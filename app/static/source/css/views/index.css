@@ -1,0 +1,79 @@
+/* index.less   */
+html,
+body {
+  height: 100%;
+}
+body {
+  padding-top: 80px;
+}
+body section.maincontent {
+  height: 100%;
+  padding: 20px;
+}
+body section.maincontent div.mainbuttons {
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  width: 100%;
+  padding: 20px;
+  text-align: right;
+}
+body section.maincontent div.mainbuttons button {
+  margin-right: 10px;
+}
+body section.maincontent form div.form-group em {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+body section.maincontent form div.form-group div#dropzone {
+  margin-top: 20px;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  padding: 0px;
+  padding: 20px;
+  min-height: 100px;
+  border: 3px dashed #519AFB;
+}
+body section.maincontent form div.form-group div#dropzone div.dz-message {
+  font-size: 30px;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  color: #ddd;
+  color: #A7C8F4;
+}
+body section.maincontent form div.form-group table {
+  margin-top: 20px;
+  background-color: white;
+}
+body section.maincontent form div.form-group table td {
+  text-align: right;
+}
+body section.maincontent form div.form-group div#dropzone.dragover {
+  background-color: #519AFB !important;
+}
+body section.maincontent form div.form-group div#dropzone.dragover div.dz-message {
+  color: #ffffff;
+}
+body section.maincontent form div.buttonsholder {
+  text-align: right;
+}
+body section.maincontent form div.buttonsholder button {
+  margin-left: 10px;
+}
+/*
+.container.maincontent {
+    height:100%;
+    
+}
+
+.fill{
+    width:100%;
+    height:100%;
+    min-height:100%;
+    background-color:#990000;
+    padding:10px;
+    color:#efefef;
+}
+*/
