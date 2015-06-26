@@ -1,0 +1,13 @@
+*.py[cod]
+.DS_Store
+pip-log.txt
+venv
+.webassets-cache
+node_modules
+app/static/bower_components
+app/static/js/*
+app/static/fonts/*
+app/static/css/*
+app/static/images/*
+app/static/uploads/*
+app/static/exports/*
