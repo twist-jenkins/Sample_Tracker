@@ -23,6 +23,21 @@ index_css = Bundle(
     filters="cssmin",
     output='css/views/index.css')
 
+editPlate_css = Bundle(
+    'source/css/views/editPlate.css',
+    filters="cssmin",
+    output='css/views/editPlate.css')
+
+sampleReport_css = Bundle(
+    'source/css/views/sampleReport.css',
+    filters="cssmin",
+    output='css/views/sampleReport.css')
+
+plateReport_css = Bundle(
+    'source/css/views/plateReport.css',
+    filters="cssmin",
+    output='css/views/plateReport.css')
+
 index_ie8_css = Bundle(
     'source/css/views/index_ie8.css',
     filters="cssmin",
@@ -45,6 +60,7 @@ common_js = Bundle(
        'js/handlebars.min.js',
        'js/moment.min.js',
        'js/jquery.easyModal.js',
+       'js/bootstrap-typeahead.min.js',
        'source/js/jquery.leanModal.min.js',
        'source/js/components/genericPopup.js', 
        'source/js/utils/utils.js', 
@@ -56,5 +72,19 @@ index_js = Bundle(
        'source/js/fileDropZone.js', 
        'source/js/views/index.js', 
         output='js/views/index.js')
+
+editPlate_js = Bundle(
+       'source/js/components/dropDownButton.js', 
+       'source/js/views/editPlate.js', 
+        output='js/views/editPlate.js')
+
+sampleReport_js = Bundle(
+       'source/js/views/sampleReport.js', 
+        output='js/views/sampleReport.js')
+
+
+plateReport_js = Bundle(
+       'source/js/views/plateReport.js', 
+        output='js/views/plateReport.js')
 
 

@@ -15,7 +15,7 @@
       {% endassets %}
 {% endblock %}
 
-{% block page_id %}login{% endblock %}
+{% block page_id %}recordSampleTransfer{% endblock %}
  
 {% block page_main_content %}
 
@@ -33,7 +33,7 @@
 
 <input id="dragndropurl" type="hidden" value="{{ url_for('dragndrop') }}" />
 <input id="createSampleMovementUrl" type="hidden" value="{{ url_for('create_sample_movement') }}" />
-
+<input id="getSampleBarcodesListUrl" type="hidden" value="{{ url_for('get_sample_plate_barcodes_list') }}" />
 
 
 
@@ -72,10 +72,10 @@
 
       </div>
       <div id="simplemovefields" class="form-group">
-        <label for="exampleInputPassword1" style="display:block;">Source Plate ID</label>
-        <label style="position:absolute; top:0px; left:50%;">Destination Plate ID</label>
-        <input type="text" class="form-control" id="sourcePlateId" style="float:left; width:49%; margin-right:1%;">
-        <input type="text" class="form-control" id="destinationPlateId" style="float:left; width:50%;">
+        <label for="exampleInputPassword1" style="display:block;">Source Plate Barcode</label>
+        <label style="position:absolute; top:0px; left:50%;">Destination Plate Barcode</label>
+        <input type="text" class="form-control" id="sourceBarcodeId" style="float:left; width:49%; margin-right:1%;">
+        <input type="text" class="form-control" id="destinationBarcodeId" style="float:left; width:50%;">
         <br style="clear:both;"/>
       </div>
       <div id="dragndropmovefields" class="form-group">

@@ -67,6 +67,36 @@ module.exports = function(grunt) {
                   "app/static/source/css/views/index.css": "app/static/source/less/views/index.less" // destination file and source file
                 }
             },
+            editPlate_css: {
+                options: {
+                  compress: false,
+                  yuicompress: false,
+                  /*optimization: 2*/
+                },
+                files: {
+                  "app/static/source/css/views/editPlate.css": "app/static/source/less/views/editPlate.less" // destination file and source file
+                }
+            },
+            sampleReport_css: {
+                options: {
+                  compress: false,
+                  yuicompress: false,
+                  /*optimization: 2*/
+                },
+                files: {
+                  "app/static/source/css/views/sampleReport.css": "app/static/source/less/views/sampleReport.less" // destination file and source file
+                }
+            },
+            plateReport_css: {
+                options: {
+                  compress: false,
+                  yuicompress: false,
+                  /*optimization: 2*/
+                },
+                files: {
+                  "app/static/source/css/views/plateReport.css": "app/static/source/less/views/plateReport.less" // destination file and source file
+                }
+            },
             index_ie8_css: {
                 options: {
                   compress: false,
@@ -90,6 +120,13 @@ module.exports = function(grunt) {
         },
 
         copy: {
+
+            bootstrapTypeahead_js: {
+                cwd: 'app/static/bower_components/bs-typeahead/js',
+                src: '**/bootstrap-typeahead.min.js',
+                dest: 'app/static/js',
+                expand: true
+            },
 
             easyModal_js: {
                 cwd: 'app/static/bower_components/easyModal.js',
@@ -254,7 +291,7 @@ module.exports = function(grunt) {
         'less:index_ie9_css',
 
 
-
+        'copy:bootstrapTypeahead_js',
         'copy:easyModal_js',
         'copy:handlebars_js',
 
@@ -278,6 +315,7 @@ module.exports = function(grunt) {
         'less:index_ie8_css',
         'less:index_ie9_css',
 
+        'copy:bootstrapTypeahead_js',
         'copy:easyModal_js',
         'copy:handlebars_js',
 

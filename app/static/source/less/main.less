@@ -131,8 +131,19 @@ body {
 
             height: @topnav_height;
 
-           
+           /*
+            li {
+                border-right:1px solid #555;
+            }
 
+            li:first-child {
+                border-left:1px solid #555;
+            }
+
+            li:last-child {
+                border-right:none;
+            }
+            */
            
 
             li > a {
@@ -144,14 +155,27 @@ body {
                 font-style: normal;
                 font-size: 16px;
                 text-transform: uppercase;
+
+                span {
+                    padding:6px 10px;
+                    .smallButtonRadius;
+                }
             }
             li > a:focus {
                 color: @unselected_top_nav_item_text_color;
                 outline: none;
             }
-            li > a:hover {
+            li > a:hover,
+            li.selected > a {
+                /*
                 background-color: @hovered_top_nav_item_background_color;
                 color: #fff;
+                */
+
+                span {
+                    background-color:#fff !important;
+                    color:@standard_dark_grey_color; 
+                }
             }
         }
     }
@@ -1189,6 +1213,18 @@ max-width:200px !important;
 */
 
     }
+}
+
+
+
+body#recordSampleTransfer li.recordSampleTransfer > a,
+body#editBarcode li.editBarcode > a,
+body#plateDetails li.plateDetails > a,
+body#sampleDetails li.sampleDetails > a {
+    span {
+        background-color:#fff !important;
+        color:@standard_dark_grey_color; 
+    }      
 }
 
 div.dropdown {

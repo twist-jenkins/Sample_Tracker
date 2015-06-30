@@ -72,9 +72,10 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse ">
                <ul class="nav navbar-nav navbar-right">
-                  <li><a href="{% block top_nav_link_news %}{% endblock %}" rel="featuredin">Record Sample Transfer</a></li>
-                  <li><a href="{% block top_nav_link_about %}{% endblock %}" rel="founders">Plate Details</a></li>
-                  <li><a href="{% block top_nav_link_careers %}{% endblock %}" rel="careers">Sample Details</a></li>
+                  <li class="recordSampleTransfer"><a href=" {{ url_for('home') }} " ><span>Record Sample Transfer</span></a></li>
+                 <li class="editBarcode" ><a href=" {{ url_for('edit_sample_plate') }} " ><span>Edit Barcode</span></a></li>
+                  <li class="plateDetails" ><a href="  {{ url_for('plate_report_page') }}  " ><span>Plate Details</span></a></li>
+                  <li class="sampleDetails" ><a href=" {{ url_for('sample_report_page') }} " ><span>Sample Details</span></a></li>
 
                </ul>
               
@@ -84,7 +85,7 @@
          </div>
       
 
-          <div id="loginlogout">
+          <div id="loginlogout" class="hidden">
              <form action="{{ url_for('logout') }}" method="post" target="_self" >
                  <button type="submit" class="btn btn-link">Log Out</button>
              </form>

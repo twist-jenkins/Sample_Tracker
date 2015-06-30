@@ -21,6 +21,7 @@ newrelic==2.46.0.37
 oauthlib==0.7.2
 Pillow==2.7.0
 psycopg2==2.6
+pymongo==3.0.2
 python-dateutil==2.4.1
 python-mimeparse==0.1.4
 requests==2.5.3
@@ -33,3 +34,4 @@ uWSGI==2.0.9
 webassets==0.10.1
 Werkzeug==0.10.1
 WTForms==2.0.2
+xlrd==0.9.3

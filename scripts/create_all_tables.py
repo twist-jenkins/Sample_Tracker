@@ -6,5 +6,5 @@ class CreateAllTables(Command):
 
     def run(self):
         print "create all tables"
-        db.create_all()
+        #db.create_all()
         print "created!"

@@ -184,6 +184,19 @@ body nav.navbar .navbar-nav {
   top: 0px;
   right: 20px;
   height: 80px;
+  /*
+            li {
+                border-right:1px solid #555;
+            }
+
+            li:first-child {
+                border-left:1px solid #555;
+            }
+
+            li:last-child {
+                border-right:none;
+            }
+            */
 }
 body nav.navbar .navbar-nav li > a {
   padding: 0px 10px;
@@ -195,13 +208,27 @@ body nav.navbar .navbar-nav li > a {
   font-size: 16px;
   text-transform: uppercase;
 }
+body nav.navbar .navbar-nav li > a span {
+  padding: 6px 10px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+}
 body nav.navbar .navbar-nav li > a:focus {
   color: #bebfbe;
   outline: none;
 }
-body nav.navbar .navbar-nav li > a:hover {
-  background-color: #51bd93;
-  color: #fff;
+body nav.navbar .navbar-nav li > a:hover,
+body nav.navbar .navbar-nav li.selected > a {
+  /*
+                background-color: @hovered_top_nav_item_background_color;
+                color: #fff;
+                */
+}
+body nav.navbar .navbar-nav li > a:hover span,
+body nav.navbar .navbar-nav li.selected > a span {
+  background-color: #fff !important;
+  color: #404041;
 }
 body section header {
   position: relative;
@@ -1077,6 +1104,13 @@ min-width:200px !important;
 max-width:200px !important;
 */
   }
+}
+body#recordSampleTransfer li.recordSampleTransfer > a span,
+body#editBarcode li.editBarcode > a span,
+body#plateDetails li.plateDetails > a span,
+body#sampleDetails li.sampleDetails > a span {
+  background-color: #fff !important;
+  color: #404041;
 }
 div.dropdown button {
   text-align: left !important;

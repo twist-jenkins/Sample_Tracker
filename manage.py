@@ -11,6 +11,8 @@
 
 from flask.ext.script import Manager, Shell, Server
 
+from flask.ext.migrate import Migrate, MigrateCommand
+
 from scripts import (CreateAllTables, LoadLookupTables, DropAllTables)
 
 from app import app, db
@@ -20,6 +22,11 @@ from app import app, db
 
 
 manager = Manager(app)
+
+migrate = Migrate(app, db)
+
+manager.add_command('db', MigrateCommand)
+
 manager.add_command("runserver", Server())
 manager.add_command("shell", Shell())
 

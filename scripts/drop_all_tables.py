@@ -6,5 +6,5 @@ class DropAllTables(Command):
 
     def run(self):
         print "drop all tables"
-        db.drop_all()
+        #db.drop_all()
         print "all tables dropped!"

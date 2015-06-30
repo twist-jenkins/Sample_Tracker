@@ -1,0 +1,118 @@
+{% extends "basetemplate.html" %}
+
+
+{% block page_specific_css %}
+      {% assets "sampleReport_css" %}
+      <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+      {% endassets %}
+
+
+{% endblock %}
+
+{% block page_specific_js %}
+      {% assets "sampleReport_js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+{% endblock %}
+
+{% block page_id %}sampleDetails{% endblock %}
+ 
+{% block page_main_content %}
+
+
+{% raw %}
+<script id="tableRowTemplate" type="text/x-handlebars-template">
+   <tr>
+      <td><a href="{{platePageUrl}}" >{{barcode}}</a></td>
+      <td>{{wellId}}</td>
+      <td>{{column}}</td>
+      <td>{{row}}</td>
+      <td>{{task}}</td>
+   </tr>
+</script>
+{% endraw %}
+
+
+<input id="getSampleReportUrl" type="hidden" value="{{ url_for('sample_report', sample_id='0') }}" />
+
+<input id ="getSampleIdsUrl" type="hidden" value=" {{  url_for('get_samples_list') }} " />
+
+<input id="plateReportUrl" type="hidden" value="{{ url_for('plate_report_page', plate_barcode='0') }}" />
+
+
+
+
+<section class="maincontent">
+
+
+    <form>
+        <legend>Sample Details Report</legend>
+
+     
+      <div class="form-group search" style="position:relative;">
+        <label for="exampleInputPassword1" style="display:block;" >Sample Id</label>
+        <input type="text" class="form-control" id="sampleId"
+          value="{% if sample_id is defined and sample_id is not none %}{{ sample_id }}{% endif %}"
+          style="float:left; width:80%;" autocomplete="off" >
+        <button id="clearSearch" type="button" class="btn btn-default btn-sm" 
+        style="position:absolute; bottom:3px; left:76%; color:#ccc; border:none; background:transparent;">&times</button>
+        <button id="search" class="btn btn-primary" style="float:left; width:18%; margin-left:2%;" type="submit">Search</button>
+
+        <br style="clear:both;"/>
+
+      </div>
+
+      <div>
+
+         <table  class="table table-borderedd hidden">
+            <thead>
+                <tr>
+                    <td>Destination Plate</td>
+                    <td>Well Id</td>
+                    <td>Well Col</td>
+                    <td>Well Row</td>
+                    <td>Task</td>
+                </tr>
+            </thead>   
+            <tbody>
+                <tr>
+                    <td>ccccccc1234</td>
+                    <td>14</td>
+                    <td>-1</td>
+                    <td>-1</td>
+                    <td>Move Specimen</td>
+                </tr>
+
+            </tbody>
+         </table>
+
+      </div>
+
+  <!--
+
+  {
+   "status": "disposed",
+   "sample_plate_id": "SPLT_5487897279930593d6805acc",
+   "storage_location": "OPEN: CHIP LAB",
+   "external_barcode": null,
+   "name": "SRN_000180 OEX Plate 3",
+   "description": "SRN_000180 Oligo Extraction Plate: 3",
+   "sample_plate_type": "30 well, plastic (Twist NW)"
+}
+
+-->
+
+
+    </form>
+
+
+
+
+</section>
+
+{% include "error_popup.html"  %}
+{% include "barcode_updated_popup.html"  %}
+
+{% endblock %}
+
+      

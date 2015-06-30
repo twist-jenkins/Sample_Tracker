@@ -21,6 +21,17 @@ GenericPopup.prototype.show = function(bodyText) {
     this.$elem.trigger('openModal');
 }
 
+GenericPopup.prototype.showWithTimeout = function(timeoutMs) {
+    this.$elem.trigger('openModal');
+
+    var hideDialog = function() {
+        this.hide();
+    }.bind(this);
+
+    setTimeout(hideDialog,timeoutMs);
+}
+
+
 
 GenericPopup.prototype.hide = function() {
     this.$elem.trigger('closeModal');

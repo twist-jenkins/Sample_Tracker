@@ -48,4 +48,8 @@ psql -d postgres
 create database sample_movement_tracker;
 ```
 
+CONNECT TO THE DB: psql -U twister -h 10.10.21.42 twistdb
+
+
+
 

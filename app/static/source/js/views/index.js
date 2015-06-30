@@ -81,9 +81,9 @@ var controller = (function() {
             // $("table#spreadsheet tbody 
 
             var context = {
-                sourcePlateId:task_item.source_plate_id,
+                sourceBarcodeId:task_item.source_plate_id,
                 sourceWell:task_item.source_well,
-                destinationPlateId:task_item.destination_plate_id,
+                destinationBarcodeId:task_item.destination_plate_id,
                 destinationWell:task_item.destination_well
             }
            // alert("CONTEXT: " + JSON.stringify(context));
@@ -128,7 +128,7 @@ var controller = (function() {
             //alert("useSpreadsheetData: " + useSpreadsheetData);
 
             var sampleTransferTypeId = m_sampleTransferTypeDropdown.val();
-            var sourcePlateId = null, destinationPlateId = null;
+            var sourceBarcodeId = null, destinationBarcodeId = null;
             var postData = null;
 
             if (sampleTransferTypeId === "") {
@@ -145,24 +145,24 @@ var controller = (function() {
                $("table#spreadsheet tbody tr").each(function() {
                   var $tr = $(this);
                   var oneWell = {
-                     sourcePlateId:$.trim($("td:eq(0)",$tr).text()),
+                     sourceBarcodeId:$.trim($("td:eq(0)",$tr).text()),
                      sourceWell:$.trim($("td:eq(1)",$tr).text()),
-                     destinationPlateId:$.trim($("td:eq(2)",$tr).text()),
+                     destinationBarcodeId:$.trim($("td:eq(2)",$tr).text()),
                      destinationWell:$.trim($("td:eq(3)",$tr).text())
                   }
                   postData.wells.push(oneWell);
                });
             } else {
-               sourcePlateId = $.trim($("#sourcePlateId").val());
-               destinationPlateId = $.trim($("#destinationPlateId").val());
+               sourceBarcodeId = $.trim($("#sourceBarcodeId").val());
+               destinationBarcodeId = $.trim($("#destinationBarcodeId").val());
 
-               if (sourcePlateId === "" || destinationPlateId === "") {
+               if (sourceBarcodeId === "" || destinationBarcodeId === "") {
                  m_errorPopup.show("Please specify a source plate id and a destination plate id.");
                  return;                  
                }
 
-               postData.sourcePlateId = sourcePlateId;
-               postData.destinationPlateId = destinationPlateId;
+               postData.sourceBarcodeId = sourceBarcodeId;
+               postData.destinationBarcodeId = destinationBarcodeId;
 
             }
 
@@ -208,13 +208,38 @@ var controller = (function() {
 
     }
 
+    /**
+    * https://github.com/biggora/bootstrap-ajax-typeahead
+    */
+    function initTypeahead() {
 
+      var url = $("#getSampleBarcodesListUrl").val();
+
+var typeaheadSource = ['John', 'Alex', 'Terry'];
+
+$('#sourceBarcodeId').typeahead({
+    ajax: url,
+    items:30
+    //source: typeaheadSource
+});
+
+/*
+$('#destinationPlateId').typeahead({
+    ajax: url,
+    items:30
+    //source: typeaheadSource
+});
+*/
+
+      
+    }
 
     function init() {
        // alert("init");
         
         initDropzone();
         initForm();
+        initTypeahead();
 
        // alert("foo");
        

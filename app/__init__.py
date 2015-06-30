@@ -120,6 +120,38 @@ def static_from_root():
 def home():
     return routes.home()
 
+@app.route('/edit_sample_plate')
+def edit_sample_plate():
+    return routes.edit_sample_plate()
+
+@app.route('/sample_plate/<sample_plate_id>')
+def get_sample_plate(sample_plate_id):
+    return routes.get_sample_plate(sample_plate_id)
+
+@app.route('/sample_plate/<sample_plate_id>/external_barcode',methods=['GET','POST'])
+def sample_plate_external_barcode(sample_plate_id):
+    return routes.sample_plate_external_barcode(sample_plate_id)
+
+
+@app.route('/sample_report', defaults={'sample_id':None})
+@app.route('/sample_report/<sample_id>')
+def sample_report_page(sample_id):
+    return routes.sample_report_page(sample_id)
+
+@app.route('/sample/<sample_id>/report')
+def sample_report(sample_id):
+    return routes.sample_report(sample_id)
+
+@app.route('/plate_report', defaults={'plate_barcode':None})
+@app.route('/plate_report/<plate_barcode>')
+def plate_report_page(plate_barcode):
+    return routes.plate_report_page(plate_barcode)
+
+@app.route('/plate/<sample_plate_barcode>/report')
+def plate_report(sample_plate_barcode):
+    return routes.plate_report(sample_plate_barcode)
+
+
 """
 def home():
     return render_template('index.html')
@@ -169,6 +201,22 @@ def dragndrop():
 @app.route('/sample_movements', methods=['POST'])
 def create_sample_movement():
     return routes.create_sample_movement()
+
+
+@app.route('/sample_plates')
+def get_sample_plates_list():
+    return routes.get_sample_plates_list()
+
+
+@app.route('/sample_plate_barcodes')
+def get_sample_plate_barcodes_list():
+    return routes.get_sample_plate_barcodes_list()
+
+
+@app.route('/samples')
+def get_samples_list():
+    return routes.get_samples_list()
+
 
 """
 @app.route('/create_sample_moveme', methods=['POST'])

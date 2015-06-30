@@ -1,0 +1,56 @@
+html,
+body {
+  height: 100%;
+}
+body {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+body section.maincontent {
+  height: 100%;
+  padding: 20px;
+}
+body section.maincontent div.mainbuttons {
+  position: absolute;
+  left: 0px;
+  bottom: 0px;
+  width: 100%;
+  padding: 20px;
+  text-align: right;
+}
+body section.maincontent div.mainbuttons button {
+  margin-right: 10px;
+}
+body section.maincontent form {
+  width: 900px;
+  margin-bottom: 40px;
+}
+body section.maincontent form table {
+  background-color: white;
+}
+body section.maincontent form table thead td {
+  background-color: #999;
+  color: #fff;
+  border-right: 1px solid #eee;
+}
+body section.maincontent form table thead td:first-child {
+  border-left: 1px solid #999;
+}
+body section.maincontent form table thead td:last-child {
+  border-right: 1px solid #999;
+}
+body section.maincontent form table tbody td {
+  border-right: 1px solid #eee;
+}
+body section.maincontent form table tbody td:first-child {
+  border-left: 1px solid #eee;
+}
+body section.maincontent form table tbody tr:last-child td {
+  border-bottom: 1px solid #eee;
+}
+body section.maincontent form div.buttonsholder {
+  text-align: right;
+}
+body section.maincontent form div.buttonsholder button {
+  margin-left: 10px;
+}

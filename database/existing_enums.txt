@@ -1,0 +1,41 @@
+--sample_plate
+ public      | enum_sample_plate_status         | disposed
+ public      | enum_sample_plate_status         | in_use
+ public      | enum_sample_plate_status         | new
+--sample
+ public      | enum_sample_status               | active
+ public      | enum_sample_status               | deleted
+ public      | enum_sample_status               | failure
+ public      | enum_sample_status               | inactive
+--sample_plate_type
+ public      | enum_sample_plate_type           | custom_plastic_16
+ public      | enum_sample_plate_type           | custom_plastic_30
+ public      | enum_sample_plate_type           | nw_ct_0004_96
+ public      | enum_sample_plate_type           | nw_ct_0006_108
+ public      | enum_sample_plate_type           | nw_ct_0008_96
+ public      | enum_sample_plate_type           | nw_ct_0012_108
+ public      | enum_sample_plate_type           | plastic_1
+ public      | enum_sample_plate_type           | plastic_12
+ public      | enum_sample_plate_type           | plastic_1536
+ public      | enum_sample_plate_type           | plastic_24
+ public      | enum_sample_plate_type           | plastic_3456
+ public      | enum_sample_plate_type           | plastic_384
+ public      | enum_sample_plate_type           | plastic_48
+ public      | enum_sample_plate_type           | plastic_6
+ public      | enum_sample_plate_type           | plastic_96
+ public      | enum_sample_plate_type           | plastic_9600
+--sample_plate_type
+ public      | enum_sample_plate_type_status    | active
+ public      | enum_sample_plate_type_status    | retired
+--sample_type
+ public      | enum_sample_type_status          | active
+ public      | enum_sample_type_status          | retired
+--storage_location
+ public      | enum_storage_location_type       | disposal
+ public      | enum_storage_location_type       | plate_storage
+ public      | enum_storage_location_type       | storage
+ public      | enum_storage_location_type       | work_station
+--storage_location
+ public      | enum_storage_status              | active
+ public      | enum_storage_status              | inactive
+--
