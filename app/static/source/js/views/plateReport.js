@@ -13,6 +13,8 @@ var controller = (function() {
 
     var m_sampleReportUrl = $("#sampleReportUrl").val();
 
+    var m_getCSVPlateReportUrl = $("#getCSVPlateReportUrl").val();
+
     /*
     var m_samplePlateExternalBarcodeUrl = $("#samplePlateExternalBarcodeUrl").val();
     var m_barcodeUpdatedPopup = new GenericPopup($("#barcodeUpdatedPopup"));
@@ -127,7 +129,8 @@ $('#destinationPlateId').typeahead({
         function clearForm() {
            $('#barcode').val("");
            $("table tbody tr").remove();
-           $(".form-group.parentPlates, .form-group.wells").addClass("hidden");
+           $("#exportAsExcel").addClass("hidden");
+           $(".form-group.plateDetails, .form-group.parentPlates, .form-group.childPlates, .form-group.wells").addClass("hidden");
         }
 
         $("#clearSearch").click(clearForm);
@@ -155,7 +158,37 @@ $('#destinationPlateId').typeahead({
                    // alert(JSON.stringify(data));
                    // return;
 
+                    $("#exportAsExcel").removeClass("hidden");
                     $(".form-group.parentPlates, .form-group.wells").removeClass("hidden");
+                    $(".form-group.childPlates, .form-group.wells").removeClass("hidden");
+                    $(".form-group.plateDetails").removeClass("hidden");
+
+
+
+                    var dateCreated = data.plateDetails.dateCreated;
+                    var momentDate = moment(dateCreated, "YYYY-MM-DD HH:mm:ss");
+                    var dateCreatedString = momentDate.format("dddd, MMMM Do YYYY, h:mm a");
+
+                    $(".plateDetails span.dateCreated").text(dateCreatedString);
+
+                    $(".plateDetails span.createdBy").text(data.plateDetails.createdBy);
+
+                    if (data.parentToThisTaskName) {
+                       $(".parentPlates span.taskName").text(data.parentToThisTaskName);
+                    }
+
+                    if (data.thisToChildTaskName) {
+                       $(".childPlates span.taskName").text(data.thisToChildTaskName);
+                    }
+                    
+                  /*
+                  "parentToThisTaskName":parent_to_this_task_name,
+        "childPlates":child_plates,
+        "thisToChildTaskName":this_to_child_task_name,
+        "wells":wells,
+                  */
+
+
 
 /*
             var context = {
@@ -198,18 +231,51 @@ var m_parentPlateRowTemplateSource = $("#parentPlateRowTemplate").html();
       <td>{{sampleId}}</td>
 
 */
-                  _.each(data.parentPlates,function(parentPlate) {
 
-                       var plateReportUrl = m_plateReportUrl.replace("/0","/" + parentPlate.externalBarcode);
+                  if (data.parentPlates.length == 0) {
+                      $(".form-group.parentPlates").addClass("hidden");
+                  } else {
+                    _.each(data.parentPlates,function(parentPlate) {
 
-                       var context = {
-                          plateBarcode:parentPlate.externalBarcode,
-                          plateReportUrl:plateReportUrl,
-                          plateCreationDateTime:"fill this in"
-                       };
-                       var html = m_parentPlateRowTemplate(context);
-                       $(".form-group.parentPlates table tbody").append(html);
-                  });
+                         var plateReportUrl = m_plateReportUrl.replace("/0","/" + parentPlate.externalBarcode);
+
+                         var dateCreated = parentPlate.dateCreated;
+                         var momentDate = moment(dateCreated, "YYYY-MM-DD HH:mm:ss");
+                         var dateCreatedString = momentDate.format("dddd, MMMM Do YYYY, h:mm a");
+
+                         var context = {
+                            plateBarcode:parentPlate.externalBarcode,
+                            plateReportUrl:plateReportUrl,
+                            plateCreationDateTime:dateCreatedString
+                         };
+                         var html = m_parentPlateRowTemplate(context);
+                         $(".form-group.parentPlates table tbody").append(html);
+
+                        
+                    });
+                  }
+
+                  if (data.childPlates.length == 0) {
+                      $(".form-group.childPlates").addClass("hidden");
+                  } else {
+
+                    _.each(data.childPlates,function(childPlate) {
+
+                         var plateReportUrl = m_plateReportUrl.replace("/0","/" + childPlate.externalBarcode);
+
+                         var dateCreated = childPlate.dateCreated;
+                         var momentDate = moment(dateCreated, "YYYY-MM-DD HH:mm:ss");
+                         var dateCreatedString = momentDate.format("dddd, MMMM Do YYYY, h:mm a");
+
+                         var context = {
+                            plateBarcode:childPlate.externalBarcode,
+                            plateReportUrl:plateReportUrl,
+                            plateCreationDateTime:dateCreatedString
+                         };
+                         var html = m_parentPlateRowTemplate(context);
+                         $(".form-group.childPlates table tbody").append(html);
+                    });
+                  }
 
                   _.each(data.wells,function(well) {
 
@@ -264,6 +330,25 @@ var m_parentPlateRowTemplateSource = $("#parentPlateRowTemplate").html();
             return false;
         }
         $("#search").click(doSearch);
+
+        // getCSVPlateReportUrl
+
+        $("#exportAsExcel").click(function(e) {
+
+            e.stopImmediatePropagation();
+            e.preventDefault();
+
+            var barcode = $.trim($("#barcode").val());
+
+            if (barcode !== "") {
+               var url = m_getCSVPlateReportUrl.replace("/0","/" + barcode);
+
+              // alert(url);
+
+               window.open(url,"_blank");
+            }
+
+        });
 
         //alert("inited");
     }

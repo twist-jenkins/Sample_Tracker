@@ -88,6 +88,34 @@ db = SQLAlchemy(app)
 from dbmodels import *
 
 
+from flask_googlelogin import GoogleLogin
+googlelogin = GoogleLogin(app)
+
+@app.route('/oauth2callback')
+@googlelogin.oauth2callback
+def create_or_update_user(token, userinfo, **params):
+
+    """
+    user = User.filter_by(google_id=userinfo['id']).first()
+    if user:
+        user.name = userinfo['name']
+        user.avatar = userinfo['picture']
+    else:
+        user = User(google_id=userinfo['id'],
+                    name=userinfo['name'],
+                    avatar=userinfo['picture'])
+    db.session.add(user)
+    db.session.flush()
+    login_user(user)
+    """
+    return redirect(url_for('home'))
+
+
+@app.route('/logout')
+def logout():
+    return routes.logout()
+
+
 #from dbmodels import (Author, Article, BlogPostSectionType, BlogPostAuthor, BlogPost, BlogPostSection, 
 #    BlogUpdateJournal, UserSegment, TopOfPageContent, TopOfPageContentUpdateJournal, CalendarEventType,
 #    CalendarEvent,NewsArticleType, MediaType, PublicationType, Publication, NewsArticle)
@@ -120,6 +148,7 @@ def static_from_root():
 def home():
     return routes.home()
 
+
 @app.route('/edit_sample_plate')
 def edit_sample_plate():
     return routes.edit_sample_plate()
@@ -138,18 +167,20 @@ def sample_plate_external_barcode(sample_plate_id):
 def sample_report_page(sample_id):
     return routes.sample_report_page(sample_id)
 
-@app.route('/sample/<sample_id>/report')
-def sample_report(sample_id):
-    return routes.sample_report(sample_id)
+@app.route('/sample/<sample_id>/report', defaults={'format':"json"})
+@app.route('/sample/<sample_id>/report/<format>')
+def sample_report(sample_id, format):
+    return routes.sample_report(sample_id, format)
 
 @app.route('/plate_report', defaults={'plate_barcode':None})
 @app.route('/plate_report/<plate_barcode>')
 def plate_report_page(plate_barcode):
     return routes.plate_report_page(plate_barcode)
 
-@app.route('/plate/<sample_plate_barcode>/report')
-def plate_report(sample_plate_barcode):
-    return routes.plate_report(sample_plate_barcode)
+@app.route('/plate/<sample_plate_barcode>/report', defaults={'format':"json"})
+@app.route('/plate/<sample_plate_barcode>/report/<format>')
+def plate_report(sample_plate_barcode,format):
+    return routes.plate_report(sample_plate_barcode,format)
 
 
 """
@@ -160,6 +191,9 @@ def home():
 
 @app.route('/login', methods=['GET','POST'])
 def login():
+    return routes.login()
+
+    """
     if request.method == 'POST':
         email = request.form["email"]
         customer = CustomerController.customer_by_email(email)
@@ -182,15 +216,17 @@ def login():
             return "Invalid Login. Go here: <a href='" + url_for('login') + "'>Log In</a>"
     else:
         return render_template('login.html')
+    """
 
 
+"""
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('user_id',None)
     session.pop('customer_id',None)
     session.pop('admin_user_id',None)
     return redirect(url_for('login'))
-
+"""
 
 
 

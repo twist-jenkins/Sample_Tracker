@@ -56,6 +56,12 @@ class Sample(db.Model):
     description = db.Column(db.String(2048))
     date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
 
+    #
+    # Relationships. ORM magicalness.
+    #
+
+    operator = db.relationship("Operator")
+
     def __init__(self, sample_id, type_id, operator_id, name):
         self.sample_id = create_unique_object_id("SMPL_")
         self.type_id = type_id
@@ -85,6 +91,7 @@ class SamplePlate(db.Model):
     # Relationships. ORM magicalness.
     #
 
+    operator = db.relationship("Operator")
     sample_plate_type = db.relationship("SamplePlateType")
     storage_location = db.relationship("StorageLocation")
     wells = db.relationship("SamplePlateLayout")
@@ -211,6 +218,13 @@ class SampleTransferDetail(db.Model):
     destination_well_id = db.Column(db.Integer, db.ForeignKey('sample_plate_layout.well_id'))
     destination_sample_id = db.Column(db.String(40), db.ForeignKey('sample_plate_layout.sample_id'))
 
+    #
+    # Relationships. ORM magicalness.
+    #
+
+    sample_transfer = db.relationship("SampleTransfer")
+
+
     def __init__(self, sample_transfer_id, item_order_number, source_sample_plate_id, source_well_id,
         source_sample_id, destination_sample_plate_id, destination_well_id, destination_sample_id ):
         self.sample_transfer_id = sample_transfer_id
@@ -224,19 +238,34 @@ class SampleTransferDetail(db.Model):
 
 
 
-
-class SampleTransferType(db.Model):
+class SampleTransferTemplate(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
 
-    sample_tranfers = db.relationship('SampleTransfer')
+    sample_tranfer_types = db.relationship('SampleTransferType')
 
     def __init__(self, name ):
         self.name = name
 
     def __repr__(self):
-        return '<SampleTransferType id: [%d] name: [%s] >' % (self.id,self.name)
+        return '<SampleTransferTemplate id: [%d] name: [%s] >' % (self.id,self.name)
+
+
+class SampleTransferType(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    sample_transfer_template_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_template.id'))
+
+    sample_tranfers = db.relationship('SampleTransfer')
+    sample_transfer_template = db.relationship('SampleTransferTemplate')
+
+    #def __init__(self, name ):
+    #    self.name = name
+
+    def __repr__(self):
+        return '<SampleTransferType id: [%d] name: [%s] template: [%s] >' % (self.id,self.name,self.sample_transfer_template.name)
 
 
 

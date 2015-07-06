@@ -8,6 +8,9 @@ var controller = (function() {
 
     var m_plateReportUrl = $("#plateReportUrl").val();
 
+    var m_getCSVSampleReportUrl = $("#getCSVSampleReportUrl").val();
+
+
     /*
     var m_samplePlateExternalBarcodeUrl = $("#samplePlateExternalBarcodeUrl").val();
     var m_barcodeUpdatedPopup = new GenericPopup($("#barcodeUpdatedPopup"));
@@ -130,6 +133,7 @@ var controller = (function() {
            $("#sampleId").val("");
            $("table tbody tr").remove();
            $("table").addClass("hidden");
+           $("#exportAsExcel").addClass("hidden");
         }
 
         $("#clearSearch").click(clearForm);
@@ -151,6 +155,7 @@ var controller = (function() {
                 $.getJSON( url, function( data ) {
 
                     $("table").removeClass("hidden");
+                    $("#exportAsExcel").removeClass("hidden");
 
 /*
             var context = {
@@ -213,6 +218,25 @@ var controller = (function() {
             return false;
         }
         $("#search").click(doSearch);
+
+
+        $("#exportAsExcel").click(function(e) {
+
+            e.stopImmediatePropagation();
+            e.preventDefault();
+
+            var sampleId = $.trim($("#sampleId").val());
+
+            if (sampleId !== "") {
+               var url = m_getCSVSampleReportUrl.replace("/0","/" + sampleId);
+
+              // alert(url);
+
+               window.open(url,"_blank");
+            }
+
+        });
+
 
         //alert("inited");
     }

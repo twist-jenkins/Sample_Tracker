@@ -1,0 +1,86 @@
+{% extends "basetemplateloggedout.html" %}
+
+
+{% block page_specific_css %}
+      {% assets "index_css" %}
+      <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+      {% endassets %}
+
+
+{% endblock %}
+
+{% block page_specific_js %}
+{% endblock %}
+
+{% block page_id %}recordSampleTransfer{% endblock %}
+ 
+{% block page_main_content %}
+
+
+
+{% raw %}
+<script id="tableRowTemplate" type="text/x-handlebars-template">
+   <tr>
+      <td>{{sourcePlateId}}</td>
+      <td>{{sourceWell}}</td>
+      <td>{{destinationPlateId}}</td>
+      <td>{{destinationWell}}</td>
+   </tr>
+</script>
+{% endraw %}
+
+
+
+
+<input id="dragndropurl" type="hidden" value="{{ url_for('dragndrop') }}" />
+<input id="createSampleMovementUrl" type="hidden" value="{{ url_for('create_sample_movement') }}" />
+<input id="getSampleBarcodesListUrl" type="hidden" value="{{ url_for('get_sample_plate_barcodes_list') }}" />
+
+
+
+<section class="maincontent">
+
+
+    <form>
+        <legend>Log In To Sample Movement Tracker</legend>
+
+     
+     
+      
+      <div class="form-group buttonsholder">
+        
+        
+
+         <a href="{{ login_url }}" class="btn btn-default" ><img style="height:30px; margin-right:8px;" src="{{ url_for('static', filename='images/google-g-logo-2012.png') }}"/>Sign In</a>
+
+       
+      </div>
+
+    </form>
+
+
+
+
+</section>
+
+{% include "error_popup.html"  %}
+
+<script>
+
+/*
+function onSignIn(googleUser) {
+   alert("signed in");
+  var profile = googleUser.getBasicProfile();
+  alert('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+  alert('Name: ' + profile.getName());
+  alert('Image URL: ' + profile.getImageUrl());
+  alert('Email: ' + profile.getEmail());
+}
+*/
+
+</script>
+
+
+{% endblock %}
+
+      

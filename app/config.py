@@ -17,6 +17,31 @@ class Config(object):
     # psql -U twister -h 10.10.21.42 twistdb
     SQLALCHEMY_ECHO = True
 
+    GOOGLE_LOGIN_CLIENT_ID = "1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com"
+    GOOGLE_LOGIN_CLIENT_SECRET = "EWohyxtKDkcZyF1BBEPu_Jo1"
+    GOOGLE_LOGIN_CLIENT_SCOPES = "Default scopes"
+    GOOGLE_LOGIN_REDIRECT_URI = "http://localhost:5000/oauth2callback"
+
+    """
+
+    GOOGLE_LOGIN_CLIENT_ID  Client ID (create one at https://code.google.com/apis/console)
+GOOGLE_LOGIN_CLIENT_SECRET  Client Secret
+GOOGLE_LOGIN_CLIENT_SCOPES  Default scopes
+GOOGLE_LOGIN_REDIRECT_URI
+
+
+    Client ID   
+1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com
+Email address   
+1093207984325-qhls4ec361elichdn0vfno05u0r7r256@developer.gserviceaccount.com
+Client secret   
+EWohyxtKDkcZyF1BBEPu_Jo1
+Redirect URIs   
+http://localhost:5000/oauth2callback
+JavaScript origins  
+http://localhost:5000
+    """
+
 
 class ProdConfig(Config):
     pass

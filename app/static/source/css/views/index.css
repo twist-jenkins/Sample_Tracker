@@ -21,6 +21,9 @@ body section.maincontent div.mainbuttons {
 body section.maincontent div.mainbuttons button {
   margin-right: 10px;
 }
+body section.maincontent form {
+  width: 900px;
+}
 body section.maincontent form div.form-group em {
   display: block;
   width: 100%;

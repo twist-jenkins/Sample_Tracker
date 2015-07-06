@@ -39,6 +39,11 @@
 
 <input id="plateReportUrl" type="hidden" value="{{ url_for('plate_report_page', plate_barcode='0') }}" />
 
+<input id="getCSVSampleReportUrl" type="hidden" value="{{ url_for('sample_report', sample_id='0', format='csv') }}" />
+
+<!--
+  GA_5457fcf3e208466dd16d3b1d
+-->
 
 
 
@@ -49,7 +54,7 @@
         <legend>Sample Details Report</legend>
 
      
-      <div class="form-group search" style="position:relative;">
+      <div class="form-group search" style="position:relative; margin-bottom:50px;">
         <label for="exampleInputPassword1" style="display:block;" >Sample Id</label>
         <input type="text" class="form-control" id="sampleId"
           value="{% if sample_id is defined and sample_id is not none %}{{ sample_id }}{% endif %}"
@@ -57,6 +62,10 @@
         <button id="clearSearch" type="button" class="btn btn-default btn-sm" 
         style="position:absolute; bottom:3px; left:76%; color:#ccc; border:none; background:transparent;">&times</button>
         <button id="search" class="btn btn-primary" style="float:left; width:18%; margin-left:2%;" type="submit">Search</button>
+
+        <button id="exportAsExcel" class="btn btn-default hidden" 
+          style="position:absolute; z-index:100; bottom:-40px; right:0px; width:18%; margin-left:2%;" 
+          ><i class="fa fa-arrow-down"></i> Export as Excel</button>
 
         <br style="clear:both;"/>
 

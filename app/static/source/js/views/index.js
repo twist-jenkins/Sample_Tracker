@@ -75,16 +75,48 @@ var controller = (function() {
 */
 
 
+        //alert("responseJson.task_items: " + JSON.stringify(responseJson.task_items));
+        //return;
+
+/*
+<!--
+   "source_plate_barcode":worksheet.cell_value(curr_row,0),
+                "source_well_id":worksheet.cell_value(curr_row,1),
+                "source_col_and_row":worksheet.cell_value(curr_row,2),
+                "destination_plate_type_name":worksheet.cell_value(curr_row,3),
+                "destination_plate_barcode":worksheet.cell_value(curr_row,4),
+                "destination_well_id":worksheet.cell_value(curr_row,5),
+                "destination_col_and_row":worksheet.cell_value(curr_row,6)
+-->
+
+{% raw %}
+<script id="tableRowTemplate" type="text/x-handlebars-template">
+   <tr>
+      <td>{{sourcePlateBarcode}}</td>
+      <td>{{}}</td>
+      <td>{{}}</td>
+      <td>{{}}</td>
+      <td>{{}}</td>
+      <td>{{}}</td>
+      <td>{{}}</td>
+   </tr>
+</script>
+*/
+
          _.each(responseJson.task_items,function(task_item) {
             
 
             // $("table#spreadsheet tbody 
 
             var context = {
-                sourceBarcodeId:task_item.source_plate_id,
-                sourceWell:task_item.source_well,
-                destinationBarcodeId:task_item.destination_plate_id,
-                destinationWell:task_item.destination_well
+                sourcePlateBarcode:task_item.source_plate_barcode,
+                sourceWellId:task_item.source_well_id,
+                sourceColAndRow:task_item.source_col_and_row,
+                destinationPlateType:task_item.destination_plate_type_name,
+                destinationPlateBarcode:task_item.destination_plate_barcode,
+                destinationWellId:task_item.destination_well_id,
+                destinationColAndRow:task_item.destination_col_and_row
+
             }
            // alert("CONTEXT: " + JSON.stringify(context));
             //alert("task_item.source_plate_id: " + task_item.source_plate_id );
@@ -111,6 +143,9 @@ var controller = (function() {
         function resetForm() {
 
           m_sampleTransferTypeDropdown.reset();
+
+          $("#sourceBarcodeId").val("");
+          $("#destinationBarcodeId").val("");
 
           $("div#dropzone").removeClass("hidden");
           $("#simplemovefields").removeClass("hidden");
@@ -140,15 +175,28 @@ var controller = (function() {
                sampleTransferTypeId:sampleTransferTypeId
             }
 
+/*
+ "source_plate_barcode":worksheet.cell_value(curr_row,0),
+                "source_well_id":worksheet.cell_value(curr_row,1),
+                "source_col_and_row":worksheet.cell_value(curr_row,2),
+                "destination_plate_type_name":worksheet.cell_value(curr_row,3),
+                "destination_plate_barcode":worksheet.cell_value(curr_row,4),
+                "destination_well_id":worksheet.cell_value(curr_row,5),
+                "destination_col_and_row":worksheet.cell_value(curr_row,6)
+*/
+
             if (useSpreadsheetData) {
                postData.wells = [];
                $("table#spreadsheet tbody tr").each(function() {
                   var $tr = $(this);
                   var oneWell = {
-                     sourceBarcodeId:$.trim($("td:eq(0)",$tr).text()),
-                     sourceWell:$.trim($("td:eq(1)",$tr).text()),
-                     destinationBarcodeId:$.trim($("td:eq(2)",$tr).text()),
-                     destinationWell:$.trim($("td:eq(3)",$tr).text())
+                     sourcePlateBarcode:$.trim($("td:eq(0)",$tr).text()),
+                     sourceWellId:$.trim($("td:eq(1)",$tr).text()),
+                     sourceColAndRow:$.trim($("td:eq(2)",$tr).text()),
+                     destinationPlateType:$.trim($("td:eq(3)",$tr).text()),
+                     destinationPlateBarcode:$.trim($("td:eq(4)",$tr).text()),
+                     destinationWellId:$.trim($("td:eq(5)",$tr).text()),
+                     destinationColAndRow:$.trim($("td:eq(6)",$tr).text())
                   }
                   postData.wells.push(oneWell);
                });
@@ -167,15 +215,23 @@ var controller = (function() {
             }
 
            // alert("post data: " + postData);
-            alert(JSON.stringify(postData));
+           // alert(JSON.stringify(postData));
 
-            alert("URL: " + m_createSampleMovementUrl);
+           // alert("URL: " + m_createSampleMovementUrl);
 
             var data = JSON.stringify(postData);
 
             Twist.Utils.ajaxJsonPost(m_createSampleMovementUrl,data,function(data) {
-               alert("RESPONDED: " + data);
-               alert(JSON.stringify(data));
+
+               //alert("SUCCESS: " + data.success);
+
+               if (data.success) {
+                  resetForm();
+                  m_errorPopup.show("Sample transfer was saved.");
+               }
+
+              // alert("RESPONDED: " + data);
+              // alert(JSON.stringify(data));
 
                //callback(data.error,data.errors,data.sequenceStatistics);
             });
