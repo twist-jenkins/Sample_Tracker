@@ -1,0 +1,162 @@
+{% extends "basetemplate.html" %}
+
+
+{% block page_specific_css %}
+      {% assets "recordSampleTransfer_css" %}
+      <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}" />
+      {% endassets %}
+
+
+{% endblock %}
+
+{% block page_specific_js %}
+      {% assets "recordSampleTransfer_js" %}
+      <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+      {% endassets %}
+{% endblock %}
+
+{% block page_id %}recordSampleTransfer{% endblock %}
+ 
+{% block page_main_content %}
+
+
+<!--
+   "source_plate_barcode":worksheet.cell_value(curr_row,0),
+                "source_well_id":worksheet.cell_value(curr_row,1),
+                "source_col_and_row":worksheet.cell_value(curr_row,2),
+                "destination_plate_type_name":worksheet.cell_value(curr_row,3),
+                "destination_plate_barcode":worksheet.cell_value(curr_row,4),
+                "destination_well_id":worksheet.cell_value(curr_row,5),
+                "destination_col_and_row":worksheet.cell_value(curr_row,6)
+-->
+
+{% raw %}
+<script id="tableRowTemplate" type="text/x-handlebars-template">
+   <tr>
+      <td>{{sourcePlateBarcode}}</td>
+      <td>{{sourceWellId}}</td>
+      <td>{{sourceColAndRow}}</td>
+      <td>{{destinationPlateType}}</td>
+      <td>{{destinationPlateBarcode}}</td>
+      <td>{{destinationWellId}}</td>
+      <td>{{destinationColAndRow}}</td>
+   </tr>
+</script>
+{% endraw %}
+
+
+<input id="dragndropurl" type="hidden" value="{{ url_for('dragndrop') }}" />
+<input id="createSampleMovementUrl" type="hidden" value="{{ url_for('create_sample_movement') }}" />
+<input id="getSampleBarcodesListUrl" type="hidden" value="{{ url_for('get_sample_plate_barcodes_list') }}" />
+
+
+
+<section class="maincontent">
+
+
+    <form>
+        <legend>Record Sample Transfer</legend>
+
+      <div class="form-group">
+        <label for="exampleInputEmail1">Sample Transfer Task Type</label>
+        
+<div id="sampleTransferTypeDropDown" class="dropdown">
+  
+   <input class="selectedItemId" type="hidden" />
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+    <span class="label">What type of transfer task are you performing?</span>
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+
+{% for sample_tranfer_type in sample_tranfer_types %}
+   <li data-sample-tranfer-type-id="{{sample_tranfer_type.id}}"><a href="JavaScript:void(0);">{{sample_tranfer_type.name}}</a></li>
+{% endfor %}
+
+<!--
+    <li><a href="#">Action</a></li>
+    <li><a href="#">Another action</a></li>
+    <li><a href="#">Something else here</a></li>
+    <li><a href="#">Separated link</a></li>
+-->
+
+  </ul>
+
+</div>
+
+      </div>
+      <div id="simplemovefields" class="form-group">
+        <label for="exampleInputPassword1" style="display:block;">Source Plate Barcode</label>
+        <label style="position:absolute; top:0px; left:50%;">Destination Plate Barcode</label>
+        <input type="text" class="form-control" id="sourceBarcodeId" style="float:left; width:49%; margin-right:1%;">
+        <input type="text" class="form-control" id="destinationBarcodeId" style="float:left; width:50%;">
+        <br style="clear:both;"/>
+      </div>
+      <div id="dragndropmovefields" class="form-group">
+         <em>- or -</em>
+
+         <div id="dropzone">
+            Drop your sample transfer description file here.
+         </div>
+
+
+
+         <table id="spreadsheet" class="hidden table table-bordered">
+            <thead>
+                <tr>
+                    <td>Source Plate Barcode</td>
+                    <td>Source Well Id</td>
+                    <td>Source Col &amp; Row</td>
+                    <td>Destination Plate Type</td>
+                    <td>Destination Plate Barcode</td>
+                    <td>Destination Well Id</td>
+                    <td>Destination Col &amp; Row</td>
+                </tr>
+            </thead>   
+            <tbody>
+                <!--
+                <tr>
+                    <td>123</td>
+                    <td>A3</td>
+                    <td>456</td>
+                    <td>B5</td>
+                </tr>
+                <tr>
+                    <td>123</td>
+                    <td>A3</td>
+                    <td>456</td>
+                    <td>B5</td>
+                </tr>
+                <tr>
+                    <td>123</td>
+                    <td>A3</td>
+                    <td>456</td>
+                    <td>B5</td>
+                </tr>
+            -->
+            </tbody>
+         </table>
+
+      </div>
+     
+      
+      <div class="form-group buttonsholder">
+        
+         <button type="button" class="reset btn btn-default btn-lg">Reset</button>
+         <button type="button" class="submit btn btn-primary btn-lg">Submit</button>
+       
+      </div>
+
+    </form>
+
+
+
+
+</section>
+
+{% include "error_popup.html"  %}
+
+
+{% endblock %}
+
+      

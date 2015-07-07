@@ -19,8 +19,11 @@ class Config(object):
 
     GOOGLE_LOGIN_CLIENT_ID = "1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com"
     GOOGLE_LOGIN_CLIENT_SECRET = "EWohyxtKDkcZyF1BBEPu_Jo1"
-    GOOGLE_LOGIN_CLIENT_SCOPES = "Default scopes"
+    GOOGLE_LOGIN_CLIENT_SCOPES = "email"
     GOOGLE_LOGIN_REDIRECT_URI = "http://localhost:5000/oauth2callback"
+
+    GOOGLE_OAUTH2_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
+    GOOGLE_OAUTH2_USERINFO_URL = 'https://www.googleapis.com/oauth2/v1/userinfo'
 
     """
 

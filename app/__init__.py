@@ -16,7 +16,7 @@ import hashlib
 
 import random
 
-from flask import Flask, render_template, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
+from flask import g, Flask, render_template, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
 
 from flask_assets import Environment
 
@@ -47,17 +47,15 @@ app.config.from_object('app.config.%sConfig' % env.capitalize())
 app.config['ENV'] = env
 app.debug = True
 
-print "USING ENVIRONMENT: " + env
 
-
+######################################################################################
 #
 # Use the value from the config file - unless the environment provides a dateabase URL (which it will
 # in prod on Heroku)
 #
+######################################################################################
+
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',app.config['SQLALCHEMY_DATABASE_URI'])
-
-print "USING DB CONNECTION: " + app.config['SQLALCHEMY_DATABASE_URI']
-
 
 UPLOAD_FOLDER = 'app/static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -88,176 +86,206 @@ db = SQLAlchemy(app)
 from dbmodels import *
 
 
+
+######################################################################################
+#
+# Configure Google OAuth Authentication
+#
+######################################################################################
+
 from flask_googlelogin import GoogleLogin
-googlelogin = GoogleLogin(app)
+from flask.ext.login import login_required, LoginManager
 
-@app.route('/oauth2callback')
-@googlelogin.oauth2callback
-def create_or_update_user(token, userinfo, **params):
+login_manager = LoginManager()
+login_manager.init_app(app)
+googlelogin = GoogleLogin(app, login_manager)
+login_manager.login_view = "login"
 
-    """
-    user = User.filter_by(google_id=userinfo['id']).first()
-    if user:
-        user.name = userinfo['name']
-        user.avatar = userinfo['picture']
-    else:
-        user = User(google_id=userinfo['id'],
-                    name=userinfo['name'],
-                    avatar=userinfo['picture'])
-    db.session.add(user)
-    db.session.flush()
-    login_user(user)
-    """
-    return redirect(url_for('home'))
-
-
-@app.route('/logout')
-def logout():
-    return routes.logout()
-
-
-#from dbmodels import (Author, Article, BlogPostSectionType, BlogPostAuthor, BlogPost, BlogPostSection, 
-#    BlogUpdateJournal, UserSegment, TopOfPageContent, TopOfPageContentUpdateJournal, CalendarEventType,
-#    CalendarEvent,NewsArticleType, MediaType, PublicationType, Publication, NewsArticle)
-
-
-#from blog_controller import LoadBlogPosts
-#
-#from top_of_page_controller import TopOfPageController
-#
-#from calendar_events_controller import CalendarEventsController
-#
-#from news_articles_controller import NewsArticlesController
-#
-#from publications_controller import PublicationsController
 
 
 ######################################################################################
 #
-# Route! In a larger app, you'd want to break these out into a "routes.py" file.
+# All "Routes" Defined here.
 #
 ######################################################################################
+
 
 import routes
+
+
+# ==========================
+#
+# "Generic, Utility" Routes
+#
+# ==========================
 
 @app.route('/robots.txt')
 def static_from_root():
     return send_from_directory(app.static_folder, request.path[1:])
 
+
+
+# ==========================
+#
+# "Authentication" Routes
+#
+# ==========================
+
+#
+# Show the "login" page (the one with a Google "Sign In" button).
+#
+@app.route('/login', methods=['GET','POST'])
+def login():
+    return routes.login()
+
+#
+# This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password). 
+# Google oauth calls this function - passing in (via URL query parameter) a "code" value if the user 
+# clicked the Accept/Allow button when first logging in. If the user clicked Cancel/Decline instead, then no
+# code value will be returned.
+#
+@app.route('/oauth2callback')
+def oauth2callback():
+    return routes.oauth2callback()
+
+#
+# This is a "GET" route that logs the user out from Google oauth (and from this application)
+#
+@app.route('/logout')
+def logout():
+    return routes.logout()
+
+
+
+
+
+# ==========================
+#
+# The Web Pages
+#
+# ==========================
+
+
+#
+# This is the "home" page, which is actually the "enter a sample movement" page.
+#
 @app.route('/')
+@login_required
 def home():
     return routes.home()
 
 
+#
+# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
+# samples.
+#
+@app.route('/dragndrop', methods=['POST'])
+def dragndrop():
+    return routes.dragndrop()
+
+
+#
+# This is the page allowing the user to add a barcode to a sample plate.
+#
 @app.route('/edit_sample_plate')
+@login_required
 def edit_sample_plate():
     return routes.edit_sample_plate()
 
+#
+# This is "Sample Report" page
+#
+@app.route('/sample_report', defaults={'sample_id':None})
+@app.route('/sample_report/<sample_id>')
+@login_required
+def sample_report_page(sample_id):
+    return routes.sample_report_page(sample_id)
+
+
+#
+# This is the "Plate Details Report" page
+#
+@app.route('/plate_report', defaults={'plate_barcode':None})
+@app.route('/plate_report/<plate_barcode>')
+@login_required
+def plate_report_page(plate_barcode):
+    return routes.plate_report_page(plate_barcode)
+
+
+
+
+# ==========================
+#
+# REST API ROUTES
+#
+# ==========================
+
+#
+# Returns the JSON representation of a "sample plate" based on the plate's ID.
+#
 @app.route('/sample_plate/<sample_plate_id>')
 def get_sample_plate(sample_plate_id):
     return routes.get_sample_plate(sample_plate_id)
 
+#
+# Returns a sample plate id and the barcode for that plate. Or if a POST is sent to this URL,
+# updates the barcode for the passed-in sample plate id.
+#
 @app.route('/sample_plate/<sample_plate_id>/external_barcode',methods=['GET','POST'])
 def sample_plate_external_barcode(sample_plate_id):
     return routes.sample_plate_external_barcode(sample_plate_id)
 
-
-@app.route('/sample_report', defaults={'sample_id':None})
-@app.route('/sample_report/<sample_id>')
-def sample_report_page(sample_id):
-    return routes.sample_report_page(sample_id)
-
+#
+# Returns the "Sample Plate" report for a specified sample (specified by id). This can return the
+# report as either JSON or a CSV.
+#
 @app.route('/sample/<sample_id>/report', defaults={'format':"json"})
 @app.route('/sample/<sample_id>/report/<format>')
 def sample_report(sample_id, format):
     return routes.sample_report(sample_id, format)
 
-@app.route('/plate_report', defaults={'plate_barcode':None})
-@app.route('/plate_report/<plate_barcode>')
-def plate_report_page(plate_barcode):
-    return routes.plate_report_page(plate_barcode)
-
+#
+# Returns the "Plate Details Report" for a specific plate (specified by its barcode). This can return
+# the report as either JSON or a CSV.
+#
 @app.route('/plate/<sample_plate_barcode>/report', defaults={'format':"json"})
 @app.route('/plate/<sample_plate_barcode>/report/<format>')
 def plate_report(sample_plate_barcode,format):
     return routes.plate_report(sample_plate_barcode,format)
 
 
-"""
-def home():
-    return render_template('index.html')
-"""
-
-
-@app.route('/login', methods=['GET','POST'])
-def login():
-    return routes.login()
-
-    """
-    if request.method == 'POST':
-        email = request.form["email"]
-        customer = CustomerController.customer_by_email(email)
-        admin_user = UserController.admin_user_by_email(email)
-
-        logger.info("Login attempt for user [%s]" % (email))
-        logger.info("customer %r" % (customer))
-        logger.info("admin_user %r" % (admin_user))
-
-        if admin_user:
-            session['admin_user_id'] = admin_user.id
-            return redirect(url_for('orders'))
-        elif customer:
-            session['customer_id'] = customer.id
-            if customer.institution:
-                return redirect(url_for('customer_settings',customer_id=customer.id))
-            else:
-                return redirect(url_for('customer_onboard',customer_id=customer.id))
-        else:
-            return "Invalid Login. Go here: <a href='" + url_for('login') + "'>Log In</a>"
-    else:
-        return render_template('login.html')
-    """
-
-
-"""
-@app.route('/logout', methods=['POST'])
-def logout():
-    session.pop('user_id',None)
-    session.pop('customer_id',None)
-    session.pop('admin_user_id',None)
-    return redirect(url_for('login'))
-"""
-
-
-
-@app.route('/dragndrop', methods=['POST'])
-def dragndrop():
-    return routes.dragndrop()
-
+#
+# This creates a new "sample movement" or "sample transfer."
+#
 @app.route('/sample_movements', methods=['POST'])
 def create_sample_movement():
     return routes.create_sample_movement()
 
-
+#
+# Returns ids of all sample plates. (Used in the UI's "type ahead" field so that the user can specify
+# a sample plate by its id).
+#
 @app.route('/sample_plates')
 def get_sample_plates_list():
     return routes.get_sample_plates_list()
 
-
+#
+# Returns barcodes of all sample plates. (Used in the UI's "type ahead" field so that the user can specify
+# a sample plate by its barcode).
+#
 @app.route('/sample_plate_barcodes')
 def get_sample_plate_barcodes_list():
     return routes.get_sample_plate_barcodes_list()
 
-
+#
+# Returns the list of sample ids. (Used in the UI's "type ahead" field so that the user can specify
+# a sample by its id).
+#
 @app.route('/samples')
 def get_samples_list():
     return routes.get_samples_list()
 
 
-"""
-@app.route('/create_sample_moveme', methods=['POST'])
-def calculate_sequence_statistics():
-    return ServiceRoutes.calculate_sequence_statistics()
-"""
+
 
 

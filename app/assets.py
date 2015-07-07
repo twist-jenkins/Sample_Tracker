@@ -23,6 +23,12 @@ index_css = Bundle(
     filters="cssmin",
     output='css/views/index.css')
 
+recordSampleTransfer_css = Bundle(
+    'source/css/dropzone.css',
+    'source/css/views/recordSampleTransfer.css',
+    filters="cssmin",
+    output='css/views/recordSampleTransfer.css')
+
 editPlate_css = Bundle(
     'source/css/views/editPlate.css',
     filters="cssmin",
@@ -72,6 +78,13 @@ index_js = Bundle(
        'source/js/fileDropZone.js', 
        'source/js/views/index.js', 
         output='js/views/index.js')
+
+recordSampleTransfer_js = Bundle(
+       'source/js/components/dropDownButton.js', 
+       'source/js/dropzone.js', 
+       'source/js/fileDropZone.js', 
+       'source/js/views/recordSampleTransfer.js', 
+        output='js/views/recordSampleTransfer.js')
 
 editPlate_js = Bundle(
        'source/js/components/dropDownButton.js', 

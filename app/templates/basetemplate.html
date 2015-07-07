@@ -93,10 +93,8 @@
          </div>
       
 
-          <div id="loginlogout" class="hidden">
-             <form action="{{ url_for('logout') }}" method="post" target="_self" >
-                 <button type="submit" class="btn btn-link">Log Out</button>
-             </form>
+          <div id="loginlogout">
+             You are <span class="username">{{ current_user_first_and_last }}</span> <a href="{{ url_for('logout') }}">Log Out</a>
           </div>
 
       </nav>
