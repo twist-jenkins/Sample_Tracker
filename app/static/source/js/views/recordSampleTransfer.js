@@ -174,6 +174,8 @@ var controller = (function() {
                // NOT AN ERROR! JUST REUSING THE DIALOG/POPUP.
                //
                m_errorPopup.show("Sample transfer was saved.");
+            } else {
+               m_errorPopup.show(data.errorMessage);
             }
          });
       }

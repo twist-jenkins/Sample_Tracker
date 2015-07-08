@@ -182,8 +182,7 @@ var controller = (function() {
                   var sampleReportUrl = m_sampleReportUrl.replace("/0", "/" + well.sample_id);
                   var context = {
                      wellId: well.well_id,
-                     column: well.column,
-                     row: well.row,
+                     columnAndRow: well.column_and_row,
                      sampleId: well.sample_id,
                      sampleReportUrl: sampleReportUrl
                   };

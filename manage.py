@@ -13,7 +13,7 @@ from flask.ext.script import Manager, Shell, Server
 
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from scripts import (CreateAllTables, LoadLookupTables, DropAllTables)
+from scripts import (CreateAllTables, LoadLookupTables, DropAllTables, DeleteSampleTransfer)
 
 from app import app, db
 
@@ -33,6 +33,11 @@ manager.add_command("shell", Shell())
 manager.add_command('createalltables', CreateAllTables())
 manager.add_command('loadlookuptables', LoadLookupTables())
 manager.add_command('dropalltables', DropAllTables())
+
+#
+# Example: python manage.py deletesampletransfer -id 3
+#
+manager.add_command('deletesampletransfer', DeleteSampleTransfer())
 
 
 manager.run()

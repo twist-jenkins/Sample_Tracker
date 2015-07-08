@@ -30,8 +30,7 @@
 <script id="wellRowTemplate" type="text/x-handlebars-template">
    <tr>
       <td>{{wellId}}</td>
-      <td>{{column}}</td>
-      <td>{{row}}</td>
+      <td>{{columnAndRow}}</td>
       <td><a href="{{sampleReportUrl}}" >{{sampleId}}</a></td>
    </tr>
 </script>
@@ -88,6 +87,7 @@
          </div>
 
          <div class="form-group parentPlates hidden">
+           <hr/>
            <label for="exampleInputPassword1" style="display:block;" >Parent Plates</label>
            <p style="color:#aaa; font-size:15px;">Task: 
                <span style="color:#333;" class="taskName"></span>
@@ -109,6 +109,7 @@
          </div>
 
          <div class="form-group childPlates hidden">
+           <hr/>
            <label for="exampleInputPassword1" style="display:block;" >Child Plates</label>
            <p style="color:#aaa; font-size:15px;">Task: 
                <span style="color:#333;" class="taskName"></span>
@@ -131,21 +132,20 @@
 
 
          <div class="form-group wells hidden">
+           <hr/>
            <label for="exampleInputPassword1" style="display:block;" >Plate Content - Wells</label>
            <table  class="table table-borderedd">
               <thead>
                   <tr>
                       <td>Well Id</td>
-                      <td>Column</td>
-                      <td>Row</td>
+                      <td>Col/Row</td>
                       <td>Sample Id</td>
                   </tr>
               </thead>   
               <tbody>
                   <tr>
                       <td>14</td>
-                      <td>A</td>
-                      <td>3</td>
+                      <td>A3</td>
                       <td>asdfasdfasdf</td>
                   </tr>
               </tbody>

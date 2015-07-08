@@ -80,8 +80,11 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse ">
                <ul class="nav navbar-nav navbar-right">
-                  <li class="recordSampleTransfer"><a href=" {{ url_for('home') }} " ><span>Record Sample Transfer</span></a></li>
-                 <li class="editBarcode" ><a href=" {{ url_for('edit_sample_plate') }} " ><span>Edit Barcode</span></a></li>
+                  <li class="recordSampleTransfer"><a href=" {{ url_for('home') }} " ><span>Record Transfer</span></a></li>
+
+                 <li class="viewSampleTransfers"><a href=" {{ url_for('sample_transfers_page') }} " ><span>View Transfers</span></a></li>
+ 
+                 <li class="editBarcode" ><a href=" {{ url_for('edit_sample_plate') }} " ><span>Edit Plate Barcode</span></a></li>
                   <li class="plateDetails" ><a href="  {{ url_for('plate_report_page') }}  " ><span>Plate Details</span></a></li>
                   <li class="sampleDetails" ><a href=" {{ url_for('sample_report_page') }} " ><span>Sample Details</span></a></li>
 
@@ -99,17 +102,6 @@
 
       </nav>
 
-<!--
-<a href="#" onclick="signOut();">Sign out</a>
-<script>
-  function signOut() {
-    var auth2 = gapi.auth2.getAuthInstance();
-    auth2.signOut().then(function () {
-      console.log('User signed out.');
-    });
-  }
-</script>
--->
 
 {% block page_main_content %}{% endblock %}
 

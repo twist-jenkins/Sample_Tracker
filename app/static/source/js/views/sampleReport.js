@@ -86,13 +86,15 @@ var controller = (function() {
                // Update the UI with the data from the report.
                //
                _.each(data, function(row) {
+
+                  alert(JSON.stringify(data));
+                  
                   var plateReportUrl = m_plateReportUrl.replace("/0", "/" + row.destination_plate_barcode);
                   var context = {
                      barcode: row.destination_plate_barcode,
                      platePageUrl: plateReportUrl,
                      wellId: row.well_id,
-                     column: row.column,
-                     row: row.row,
+                     columnAndRow: row.column_and_row,
                      task: row.task
                   };
                   var html = m_tableRowTemplate(context);

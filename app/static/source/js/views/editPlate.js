@@ -36,6 +36,12 @@ var controller = (function() {
       var url = m_getPlateByIdUrl.replace("/0", "/" + sourcePlateId);
       $.getJSON(url, function(data) {
          
+         if (data.externalBarcode && data.externalBarcode !== "") {
+            $("#externalBarcode").val(data.externalBarcode)
+         } else {
+            $("#externalBarcode").val("");
+         }
+
          //
          // Update the screen.
          //

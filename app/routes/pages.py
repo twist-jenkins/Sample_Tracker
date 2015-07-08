@@ -1,3 +1,13 @@
+######################################################################################
+#
+# Copyright (c) 2015 Twist Bioscience
+#
+# File: app/routes/pages.py
+#
+# These are the handlers for all the web pages of the application. (These are not JSON/REST routes, they
+# are only web page routes.)
+# 
+######################################################################################
 
 import os, sys
 
@@ -15,11 +25,11 @@ import json
 
 from flask import g, Flask, render_template, make_response, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
 
-from werkzeug import secure_filename
+from sqlalchemy import and_ 
 
 from app import app, db
 
-from app.dbmodels import Operator, SampleTransferType
+from app.dbmodels import Operator, SampleTransferType, SampleTransfer, SampleTransferDetail
 
 
 #
@@ -32,61 +42,31 @@ def home():
 
 
 
-ALLOWED_EXTENSIONS = set(['xls','xlsx'])
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
 
 
 #
-# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
-# samples.
+# The list of sample transfers
 #
-def dragndrop():
-    file = request.files['file']
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        timestr = time.strftime("%Y%m%d-%H%M%S")
-        filename = timestr + filename
-        path_and_file_name = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(path_and_file_name)
+def sample_transfers_page():
+    rows = db.session.query(SampleTransfer, SampleTransferDetail).filter(
+        SampleTransferDetail.sample_transfer_id==SampleTransfer.id).order_by(
+        SampleTransfer.date_transfer.desc()).all()
 
-        workbook = xlrd.open_workbook(path_and_file_name, on_demand = True)
-        print "SHEET NAMES: ", workbook.sheet_names()
+    sample_transfer_details = []
 
-        worksheet = workbook.sheet_by_name('Sheet1')
-        num_rows = worksheet.nrows - 1
+    seen = []
 
-        task_items = []
-
-        print "NUMBER OF ROWS: ", num_rows
+    for transfer,details in rows:
+        if (transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id) not in seen:
+            seen.append((transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id))
+            sample_transfer_details.append((transfer,details))
 
 
 
-        curr_row = 0
-        while curr_row < num_rows:
-            curr_row += 1
-            task_item = {
-                "source_plate_barcode":worksheet.cell_value(curr_row,0),
-                "source_well_id":worksheet.cell_value(curr_row,1),
-                "source_col_and_row":worksheet.cell_value(curr_row,2),
-                "destination_plate_type_name":worksheet.cell_value(curr_row,3),
-                "destination_plate_barcode":worksheet.cell_value(curr_row,4),
-                "destination_well_id":worksheet.cell_value(curr_row,5),
-                "destination_col_and_row":worksheet.cell_value(curr_row,6)
-            } 
-            row = worksheet.row(curr_row)
-            task_items.append(task_item)
+    return render_template('viewSampleTransfers.html',
+        sample_transfer_details=sample_transfer_details,
+        current_user_first_and_last=g.user.first_and_last_name)
 
-        response = {
-            "success":True,
-            "task_items":task_items
-        }
-
-
-    return jsonify(response)  
 
 
 

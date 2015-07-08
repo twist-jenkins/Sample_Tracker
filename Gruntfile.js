@@ -67,6 +67,28 @@ module.exports = function(grunt) {
                   "app/static/source/css/views/index.css": "app/static/source/less/views/index.less" // destination file and source file
                 }
             },
+            recordSampleTransfer_css: {
+                options: {
+                  compress: false,
+                  yuicompress: false,
+                  /*optimization: 2*/
+                },
+                files: {
+                  "app/static/source/css/views/recordSampleTransfer.css": "app/static/source/less/views/recordSampleTransfer.less" // destination file and source file
+                }
+            },
+
+            viewSampleTransfers_css: {
+                options: {
+                  compress: false,
+                  yuicompress: false,
+                  /*optimization: 2*/
+                },
+                files: {
+                  "app/static/source/css/views/viewSampleTransfers.css": "app/static/source/less/views/viewSampleTransfers.less" // destination file and source file
+                }
+            },
+
             editPlate_css: {
                 options: {
                   compress: false,

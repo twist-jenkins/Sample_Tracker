@@ -174,14 +174,14 @@ def logout():
 def home():
     return routes.home()
 
+#
+# The list of sample transfers
+#
+@app.route('/sample_transfers')
+@login_required
+def sample_transfers_page():
+    return routes.sample_transfers_page()
 
-#
-# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
-# samples.
-#
-@app.route('/dragndrop', methods=['POST'])
-def dragndrop():
-    return routes.dragndrop()
 
 
 #
@@ -219,6 +219,14 @@ def plate_report_page(plate_barcode):
 # REST API ROUTES
 #
 # ==========================
+
+#
+# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
+# samples.
+#
+@app.route('/dragndrop', methods=['POST'])
+def dragndrop():
+    return routes.dragndrop()
 
 #
 # Returns the JSON representation of a "sample plate" based on the plate's ID.

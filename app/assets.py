@@ -86,6 +86,10 @@ recordSampleTransfer_js = Bundle(
        'source/js/views/recordSampleTransfer.js', 
         output='js/views/recordSampleTransfer.js')
 
+viewSampleTransfers_js = Bundle(
+       'source/js/views/viewSampleTransfers.js', 
+        output='js/views/viewSampleTransfers.js')
+
 editPlate_js = Bundle(
        'source/js/components/dropDownButton.js', 
        'source/js/views/editPlate.js', 

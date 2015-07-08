@@ -159,13 +159,18 @@ body nav.navbar #loginlogout span.username {
   font-weight: 400;
 }
 body nav.navbar #loginlogout a {
-  margin-left: 10px;
+  margin-left: 0px;
   color: #ddd;
   font-weight: 200;
-  text-decoration: underline;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  background-color: #eee;
+  color: #333;
+  padding: 2px 6px;
 }
 body nav.navbar #loginlogout a:hover {
-  color: white;
+  background-color: #fff;
 }
 body nav.navbar .navbar-header {
   position: relative;
@@ -210,6 +215,7 @@ body nav.navbar .navbar-nav {
 }
 body nav.navbar .navbar-nav li > a {
   padding: 0px 10px;
+  padding: 0px 2px;
   line-height: 80px;
   line-height: 40px;
   color: #bebfbe;
@@ -545,6 +551,7 @@ body div.popup.small div.body p {
   display: none;
 }
 body#recordSampleTransfer li.recordSampleTransfer > a span,
+body#viewSampleTransfers li.viewSampleTransfers > a span,
 body#editBarcode li.editBarcode > a span,
 body#plateDetails li.plateDetails > a span,
 body#sampleDetails li.sampleDetails > a span {

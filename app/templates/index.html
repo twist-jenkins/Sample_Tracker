@@ -20,15 +20,7 @@
 {% block page_main_content %}
 
 
-<!--
-   "source_plate_barcode":worksheet.cell_value(curr_row,0),
-                "source_well_id":worksheet.cell_value(curr_row,1),
-                "source_col_and_row":worksheet.cell_value(curr_row,2),
-                "destination_plate_type_name":worksheet.cell_value(curr_row,3),
-                "destination_plate_barcode":worksheet.cell_value(curr_row,4),
-                "destination_well_id":worksheet.cell_value(curr_row,5),
-                "destination_col_and_row":worksheet.cell_value(curr_row,6)
--->
+
 
 {% raw %}
 <script id="tableRowTemplate" type="text/x-handlebars-template">
@@ -73,12 +65,7 @@
    <li data-sample-tranfer-type-id="{{sample_tranfer_type.id}}"><a href="JavaScript:void(0);">{{sample_tranfer_type.name}}</a></li>
 {% endfor %}
 
-<!--
-    <li><a href="#">Action</a></li>
-    <li><a href="#">Another action</a></li>
-    <li><a href="#">Something else here</a></li>
-    <li><a href="#">Separated link</a></li>
--->
+
 
   </ul>
 
@@ -114,26 +101,7 @@
                 </tr>
             </thead>   
             <tbody>
-                <!--
-                <tr>
-                    <td>123</td>
-                    <td>A3</td>
-                    <td>456</td>
-                    <td>B5</td>
-                </tr>
-                <tr>
-                    <td>123</td>
-                    <td>A3</td>
-                    <td>456</td>
-                    <td>B5</td>
-                </tr>
-                <tr>
-                    <td>123</td>
-                    <td>A3</td>
-                    <td>456</td>
-                    <td>B5</td>
-                </tr>
-            -->
+                
             </tbody>
          </table>
 

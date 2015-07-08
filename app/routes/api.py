@@ -1,3 +1,15 @@
+######################################################################################
+#
+# Copyright (c) 2015 Twist Bioscience
+#
+# File: app/routes/api.py
+#
+# These are the handlers for all JSON/REST API routes used by this application.
+# 
+######################################################################################
+
+import csv 
+
 import os, sys
 
 import time
@@ -17,12 +29,74 @@ from flask import ( g, Flask, render_template, make_response, request, Response,
 
 from sqlalchemy import and_
 
-
+from werkzeug import secure_filename
 
 from app import app, db
 
 from app.dbmodels import (create_unique_object_id, Operator, Sample, SampleTransfer, SampleTransferType, SamplePlate,
     SampleTransferDetail, SamplePlateLayout, SamplePlateType)
+
+from well_mappings import ( get_col_and_row_for_well_id_96, get_well_id_for_col_and_row_96, get_col_and_row_for_well_id_384,
+       get_well_id_for_col_and_row_384 )
+
+import StringIO
+
+
+ALLOWED_EXTENSIONS = set(['xls','xlsx'])
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
+
+#
+# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
+# samples.
+#
+def dragndrop():
+    file = request.files['file']
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        filename = timestr + filename
+        path_and_file_name = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(path_and_file_name)
+
+        workbook = xlrd.open_workbook(path_and_file_name, on_demand = True)
+        print "SHEET NAMES: ", workbook.sheet_names()
+
+        worksheet = workbook.sheet_by_name('Sheet1')
+        num_rows = worksheet.nrows - 1
+
+        task_items = []
+
+        print "NUMBER OF ROWS: ", num_rows
+
+
+
+        curr_row = 0
+        while curr_row < num_rows:
+            curr_row += 1
+            task_item = {
+                "source_plate_barcode":worksheet.cell_value(curr_row,0),
+                "source_well_id":worksheet.cell_value(curr_row,1),
+                "source_col_and_row":worksheet.cell_value(curr_row,2),
+                "destination_plate_type_name":worksheet.cell_value(curr_row,3),
+                "destination_plate_barcode":worksheet.cell_value(curr_row,4),
+                "destination_well_id":worksheet.cell_value(curr_row,5),
+                "destination_col_and_row":worksheet.cell_value(curr_row,6)
+            } 
+            row = worksheet.row(curr_row)
+            task_items.append(task_item)
+
+        response = {
+            "success":True,
+            "task_items":task_items
+        }
+
+
+    return jsonify(response)  
+
 
 #
 # Returns the JSON representation of a "sample plate" based on the plate's ID.
@@ -91,14 +165,26 @@ def sample_report(sample_id, format):
 
     first_row = None 
 
+
+
     if len(rows) > 0:
         transfer, transfer_detail, well, plate = rows[0]
+
+        number_clusters = plate.sample_plate_type.number_clusters
+
+        #print "number_clusters: ", number_clusters 
+
+        well_to_col_and_row_mapping_fn = {
+            96:get_col_and_row_for_well_id_96,
+            384:get_col_and_row_for_well_id_384
+        }.get(number_clusters,lambda well_id:"missing map")
+
         first_row = { 
                "date_created": str(well.date_created),
+               "date_created_formatted":well.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
                "destination_plate_barcode": plate.external_barcode,
                "well_id": well.well_id,
-               "column": well.column,
-               "row": well.row,
+               "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
                "task": ""
         }
 
@@ -109,17 +195,27 @@ def sample_report(sample_id, format):
         SamplePlateLayout.well_id==SampleTransferDetail.destination_well_id,
         SamplePlate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
 
-    report = [
-       { 
+    report = []
+
+    for transfer, transfer_detail, well, plate in rows:
+
+        number_clusters = plate.sample_plate_type.number_clusters
+
+        well_to_col_and_row_mapping_fn = {
+            96:get_col_and_row_for_well_id_96,
+            384:get_col_and_row_for_well_id_384
+        }.get(number_clusters,lambda well_id:"missing map")
+
+        row = { 
            "date_created":str(well.date_created),
+           "date_created_formatted":well.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
            "destination_plate_barcode": plate.external_barcode,
            "well_id": well.well_id,
-           "column": well.column,
-           "row": well.row,
+           "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
            "task": transfer.sample_transfer_type.name
-       }
-       for transfer, transfer_detail, well, plate in rows
-    ]
+        }
+        report.append(row)
+       
 
     if first_row:
         report.insert(0,first_row)
@@ -129,29 +225,55 @@ def sample_report(sample_id, format):
             status=200, \
             mimetype="application/json")
         return(resp)
+
     elif format == "csv":
-        csv = "SAMPLE DETAILS REPORT\n\n"
-        csv += """,SAMPLE ID, CREATION DATE/TIME,CREATED BY\n """
-        csv += "," + sample.sample_id + "," + str(sample.date_created) + "," + sample.operator.first_and_last_name
 
-        """
-        Destination Plate   Well Id Well Col    Well Row    Task
-        """
+        si = StringIO.StringIO()
+        cw = csv.writer(si)
+        #w.writerow(["foo","bar"])
+        #return
 
-        csv += "\n\nPLATE-TO-PLATE HISTORY\n\n"
-        csv += ", DATE/TIME, DESTINATION PLATE, WELL ID, COLUMN, ROW, TASK\n"
+        cw.writerow(["SAMPLE DETAILS REPORT"])
+        cw.writerow("")
+        cw.writerow("")
+        cw.writerow(["","SAMPLE ID", "CREATION DATE/TIME","CREATED BY"])
+        cw.writerow(["",sample.sample_id, sample.date_created.strftime("%A, %B %d, %Y %I:%M%p"),sample.operator.first_and_last_name])
+
+        #csv2 = "SAMPLE DETAILS REPORT\n\n"
+        #csv2 += """,SAMPLE ID, CREATION DATE/TIME,CREATED BY\n """
+        #csv2 += "," + sample.sample_id + "," + "\"" + sample.date_created.strftime("%A, %B %d, %Y %I:%M%p") + "\"" + "," + sample.operator.first_and_last_name
+
+ 
+        cw.writerow("")
+        cw.writerow("")
+        cw.writerow(["PLATE-TO-PLATE HISTORY"])
+        cw.writerow(["","DATE/TIME", "DESTINATION PLATE", "WELL ID", "COL/ROW", "TASK"])
+
+        #csv2 += "\n\nPLATE-TO-PLATE HISTORY\n\n"
+        #csv2 += ", DATE/TIME, DESTINATION PLATE, WELL ID, COL/ROW, TASK\n"
 
         for plate in report:
-            csv += ", " + str(plate["date_created"]) + "," + plate["destination_plate_barcode"] + ", " + str(plate["well_id"]) + ", " + str(plate["column"]) + ", " + str(plate["row"]) +  ", " + plate["task"] + "\n"
+            cw.writerow(["",plate["date_created_formatted"],plate["destination_plate_barcode"],plate["well_id"],plate["column_and_row"],plate["task"]])
+            #date_created = "\"" + plate["date_created_formatted"] + "\""
+            #print "date created [%s]" % (date_created)
+            #csv2 += ", " + date_created + " ," + plate["destination_plate_barcode"] + ", " + str(plate["well_id"]) + ", " + str(plate["column_and_row"]) +  ", " + plate["task"] + "\n"
+
+
+
+        csvout = si.getvalue().strip('\r\n')
+        
+        #print "CSV: ", csvout
 
 
         # We need to modify the response, so the first thing we 
         # need to do is create a response out of the CSV string
-        response = make_response(csv)
+        response = make_response(csvout)
         # This is the key: Set the right header for the response
         # to be downloaded, instead of just printed on the browser
         response.headers["Content-Disposition"] = "attachment; filename=Sample_" + sample.sample_id + "_Report.csv"
         return response
+
+
 
 #
 # Returns the "Plate Details Report" for a specific plate (specified by its barcode). This can return
@@ -164,6 +286,14 @@ def plate_report(sample_plate_barcode, format):
     #
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
     sample_plate_id = sample_plate.sample_plate_id
+    number_clusters = sample_plate.sample_plate_type.number_clusters
+
+    #print "number_clusters: ", number_clusters 
+
+    well_to_col_and_row_mapping_fn = {
+        96:get_col_and_row_for_well_id_96,
+        384:get_col_and_row_for_well_id_384
+    }.get(number_clusters,lambda well_id:"missing map")
 
     rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
         SampleTransferDetail.destination_sample_plate_id==sample_plate_id,
@@ -177,7 +307,8 @@ def plate_report(sample_plate_barcode, format):
             seen.append(parent_plate.sample_plate_id)
             parent_plates.append({
                 "externalBarcode":parent_plate.external_barcode,
-                "dateCreated":str(parent_plate.date_created)
+                "dateCreated":str(parent_plate.date_created),
+                "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
             parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
     
@@ -194,7 +325,8 @@ def plate_report(sample_plate_barcode, format):
             seen.append(child_plate.sample_plate_id)
             child_plates.append({
                 "externalBarcode":child_plate.external_barcode,
-                "dateCreated":str(child_plate.date_created)
+                "dateCreated":str(child_plate.date_created),
+                "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
             this_to_child_task_name = details.sample_transfer.sample_transfer_type.name
 
@@ -206,8 +338,7 @@ def plate_report(sample_plate_barcode, format):
     for well in rows:
         well_dict = {
             "well_id":well.well_id,
-            "column":well.column,
-            "row":well.row,
+            "column_and_row":well_to_col_and_row_mapping_fn(well.well_id),
             "sample_id":well.sample_id
         }
         wells.append(well_dict)
@@ -221,6 +352,7 @@ def plate_report(sample_plate_barcode, format):
         "wells":wells,
         "plateDetails":{
             "dateCreated":str(sample_plate.date_created),
+            "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
             "createdBy":str(sample_plate.operator.first_and_last_name)
         }
     }
@@ -230,50 +362,67 @@ def plate_report(sample_plate_barcode, format):
             status=200, \
             mimetype="application/json")
         return(resp)
+
     elif format=="csv":
 
-        csv = "PLATE REPORT\n\n"
-        csv += """,PLATE ID, CREATION DATE/TIME,CREATED BY\n """
-        csv += "," + sample_plate_barcode + "," + report["plateDetails"]["dateCreated"] + "," + report["plateDetails"]["createdBy"]
+
+        si = StringIO.StringIO()
+        cw = csv.writer(si)
+        #w.writerow(["foo","bar"])
+        #return
+
+        cw.writerow(["PLATE REPORT"])
+        cw.writerow("")
+        cw.writerow("")
+        cw.writerow(["","PLATE BARCODE", "CREATION DATE/TIME","CREATED BY"])
+        cw.writerow("")
+        cw.writerow(["",sample_plate_barcode, report["plateDetails"]["dateCreatedFormatted"],report["plateDetails"]["createdBy"]])
+
+        #csv = "PLATE REPORT\n\n"
+        #csv += """,PLATE BARCODE, CREATION DATE/TIME,CREATED BY\n """
+        #csv += "," + sample_plate_barcode + "," + "\"" + report["plateDetails"]["dateCreatedFormatted"] + "\" ," + report["plateDetails"]["createdBy"]
+
+        #
+        # dt.strftime("%A, %d. %B %Y %I:%M%p")
+        #
 
         if len(parent_plates) > 0:
-            csv += "\n\n"
-            csv += "PARENT PLATES\n\n"
-            csv += ",TASK: " + report["parentToThisTaskName"] + "\n\n"
-            csv += ",BAR CODE, CREATION DATE/TIME\n"
+            cw.writerow("")
+            cw.writerow("")
+            cw.writerow(["PARENT PLATES"])
+            cw.writerow(["","Task:" + report["parentToThisTaskName"]])
+            cw.writerow("")
+            cw.writerow(["","BAR CODE", "CREATION DATE/TIME"])
             for plate in parent_plates:
-                csv += "," + plate["externalBarcode"] + "," + plate["dateCreated"] + "\n"
+                cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
+
 
         if len(child_plates) > 0:
-            csv += "\n\n"
-            csv += "CHILD PLATES\n\n"
-            csv += ",TASK: " + report["thisToChildTaskName"] + "\n\n"
-            csv += ",BAR CODE, CREATION DATE/TIME\n"
-            for child_plate in child_plates:
-                csv += "," + child_plate["externalBarcode"] + "," + child_plate["dateCreated"] + "\n"
+            cw.writerow("")
+            cw.writerow("")
+            cw.writerow(["CHILD PLATES"])
+            cw.writerow(["","Task:" + report["thisToChildTaskName"]])
+            cw.writerow("")
+            cw.writerow(["","BAR CODE", "CREATION DATE/TIME"])
+            for plate in child_plates:
+                cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
 
 
-        csv += "\n\n"
-        csv += "PLATE WELLS\n\n"
-        csv += ",WELL ID, COLUMN, ROW, SAMPLE ID\n"
+        cw.writerow("")
+        cw.writerow("")
+        cw.writerow(["PLATE WELLS"])
+        cw.writerow(["","WELL ID", "COL/ROW", "SAMPLE ID"])
 
-        """
-         "well_id":well.well_id,
-            "column":well.column,
-            "row":well.row,
-            "sample_id":well.sample_id
-        """
 
         for well in wells:
-            csv += "," + str(well["well_id"]) + "," + str(well["column"]) + ", " + str(well["row"]) + ", " + well["sample_id"] + "\n"
+            cw.writerow(["",well["well_id"], well_to_col_and_row_mapping_fn(well["well_id"]), well["sample_id"]])
 
-
-
+        csvout = si.getvalue().strip('\r\n')
 
 
         # We need to modify the response, so the first thing we 
         # need to do is create a response out of the CSV string
-        response = make_response(csv)
+        response = make_response(csvout)
         # This is the key: Set the right header for the response
         # to be downloaded, instead of just printed on the browser
         response.headers["Content-Disposition"] = "attachment; filename=Plate_" + sample_plate_barcode + "_Report.csv"
@@ -324,7 +473,14 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         #
         source_plate = db.session.query(SamplePlate).filter_by(external_barcode=source_plate_barcode).first()
 
-        print "source plate barcode [%s]" % (source_plate_barcode)
+        if not source_plate:
+            return {
+                "success":False,
+                "errorMessage":"There is no source plate with the barcode: [%s]" % (source_plate_barcode)
+            }
+
+
+        #print "source plate barcode [%s]" % (source_plate_barcode)
         storage_location_id = source_plate.storage_location_id
 
         #
@@ -336,6 +492,15 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             sample_plate_type = db.session.query(SamplePlateType).filter_by(name=destination_plate_type_name).first()
             if sample_plate_type:
                 sample_plate_types_by_name[destination_plate_type_name] = sample_plate_type
+            else:
+                return {
+                    "success":False,
+                    "errorMessage":"There are no sample plates with the type: [%s]" % (destination_plate_type_name)
+                }
+
+
+
+
 
         #
         # 3. Obtain (or create if we haven't yet added a row for it in the database) the row for this well-to-well
@@ -343,6 +508,18 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         #
         destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
         if not destination_plate:
+
+            #
+            # Is there already a plate in the database with the barcode being specified?
+            # If so, that is an error!
+            #
+            destination_plate = db.session.query(SamplePlate).filter_by(external_barcode=destination_plate_barcode).first()
+            if destination_plate:
+                return {
+                    "success":False,
+                    "errorMessage":"A plate with the destination plate barcode: [%s] already exists" % (destination_plate_barcode)
+                }
+
             destination_plate_name = create_unique_object_id("PLATE_")
             destination_plate_description = create_unique_object_id("PLATEDESC_")
 
@@ -384,6 +561,10 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
 
     db.session.commit()
 
+    return {
+        "success":True
+    }
+
 
 #
 # If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in 
@@ -394,7 +575,21 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
     print "destination_barcode: ", destination_barcode
 
     source_plate = db.session.query(SamplePlate).filter_by(external_barcode=source_barcode).first()
-    print "SOURCE PLATE: ", source_plate
+    if not source_plate:
+        return {
+            "success":False,
+            "errorMessage":"There is no source plate with the barcode: [%s]" % (source_barcode)
+        }
+    #print "SOURCE PLATE: ", source_plate
+
+    destination_plate = db.session.query(SamplePlate).filter_by(external_barcode=destination_barcode).first()
+    if destination_plate:
+        return {
+            "success":False,
+            "errorMessage":"A plate with the destination plate barcode: [%s] already exists" % (destination_barcode)
+        }
+
+    #print "SOURCE PLATE: ", source_plate
 
     source_plate_type_id = source_plate.type_id 
     storage_location_id = source_plate.storage_location_id
@@ -448,6 +643,10 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
     #
     db.session.commit()
 
+    return {
+        "success":True
+    }
+
 
 #
 # This creates a new "sample movement" or "sample transfer."
@@ -466,7 +665,7 @@ def create_sample_movement():
     # process that spreadsheet data.
     #
     if wells:
-        create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_id,wells)
+        response = create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_id,wells)
 
 
 
@@ -478,13 +677,7 @@ def create_sample_movement():
         source_barcode = data["sourceBarcodeId"]
         destination_barcode = data["destinationBarcodeId"]
 
-        create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_id,source_barcode,destination_barcode)
-
-
-
-    response = {
-        "success":True
-    }
+        response = create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_id,source_barcode,destination_barcode)
 
 
     return jsonify(response)  

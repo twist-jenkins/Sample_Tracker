@@ -15,7 +15,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
 
     # psql -U twister -h 10.10.21.42 twistdb
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO = False
 
     GOOGLE_LOGIN_CLIENT_ID = "1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com"
     GOOGLE_LOGIN_CLIENT_SECRET = "EWohyxtKDkcZyF1BBEPu_Jo1"

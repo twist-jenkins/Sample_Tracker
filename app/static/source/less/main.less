@@ -74,13 +74,16 @@ body {
             }
             
             a {
-                margin-left:10px;
+                margin-left:0px;
                 color:#ddd;
                 font-weight:200;
-                text-decoration:underline;
+                .smallButtonRadius;
+                background-color:#eee;
+                color:#333;
+                padding:2px 6px;
             }
             a:hover {
-                color:white;
+                background-color:#fff;
             }
 
             /*
@@ -162,6 +165,7 @@ body {
 
             li > a {
                 padding: 0px 10px;
+                padding: 0px 2px;
                 line-height: @topnav_height;
                 line-height: @topnav_half_height;
                 color: @unselected_top_nav_item_text_color;
@@ -584,6 +588,7 @@ body {
 
 
 body#recordSampleTransfer li.recordSampleTransfer > a,
+body#viewSampleTransfers li.viewSampleTransfers > a,
 body#editBarcode li.editBarcode > a,
 body#plateDetails li.plateDetails > a,
 body#sampleDetails li.sampleDetails > a {

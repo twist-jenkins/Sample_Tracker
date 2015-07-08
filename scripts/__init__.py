@@ -2,3 +2,4 @@
 from create_all_tables import CreateAllTables
 from load_lookup_tables import LoadLookupTables
 from drop_all_tables import DropAllTables
+from delete_sample_transfer import DeleteSampleTransfer

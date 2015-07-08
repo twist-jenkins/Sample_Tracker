@@ -1,3 +1,12 @@
+######################################################################################
+#
+# Copyright (c) 2015 Twist Bioscience
+#
+# File: app/routes/authentication.py
+#
+# These are the handlers for all authentication-related routes in this application.
+# 
+######################################################################################
 
 from flask import g, Flask, render_template, make_response, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
 
@@ -80,7 +89,7 @@ def create_or_update_user(token, userinfo, **params):
 
 # ==========================
 #
-# "Authentication" Routes
+# "Authentication" Route Handlers
 #
 # ==========================
 

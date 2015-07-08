@@ -4,8 +4,7 @@
 #
 # File: dbmodels.py
 #
-# The database models used by SQLAlchemy. These are used for the parts of the web app that
-# are data driven - such as the "publications" page.
+# The database models used by SQLAlchemy. 
 # 
 ######################################################################################
 
@@ -98,7 +97,7 @@ class SamplePlate(db.Model):
     type_id = db.Column(db.String(40), db.ForeignKey('sample_plate_type.type_id'))
     operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
     storage_location_id = db.Column(db.String(10), db.ForeignKey('storage_location.storage_location_id'))
-    date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+    date_created = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
     name = db.Column(db.String(100))
     description = db.Column(db.String(2048))
     external_barcode = db.Column(db.String(100))
@@ -123,6 +122,7 @@ class SamplePlate(db.Model):
         self.description = description
         self.status = "new"
         self.external_barcode = external_barcode
+        self.date_created = datetime.datetime.now()
 
     def __repr__(self):
         return '<SamplePlate sample_plate_id: [%s] name: [%s] >' % (self.sample_plate_id,self.name)
@@ -138,7 +138,7 @@ class SamplePlateLayout(db.Model):
     operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
     row = db.Column(db.String(10))
     column = db.Column(db.Integer)
-    date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+    date_created = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
     notes = db.Column(db.String(512))
     status = db.Column(db.Enum('active','deleted','failure','inactive'),default="active")
 
@@ -150,6 +150,7 @@ class SamplePlateLayout(db.Model):
         self.row = row
         self.column = column
         self.status = status
+        self.date_created = datetime.datetime.now()
 
 
         #self.name = name
@@ -200,7 +201,7 @@ class SampleTransfer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sample_transfer_type_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_type.id'))
     operator_id = db.Column(db.Integer, db.ForeignKey('operator.operator_id'))
-    date_transfer = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+    date_transfer = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
 
     #
     # Relationships. ORM magicalness.
@@ -213,6 +214,7 @@ class SampleTransfer(db.Model):
     def __init__(self, sample_transfer_type_id, operator_id):
         self.sample_transfer_type_id = sample_transfer_type_id
         self.operator_id = operator_id
+        self.date_transfer = datetime.datetime.now()
 
     def __repr__(self):
         return '<SampleTransfer operator: [%s] transfer type: [%s] datetime: [%s] >' % (self.operator.first_and_last_name,
@@ -240,6 +242,8 @@ class SampleTransferDetail(db.Model):
     #
 
     sample_transfer = db.relationship("SampleTransfer")
+    source_plate = db.relationship("SamplePlate",foreign_keys='SampleTransferDetail.source_sample_plate_id')
+    destination_plate = db.relationship("SamplePlate",foreign_keys='SampleTransferDetail.destination_sample_plate_id')
 
 
     def __init__(self, sample_transfer_id, item_order_number, source_sample_plate_id, source_well_id,
