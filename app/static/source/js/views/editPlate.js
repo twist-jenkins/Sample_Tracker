@@ -130,7 +130,11 @@ var controller = (function() {
          });
 
          Twist.Utils.ajaxJsonPost(url, data, function(data) {
-            m_barcodeUpdatedPopup.showWithTimeout(1000);
+            if (data.success) {
+               m_barcodeUpdatedPopup.showWithTimeout(1000);
+            } else {
+               m_errorPopup.show(data.errorMessage);
+            }
          });
       });
    }

@@ -24,6 +24,10 @@ from flask_login import (UserMixin, login_required, login_user, logout_user,
                          current_user)
 
 
+
+from logging_wrapper import get_logger
+logger = get_logger(__name__)
+
 ######################################################################################
 #
 # "Authentication" Helper Methods
@@ -33,6 +37,7 @@ from flask_login import (UserMixin, login_required, login_user, logout_user,
 
 @app.before_request
 def before_request():
+    app.config['GOOGLE_LOGIN_REDIRECT_URI'] = url_for('oauth2callback',_external=True)
     g.user = current_user
 
 def login_to_google(code, redirect_uri):
@@ -47,12 +52,14 @@ def login_to_google(code, redirect_uri):
     )).json
 
     if not token or token.get('error'):
+        logger.error("Error requesting auth token from Google") 
         abort(400)
 
     userinfo = requests.get(app.config['GOOGLE_OAUTH2_USERINFO_URL'], params=dict(
         access_token=token['access_token'],
     )).json
     if not userinfo or userinfo.get('error'):
+        logger.error("Error requesting user info from Google") 
         abort(400)
 
     return token, userinfo
@@ -74,7 +81,16 @@ def create_or_update_user(token, userinfo, **params):
 
     user_email = userinfo.get("email")
 
+    logger.info(" Login attempt for user with email [%s]" % (user_email))
+
     operator = db.session.query(Operator).filter_by(email=user_email).first()
+
+    if operator:
+        logger.info(" User [%s - %s] logged in. Hello!" % (operator.first_and_last_name, operator.email))
+    else:
+        logger.error("Login attempt for user with email [%s] but user not in operator table" % (user_email)) 
+        return redirect(url_for('user_missing_from_operator_table'))
+
     
     #
     # This causes the "load_user" function to be called!!!
@@ -100,6 +116,11 @@ def create_or_update_user(token, userinfo, **params):
 def login():
     return render_template('login.html',login_url=googlelogin.login_url(scopes=['https://www.googleapis.com/auth/userinfo.email']))
 
+#
+# The user logged in via their Gmail account, but they aren't in the "operator" table.
+#
+def user_missing_from_operator_table():
+    return render_template('user_missing_from_operator_table.html',login_url=url_for('login'))
 
 #
 # This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password). 
@@ -132,6 +153,9 @@ def oauth2callback():
 # This is a "GET" route that logs the user out from Google oauth (and from this application)
 #
 def logout():
+    if g.user:
+        logger.info(" User [%s - %s] logged out. Bye!" % (g.user.first_and_last_name, g.user.email))
+
     logout_user()
     g.user = None
     return redirect(url_for('login'))

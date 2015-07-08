@@ -32,6 +32,19 @@ from sqlalchemy import func
 
 import assets
 
+import logging
+
+rootlogger = logging.getLogger()
+
+from logging.handlers import SysLogHandler
+syslog = SysLogHandler(address=('logs3.papertrailapp.com', 47028))
+rootlogger.addHandler(syslog)
+formatter = logging.Formatter('%(name)s : %(levelname)s - %(message)s')
+#formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+#formatter = logging.Formatter('%(name)s : %(message)s')
+
+formatter = logging.Formatter('[%(name)s : %(levelname)s] %(message)s')
+syslog.setFormatter(formatter)
 
 
 
@@ -43,7 +56,9 @@ import assets
 
 app = Flask(__name__)
 env = os.environ.get('WEBSITE_ENV', 'dev')
-app.config.from_object('app.config.%sConfig' % env.capitalize())
+config_object_name = 'app.config.%sConfig' % env.capitalize()
+print "Using configuration environment [%s] and config object [%s]" % (env,config_object_name)
+app.config.from_object(config_object_name)
 app.config['ENV'] = env
 app.debug = True
 
@@ -93,6 +108,7 @@ from dbmodels import *
 #
 ######################################################################################
 
+
 from flask_googlelogin import GoogleLogin
 from flask.ext.login import login_required, LoginManager
 
@@ -137,6 +153,14 @@ def static_from_root():
 @app.route('/login', methods=['GET','POST'])
 def login():
     return routes.login()
+
+#
+# The user logged in via their Gmail account, but they aren't in the "operator" table.
+#
+@app.route('/user_missing_from_operator_table')
+def user_missing_from_operator_table():
+    return routes.user_missing_from_operator_table()
+
 
 #
 # This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password). 

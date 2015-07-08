@@ -2,7 +2,7 @@
 #
 # Authentication route handlers.
 #
-from authentication import login, oauth2callback, logout
+from authentication import login, user_missing_from_operator_table, oauth2callback, logout
 
 #
 # Route handlers for the pages of the application.

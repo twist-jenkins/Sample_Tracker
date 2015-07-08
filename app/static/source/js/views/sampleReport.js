@@ -18,6 +18,8 @@ var controller = (function() {
 
    var m_getCSVSampleReportUrl = $("#getCSVSampleReportUrl").val();
 
+   var m_errorPopup = new GenericPopup($("#errorPopup"));
+
 
    /**
    * Init the "type ahead" behavior in the sample id text field. As the user types, it goes out to the
@@ -76,6 +78,13 @@ var controller = (function() {
             var url = m_getSampleReportUrl.replace("/0", "/" + sampleId);
             $.getJSON(url, function(data) {
 
+               if (!data.success) {
+                  m_errorPopup.show(data.errorMessage);
+                  return;
+               }
+
+               var report = data.report;
+
                //
                // Show stuff that is hidden if the user hasn't yet requested the report.
                //
@@ -85,9 +94,9 @@ var controller = (function() {
                //
                // Update the UI with the data from the report.
                //
-               _.each(data, function(row) {
+               _.each(report, function(row) {
 
-                  alert(JSON.stringify(data));
+                  //alert(JSON.stringify(data));
                   
                   var plateReportUrl = m_plateReportUrl.replace("/0", "/" + row.destination_plate_barcode);
                   var context = {

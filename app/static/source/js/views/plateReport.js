@@ -24,6 +24,8 @@ var controller = (function() {
 
    var m_getCSVPlateReportUrl = $("#getCSVPlateReportUrl").val();
 
+   var m_errorPopup = new GenericPopup($("#errorPopup"));
+
 
    /**
     * Init the "type ahead" behavior in the sample plate barcode text field. As the user types, it goes out to the
@@ -85,6 +87,11 @@ var controller = (function() {
 
             var url = m_getPlateReportUrl.replace("/0", "/" + barcode);
             $.getJSON(url, function(data) {
+
+               if (!data.success) {
+                  m_errorPopup.show(data.errorMessage);
+                  return;
+               }
 
                //
                // Show stuff that is hidden if the user hasn't yet requested the report.

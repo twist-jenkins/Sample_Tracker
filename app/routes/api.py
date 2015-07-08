@@ -41,6 +41,9 @@ from well_mappings import ( get_col_and_row_for_well_id_96, get_well_id_for_col_
 
 import StringIO
 
+from logging_wrapper import get_logger
+logger = get_logger(__name__)
+
 
 ALLOWED_EXTENSIONS = set(['xls','xlsx'])
 
@@ -63,14 +66,14 @@ def dragndrop():
         file.save(path_and_file_name)
 
         workbook = xlrd.open_workbook(path_and_file_name, on_demand = True)
-        print "SHEET NAMES: ", workbook.sheet_names()
+        #print "SHEET NAMES: ", workbook.sheet_names()
 
         worksheet = workbook.sheet_by_name('Sheet1')
         num_rows = worksheet.nrows - 1
 
         task_items = []
 
-        print "NUMBER OF ROWS: ", num_rows
+        #print "NUMBER OF ROWS: ", num_rows
 
 
 
@@ -94,6 +97,8 @@ def dragndrop():
             "task_items":task_items
         }
 
+        logger.info(" %s uploaded a spreadsheet into the sample transfer form" % (g.user.first_and_last_name))
+
 
     return jsonify(response)  
 
@@ -104,7 +109,15 @@ def dragndrop():
 def get_sample_plate(sample_plate_id):
     sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
 
+    if not sample_plate:
+        response = {
+            "success":False,
+            "errorMessage":"There is no plate with the id: [%s]" % (sample_plate_id)
+        }
+        return jsonify(response)
+
     sample_plate_dict = {
+       "success":True,
        "sample_plate_id":sample_plate_id,
        "name":sample_plate.name,
        "description":sample_plate.description,
@@ -139,12 +152,30 @@ def sample_plate_external_barcode(sample_plate_id):
         return(resp)
     elif request.method == 'POST':
         external_barcode = request.json["externalBarcode"]
+
+        #
+        # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
+        #
+        sample_plate_with_this_barcode = db.session.query(SamplePlate).filter_by(external_barcode=external_barcode).first()
+        if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
+            logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" % 
+                (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
+            response = {
+                "success":False,
+                "errorMessage":"The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.sample_plate_id)
+            }
+            return jsonify(response)  
+
+
         sample_plate.external_barcode = external_barcode
         db.session.commit()
         print "external_barcode: ", external_barcode
         response = {
             "success":True
         }
+
+        logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
+
         return jsonify(response)  
 
 
@@ -155,6 +186,13 @@ def sample_plate_external_barcode(sample_plate_id):
 def sample_report(sample_id, format):
 
     sample = db.session.query(Sample).filter_by(sample_id=sample_id).first()
+
+    if not sample:
+        response = {
+            "success":False,
+            "errorMessage":"There is no sample with the id: [%s]" % (sample_id)
+        }
+        return jsonify(response)
 
     rows = db.session.query(SampleTransfer, SampleTransferDetail, SamplePlateLayout,SamplePlate).filter(and_(
         SampleTransferDetail.source_sample_id==sample_id,SampleTransfer.id==SampleTransferDetail.sample_transfer_id,
@@ -221,7 +259,11 @@ def sample_report(sample_id, format):
         report.insert(0,first_row)
 
     if format == "json":
-        resp = Response(response=json.dumps(report),
+        response = {
+            "success":True,
+            "report":report
+        }
+        resp = Response(response=json.dumps(response),
             status=200, \
             mimetype="application/json")
         return(resp)
@@ -262,6 +304,9 @@ def sample_report(sample_id, format):
 
         csvout = si.getvalue().strip('\r\n')
         
+        logger.info(" %s downloaded the SAMPLE DETAILS REPORT for sample with id [%s]" % (g.user.first_and_last_name,sample_id))
+
+
         #print "CSV: ", csvout
 
 
@@ -285,6 +330,14 @@ def plate_report(sample_plate_barcode, format):
     # "ccccccc1234"
     #
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
+
+    if not sample_plate:
+        response = {
+            "success":False,
+            "errorMessage":"There is no plate with the barcode: [%s]" % (sample_plate_barcode)
+        }
+        return jsonify(response)
+
     sample_plate_id = sample_plate.sample_plate_id
     number_clusters = sample_plate.sample_plate_type.number_clusters
 
@@ -345,6 +398,7 @@ def plate_report(sample_plate_barcode, format):
 
 
     report = {
+        "success":True,
         "parentPlates":parent_plates,
         "parentToThisTaskName":parent_to_this_task_name,
         "childPlates":child_plates,
@@ -419,6 +473,7 @@ def plate_report(sample_plate_barcode, format):
 
         csvout = si.getvalue().strip('\r\n')
 
+        logger.info(" %s downloaded the PLATE DETAILS REPORT for plate with barcode [%s]" % (g.user.first_and_last_name,sample_plate_barcode))
 
         # We need to modify the response, so the first thing we 
         # need to do is create a response out of the CSV string
@@ -474,6 +529,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         source_plate = db.session.query(SamplePlate).filter_by(external_barcode=source_plate_barcode).first()
 
         if not source_plate:
+            logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: [%s]" % (g.user.first_and_last_name,source_plate_barcode))
             return {
                 "success":False,
                 "errorMessage":"There is no source plate with the barcode: [%s]" % (source_plate_barcode)
@@ -493,6 +549,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             if sample_plate_type:
                 sample_plate_types_by_name[destination_plate_type_name] = sample_plate_type
             else:
+                logger.info(" %s encountered error creating sample transfer. There are no sample plates with the type: [%s]" % (g.user.first_and_last_name,destination_plate_type_name))
                 return {
                     "success":False,
                     "errorMessage":"There are no sample plates with the type: [%s]" % (destination_plate_type_name)
@@ -515,6 +572,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             #
             destination_plate = db.session.query(SamplePlate).filter_by(external_barcode=destination_plate_barcode).first()
             if destination_plate:
+                logger.info(" %s encountered error creating sample transfer. A plate with the destination plate barcode: [%s] already exists" % (g.user.first_and_last_name,destination_plate_barcode))
                 return {
                     "success":False,
                     "errorMessage":"A plate with the destination plate barcode: [%s] already exists" % (destination_plate_barcode)
@@ -576,6 +634,7 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
 
     source_plate = db.session.query(SamplePlate).filter_by(external_barcode=source_barcode).first()
     if not source_plate:
+        logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: [%s]" % (g.user.first_and_last_name,source_barcode))
         return {
             "success":False,
             "errorMessage":"There is no source plate with the barcode: [%s]" % (source_barcode)
@@ -584,6 +643,7 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
 
     destination_plate = db.session.query(SamplePlate).filter_by(external_barcode=destination_barcode).first()
     if destination_plate:
+        logger.info(" %s encountered error creating sample transfer. A plate with the destination plate barcode: [%s] already exists" % (g.user.first_and_last_name,destination_barcode))
         return {
             "success":False,
             "errorMessage":"A plate with the destination plate barcode: [%s] already exists" % (destination_barcode)
@@ -667,6 +727,9 @@ def create_sample_movement():
     if wells:
         response = create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_id,wells)
 
+        if response["success"]:
+            logger.info(" %s created a new sample movement using spreadsheet data." % (g.user.first_and_last_name))
+
 
 
     #
@@ -678,6 +741,9 @@ def create_sample_movement():
         destination_barcode = data["destinationBarcodeId"]
 
         response = create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_id,source_barcode,destination_barcode)
+
+        if response["success"]:
+            logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))
 
 
     return jsonify(response)  
