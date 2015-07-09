@@ -148,6 +148,7 @@ redirect_stderr=true
 
 21. Start the web app
 cd /opt/app/sample_movement_tracker/operations_scripts/supervisord
+
 ./start
 
 
