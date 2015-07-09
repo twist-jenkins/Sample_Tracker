@@ -113,7 +113,11 @@ sudo venv/bin/python runserver.py
 
 cd /opt/app/sample_movement_tracker/operations_configs/supervisord/supervisord.d
 
-22.a. Change nginx.conf to look like this:
+21.a.  COPY THE APPROPRIATE uwsgi.conf file onto uwsgi.conf
+
+cp uwsgi-staging.conf uwsgi.conf
+
+SKIP: 22.a. Change nginx.conf to look like this:
 
 [program:nginx]
 command = /usr/sbin/nginx -c  /opt/app/sample_movement_tracker/operations_configs/nginx/nginx.conf
@@ -122,7 +126,7 @@ autostart = true
 stdout_logfile=/var/log/nginx.log
 redirect_stderr=true
 
-22.b. Change uwsgi.conf to look like this:
+SKIP: 22.b. Change uwsgi.conf to look like this:
 
 [program:uwsgi]
 

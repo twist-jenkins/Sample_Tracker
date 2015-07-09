@@ -28,7 +28,7 @@ class ProdConfig(Config):
 
 
 class StagingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb_staging"
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
 
 
 class DevConfig(Config):
