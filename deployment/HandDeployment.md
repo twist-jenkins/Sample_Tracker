@@ -106,23 +106,27 @@ sudo venv/bin/python runserver.py
 
 
 20. Assuming you've installed the web app at /opt/app/sample_movement_tracker, make these config file changes.
+
 cd /opt/app/sample_movement_tracker/operations_configs/supervisord/supervisord.d
-change nginx.conf to look like this:
+
+20.a. Change nginx.conf to look like this:
+
 [program:nginx]
-command = /usr/sbin/nginx -c /var/www/twist_external_website/operations_configs/nginx/nginx.conf
+command = /opt/app/sample_movement_tracker/operations_configs/nginx/nginx.conf
 user = root
 autostart = true
 stdout_logfile=/var/log/nginx.log
 redirect_stderr=true
 
-change uwsgi.conf to look like this:
+20.b. Change uwsgi.conf to look like this:
+
 [program:uwsgi]
 
 ;
 ; THIS CAUSES uWSGI TO LISTEN ON AN HTTP PORT RATHER THAN A LOCAL SOCKET. IT MIGHT BE SLOWER THAN THE WAY
 ; BELOW. BUT THE ADVANTAGE IS YOU CAN ACCESS THE WEBSITE AS YOU DO DEV BY GOING DIRECTLY TO http://localhost:9090 THUS
 ; BYPASSING "nginx".
-command = /bin/uwsgi --http :9090 -w app:app -H /www/var/twist_external_website/venv --master --processes 4 --threads 2
+command = /bin/uwsgi --http :9090 -w app:app -H /opt/app/sample_movement_tracker/venv --master --processes 4 --threads 2
 
 
 
@@ -130,16 +134,21 @@ command = /bin/uwsgi --http :9090 -w app:app -H /www/var/twist_external_website/
 ; THIS MIGHT BE FASTER. SHOULD PROLLY CONSIDER THIS ONCE WE SCALE UP. WITH THIS CONFIG, THE ONLY WAY TO GET TO THE
 ; APP IS THRU "nginx" - WHICH MIGHT JUST BE FINE.
 ;
-;command = /usr/local/bin/uwsgi --socket :3031 -w app:app -H /Users/swilliams/dev/twist_external_website/venv --master --processes 4 --threads 2
+;command = /usr/local/bin/uwsgi --socket :3031 -w app:app -H /opt/app/sample_movement_tracker/venv --master --processes 4 --threads 2
 
 
-directory = /var/www/twist_external_website/
+directory = /opt/app/sample_movement_tracker/
 user = root
 stopsignal=QUIT
 autostart=true
 autorestart=true
 stdout_logfile=/var/log/uwsgi.log
 redirect_stderr=true
+
+
+21. Start the web app
+cd /opt/app/sample_movement_tracker/operations_scripts/supervisord
+./start
 
 
 
