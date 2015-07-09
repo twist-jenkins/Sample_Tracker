@@ -92,16 +92,21 @@ pip install -r requirements.txt
 17. Now run grunt to run bower and copy files and such...
 grunt
 
+18. Make sure the database is up to date.
+python manage.py db upgrade
+
 
 ///////////////// NOW TRY TO RUN THE SERVER WITHOUT NGINX /////////////////////
 
+19.
+sudo venv/bin/python runserver.py
 
 ///////////////// NOW DO THE OTHER STUFF /////////////////////
 
 
 
-20. Assuming you've installed the web app at /var/www/twist_external_website, make these config file changes.
-cd /var/www/twist_external_website/operations_configs/supervisord/supervisord.d
+20. Assuming you've installed the web app at /opt/app/sample_movement_tracker, make these config file changes.
+cd /opt/app/sample_movement_tracker/operations_configs/supervisord/supervisord.d
 change nginx.conf to look like this:
 [program:nginx]
 command = /usr/sbin/nginx -c /var/www/twist_external_website/operations_configs/nginx/nginx.conf
