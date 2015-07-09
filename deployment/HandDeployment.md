@@ -95,30 +95,34 @@ grunt
 18. Make sure the database is up to date.
 python manage.py db upgrade
 
+19. Make an "uploads" directory...
+
+cd /opt/app/sample_movement_tracker/app/static
+mkdir uploads
 
 ///////////////// NOW TRY TO RUN THE SERVER WITHOUT NGINX /////////////////////
 
-19.
+20.
 sudo venv/bin/python runserver.py
 
 ///////////////// NOW DO THE OTHER STUFF /////////////////////
 
 
 
-20. Assuming you've installed the web app at /opt/app/sample_movement_tracker, make these config file changes.
+21. Assuming you've installed the web app at /opt/app/sample_movement_tracker, make these config file changes.
 
 cd /opt/app/sample_movement_tracker/operations_configs/supervisord/supervisord.d
 
-20.a. Change nginx.conf to look like this:
+22.a. Change nginx.conf to look like this:
 
 [program:nginx]
-command = /opt/app/sample_movement_tracker/operations_configs/nginx/nginx.conf
+command = /usr/sbin/nginx -c  /opt/app/sample_movement_tracker/operations_configs/nginx/nginx.conf
 user = root
 autostart = true
 stdout_logfile=/var/log/nginx.log
 redirect_stderr=true
 
-20.b. Change uwsgi.conf to look like this:
+22.b. Change uwsgi.conf to look like this:
 
 [program:uwsgi]
 
@@ -126,7 +130,7 @@ redirect_stderr=true
 ; THIS CAUSES uWSGI TO LISTEN ON AN HTTP PORT RATHER THAN A LOCAL SOCKET. IT MIGHT BE SLOWER THAN THE WAY
 ; BELOW. BUT THE ADVANTAGE IS YOU CAN ACCESS THE WEBSITE AS YOU DO DEV BY GOING DIRECTLY TO http://localhost:9090 THUS
 ; BYPASSING "nginx".
-command = /bin/uwsgi --http :9090 -w app:app -H /opt/app/sample_movement_tracker/venv --master --processes 4 --threads 2
+command = /opt/app/sample_movement_tracker/venv/bin/uwsgi --http :9090 -w app:app -H /opt/app/sample_movement_tracker/venv --master --processes 4 --threads 2
 
 
 
@@ -146,10 +150,12 @@ stdout_logfile=/var/log/uwsgi.log
 redirect_stderr=true
 
 
-21. Start the web app
+23. Start the web app
 cd /opt/app/sample_movement_tracker/operations_scripts/supervisord
 
-./start
+sudo ./start 
+
+To stop: sudo ./stop
 
 
 
