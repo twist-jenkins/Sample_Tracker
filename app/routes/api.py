@@ -153,6 +153,14 @@ def sample_plate_external_barcode(sample_plate_id):
     elif request.method == 'POST':
         external_barcode = request.json["externalBarcode"]
 
+        if not sample_plate:
+            response = {
+                "success":False,
+                "errorMessage":"There is no sample plate with the id: [%s]" % (sample_plate_id)
+            }
+            return jsonify(response)
+
+
         #
         # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
         #

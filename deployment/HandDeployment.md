@@ -1,11 +1,15 @@
 
 1. Install PIP
 
-sudo easy_install pip
+sudo easy_install pip or yum install python-pip
+
+1.5
+
+sudo pip install -U setuptools pip
 
 2. Install virtualenv
 
-sudo pip install virtualenv
+sudo pip install -U virtualenv
 
 3. Install node.js
 
@@ -160,6 +164,9 @@ cd /opt/app/sample_movement_tracker/operations_scripts/supervisord
 sudo ./start 
 
 To stop: sudo ./stop
+
+FOR REFERENCE:
+cd /opt/app/sample_movement_tracker/operations_configs/supervisord/supervisord.d
 
 
 
