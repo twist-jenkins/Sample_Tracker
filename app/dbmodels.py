@@ -133,8 +133,13 @@ class SamplePlate(db.Model):
 class SamplePlateLayout(db.Model):
 
     sample_plate_id = db.Column(db.String(40), db.ForeignKey('sample_plate.sample_plate_id'), primary_key=True)
-    sample_id = db.Column(db.String(40), db.ForeignKey('sample.sample_id'), primary_key=True)
     well_id = db.Column(db.Integer, primary_key=True)
+
+    #
+    # removed the primary key constraint on 7/15/15
+    #
+    sample_id = db.Column(db.String(40), db.ForeignKey('sample.sample_id')) #, primary_key=True)
+
     operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
     row = db.Column(db.String(10))
     column = db.Column(db.Integer)
