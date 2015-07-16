@@ -604,6 +604,15 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             SamplePlateLayout.well_id==source_well_id
         )).first()
 
+        print "SAMPLE PLATE WELL: ", source_plate_well
+
+        if not source_plate_well:
+            return {
+                "success":False,
+                "errorMessage":"There is no well [%s] in the source plate with barcode: [%s]" % (source_well_id,source_plate_barcode)
+            }
+
+
 
         #
         # 5. Create a row representing a well in the desination plate.

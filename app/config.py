@@ -36,5 +36,6 @@ class StagingConfig(Config):
 
 class DevConfig(Config):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" # "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
+    #SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:jOf-yIf-cE-hunT-@10.10.21.38/synapp_test"
     DEBUG = True
     
