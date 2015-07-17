@@ -562,35 +562,6 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         destination_col_and_row = well["destinationColAndRow"]
 
 
-
-
-                
-
-
-        """
-        destination_col_and_row = destination_col_and_row.strip()
-        if destination_col_and_row != "":
-            parts = destination_col_and_row.split(":")
-            if len(parts) < 2:
-                return {
-                    "success":False,
-                    "errorMessage":"Please specify both the plate size and the row-and-column ==> Like this: 384:A2"
-                }
-                plate_size, row_and_column = parts[0], parts[1]
-                print "plate size: %s   row and column %s " % (plate_size, row_and_column)
-                destination_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
-                logger.info ("calculated destination well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, row_and_column))
-                print "calculated destination well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, row_and_column)
-        """
-
-        """
-                    source_col_and_row = worksheet.cell_value(curr_row,2)
-            if source_col_and_row
-
-            destination_col_and_row = worksheet.cell_value(curr_row,6)
-
-        """
-
         #
         # 1. Obtain access to the source plate for this line item.
         #
@@ -730,10 +701,16 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
                     error_well_id = get_col_and_row_for_well_id_96(source_well_id)
                 elif plate_size == "384":
                     error_well_id = get_col_and_row_for_well_id_384(source_well_id)
+            print "*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
+            logger.info("*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode))
+            continue
+
+            """
             return {
                 "success":False,
                 "errorMessage":"There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
             }
+            """
 
 
 
