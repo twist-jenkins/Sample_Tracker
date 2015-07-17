@@ -716,19 +716,26 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         print "SOURCE PLATE WELL: %s " % str(source_plate_well)
         logger.info("SOURCE PLATE WELL: %s " % str(source_plate_well))
 
-        if not source_plate_well:
-            return {
-                "success":False,
-                "errorMessage":"There is no well [%s] in the source plate with barcode: [%s]" % (source_well_id,source_plate_barcode)
-            }
-
-
         if sample_plate_type.name == "96 well, plastic":
             plate_size = "96" 
         elif sample_plate_type.name == "384 well, plastic":
             plate_size = "384" 
         else:
             plate_size = None 
+
+        if not source_plate_well:
+            error_well_id = source_well_id
+            if plate_size:
+                if plate_size == "96":
+                    error_well_id = get_col_and_row_for_well_id_96(source_well_id)
+                elif plate_size == "384":
+                    error_well_id = get_col_and_row_for_well_id_384(source_well_id)
+            return {
+                "success":False,
+                "errorMessage":"There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
+            }
+
+
 
         #print "DESTINATION PLATE TYPE: ",sample_plate_type.name
 
