@@ -65,11 +65,11 @@ var controller = (function() {
          _.each(responseJson.task_items, function(task_item) {
             var context = {
                sourcePlateBarcode: task_item.source_plate_barcode,
-               sourceWellId: task_item.source_well_id,
+               //sourceWellId: task_item.source_well_id,
                sourceColAndRow: task_item.source_col_and_row,
-               destinationPlateType: task_item.destination_plate_type_name,
+               //destinationPlateType: task_item.destination_plate_type_name,
                destinationPlateBarcode: task_item.destination_plate_barcode,
-               destinationWellId: task_item.destination_well_id,
+               //destinationWellId: task_item.destination_well_id,
                destinationColAndRow: task_item.destination_col_and_row,
                destinationWellCount: task_item.destination_well_count
 
@@ -131,16 +131,19 @@ var controller = (function() {
                var $tr = $(this);
                var oneWell = {
                   sourcePlateBarcode: $.trim($("td:eq(0)", $tr).text()),
-                  sourceWellId: $.trim($("td:eq(1)", $tr).text()),
-                  sourceColAndRow: $.trim($("td:eq(2)", $tr).text()),
-                  destinationPlateType: $.trim($("td:eq(3)", $tr).text()),
-                  destinationPlateBarcode: $.trim($("td:eq(4)", $tr).text()),
-                  destinationWellId: $.trim($("td:eq(5)", $tr).text()),
-                  destinationColAndRow: $.trim($("td:eq(6)", $tr).text()),
-                  destinationWellCount: $.trim($("td:eq(7)", $tr).text())
+                  //sourceWellId: $.trim($("td:eq(1)", $tr).text()),
+                  sourceColAndRow: $.trim($("td:eq(1)", $tr).text()),
+                  //destinationPlateType: $.trim($("td:eq(3)", $tr).text()),
+                  destinationPlateBarcode: $.trim($("td:eq(2)", $tr).text()),
+                  //destinationWellId: $.trim($("td:eq(5)", $tr).text()),
+                  destinationColAndRow: $.trim($("td:eq(3)", $tr).text()),
+                  destinationWellCount: $.trim($("td:eq(4)", $tr).text())
                }
                postData.wells.push(oneWell);
             });
+
+            //alert(JSON.stringify(postData));
+            //return;
 
          //
          // If the user didn't drag-and-drop a spreadsheet, copy the barcodes the user entered into the
