@@ -161,7 +161,7 @@ class SamplePlateLayout(db.Model):
         #self.name = name
 
     def __repr__(self):
-        return '<SamplePlateLayout sample_plate_id: [%s]  sample_id: [%s]  well_id: [%d] >' % (self.sample_plate_id,
+        return '<SamplePlateLayout sample_plate_id: [%s]  sample_id: [%s]  well_id: [%s] >' % (self.sample_plate_id,
             self.sample_id, self.well_id )
 
 

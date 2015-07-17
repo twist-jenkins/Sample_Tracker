@@ -75,11 +75,36 @@ def dragndrop():
 
         #print "NUMBER OF ROWS: ", num_rows
 
+        """
+        def get_col_and_row_for_well_id_96(well_id):
+    cell = well_id_to_cell_map_96[well_id]
+    return cell["col_and_row"]
+    
+def get_well_id_for_col_and_row_96(col_and_row):
+    cell = col_and_row_to_cell_map_96[col_and_row]
+    return cell["well_id"]
+
+def get_col_and_row_for_well_id_384(well_id):
+    cell = well_id_to_cell_map_384[well_id]
+    return cell["col_and_row"]
+    
+def get_well_id_for_col_and_row_384(col_and_row):
+    cell = col_and_row_to_cell_map_384[col_and_row]
+    return cell["well_id"]
+        """
 
 
         curr_row = 0
         while curr_row < num_rows:
             curr_row += 1
+
+            """
+            source_col_and_row = worksheet.cell_value(curr_row,2)
+            if source_col_and_row
+
+            destination_col_and_row = worksheet.cell_value(curr_row,6)
+            """
+
             task_item = {
                 "source_plate_barcode":worksheet.cell_value(curr_row,0),
                 "source_well_id":worksheet.cell_value(curr_row,1),
@@ -522,6 +547,11 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
     #
     order_number = 1
 
+    well_from_col_and_row_methods = {
+        "96":get_well_id_for_col_and_row_96,
+        "384":get_well_id_for_col_and_row_384
+    }
+
     for well in wells:
         source_plate_barcode = well["sourcePlateBarcode"]
         source_well_id = well["sourceWellId"]
@@ -530,6 +560,36 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         destination_plate_barcode = well["destinationPlateBarcode"]
         destination_well_id = well["destinationWellId"]
         destination_col_and_row = well["destinationColAndRow"]
+
+
+
+
+                
+
+
+        """
+        destination_col_and_row = destination_col_and_row.strip()
+        if destination_col_and_row != "":
+            parts = destination_col_and_row.split(":")
+            if len(parts) < 2:
+                return {
+                    "success":False,
+                    "errorMessage":"Please specify both the plate size and the row-and-column ==> Like this: 384:A2"
+                }
+                plate_size, row_and_column = parts[0], parts[1]
+                print "plate size: %s   row and column %s " % (plate_size, row_and_column)
+                destination_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
+                logger.info ("calculated destination well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, row_and_column))
+                print "calculated destination well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, row_and_column)
+        """
+
+        """
+                    source_col_and_row = worksheet.cell_value(curr_row,2)
+            if source_col_and_row
+
+            destination_col_and_row = worksheet.cell_value(curr_row,6)
+
+        """
 
         #
         # 1. Obtain access to the source plate for this line item.
@@ -542,6 +602,54 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
                 "success":False,
                 "errorMessage":"There is no source plate with the barcode: [%s]" % (source_plate_barcode)
             }
+
+        #
+        # 96 well, plastic
+        #
+        sample_plate_type = source_plate.sample_plate_type
+        plate_size = None 
+        if sample_plate_type.name == "96 well, plastic":
+            plate_size = "96" 
+        elif sample_plate_type.name == "384 well, plastic":
+            plate_size = "384" 
+        else:
+            plate_size = None 
+
+        print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (source_plate.external_barcode,sample_plate_type.name)
+        logger.info("SOURCE PLATE, barcode: %s  plate type: [%s]" % (source_plate.external_barcode,sample_plate_type.name))
+
+        source_col_and_row = source_col_and_row.strip()
+
+        if source_well_id is None or source_well_id.strip() == "":
+            if plate_size is None:
+                return {
+                    "success":False,
+                    "errorMessage":"You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
+                }
+            else:
+                source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
+                logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, source_col_and_row))
+                print "calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, source_col_and_row)
+        #else:
+        #    source_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
+        #    logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column))
+        #    print "calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column)
+
+        """
+        if source_col_and_row != "":
+            parts = source_col_and_row.split(":")
+            if len(parts) < 2:
+                return {
+                    "success":False,
+                    "errorMessage":"Please specify both the plate size and the row-and-column ==> Like this: 384:A2"
+                }
+                plate_size, row_and_column = parts[0], parts[1]
+                print "plate size: %s   row and column %s " % (plate_size, row_and_column)
+                source_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
+                logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column))
+                print "calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column)
+        """
+
 
 
         #print "source plate barcode [%s]" % (source_plate_barcode)
@@ -586,6 +694,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
                     "errorMessage":"A plate with the destination plate barcode: [%s] already exists" % (destination_plate_barcode)
                 }
 
+
             destination_plate_name = create_unique_object_id("PLATE_")
             destination_plate_description = create_unique_object_id("PLATEDESC_")
 
@@ -604,7 +713,8 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             SamplePlateLayout.well_id==source_well_id
         )).first()
 
-        print "SAMPLE PLATE WELL: ", source_plate_well
+        print "SOURCE PLATE WELL: %s " % str(source_plate_well)
+        logger.info("SOURCE PLATE WELL: %s " % str(source_plate_well))
 
         if not source_plate_well:
             return {
@@ -613,20 +723,36 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             }
 
 
-        """
-         sample_plate_id = db.Column(db.String(40), db.ForeignKey('sample_plate.sample_plate_id'), primary_key=True)
-    well_id = db.Column(db.Integer, primary_key=True)
+        if sample_plate_type.name == "96 well, plastic":
+            plate_size = "96" 
+        elif sample_plate_type.name == "384 well, plastic":
+            plate_size = "384" 
+        else:
+            plate_size = None 
 
-    #
-    # removed the primary key constraint on 7/15/15
-    #
-    sample_id = db.Column(db.String(40), db.ForeignKey('sample.sample_id')) #, primary_key=True)
-        """
+        #print "DESTINATION PLATE TYPE: ",sample_plate_type.name
+
+        print "DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,sample_plate_type.name)
+        logger.info("DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,sample_plate_type.name))
+
+        if destination_well_id is None or destination_well_id.strip() == "":
+            if plate_size is None:
+                return {
+                    "success":False,
+                    "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
+                }
+            else:
+                destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
+                logger.info ("calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row))
+                print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row)
+
+
+        #print "DEST WELL ID: ", destination_well_id
 
         existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
             SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
             SamplePlateLayout.sample_id==source_plate_well.sample_id,
-            SamplePlateLayout.well_id==source_plate_well.well_id
+            SamplePlateLayout.well_id==destination_well_id
             )).first()
 
         #existing_sample_plate_layout = True 
@@ -634,7 +760,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         if existing_sample_plate_layout:
             return {
                 "success":False,
-                "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
+                "errorMessage":"This destination plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
                     source_plate_well.sample_id,source_plate_well.well_id)
             }
 
@@ -642,11 +768,23 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         #
         # 5. Create a row representing a well in the desination plate.
         #
+
+        #
+        # FIXED: 7/17/15
+        #
+        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
+        #    source_plate_well.sample_id,source_plate_well.well_id,operator.operator_id,
+        #    source_plate_well.row,source_plate_well.column)
+        #db.session.add(destination_plate_well)
+
         destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-            source_plate_well.sample_id,source_plate_well.well_id,operator.operator_id,
+            source_plate_well.sample_id,destination_well_id,operator.operator_id,
             source_plate_well.row,source_plate_well.column)
         db.session.add(destination_plate_well)
 
+
+        print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
+        logger.info("DESTINATION PLATE WELL: %s " % (str(destination_plate_well)))
 
         #
         # 6. Create a row representing a transfer from a well in the "source" plate to a well
@@ -658,6 +796,11 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         db.session.add(source_to_destination_well_transfer)
 
         order_number += 1
+
+    #return {
+    #    "success":False,
+    #    "errorMessage":"testing!!!"
+    #}
 
     db.session.commit()
 

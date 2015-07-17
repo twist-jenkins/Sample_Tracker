@@ -5204,10 +5204,11 @@ col_and_row_to_cell_map_384 = {
         },
     }
 
-def get_col_and_row_for_well_id_96(well_id):
-    cell = well_id_to_cell_map_96[well_id]
-    return cell["col_and_row"]
-    col_and_row_to_cell_map_96 = {
+#def get_col_and_row_for_well_id_96(well_id):
+#    cell = well_id_to_cell_map_96[well_id]
+#    return cell["col_and_row"]
+
+col_and_row_to_cell_map_96 = {
     u'G7': {
         'col_and_row': u'G7',
         'row': 7,
