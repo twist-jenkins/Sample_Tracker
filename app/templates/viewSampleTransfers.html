@@ -73,8 +73,8 @@
                     <td>{{sample_transfer.date_transfer}}</td>
                     <td>{{sample_transfer.operator.first_and_last_name}}</td>
 {% endif %}
-                    <td>{{details.source_plate.external_barcode}}</td>
-                    <td>{{details.destination_plate.external_barcode}}</td>
+                    <td><a href="{{ url_for('plate_report_page', plate_barcode=details.source_plate.external_barcode) }}">{{details.source_plate.external_barcode}}</a></td>
+                    <td><a href="{{ url_for('plate_report_page', plate_barcode=details.destination_plate.external_barcode) }}">{{details.destination_plate.external_barcode}}</a></td>
               </tr>
 {% endfor %}
             </tbody>

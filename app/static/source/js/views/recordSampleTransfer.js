@@ -70,7 +70,8 @@ var controller = (function() {
                destinationPlateType: task_item.destination_plate_type_name,
                destinationPlateBarcode: task_item.destination_plate_barcode,
                destinationWellId: task_item.destination_well_id,
-               destinationColAndRow: task_item.destination_col_and_row
+               destinationColAndRow: task_item.destination_col_and_row,
+               destinationWellCount: task_item.destination_well_count
 
             }
             var html = m_tableRowTemplate(context);
@@ -135,7 +136,8 @@ var controller = (function() {
                   destinationPlateType: $.trim($("td:eq(3)", $tr).text()),
                   destinationPlateBarcode: $.trim($("td:eq(4)", $tr).text()),
                   destinationWellId: $.trim($("td:eq(5)", $tr).text()),
-                  destinationColAndRow: $.trim($("td:eq(6)", $tr).text())
+                  destinationColAndRow: $.trim($("td:eq(6)", $tr).text()),
+                  destinationWellCount: $.trim($("td:eq(7)", $tr).text())
                }
                postData.wells.push(oneWell);
             });

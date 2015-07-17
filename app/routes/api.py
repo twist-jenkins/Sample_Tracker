@@ -41,6 +41,8 @@ from well_mappings import ( get_col_and_row_for_well_id_96, get_well_id_for_col_
 
 import StringIO
 
+from well_count_to_plate_type_name import well_count_to_plate_type_name
+
 from logging_wrapper import get_logger
 logger = get_logger(__name__)
 
@@ -105,6 +107,12 @@ def get_well_id_for_col_and_row_384(col_and_row):
             destination_col_and_row = worksheet.cell_value(curr_row,6)
             """
 
+            destination_well_count = ""
+            try:
+                destination_well_count = worksheet.cell_value(curr_row,7)
+            except:
+                destination_well_count = ""
+
             task_item = {
                 "source_plate_barcode":worksheet.cell_value(curr_row,0),
                 "source_well_id":worksheet.cell_value(curr_row,1),
@@ -112,7 +120,8 @@ def get_well_id_for_col_and_row_384(col_and_row):
                 "destination_plate_type_name":worksheet.cell_value(curr_row,3),
                 "destination_plate_barcode":worksheet.cell_value(curr_row,4),
                 "destination_well_id":worksheet.cell_value(curr_row,5),
-                "destination_col_and_row":worksheet.cell_value(curr_row,6)
+                "destination_col_and_row":worksheet.cell_value(curr_row,6),
+                "destination_well_count":destination_well_count
             } 
             row = worksheet.row(curr_row)
             task_items.append(task_item)
@@ -560,6 +569,19 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         destination_plate_barcode = well["destinationPlateBarcode"]
         destination_well_id = well["destinationWellId"]
         destination_col_and_row = well["destinationColAndRow"]
+        destination_well_count = well["destinationWellCount"]
+
+        print "DEST WELL COUNT: ", destination_well_count
+
+        #
+        # well_count_to_plate_type_name
+        #
+
+        if destination_well_count and destination_well_count.strip() != "":
+            #print "USING well count rather than destination plate type name"
+            #destination_well_count = "invalid"
+            destination_plate_type_name = well_count_to_plate_type_name.get(destination_well_count.strip(),destination_plate_type_name)
+            print "\n\nCalculated destination_plate_type_name: %s from well count: %s" % (destination_plate_type_name,destination_well_count)
 
 
         #
