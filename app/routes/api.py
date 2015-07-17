@@ -613,6 +613,31 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             }
 
 
+        """
+         sample_plate_id = db.Column(db.String(40), db.ForeignKey('sample_plate.sample_plate_id'), primary_key=True)
+    well_id = db.Column(db.Integer, primary_key=True)
+
+    #
+    # removed the primary key constraint on 7/15/15
+    #
+    sample_id = db.Column(db.String(40), db.ForeignKey('sample.sample_id')) #, primary_key=True)
+        """
+
+        existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
+            SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+            SamplePlateLayout.sample_id==source_plate_well.sample_id,
+            SamplePlateLayout.well_id==source_plate_well.well_id
+            )).first()
+
+        #existing_sample_plate_layout = True 
+
+        if existing_sample_plate_layout:
+            return {
+                "success":False,
+                "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
+                    source_plate_well.sample_id,source_plate_well.well_id)
+            }
+
 
         #
         # 5. Create a row representing a well in the desination plate.
@@ -696,6 +721,21 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
     #
     order_number = 1
     for source_plate_well in source_plate.wells:
+
+        existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
+            SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+            SamplePlateLayout.sample_id==source_plate_well.sample_id,
+            SamplePlateLayout.well_id==source_plate_well.well_id
+            )).first()
+
+        #existing_sample_plate_layout = True 
+
+        if existing_sample_plate_layout:
+            return {
+                "success":False,
+                "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
+                    source_plate_well.sample_id,source_plate_well.well_id)
+            }
 
         #
         # 3a. Create a row representing a well in the desination plate.
