@@ -698,9 +698,15 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             error_well_id = source_well_id
             if plate_size:
                 if plate_size == "96":
-                    error_well_id = get_col_and_row_for_well_id_96(source_well_id)
+                    try:
+                        error_well_id = get_col_and_row_for_well_id_96(source_well_id)
+                    except:
+                        error_well_id = source_well_id
                 elif plate_size == "384":
-                    error_well_id = get_col_and_row_for_well_id_384(source_well_id)
+                    try:
+                        error_well_id = get_col_and_row_for_well_id_384(source_well_id)
+                    except:
+                        error_well_id = source_well_id
             print "*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
             logger.info("*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode))
             continue
