@@ -1,5 +1,318 @@
 
 
+
+
+well_id_to_cell_map_48 = {
+
+    1: {
+        'col_and_row': u'A1',
+        'row': 1,
+        'col': 1,
+        'well_id': 1,
+        },
+    2: {
+        'col_and_row': u'A2',
+        'row': 1,
+        'col': 2,
+        'well_id': 2,
+        },
+    3: {
+        'col_and_row': u'A3',
+        'row': 1,
+        'col': 3,
+        'well_id': 3,
+        },
+    4: {
+        'col_and_row': u'A4',
+        'row': 1,
+        'col': 4,
+        'well_id': 4,
+        },
+    5: {
+        'col_and_row': u'A5',
+        'row': 1,
+        'col': 5,
+        'well_id': 5,
+        },
+    6: {
+        'col_and_row': u'A6',
+        'row': 1,
+        'col': 6,
+        'well_id': 6,
+        },
+
+
+    7: {
+        'col_and_row': u'B1',
+        'row': 1,
+        'col': 1,
+        'well_id': 7,
+        },
+    8: {
+        'col_and_row': u'B2',
+        'row': 1,
+        'col': 2,
+        'well_id': 8,
+        },
+    9: {
+        'col_and_row': u'B3',
+        'row': 1,
+        'col': 3,
+        'well_id': 9,
+        },
+    10: {
+        'col_and_row': u'B4',
+        'row': 1,
+        'col': 4,
+        'well_id': 10,
+        },
+    11: {
+        'col_and_row': u'B5',
+        'row': 1,
+        'col': 5,
+        'well_id': 11,
+        },
+    12: {
+        'col_and_row': u'B6',
+        'row': 1,
+        'col': 6,
+        'well_id': 12,
+        },
+
+
+    13: {
+        'col_and_row': u'C1',
+        'row': 1,
+        'col': 1,
+        'well_id': 13,
+        },
+    14: {
+        'col_and_row': u'C2',
+        'row': 1,
+        'col': 2,
+        'well_id': 14,
+        },
+    15: {
+        'col_and_row': u'C3',
+        'row': 1,
+        'col': 3,
+        'well_id': 15,
+        },
+    16: {
+        'col_and_row': u'C4',
+        'row': 1,
+        'col': 4,
+        'well_id': 16,
+        },
+    17: {
+        'col_and_row': u'C5',
+        'row': 1,
+        'col': 5,
+        'well_id': 17,
+        },
+    18: {
+        'col_and_row': u'C6',
+        'row': 1,
+        'col': 6,
+        'well_id': 18,
+        },
+
+
+    19: {
+        'col_and_row': u'D1',
+        'row': 1,
+        'col': 1,
+        'well_id': 19,
+        },
+    20: {
+        'col_and_row': u'D2',
+        'row': 1,
+        'col': 2,
+        'well_id': 20,
+        },
+    21: {
+        'col_and_row': u'D3',
+        'row': 1,
+        'col': 3,
+        'well_id': 21,
+        },
+    22: {
+        'col_and_row': u'D4',
+        'row': 1,
+        'col': 4,
+        'well_id': 22,
+        },
+    23: {
+        'col_and_row': u'D5',
+        'row': 1,
+        'col': 5,
+        'well_id': 23,
+        },
+    24: {
+        'col_and_row': u'D6',
+        'row': 1,
+        'col': 6,
+        'well_id': 24,
+        },
+
+    25: {
+        'col_and_row': u'E1',
+        'row': 1,
+        'col': 1,
+        'well_id': 25,
+        },
+    26: {
+        'col_and_row': u'E2',
+        'row': 1,
+        'col': 2,
+        'well_id': 26,
+        },
+    27: {
+        'col_and_row': u'E3',
+        'row': 1,
+        'col': 3,
+        'well_id': 27,
+        },
+    28: {
+        'col_and_row': u'E4',
+        'row': 1,
+        'col': 4,
+        'well_id': 28,
+        },
+    29: {
+        'col_and_row': u'E5',
+        'row': 1,
+        'col': 5,
+        'well_id': 29,
+        },
+    30: {
+        'col_and_row': u'E6',
+        'row': 1,
+        'col': 6,
+        'well_id': 30,
+        },
+
+
+    31: {
+        'col_and_row': u'F1',
+        'row': 1,
+        'col': 1,
+        'well_id': 31,
+        },
+    32: {
+        'col_and_row': u'F2',
+        'row': 1,
+        'col': 2,
+        'well_id': 32,
+        },
+    33: {
+        'col_and_row': u'F3',
+        'row': 1,
+        'col': 3,
+        'well_id': 33,
+        },
+    34: {
+        'col_and_row': u'F4',
+        'row': 1,
+        'col': 4,
+        'well_id': 34,
+        },
+    35: {
+        'col_and_row': u'F5',
+        'row': 1,
+        'col': 5,
+        'well_id': 35,
+        },
+    36: {
+        'col_and_row': u'F6',
+        'row': 1,
+        'col': 6,
+        'well_id': 36,
+        },
+
+
+    37: {
+        'col_and_row': u'G1',
+        'row': 1,
+        'col': 1,
+        'well_id': 37,
+        },
+    38: {
+        'col_and_row': u'G2',
+        'row': 1,
+        'col': 2,
+        'well_id': 38,
+        },
+    39: {
+        'col_and_row': u'G3',
+        'row': 1,
+        'col': 3,
+        'well_id': 39,
+        },
+    40: {
+        'col_and_row': u'G4',
+        'row': 1,
+        'col': 4,
+        'well_id': 40,
+        },
+    41: {
+        'col_and_row': u'G5',
+        'row': 1,
+        'col': 5,
+        'well_id': 41,
+        },
+    42: {
+        'col_and_row': u'G6',
+        'row': 1,
+        'col': 6,
+        'well_id': 42,
+        },
+
+   43: {
+        'col_and_row': u'H1',
+        'row': 1,
+        'col': 1,
+        'well_id': 43,
+        },
+    44: {
+        'col_and_row': u'H2',
+        'row': 1,
+        'col': 2,
+        'well_id': 44,
+        },
+    45: {
+        'col_and_row': u'H3',
+        'row': 1,
+        'col': 3,
+        'well_id': 45,
+        },
+    46: {
+        'col_and_row': u'H4',
+        'row': 1,
+        'col': 4,
+        'well_id': 46,
+        },
+    47: {
+        'col_and_row': u'H5',
+        'row': 1,
+        'col': 5,
+        'well_id': 47,
+        },
+    48: {
+        'col_and_row': u'H6',
+        'row': 1,
+        'col': 6,
+        'well_id': 48,
+        }
+    }
+
+
+
+
+
+
+
+
 well_id_to_cell_map_96 = {
     1: {
         'col_and_row': u'A1',
@@ -5204,9 +5517,6 @@ col_and_row_to_cell_map_384 = {
         },
     }
 
-#def get_col_and_row_for_well_id_96(well_id):
-#    cell = well_id_to_cell_map_96[well_id]
-#    return cell["col_and_row"]
 
 col_and_row_to_cell_map_96 = {
     u'G7': {
@@ -5786,6 +6096,328 @@ col_and_row_to_cell_map_96 = {
         'well_id': 37,
         },
     }
+
+
+
+col_and_row_to_cell_map_48 = {
+
+
+    u'A1': {
+        'col_and_row': u'A1',
+        'row': 7,
+        'col': 7,
+        'well_id': 1,
+        },
+    u'A2': {
+        'col_and_row': u'A2',
+        'row': 7,
+        'col': 6,
+        'well_id': 2,
+        },
+    u'A3': {
+        'col_and_row': u'A3',
+        'row': 7,
+        'col': 5,
+        'well_id': 3,
+        },
+    u'A4': {
+        'col_and_row': u'A4',
+        'row': 7,
+        'col': 4,
+        'well_id': 4,
+        },
+    u'A5': {
+        'col_and_row': u'A5',
+        'row': 7,
+        'col': 3,
+        'well_id': 5,
+        },
+    u'A6': {
+        'col_and_row': u'A6',
+        'row': 7,
+        'col': 2,
+        'well_id': 6,
+        },
+
+
+    u'B1': {
+        'col_and_row': u'B1',
+        'row': 7,
+        'col': 7,
+        'well_id': 7,
+        },
+    u'B2': {
+        'col_and_row': u'B2',
+        'row': 7,
+        'col': 6,
+        'well_id': 8,
+        },
+    u'B3': {
+        'col_and_row': u'B3',
+        'row': 7,
+        'col': 5,
+        'well_id': 9,
+        },
+    u'B4': {
+        'col_and_row': u'B4',
+        'row': 7,
+        'col': 4,
+        'well_id': 10,
+        },
+    u'B5': {
+        'col_and_row': u'B5',
+        'row': 7,
+        'col': 3,
+        'well_id': 11,
+        },
+    u'B6': {
+        'col_and_row': u'B6',
+        'row': 7,
+        'col': 2,
+        'well_id': 12,
+        },
+
+
+    u'C1': {
+        'col_and_row': u'C1',
+        'row': 7,
+        'col': 7,
+        'well_id': 13,
+        },
+    u'C2': {
+        'col_and_row': u'C2',
+        'row': 7,
+        'col': 6,
+        'well_id': 14,
+        },
+    u'C3': {
+        'col_and_row': u'C3',
+        'row': 7,
+        'col': 5,
+        'well_id': 15,
+        },
+    u'C4': {
+        'col_and_row': u'C4',
+        'row': 7,
+        'col': 4,
+        'well_id': 16,
+        },
+    u'C5': {
+        'col_and_row': u'C5',
+        'row': 7,
+        'col': 3,
+        'well_id': 17,
+        },
+    u'C6': {
+        'col_and_row': u'C6',
+        'row': 7,
+        'col': 2,
+        'well_id': 18,
+        },
+
+
+    u'D1': {
+        'col_and_row': u'D1',
+        'row': 7,
+        'col': 7,
+        'well_id': 19,
+        },
+    u'D2': {
+        'col_and_row': u'D2',
+        'row': 7,
+        'col': 6,
+        'well_id': 20,
+        },
+    u'D3': {
+        'col_and_row': u'D3',
+        'row': 7,
+        'col': 5,
+        'well_id': 21,
+        },
+    u'D4': {
+        'col_and_row': u'D4',
+        'row': 7,
+        'col': 4,
+        'well_id': 22,
+        },
+    u'D5': {
+        'col_and_row': u'D5',
+        'row': 7,
+        'col': 3,
+        'well_id': 23,
+        },
+    u'D6': {
+        'col_and_row': u'D6',
+        'row': 7,
+        'col': 2,
+        'well_id': 24,
+        },
+
+
+
+    u'E1': {
+        'col_and_row': u'E1',
+        'row': 7,
+        'col': 7,
+        'well_id': 25,
+        },
+    u'E2': {
+        'col_and_row': u'E2',
+        'row': 7,
+        'col': 6,
+        'well_id': 26,
+        },
+    u'E3': {
+        'col_and_row': u'E3',
+        'row': 7,
+        'col': 5,
+        'well_id': 27,
+        },
+    u'E4': {
+        'col_and_row': u'E4',
+        'row': 7,
+        'col': 4,
+        'well_id': 28,
+        },
+    u'E5': {
+        'col_and_row': u'E5',
+        'row': 7,
+        'col': 3,
+        'well_id': 29,
+        },
+    u'E6': {
+        'col_and_row': u'E6',
+        'row': 7,
+        'col': 2,
+        'well_id': 30,
+        },
+
+
+
+
+    u'F1': {
+        'col_and_row': u'F1',
+        'row': 7,
+        'col': 7,
+        'well_id': 31,
+        },
+    u'F2': {
+        'col_and_row': u'F2',
+        'row': 7,
+        'col': 6,
+        'well_id': 32,
+        },
+    u'F3': {
+        'col_and_row': u'F3',
+        'row': 7,
+        'col': 5,
+        'well_id': 33,
+        },
+    u'F4': {
+        'col_and_row': u'F4',
+        'row': 7,
+        'col': 4,
+        'well_id': 34,
+        },
+    u'F5': {
+        'col_and_row': u'F5',
+        'row': 7,
+        'col': 3,
+        'well_id': 35,
+        },
+    u'F6': {
+        'col_and_row': u'F6',
+        'row': 7,
+        'col': 2,
+        'well_id': 36,
+        },
+
+
+
+    u'G1': {
+        'col_and_row': u'G1',
+        'row': 7,
+        'col': 7,
+        'well_id': 37,
+        },
+    u'G2': {
+        'col_and_row': u'G2',
+        'row': 7,
+        'col': 6,
+        'well_id': 38,
+        },
+    u'G3': {
+        'col_and_row': u'G3',
+        'row': 7,
+        'col': 5,
+        'well_id': 39,
+        },
+    u'G4': {
+        'col_and_row': u'G4',
+        'row': 7,
+        'col': 4,
+        'well_id': 40,
+        },
+    u'G5': {
+        'col_and_row': u'G5',
+        'row': 7,
+        'col': 3,
+        'well_id': 41,
+        },
+
+    u'G6': {
+        'col_and_row': u'G6',
+        'row': 7,
+        'col': 3,
+        'well_id': 42,
+        },
+
+    u'H1': {
+        'col_and_row': u'H1',
+        'row': 7,
+        'col': 2,
+        'well_id': 43,
+        },
+    u'H2': {
+        'col_and_row': u'H2',
+        'row': 7,
+        'col': 7,
+        'well_id': 44,
+        },
+    u'H3': {
+        'col_and_row': u'H3',
+        'row': 7,
+        'col': 6,
+        'well_id': 45,
+        },
+    u'H4': {
+        'col_and_row': u'H4',
+        'row': 7,
+        'col': 5,
+        'well_id': 46,
+        },
+    u'H5': {
+        'col_and_row': u'H5',
+        'row': 7,
+        'col': 4,
+        'well_id': 47,
+        },
+    u'H6': {
+        'col_and_row': u'H6',
+        'row': 7,
+        'col': 3,
+        'well_id': 48,
+        }
+    }
+
+def get_col_and_row_for_well_id_48(well_id):
+    cell = well_id_to_cell_map_48[well_id]
+    return cell["col_and_row"]
+    
+def get_well_id_for_col_and_row_48(col_and_row):
+    cell = col_and_row_to_cell_map_48[col_and_row]
+    return cell["well_id"]
+
 
 def get_col_and_row_for_well_id_96(well_id):
     cell = well_id_to_cell_map_96[well_id]

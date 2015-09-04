@@ -13,7 +13,8 @@ from flask.ext.script import Manager, Shell, Server
 
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from scripts import (CreateAllTables, LoadLookupTables, DropAllTables, DeleteSampleTransfer)
+from scripts import (CreateAllTables, LoadLookupTables, DropAllTables, 
+    DeleteSampleTransfer, ImportSampleTransferTemplate)
 
 from app import app, db
 
@@ -38,6 +39,12 @@ manager.add_command('dropalltables', DropAllTables())
 # Example: python manage.py deletesampletransfer -id 3
 #
 manager.add_command('deletesampletransfer', DeleteSampleTransfer())
+
+#
+# Example: python manage.py importtemplate -f TemplateExample.xlsx -n "the template name"
+#
+manager.add_command('importtemplate', ImportSampleTransferTemplate())
+
 
 
 manager.run()

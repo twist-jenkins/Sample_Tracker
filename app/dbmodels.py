@@ -263,11 +263,15 @@ class SampleTransferDetail(db.Model):
         self.destination_sample_id = destination_sample_id
 
 
-
 class SampleTransferTemplate(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
+    is_one_to_one_transfer = db.Column(db.String(1),default="N", nullable=True)
+    from_plate_size = db.Column(db.Integer,default=1,nullable=False)
+    destination_plate_size = db.Column(db.Integer,default=1,nullable=False)
+
+    __table_args__ = (db.CheckConstraint(is_one_to_one_transfer.in_(['Y','N'])), )
 
     sample_tranfer_types = db.relationship('SampleTransferType')
 
@@ -276,6 +280,23 @@ class SampleTransferTemplate(db.Model):
 
     def __repr__(self):
         return '<SampleTransferTemplate id: [%d] name: [%s] >' % (self.id,self.name)
+
+
+class SampleTransferTemplateDetails(db.Model):
+
+    id = db.Column(db.Integer, primary_key=True)
+    sample_transfer_template_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_template.id'))
+    source_plate_number = db.Column(db.Integer, default=1, nullable=False)
+    #source_plate_well_count = db.Column(db.Integer, nullable=False)
+    source_plate_well_id = db.Column(db.Integer, nullable=False)
+    source_plate_well_id_string = db.Column(db.String(10),default="",nullable=True)
+
+    destination_plate_number = db.Column(db.Integer, default=1, nullable=False)
+    #destination_plate_well_count = db.Column(db.Integer, nullable=False)
+    destination_plate_well_id = db.Column(db.Integer, nullable=False)
+    destination_plate_well_id_string = db.Column(db.String(10),default="",nullable=True)
+
+    sample_transfer_template = db.relationship('SampleTransferTemplate')
 
 
 class SampleTransferType(db.Model):

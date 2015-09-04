@@ -1,0 +1,11 @@
+Need to support from and to plates the same
+
+Format for template is:
+
+number of wells | well id | plate number | number of wells | well id | plate number
+
+It is here: https://sampletransfer-stg.twistbioscience.com/
+
+dev/staging db ==> postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb
+
+psql -U twister -h 10.10.53.47 twistdb

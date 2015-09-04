@@ -36,7 +36,8 @@ from app import app, db
 from app.dbmodels import (create_unique_object_id, Operator, Sample, SampleTransfer, SampleTransferType, SamplePlate,
     SampleTransferDetail, SamplePlateLayout, SamplePlateType)
 
-from well_mappings import ( get_col_and_row_for_well_id_96, get_well_id_for_col_and_row_96, get_col_and_row_for_well_id_384,
+from well_mappings import ( get_col_and_row_for_well_id_48, get_well_id_for_col_and_row_48,
+       get_col_and_row_for_well_id_96, get_well_id_for_col_and_row_96, get_col_and_row_for_well_id_384,
        get_well_id_for_col_and_row_384 )
 
 import StringIO
@@ -250,6 +251,7 @@ def sample_report(sample_id, format):
         #print "number_clusters: ", number_clusters 
 
         well_to_col_and_row_mapping_fn = {
+            48:get_col_and_row_for_well_id_48,
             96:get_col_and_row_for_well_id_96,
             384:get_col_and_row_for_well_id_384
         }.get(number_clusters,lambda well_id:"missing map")
@@ -277,6 +279,7 @@ def sample_report(sample_id, format):
         number_clusters = plate.sample_plate_type.number_clusters
 
         well_to_col_and_row_mapping_fn = {
+            48:get_col_and_row_for_well_id_48,
             96:get_col_and_row_for_well_id_96,
             384:get_col_and_row_for_well_id_384
         }.get(number_clusters,lambda well_id:"missing map")
@@ -381,6 +384,7 @@ def plate_report(sample_plate_barcode, format):
     #print "number_clusters: ", number_clusters 
 
     well_to_col_and_row_mapping_fn = {
+        48:get_col_and_row_for_well_id_48,
         96:get_col_and_row_for_well_id_96,
         384:get_col_and_row_for_well_id_384
     }.get(number_clusters,lambda well_id:"missing map")
@@ -552,6 +556,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
     order_number = 1
 
     well_from_col_and_row_methods = {
+        "48":get_well_id_for_col_and_row_48,
         "96":get_well_id_for_col_and_row_96,
         "384":get_well_id_for_col_and_row_384
     }
@@ -603,7 +608,9 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         #
         sample_plate_type = source_plate.sample_plate_type
         plate_size = None 
-        if sample_plate_type.name == "96 well, plastic":
+        if sample_plate_type.name == "48 well, plastic":
+            plate_size = "48" 
+        elif sample_plate_type.name == "96 well, plastic":
             plate_size = "96" 
         elif sample_plate_type.name == "384 well, plastic":
             plate_size = "384" 
@@ -712,7 +719,10 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         print "SOURCE PLATE WELL: %s " % str(source_plate_well)
         logger.info("SOURCE PLATE WELL: %s " % str(source_plate_well))
 
-        if sample_plate_type.name == "96 well, plastic":
+
+        if sample_plate_type.name == "48 well, plastic":
+            plate_size = "48" 
+        elif sample_plate_type.name == "96 well, plastic":
             plate_size = "96" 
         elif sample_plate_type.name == "384 well, plastic":
             plate_size = "384" 
@@ -722,7 +732,12 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         if not source_plate_well:
             error_well_id = source_well_id
             if plate_size:
-                if plate_size == "96":
+                if plate_size == "48":
+                    try:
+                        error_well_id = get_col_and_row_for_well_id_48(source_well_id)
+                    except:
+                        error_well_id = source_well_id
+                elif plate_size == "96":
                     try:
                         error_well_id = get_col_and_row_for_well_id_96(source_well_id)
                     except:
