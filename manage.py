@@ -43,6 +43,8 @@ manager.add_command('deletesampletransfer', DeleteSampleTransfer())
 #
 # Example: python manage.py importtemplate -f TemplateExample.xlsx -n "the template name"
 #
+# python manage.py importtemplate -f Template384to48.csv -n "384 to 48"
+#
 manager.add_command('importtemplate', ImportSampleTransferTemplate())
 
 

@@ -9,3 +9,21 @@ It is here: https://sampletransfer-stg.twistbioscience.com/
 dev/staging db ==> postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb
 
 psql -U twister -h 10.10.53.47 twistdb
+
+To Import a new Map:
+
+  1. python manage.py importtemplate -f Template384to48.csv -n "384 to 48"
+  2. Find out the name of the created file.
+  3. Create a new empty migration: 
+          python manage.py db revision --message "add 384 to 48 transfer template"
+  4. Go into the migration. Copy this stuff into it. But change the data file name appropriately:
+
+     from app.database_data.template09_04_2015_16_17_15PM import template
+     from app.database_data.template_importer import import_template
+
+
+     def upgrade():
+         import_template(op,template)
+
+     def downgrade():
+         pass

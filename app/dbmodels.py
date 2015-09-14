@@ -275,6 +275,8 @@ class SampleTransferTemplate(db.Model):
 
     sample_tranfer_types = db.relationship('SampleTransferType')
 
+    sample_transfer_template_details = db.relationship('SampleTransferTemplateDetails')
+
     def __init__(self, name ):
         self.name = name
 

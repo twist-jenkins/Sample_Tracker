@@ -63,9 +63,16 @@ def import_template(op,template):
     for detail in template["details"]:
         print "DETAIL: ", detail
 
+        destination_plate_number_parts = detail["destination_plate_number"].split(" ")
+        destination_plate_number_string = destination_plate_number_parts[len(destination_plate_number_parts)-1]
+
+        print "ORIG: ", detail["destination_plate_number"]
+        print "PARTS: ", destination_plate_number_parts
+        print "STR [%s]", destination_plate_number_string
+
         source_plate_number = int(detail["source_plate_number"])
         source_well_id = int(detail["source_well_id"])
-        destination_plate_number = int(detail["destination_plate_number"])
+        destination_plate_number = int(destination_plate_number_string)
         destination_well_id = int(detail["destination_well_id"])
         
 
