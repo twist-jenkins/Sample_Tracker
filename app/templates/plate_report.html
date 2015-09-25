@@ -27,6 +27,11 @@
       <td>{{plateCreationDateTime}}</td>
    </tr>
 </script>
+<script id="samePlateRowTemplate" type="text/x-handlebars-template">
+   <tr>
+      <td>{{plateCreationDateTime}}</td>
+   </tr>
+</script>
 <script id="wellRowTemplate" type="text/x-handlebars-template">
    <tr>
       <td>{{wellId}}</td>
@@ -125,6 +130,23 @@
                   <tr>
                       <td>ccccccc1234</td>
                       <td>12-12-15</td>
+                  </tr>
+              </tbody>
+           </table>
+         </div>
+
+         <div class="form-group samePlateSteps hidden">
+           <hr/>
+           <label for="exampleInputPassword1" style="display:block;" >Same-Plate Steps</label>
+           <table  class="table table-borderedd">
+              <thead>
+                  <tr>
+                      <td>Step(s)</td>
+                  </tr>
+              </thead>   
+              <tbody>
+                  <tr>
+                      <td>&nbsp;</td>
                   </tr>
               </tbody>
            </table>

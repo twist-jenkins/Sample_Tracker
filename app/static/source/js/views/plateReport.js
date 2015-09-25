@@ -12,6 +12,8 @@ var controller = (function() {
 
    var m_parentPlateRowTemplate = Handlebars.compile(m_parentPlateRowTemplateSource);
 
+   var m_samePlateRowTemplate = Handlebars.compile($('#samePlateRowTemplate').html());
+
    var m_wellRowTemplateSource = $("#wellRowTemplate").html();
 
    var m_wellRowTemplate = Handlebars.compile(m_wellRowTemplateSource);
@@ -97,8 +99,6 @@ var controller = (function() {
                // Show stuff that is hidden if the user hasn't yet requested the report.
                //
                $("#exportAsExcel").removeClass("hidden");
-               $(".form-group.parentPlates, .form-group.wells").removeClass("hidden");
-               $(".form-group.childPlates, .form-group.wells").removeClass("hidden");
                $(".form-group.plateDetails").removeClass("hidden");
 
                //
@@ -122,9 +122,7 @@ var controller = (function() {
                // PARENT PLATES
                //
 
-               if (data.parentPlates.length == 0) {
-                  $(".form-group.parentPlates").addClass("hidden");
-               } else {
+               if (data.parentPlates.length) {
 
                   if (data.parentToThisTaskName) {
                      $(".parentPlates span.taskName").text(data.parentToThisTaskName);
@@ -144,24 +142,27 @@ var controller = (function() {
                         plateCreationDateTime: dateCreatedString
                      };
                      var html = m_parentPlateRowTemplate(context);
+                     $(".form-group.parentPlates").removeClass("hidden");
                      $(".form-group.parentPlates table tbody").append(html);
-
-
                   });
+
+               } else {
+                  $(".form-group.parentPlates").addClass("hidden");
                }
+
+               
 
                //
                // CHILD PLATES
                //
 
-               if (data.childPlates.length == 0) {
-                  $(".form-group.childPlates").addClass("hidden");
-               } else {
+               if (data.childPlates.length) {
 
                   if (data.thisToChildTaskName) {
                      $(".childPlates span.taskName").text(data.thisToChildTaskName);
                   }
 
+                  var insertIntoBlock, rowML, samePlateSteps = 0, childPlateSteps = 0;
 
                   _.each(data.childPlates, function(childPlate) {
 
@@ -176,10 +177,40 @@ var controller = (function() {
                         plateReportUrl: plateReportUrl,
                         plateCreationDateTime: dateCreatedString
                      };
-                     var html = m_parentPlateRowTemplate(context);
-                     $(".form-group.childPlates table tbody").append(html);
+
+                     //some "child plates" are actually just records for a step performed on the *same* plate
+                     //we'll want to list these as Same-Plate Steps rather child plates
+                     if (barcode === childPlate.externalBarcode) {
+                        samePlateSteps++;
+                        delete context.plateBarcode;
+                        context.plateCreationDateTime = $(".form-group.samePlateSteps tr").length + '. ' + context.plateCreationDateTime;
+                        insertIntoBlock = $(".form-group.samePlateSteps");
+                        rowML = m_samePlateRowTemplate(context);
+                        $(".form-group.samePlateSteps").removeClass("hidden");
+                     } else {
+                        childPlateSteps++;
+                        insertIntoBlock = $(".form-group.childPlates");
+                        rowML = m_parentPlateRowTemplate(context);
+                        $(".form-group.childPlates").removeClass("hidden");
+                     }
+
+                     $('table tbody', insertIntoBlock).append(rowML);
+                     
                   });
+
+                  if (!samePlateSteps) {
+                     $(".form-group.samePlateSteps").addClass("hidden");
+                  }
+
+                  if (!childPlateSteps) {
+                     $(".form-group.childPlates").addClass("hidden");
+                  }
+   
+               } else {
+                  $(".form-group.samePlateSteps").addClass("hidden");
+                  $(".form-group.childPlates").addClass("hidden");
                }
+
 
                //
                // "WELLS" IN THIS PLATE

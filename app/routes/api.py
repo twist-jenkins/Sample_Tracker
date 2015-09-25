@@ -856,13 +856,15 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
         }
     #print "SOURCE PLATE: ", source_plate
 
+    """
     destination_plate = db.session.query(SamplePlate).filter_by(external_barcode=destination_barcode).first()
     if destination_plate:
         logger.info(" %s encountered error creating sample transfer. A plate with the destination plate barcode: [%s] already exists" % (g.user.first_and_last_name,destination_barcode))
         return {
             "success":False,
-            "errorMessage":"A plate with the destination plate barcode: [%s] already exists" % (destination_barcode)
+            "errorMessage":"A plate XXX with the destination plate barcode: [%s] already exists" % (destination_barcode)
         }
+    """
 
     #print "SOURCE PLATE: ", source_plate
 
