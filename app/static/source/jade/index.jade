@@ -1,0 +1,33 @@
+doctype html
+html(lang="en" ng-app="twst.app")
+	head
+		base(href="{{ url_for('home', _external=True) }}")
+		meta(charset="utf-8")
+		meta(http-equiv="X-UA-Compatible" content="IE=edge")
+		meta(content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" name="viewport")
+		meta(name="title" content="Twist Bioscience: Sample Movement Tracker")
+		meta(name="description" content="Helping you change the world by providing synthetic DNA for health and sustainability")
+		meta(name="keywords" content="synthetic dna, biodetection, functional genomics, genome engineering, drugs, biodefense, data storage, mission bay, san francisco")
+
+		meta(name="google-signin-client_id" content="1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com")
+		link(rel="shortcut icon" href="images/favicon.ico")
+		title Twist Bioscience: Sample Movement Tracker
+
+		script(src="//apis.google.com/js/platform.js" async defer)
+
+		script(src="//use.typekit.net/omi0zjp.js")
+		script (try{ Typekit.load();}catch(e){ }
+
+		link(href='//fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css')
+		link(href='//fonts.googleapis.com/css?family=Merriweather:400,300' rel='stylesheet' type='text/css')
+
+		link(rel="stylesheet" type="text/css" href='/static/css/angular-app' + githash + '.css')
+
+		script(src="/static/js/jquery.min.js")
+		script(src="/static/js/angular.min.js")
+		script(src="/static/js/angular-ui-router.min.js")
+		script(src='/static/js/angular-app' + githash + '.js')
+
+	body
+		div NEW HOME
+		div(class="twst-main-outer" ui-view) TWIST BIOSCIENCES

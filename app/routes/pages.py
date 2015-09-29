@@ -31,6 +31,15 @@ from app import app, db
 
 from app.dbmodels import Operator, SampleTransferType, SampleTransfer, SampleTransferDetail
 
+#
+# This is the "home" page, which is actually the "enter a sample movement" page.
+#
+def new_home():
+    return app.send_static_file('index.html')
+
+################################################################################################################################################################
+################ PRE-ANGULAR PAGES ################
+################################################################################################################################################################
 
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
@@ -39,10 +48,6 @@ def home():
     sample_tranfer_types = db.session.query(SampleTransferType).order_by(SampleTransferType.name)
     return render_template('recordSampleTransfer.html',sample_tranfer_types=sample_tranfer_types,
         current_user_first_and_last=g.user.first_and_last_name)
-
-
-
-
 
 #
 # The list of sample transfers

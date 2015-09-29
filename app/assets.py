@@ -55,8 +55,6 @@ index_ie9_css = Bundle(
     filters="cssmin",
     output='css/views/index_ie9.css')
 
-
-
 common_js = Bundle(
        'js/rlite.min.js', 
        'js/jquery.min.js', 

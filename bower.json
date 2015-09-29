@@ -16,9 +16,11 @@
     "rlite": "~0.0.54",
     "font-awesome": "~4.3.0",
     "moment": "~2.9.0",
-    "jquery": "1.11.2",
+    "jquery": "~2.1.4",
     "handlebars": "~3.0.2",
     "easyModal.js": "*",
-    "bs-typeahead": "~0.0.5"
+    "bs-typeahead": "~0.0.5",
+    "angular": "~1.4.6",
+    "angular-ui-router": "~0.2.15"
   }
 }
