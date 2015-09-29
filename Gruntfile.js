@@ -10,6 +10,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-sass');
     grunt.loadNpmTasks('grunt-contrib-jade');
+    grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-githash');
     grunt.loadNpmTasks('grunt-exec');
 
@@ -26,11 +27,11 @@ module.exports = function(grunt) {
         ,watch: {
             javascript: {
                 files: 'app/static/source/js/**/*.js'
-                ,tasks: ['githash', 'uglify:angular_app']
+                ,tasks: ['githash', 'clean:twist_app', 'uglify:twist_app']
             }
             ,stylesheets: {
                 files: 'app/static/source/scss/**/*.scss'
-                ,tasks: ['githash', 'sass:all']
+                ,tasks: ['githash', 'clean:twist_app', 'sass:all']
             }
             ,templates: {
                 files: 'app/static/source/jade/**/*.jade'
@@ -39,9 +40,9 @@ module.exports = function(grunt) {
         }
 
         ,uglify: {
-            angular_app: {
+            twist_app: {
                 files: {
-                    'app/static/js/angular-app<%= githash.main.short %>.js': [
+                    'app/static/js/twist-app<%= githash.main.short %>.js': [
                         'app/static/source/js/app.js'
                     ]
                 }
@@ -51,7 +52,7 @@ module.exports = function(grunt) {
         ,sass: {
             all: {
                 files: {
-                    'app/static/css/angular-app<%= githash.main.short %>.css': 'app/static/source/scss/**/*.scss'
+                    'app/static/css/twist-app<%= githash.main.short %>.css': 'app/static/source/scss/**/*.scss'
                 }
             }
         }
@@ -65,6 +66,13 @@ module.exports = function(grunt) {
                   "app/static/index.html": ["app/static/source/jade/index.jade"]
                 }
             }
+        }
+
+        ,clean: {
+            twist_app: [
+                'app/static/css/twist-app*.css'
+                ,'app/static/js/twist-app*.js'
+            ]
         }
 
         //END NEW ANGULAR APP
@@ -169,16 +177,31 @@ module.exports = function(grunt) {
 
             // NEW ANGULAR APP
 
-            angular_app_js: {
+            twist_app_js: {
                 cwd: 'app/static/bower_components'
                 ,src: [
-                    'jquery/dist/jquery.*'
+                    'jquery/dist/jquery.min.js'
+                    ,'jquery/dist/jquery.min.map'
                     ,'angular/angular.js'
                     ,'angular/angular.min.js'
                     ,'angular/angular.min.js.map'
                     ,'angular-ui-router/release/angular-ui-router.*'
+                    ,'angular-bootstrap/ui-bootstrap.min.js'
+                    ,'angular-sanitize/angular-sanitize.min.js'
+                    ,'angular-sanitize/angular-sanitize.min.js.map'
                 ]
                 ,dest: 'app/static/js'
+                ,flatten: true
+                ,expand: true
+            }
+
+            ,twist_app_css: {
+                cwd: 'app/static/bower_components'
+                ,src: [
+                    'bootstrap/dist/css/bootstrap.min.css'
+                    ,'bootstrap/dist/css/bootstrap.css.map'
+                ]
+                ,dest: 'app/static/css'
                 ,flatten: true
                 ,expand: true
             }
@@ -363,10 +386,12 @@ module.exports = function(grunt) {
 
         // NEW ANGULAR APP
         'githash'
-        ,'uglify:angular_app'
+        ,'clean:twist_app'
+        ,'uglify:twist_app'
         ,'sass:all'
         ,'jade:compile_home'
-        ,'copy:angular_app_js'
+        ,'copy:twist_app_js'
+        ,'copy:twist_app_css'
         //END NEW ANGULAR APP
     ]);
 
@@ -396,9 +421,11 @@ module.exports = function(grunt) {
 
         // NEW ANGULAR APP
         'githash'
-        ,'uglify:angular_app'
+        ,'clean:twist_app'
+        ,'uglify:twist_app'
         ,'sass:all'
-        ,'copy:angular_app_js'
+        ,'copy:twist_app_js'
+        ,'copy:twist_app_css'
         //END NEW ANGULAR APP
     ]);
 

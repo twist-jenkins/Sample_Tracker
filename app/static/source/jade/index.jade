@@ -15,18 +15,15 @@ html(lang="en" ng-app="twst.app")
 
 		script(src="//apis.google.com/js/platform.js" async defer)
 
-		script(src="//use.typekit.net/omi0zjp.js")
-		script (try{ Typekit.load();}catch(e){ }
-
-		link(href='//fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css')
-		link(href='//fonts.googleapis.com/css?family=Merriweather:400,300' rel='stylesheet' type='text/css')
-
-		link(rel="stylesheet" type="text/css" href='/static/css/angular-app' + githash + '.css')
+		link(rel="stylesheet" type="text/css" href='/static/css/bootstrap.min.css')
+		link(rel="stylesheet" type="text/css" href='/static/css/twist-app' + githash + '.css')
 
 		script(src="/static/js/jquery.min.js")
 		script(src="/static/js/angular.min.js")
 		script(src="/static/js/angular-ui-router.min.js")
-		script(src='/static/js/angular-app' + githash + '.js')
+		script(src="/static/js/ui-bootstrap.min.js")
+		script(src="/static/js/angular-sanitize.min.js")
+		script(src='/static/js/twist-app' + githash + '.js')
 
 	body
 		div NEW HOME

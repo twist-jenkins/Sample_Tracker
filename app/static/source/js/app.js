@@ -1,6 +1,6 @@
 var app;
 
-app = angular.module('twst.app', ['ui.router'])
+app = angular.module('twst.app', ['ui.router', 'ui.bootstrap', 'ngSanitize'])
 
 
 .controller('rootController', ['$scope', '$state', '$location', 
