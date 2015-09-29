@@ -7,47 +7,77 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-copy");
     grunt.loadNpmTasks("grunt-contrib-less");
     grunt.loadNpmTasks("grunt-contrib-watch");
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-sass');
+    grunt.loadNpmTasks('grunt-contrib-jade');
+    grunt.loadNpmTasks('grunt-contrib-clean');
+    grunt.loadNpmTasks('grunt-githash');
     grunt.loadNpmTasks('grunt-exec');
-
-
 
     grunt.initConfig({
 
-        /*
-        exec: {
-            loadblogposts: {
-                command:'python manage.py loadblogposts'
-            },
-            loadtopofpagecontent: {
-                command:'python manage.py loadtopofpagecontent'
-            },
-            loadcalendarevents: {
-                command:'python manage.py loadcalendarevents'
-            },
-            loadnewsarticles: {
-                command:'python manage.py loadnewsarticles'
-            },
-            loadfounderpublications: {
-                command:'python manage.py loadfounderpublications'
-            },
-        },
-        */
+        // NEW ANGULAR APP
 
+        githash: {
+            main: {
+              options: {},
+            }
+        }
 
-        watch: {
-          lessfiles: {
-            files: ['app/static/source/less/**/*.less'],
-            tasks: ['less'],
-            options: {
-              spawn: true,
-            },
-          },
+        ,watch: {
+            javascript: {
+                files: 'app/static/source/js/**/*.js'
+                ,tasks: ['githash', 'clean:twist_app', 'uglify:twist_app']
+            }
+            ,stylesheets: {
+                files: 'app/static/source/scss/**/*.scss'
+                ,tasks: ['githash', 'clean:twist_app', 'sass:all']
+            }
+            ,templates: {
+                files: 'app/static/source/jade/**/*.jade'
+                ,tasks: ['githash', 'jade:compile_home']
+            }
+        }
 
+        ,uglify: {
+            twist_app: {
+                files: {
+                    'app/static/js/twist-app<%= githash.main.short %>.js': [
+                        'app/static/source/js/app.js'
+                    ]
+                }
+            }
+        }
 
+        ,sass: {
+            all: {
+                files: {
+                    'app/static/css/twist-app<%= githash.main.short %>.css': 'app/static/source/scss/**/*.scss'
+                }
+            }
+        }
 
-        },
+        ,jade: {
+            compile_home: {
+                options: {
+                    data: {'githash': '<%= githash.main.short %>'}
+                }
+                ,files: {
+                  "app/static/index.html": ["app/static/source/jade/index.jade"]
+                }
+            }
+        }
 
-        less: {
+        ,clean: {
+            twist_app: [
+                'app/static/css/twist-app*.css'
+                ,'app/static/js/twist-app*.js'
+            ]
+        }
+
+        //END NEW ANGULAR APP
+
+        ,less: {
             common_css: {
                 options: {
                   compress: false,
@@ -143,7 +173,44 @@ module.exports = function(grunt) {
 
         copy: {
 
-            bootstrapTypeahead_js: {
+
+
+            // NEW ANGULAR APP
+
+            twist_app_js: {
+                cwd: 'app/static/bower_components'
+                ,src: [
+                    'jquery/dist/jquery.min.js'
+                    ,'jquery/dist/jquery.min.map'
+                    ,'angular/angular.js'
+                    ,'angular/angular.min.js'
+                    ,'angular/angular.min.js.map'
+                    ,'angular-ui-router/release/angular-ui-router.*'
+                    ,'angular-bootstrap/ui-bootstrap.min.js'
+                    ,'angular-sanitize/angular-sanitize.min.js'
+                    ,'angular-sanitize/angular-sanitize.min.js.map'
+                ]
+                ,dest: 'app/static/js'
+                ,flatten: true
+                ,expand: true
+            }
+
+            ,twist_app_css: {
+                cwd: 'app/static/bower_components'
+                ,src: [
+                    'bootstrap/dist/css/bootstrap.min.css'
+                    ,'bootstrap/dist/css/bootstrap.css.map'
+                ]
+                ,dest: 'app/static/css'
+                ,flatten: true
+                ,expand: true
+            }
+
+            // END NEW ANGULAR APP
+
+
+
+            ,bootstrapTypeahead_js: {
                 cwd: 'app/static/bower_components/bs-typeahead/js',
                 src: '**/bootstrap-typeahead.min.js',
                 dest: 'app/static/js',
@@ -174,13 +241,6 @@ module.exports = function(grunt) {
             rlite_js: {
                 cwd: 'app/static/bower_components/rlite',
                 src: '**/*.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            jquery_js: {
-                cwd: 'app/static/bower_components/jquery/dist',
-                src: '**/*',
                 dest: 'app/static/js',
                 expand: true
             },
@@ -300,11 +360,6 @@ module.exports = function(grunt) {
        grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
     });
 
-   // grunt.registerTask('watch', 'Running "DEFAULT", compiling everything.', [
-   //     'watch:lessfiles'
-   // ]);
-
-
     grunt.registerTask('default', 'Running "DEFAULT", compiling everything.', [
         'bower-install-simple',
         'less:common_css',
@@ -319,7 +374,6 @@ module.exports = function(grunt) {
 
         'copy:rlite_js',
         'copy:moment_js',
-        'copy:jquery_js',
         'copy:jquery_easing_js',
         'copy:underscore_js',
         'copy:bootstrap_js',
@@ -328,6 +382,17 @@ module.exports = function(grunt) {
         'copy:fontawesome_css',
         'copy:fontawesome_fonts',
         'copy:source_images',
+
+
+        // NEW ANGULAR APP
+        'githash'
+        ,'clean:twist_app'
+        ,'uglify:twist_app'
+        ,'sass:all'
+        ,'jade:compile_home'
+        ,'copy:twist_app_js'
+        ,'copy:twist_app_css'
+        //END NEW ANGULAR APP
     ]);
 
     grunt.registerTask('heroku', 'Running "DEFAULT", compiling everything.', [
@@ -352,6 +417,16 @@ module.exports = function(grunt) {
         'copy:fontawesome_css',
         'copy:fontawesome_fonts',
         'copy:source_images',
+
+
+        // NEW ANGULAR APP
+        'githash'
+        ,'clean:twist_app'
+        ,'uglify:twist_app'
+        ,'sass:all'
+        ,'copy:twist_app_js'
+        ,'copy:twist_app_css'
+        //END NEW ANGULAR APP
     ]);
 
 
