@@ -1,16 +1,17 @@
 var app;
 
-app = angular.module('twst.app', ['ui.router', 'ui.bootstrap', 'ngSanitize'])
+app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main'])
 
 
 .controller('rootController', ['$scope', '$state', '$location', 
-	function ($scope, $state, $location) { 
-	}]
+    function ($scope, $state, $location) { 
+        $scope.current_year = (new Date).getFullYear();
+    }]
 )
 
 .run(['$state', 
     function($state) {
-    	$state.go('root');
+        $state.go('root');
     }]
 )
 
@@ -18,7 +19,7 @@ app = angular.module('twst.app', ['ui.router', 'ui.bootstrap', 'ngSanitize'])
     function($stateProvider) {
         return $stateProvider.state('root', {
             url: '/'
-            ,template: '<p>Angular is IN DA HOUSE!</p>'
+            ,templateUrl: 'twist-base.html'
             ,controller: 'rootController'
         });
     }

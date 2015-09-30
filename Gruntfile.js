@@ -13,6 +13,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-githash');
     grunt.loadNpmTasks('grunt-exec');
+    grunt.loadNpmTasks('grunt-html2js');
 
     grunt.initConfig({
 
@@ -27,15 +28,19 @@ module.exports = function(grunt) {
         ,watch: {
             javascript: {
                 files: 'app/static/source/js/**/*.js'
-                ,tasks: ['githash', 'clean:twist_app', 'uglify:twist_app']
+                ,tasks: ['githash', 'clean:twist_app_js', 'uglify:twist_app']
             }
             ,stylesheets: {
                 files: 'app/static/source/scss/**/*.scss'
-                ,tasks: ['githash', 'clean:twist_app', 'sass:all']
+                ,tasks: ['githash', 'clean:twist_app_css', 'sass:all']
             }
-            ,templates: {
-                files: 'app/static/source/jade/**/*.jade'
+            ,index_template: {
+                files: 'app/static/source/jade/index.jade'
                 ,tasks: ['githash', 'jade:compile_home']
+            }
+            ,other_templates: {
+                files: 'app/static/source/jade/other_templates/**/*.jade'
+                ,tasks: ['clean:compiled_templates', 'jade:compile_templates', 'html2js']
             }
         }
 
@@ -43,7 +48,7 @@ module.exports = function(grunt) {
             twist_app: {
                 files: {
                     'app/static/js/twist-app<%= githash.main.short %>.js': [
-                        'app/static/source/js/app.js'
+                        'app/static/source/js/*.js'
                     ]
                 }
             }
@@ -60,18 +65,49 @@ module.exports = function(grunt) {
         ,jade: {
             compile_home: {
                 options: {
-                    data: {'githash': '<%= githash.main.short %>'}
+                    pretty: true
+                    ,data: {'githash': '<%= githash.main.short %>'}
                 }
                 ,files: {
                   "app/static/index.html": ["app/static/source/jade/index.jade"]
                 }
             }
+            ,compile_templates: {
+                options: {
+                    pretty: true
+                }
+                ,files: [
+                    {
+                        cwd: "app/static/source/jade/other_templates"
+                        ,src: "**/*.jade"
+                        ,dest: "app/static/source/jade/compiled_templates"
+                        ,expand: true
+                        ,ext: ".html"
+                    }
+                ]
+            }
+        }
+
+        ,html2js: {
+            options: {
+                base: 'app/static/source/jade/compiled_templates'
+            },
+            main: {
+                src: ['app/static/source/jade/compiled_templates/**/*.html']
+                ,dest: 'app/static/source/js/templates.js'
+            },
         }
 
         ,clean: {
-            twist_app: [
+            twist_app_js: [
+                'app/static/js/twist-app*.js'
+            ],
+            twist_app_css: [
                 'app/static/css/twist-app*.css'
-                ,'app/static/js/twist-app*.js'
+            ],
+            compiled_templates: [
+                'app/static/source/jade/compiled_html'
+                ,'app/static/source/js/templates.js'
             ]
         }
 
@@ -176,8 +212,11 @@ module.exports = function(grunt) {
 
 
             // NEW ANGULAR APP
-
-            twist_app_js: {
+            twist_app_index: {
+                src: 'app/static/source/jade/compiled_html/index.html'
+                ,dest: 'app/static/index.html'
+            }
+            ,twist_app_other_js: {
                 cwd: 'app/static/bower_components'
                 ,src: [
                     'jquery/dist/jquery.min.js'
@@ -195,7 +234,7 @@ module.exports = function(grunt) {
                 ,expand: true
             }
 
-            ,twist_app_css: {
+            ,twist_app_other_css: {
                 cwd: 'app/static/bower_components'
                 ,src: [
                     'bootstrap/dist/css/bootstrap.min.css'
@@ -386,12 +425,15 @@ module.exports = function(grunt) {
 
         // NEW ANGULAR APP
         'githash'
-        ,'clean:twist_app'
+        ,'clean'
+        ,'jade:compile_home'
+        ,'jade:compile_templates'
+        ,'html2js'
         ,'uglify:twist_app'
         ,'sass:all'
-        ,'jade:compile_home'
-        ,'copy:twist_app_js'
-        ,'copy:twist_app_css'
+        ,'copy:twist_app_index'
+        ,'copy:twist_app_other_js'
+        ,'copy:twist_app_other_css'
         //END NEW ANGULAR APP
     ]);
 
@@ -421,11 +463,15 @@ module.exports = function(grunt) {
 
         // NEW ANGULAR APP
         'githash'
-        ,'clean:twist_app'
+        ,'clean'
+        ,'jade:compile_home'
+        ,'jade:compile_templates'
+        ,'html2js'
         ,'uglify:twist_app'
         ,'sass:all'
-        ,'copy:twist_app_js'
-        ,'copy:twist_app_css'
+        ,'copy:twist_app_index'
+        ,'copy:twist_app_other_js'
+        ,'copy:twist_app_other_css'
         //END NEW ANGULAR APP
     ]);
 
