@@ -11,3 +11,6 @@ app/static/css/*
 app/static/images/*
 app/static/uploads/*
 app/static/exports/*
+.sass-cache/
+app/static/index.html
+app/static/source/jade/compiled_templates/
