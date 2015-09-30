@@ -65,22 +65,22 @@ common_js = Bundle(
        'js/moment.min.js',
        'js/jquery.easyModal.js',
        'js/bootstrap-typeahead.min.js',
-       'source/js/jquery.leanModal.min.js',
+       'source/js/lib/jquery.leanModal.min.js',
        'source/js/components/genericPopup.js', 
        'source/js/utils/utils.js', 
        output='js/common.js')
 
 index_js = Bundle(
        'source/js/components/dropDownButton.js', 
-       'source/js/dropzone.js', 
-       'source/js/fileDropZone.js', 
+       'source/js/lib/dropzone.js', 
+       'source/js/lib/fileDropZone.js', 
        'source/js/views/index.js', 
         output='js/views/index.js')
 
 recordSampleTransfer_js = Bundle(
        'source/js/components/dropDownButton.js', 
-       'source/js/dropzone.js', 
-       'source/js/fileDropZone.js', 
+       'source/js/lib/dropzone.js', 
+       'source/js/lib/fileDropZone.js', 
        'source/js/views/recordSampleTransfer.js', 
         output='js/views/recordSampleTransfer.js')
 
