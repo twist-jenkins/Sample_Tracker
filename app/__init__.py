@@ -186,27 +186,11 @@ def oauth2callback():
 def logout():
     return routes.logout()
 
-
-
-
-
 # ==========================
 #
 # The Web Pages
 #
 # ==========================
-
-#
-# This is the new app - single page "home"
-#
-@app.route('/new-home')
-@login_required
-def new_home():
-    return routes.new_home()
-
-################################################################################################################################################################
-################ PRE-ANGULAR PAGES ################
-################################################################################################################################################################
 
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
@@ -334,6 +318,52 @@ def get_sample_plate_barcodes_list():
 @app.route('/samples')
 def get_samples_list():
     return routes.get_samples_list()
+
+
+
+
+#######################################################################################################################################
+#######################################################################################################################################
+#######################################################################################################################################
+######## ANGULAR APP ROUTES
+#######################################################################################################################################
+#######################################################################################################################################
+#######################################################################################################################################
+
+#
+# This is the new app - single page "home"
+#
+@app.route('/new-home')
+def new_home():
+    return routes.new_home()
+
+
+########################################################
+#### api routes
+########################################################
+
+#
+# This is the route to see if there is a logged-in user. Once the angular route loads from its route, the auth status of the user could change
+#
+@app.route('/api/v1/user', methods=['GET'])
+def user_data():
+    return routes.user_data()
+
+@app.route('/google-login', methods=['GET'])
+def google_login():
+    return routes.google_login()
+
+@app.route('/api/v1/sample-tranfer-types', methods=['GET'])
+def sample_tranfer_types():
+    return routes.sample_tranfer_types()
+
+@app.route('/api/v1/sample-plate-barcodes', methods=['GET'])
+def sample_plate_barcodes():
+    return routes.sample_plate_barcodes()
+
+@app.route('/api/v1/track-sample-step', methods=['POST'])
+def track_sample_step():
+    return routes.create_sample_movement()
 
 
 

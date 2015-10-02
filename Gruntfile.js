@@ -66,6 +66,7 @@ module.exports = function(grunt) {
             compile_home: {
                 options: {
                     pretty: true
+                    ,doctype: 'html'
                     ,data: {'githash': '<%= githash.main.short %>'}
                 }
                 ,files: {
@@ -75,6 +76,7 @@ module.exports = function(grunt) {
             ,compile_templates: {
                 options: {
                     pretty: true
+                    ,doctype: 'html'
                 }
                 ,files: [
                     {
@@ -226,6 +228,7 @@ module.exports = function(grunt) {
                     ,'angular/angular.min.js.map'
                     ,'angular-ui-router/release/angular-ui-router.*'
                     ,'angular-bootstrap/ui-bootstrap.min.js'
+                    ,'angular-bootstrap/ui-bootstrap-tpls.min.js'
                     ,'angular-sanitize/angular-sanitize.min.js'
                     ,'angular-sanitize/angular-sanitize.min.js.map'
                 ]
