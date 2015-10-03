@@ -524,17 +524,6 @@ def plate_report(sample_plate_barcode, format):
         response.headers["Content-Disposition"] = "attachment; filename=Plate_" + sample_plate_barcode + "_Report.csv"
         return response
 
-
-
-
-
-
-
-
-
-
-
-
 #
 # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we 
 # process that spreadsheet data.
@@ -978,9 +967,9 @@ def create_sample_movement():
             logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))
 
 
-    return jsonify(response)  
-
-
+    return Response(response=json.dumps(response),
+        status=200, \
+        mimetype="application/json")
 
 #
 # Returns ids of all sample plates. (Used in the UI's "type ahead" field so that the user can specify

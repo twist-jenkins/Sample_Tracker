@@ -305,6 +305,8 @@ class SampleTransferType(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
+    source_plate_count = db.Column(db.Integer)
+    destination_plate_count = db.Column(db.Integer)
     sample_transfer_template_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_template.id'))
 
     sample_tranfers = db.relationship('SampleTransfer')
@@ -314,7 +316,7 @@ class SampleTransferType(db.Model):
     #    self.name = name
 
     def __repr__(self):
-        return '<SampleTransferType id: [%d] name: [%s] template: [%s] >' % (self.id,self.name,self.sample_transfer_template.name)
+        return '<SampleTransferType id: [%d] name: [%s] template: [%s] source_plate_count: [%s] destination_plate_count: [%s]>' % (self.id,self.name,self.sample_transfer_template.name, self.source_plate_count, self.destination_plate_count)
 
 
 

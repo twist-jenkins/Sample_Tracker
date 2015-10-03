@@ -55,6 +55,11 @@ table {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 $twst-brown-black: #404041;
+$max-app-width: 1180px;
+$twst-minty-green: #dbffec;
+$twst-darker-green: #337251;
+$twst-dark-red: #7c0e0e;
+$twst-light-red: #ead3d3;
 
 @mixin after-clear {
     content: ".";
@@ -70,6 +75,71 @@ $twst-brown-black: #404041;
     -ms-transition: $args;
     -o-transition: $args;
     transition: $args;
+}
+
+@mixin twst-button-basic {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 0.3em;
+    padding: 0.5em 0.75em;
+    border: 1px solid $twst-brown-black;
+    opacity: 0.85;
+    color: #444;
+
+    &:hover {
+        opacity: 1;
+        text-decoration: none;
+        color: #000;
+    }
+}
+
+@mixin transform($transforms) {
+    -moz-transform: $transforms;
+    -o-transform: $transforms;
+    -ms-transform: $transforms;
+    -webkit-transform: $transforms;
+    transform: $transforms;
+}
+
+@mixin rotate($deg) {
+    @include transform(rotate(#{$deg}deg));
+}
+
+@mixin translate ($x, $y) {
+   @include transform(translate($x, $y));
+}
+
+@mixin flipV {
+    -moz-transform: scaleY(-1);
+    -o-transform: scaleY(-1);
+    -webkit-transform: scaleY(-1);
+    transform: scaleY(-1);
+    ms-transform: scaleY(-1);
+}
+
+@mixin flipH {
+    -moz-transform: scaleX(-1);
+    -o-transform: scaleX(-1);
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+    ms-transform: scaleX(-1);
+}
+
+@mixin flipBoth {
+    -moz-transform: scale(-1, -1);
+    -o-transform: scale(-1, -1);
+    -webkit-transform: scale(-1, -1);
+    transform: scale(-1, -1);
+    ms-transform: scale(-1, -1);
+}
+
+@mixin validThumbIcon {
+    -moz-transform: scaleY(-1) translate(0, 0.2em);
+    -o-transform: scaleY(-1) translate(0, 0.2em);
+    -ms-transform: scaleY(-1) translate(0, 0.2em);
+    -webkit-transform: scaleY(-1) translate(0, 0.2em);
+    transform: scaleY(-1) translate(0, 0.2em);
 }
 
 
@@ -108,6 +178,15 @@ body {
     cursor: pointer;
 }
 
+.twst-invisible {
+    visibility: hidden;
+}
+
+.twst-input-label-block {
+    margin-bottom: 0.3em;
+    color: #aaa;    
+}
+
 
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -119,11 +198,7 @@ body {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 .twst-button {
-    position: relative;
-    cursor: pointer;
-    border-radius: 0.3em;
-    padding: 0.5em 0.75em;
-    border: 1px solid $twst-brown-black;
+    @include twst-button-basic;
     /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#dbffec+0,dbffec+52,75a089+100 */
     background: #dbffec; /* Old browsers */
     background: -moz-linear-gradient(top,  #dbffec 0%, #dbffec 52%, #75a089 100%); /* FF3.6+ */
@@ -135,12 +210,208 @@ body {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbffec', endColorstr='#75a089',GradientType=0 ); /* IE6-9 */
 }
 
+.twst-blue-button {
+    @include twst-button-basic;
+    &:hover {
+        color: #fff;
+    }
+    color: #fff;
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#d3e4ed+0,157ad8+33,157ad8+100 */
+    background: #d3e4ed; /* Old browsers */
+    background: -moz-linear-gradient(top,  #d3e4ed 0%, #157ad8 33%, #157ad8 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#d3e4ed), color-stop(33%,#157ad8), color-stop(100%,#157ad8)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  #d3e4ed 0%,#157ad8 33%,#157ad8 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  #d3e4ed 0%,#157ad8 33%,#157ad8 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  #d3e4ed 0%,#157ad8 33%,#157ad8 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  #d3e4ed 0%,#157ad8 33%,#157ad8 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d3e4ed', endColorstr='#157ad8',GradientType=0 ); /* IE6-9 */
+}
+
+.twst-disabled-button {
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#e5e5e5+0,7f7f7f+33,7f7f7f+100 */
+    background: #e5e5e5; /* Old browsers */
+    background: -moz-linear-gradient(top,  #e5e5e5 0%, #7f7f7f 33%, #7f7f7f 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#e5e5e5), color-stop(33%,#7f7f7f), color-stop(100%,#7f7f7f)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  #e5e5e5 0%,#7f7f7f 33%,#7f7f7f 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  #e5e5e5 0%,#7f7f7f 33%,#7f7f7f 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  #e5e5e5 0%,#7f7f7f 33%,#7f7f7f 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  #e5e5e5 0%,#7f7f7f 33%,#7f7f7f 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e5e5e5', endColorstr='#7f7f7f',GradientType=0 ); /* IE6-9 */
+    cursor: default;
+    opacity: 0.7;
+
+
+    &:hover {
+        opacity: 0.7;
+    }
+
+    &:focus {
+        outline: none;
+    }
+}
+
+.twst-thumbs-validation-icon {
+    display: inline-block;
+
+    &.twst-thumbs-validation-icon-valid {
+        @include validThumbIcon;
+        svg {
+            path {
+                fill: #5caa5e;
+            }
+
+        }
+    }
+
+    svg {
+        width: 1em;
+        height: 0.965em;
+
+        path {
+            fill: #eee;
+        }
+    }
+
+}
+
+/******************************/
+/*** SPINNER ***/
+/******************************/
+
+.twst-spinner {
+    position: relative;
+    margin: 0 auto;
+    display: block;
+}
+
+.twst-spinner-blocks {
+    position: relative;
+    display: table;
+    line-height: 1.2em;
+    font-size: 1.2em;
+    margin: 0 auto;
+    width:3.6em;
+}
+
+.twst-reversed-spinner {
+    .twst-spinner-block-outer > span {
+        background-color: #C9EAFF;
+    }
+}
+
+.twst-spinner-block-outer {
+    position: relative;
+    display: table-cell;
+    width: 1em;
+    height: 1em;
+    vertical-align: middle;
+    text-align: center;
+    border-right: 0.1em solid transparent;
+    border-left: 0.1em solid transparent;
+
+    > span {
+        position: relative;
+        display: block;
+        width:100%;
+        height:100%;
+        background-color: #008FE8;
+        border-radius: 0.2em;
+        margin: 0 auto;
+    }
+}
+
+.twst-spinner-view-load {
+    position: absolute;
+    text-align: center;
+    top: 10px;
+    left: 45%;
+}
+
+.twst-spinner-blocker {
+    display: block;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
+    font-size: 0.7em;
+    top: 35%;
+}
+
+.twst-tiny-spinner, .twst-tiny-spinner-right, .twst-tiny-spinner-abs {
+    font-size: 0.4em;
+    top: 1.2em;
+}
+
+.twst-spinner.twst-tiny-spinner-right {
+    float: right;
+}
+
+.twst-spinner.twst-tiny-spinner-invite-banner {
+    font-size: 0.6em;
+}
+
+.twst-spinner.twst-tiny-spinner-abs {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    font-size: 0.6em;
+}
+
+/******************************/
+/*** END SPINNER ***/
+/******************************/
+
+.twst-message {
+    border-radius: 0.3em;
+    font-size: 1.3em;
+    padding: 1em 0.5em 1em 0.6em;
+    opacity: 0;
+    @include transition(opacity .3s ease);
+
+    &.twst-message-visible {
+        opacity: 1;
+    }
+
+    &.twst-success {
+        background: $twst-minty-green;
+        color: $twst-darker-green;
+        border: 1px solid $twst-darker-green;
+        .twst-message-text:before {
+            content: '\2713';
+        }
+    }
+
+    &.twst-error {
+        background: $twst-light-red;
+        color: $twst-dark-red;
+        border: 1px solid $twst-dark-red;
+
+        .twst-message-text:before {
+            content: '\2717';
+        }
+    }
+
+    .twst-message-text:before {
+        font-size: 2em;
+        line-height: 0.1em;
+        top: 0.2em;
+        position: relative;
+        margin-right: 0.15em;
+    }
+
+    span.twst-step-text {
+        color: #000;
+        font-weight: bold;
+    }
+}
+
 
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
-/******* TWIST HEADER
+/******* HEADER
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -156,33 +427,43 @@ body {
         @include after-clear;
     }
 
-    .twst-header-logo-image, .twst-header-title, .twst-header-user-info {
-        display: table-cell;
-        vertical-align: middle;
-    }
+    .twst-header-inner {
+        margin: 0 auto;
+        max-width: $max-app-width;
 
-    .twst-header-logo-image {
-        position: relative;
-        float: left;
-        width: 8em;
-        margin-right: 2em;
-    }
+        .twst-header-logo-image, .twst-header-title, .twst-header-user-info {
+            display: table-cell;
+            vertical-align: middle;
+        }
 
-    .twst-header-title {
-        font-size: 2em;
-        color: #fff;
-        width: 100%;
-    }
+        .twst-header-logo-image {
+            position: relative;
+            float: left;
+            height: 4em;
+            width: 8.67em;
+            margin-right: 2em;
+        }
 
-    .twst-header-user-info {
-        min-width: 15em;
-        color: #fff;
-        margin-right: 0.25em;
-        text-align: right;
-    }
+        .twst-header-title {
+            font-size: 2em;
+            color: #fff;
+            width: 100%;
+        }
 
-    .twst-button {
-        border: 0;
+        .twst-header-user-info {
+            min-width: 15em;
+            color: #fff;
+            margin-right: 0.25em;
+            text-align: right;
+        }
+
+        .twst-button {
+            border: 0;
+        }
+
+        .twst-logout-button {
+            margin-top: 0.25em;
+        }
     }
 }
 
@@ -191,7 +472,7 @@ body {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
-/******* TWIST MAIN BODY
+/******* MAIN BODY
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -199,6 +480,8 @@ body {
 
 .twst-main-body {
     padding: 1em 1em 2em 1em;
+    margin: 0 auto;
+    max-width: $max-app-width;
 }
 
 
@@ -206,7 +489,7 @@ body {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
-/******* TWIST FOOTER
+/******* FOOTER
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -223,4 +506,168 @@ body {
     text-align: center;
     width: 100%;
     background-color: #c7ddd2;
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******* LOGIN
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-login-main {
+    text-align: center;
+
+    h3 {
+        font-size: 2em;
+        margin-bottom: 1em;
+    }
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******* SAMPLE TRACK
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-sample-track-main {
+    padding-top: 3em;
+    
+    h1 {
+        font-size: 2em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 1em;
+    }
+
+    .twst-sample-track-result-message {
+        position: relative;
+        float: right;
+    }
+
+    .twst-sample-track-main-inputs {
+        padding: 0 2em;
+        position: relative;
+    }
+
+    /****************************************/
+    /* override bootstrap styles */
+    /****************************************/
+
+    .btn, .dropdown-menu {
+        font-size: 1.2em;
+    }
+
+    .btn-primary {
+        background-color: #fff;
+        color: #000;
+        border-color: #ddd;
+    }
+
+    .btn-primary.active.focus, .btn-primary.active:focus, .btn-primary.active:hover, .btn-primary:active.focus, .btn-primary:active:focus, .btn-primary:active:hover, .open>.dropdown-toggle.btn-primary.focus, .open>.dropdown-toggle.btn-primary:focus, .open>.dropdown-toggle.btn-primary:hover, .btn-primary.active, .btn-primary:active, .open>.dropdown-toggle.btn-primary {
+        color: #000;
+        background-color: $twst-minty-green;
+        border-color: #ddd;
+    }
+
+    .btn-primary:hover {
+        background-color: $twst-minty-green;
+    }
+
+    /****************************************/
+    /* end override bootstrap styles */
+    /****************************************/
+
+    .twst-sample-track-step-options-select {
+
+        .twst-thumbs-validation-icon {
+            margin-left: 0.3em;
+            position: relative;
+            top: 0.15em;
+            font-size: 2em;
+        }
+
+        a {
+            display: block;
+            cursor: pointer;
+        }
+
+    }
+
+    .twst-sample-track-plate-barcodes {
+        display: table;
+        width: 100%;
+        margin-top: 2em;
+
+        .twst-sample-track-plate-barcodes-left, .twst-sample-track-plate-barcodes-right {
+            display: table-cell;
+            width: 50%;
+            padding-right: 2em;
+
+            &:first-child {
+                 padding-right: 4em;
+            }
+
+            &:last-child {
+                padding-left: 2em;
+            }
+
+            .twst-input-label-row {
+                position: relative;
+                margin-top: 0.3em;
+
+                &:first-child {
+                    margin-top: 0;
+                }
+
+                .twst-thumbs-validation-icon {
+                    margin-left: 0.3em;
+                    position: absolute;
+                    right: -1.3em;
+                    top: 0.15em;
+                    font-size: 2em;
+                }
+
+                input {
+                    font-size: 1.2em;
+                    padding: 1em 0.5em;
+                }
+            }
+        }
+    }
+
+    .twst-sample-track-main-buttons {
+        margin-top: 2em;
+        position: relative;
+
+        .twst-spinner {
+            position: absolute;
+            font-size: 0.7em;
+            top: -1.4em;
+            left: 0.3em;
+            width: 7.5em;
+            z-index: 10;
+        }
+
+        .twst-blue-button {
+            font-size: 1.2em;
+            outline: none;
+        }
+
+        .twst-sample-track-clear-btn {
+            margin-left: 2em;
+            cursor: pointer;
+        }
+
+    }
+
 }

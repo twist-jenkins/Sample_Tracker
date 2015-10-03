@@ -42,6 +42,10 @@ module.exports = function(grunt) {
                 files: 'app/static/source/jade/other_templates/**/*.jade'
                 ,tasks: ['clean:compiled_templates', 'jade:compile_templates', 'html2js']
             }
+            ,images: {
+                files: 'app/static/source/images/**/*'
+                ,tasks: ['copy:source_images']
+            }
         }
 
         ,uglify: {
@@ -66,6 +70,7 @@ module.exports = function(grunt) {
             compile_home: {
                 options: {
                     pretty: true
+                    ,doctype: 'html'
                     ,data: {'githash': '<%= githash.main.short %>'}
                 }
                 ,files: {
@@ -75,6 +80,7 @@ module.exports = function(grunt) {
             ,compile_templates: {
                 options: {
                     pretty: true
+                    ,doctype: 'html'
                 }
                 ,files: [
                     {
@@ -226,6 +232,7 @@ module.exports = function(grunt) {
                     ,'angular/angular.min.js.map'
                     ,'angular-ui-router/release/angular-ui-router.*'
                     ,'angular-bootstrap/ui-bootstrap.min.js'
+                    ,'angular-bootstrap/ui-bootstrap-tpls.min.js'
                     ,'angular-sanitize/angular-sanitize.min.js'
                     ,'angular-sanitize/angular-sanitize.min.js.map'
                 ]
