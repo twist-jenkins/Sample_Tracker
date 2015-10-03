@@ -40,10 +40,14 @@ angular.module("twist-track-sample.html", []).run(["$templateCache", function($t
   $templateCache.put("twist-track-sample.html",
     "<div class=\"twst-sample-track-main\"> \n" +
     "  <h1>Record Step</h1>\n" +
-    "  <form class=\"twst-sample-track-main-inputs\">\n" +
-    "    <div ng-bind-html=\"submissionResultMessage\" ng-show=\"submissionResultMessage\" class=\"twst-sample-track-result-message\"></div>\n" +
+    "  <div ng-if=\"!stepTypeOptions\" class=\"twst-spinner\"></div>\n" +
+    "  <form ng-show=\"stepTypeOptions\" class=\"twst-sample-track-main-inputs\">\n" +
+    "    <div class=\"twst-sample-track-result-message\">\n" +
+    "      <twst-message message=\"submissionResultMessage\" visible-and-valid=\"submissionResultVisible\"></twst-message>\n" +
+    "    </div>\n" +
     "    <p class=\"twst-input-label-block\">Step Type:</p>\n" +
     "    <div dropdown class=\"btn-group twst-sample-track-step-options-select\">\n" +
+    "      <twst-thumb-validation-icon validation=\"selectedStepType\"></twst-thumb-validation-icon>\n" +
     "      <button id=\"single-button\" type=\"button\" dropdown-toggle class=\"btn btn-primary\">{{stepTypeDropdownValue}}&nbsp;<span class=\"caret\"></span></button>\n" +
     "      <ul role=\"menu\" aria-labelledby=\"single-button\" class=\"dropdown-menu\">\n" +
     "        <li role=\"menuitem\" ng-repeat=\"option in stepTypeOptions\"><a ng-click=\"selectStepType(option)\">{{option.text}}</a></li>\n" +
@@ -51,20 +55,25 @@ angular.module("twist-track-sample.html", []).run(["$templateCache", function($t
     "    </div>\n" +
     "    <div class=\"twst-sample-track-plate-barcodes\">\n" +
     "      <div class=\"twst-sample-track-plate-barcodes-left\">\n" +
-    "        <p class=\"twst-input-label-block\">Source Plate Barcode:</p>\n" +
-    "        <div ng-repeat=\"plate in sourcePlates\">\n" +
-    "          <input type=\"text\" ng-model=\"plate.text\" typeahead=\"barcode for barcode in getTypeAheadBarcodes($index)\" typeahead-loading=\"loadingLocations\" typeahead-no-results=\"noResults\" class=\"form-control\"><i ng-show=\"loadingLocations\" class=\"glyphicon glyphicon-refresh\"></i>\n" +
+    "        <p class=\"twst-input-label-block\"><span ng-if=\"destinationPlates.length\">Source&nbsp;</span><span>Plate Barcode:</span></p>\n" +
+    "        <div ng-repeat=\"plate in sourcePlates\" class=\"twst-input-label-row\">\n" +
+    "          <input type=\"text\" ng-model=\"plate.text\" typeahead=\"barcode for barcode in getTypeAheadBarcodes($index)\" typeahead-loading=\"loadingLocations\" typeahead-no-results=\"noResults\" class=\"form-control\">\n" +
+    "          <twst-thumb-validation-icon validation=\"plate.text\"></twst-thumb-validation-icon><i ng-show=\"loadingLocations\" class=\"glyphicon glyphicon-refresh\"></i>\n" +
     "          <div ng-show=\"noResults\"><i class=\"glyphicon glyphicon-remove\">No Results Found</i></div>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "      <div class=\"twst-sample-track-plate-barcodes-left\">\n" +
-    "        <p class=\"twst-input-label-block\">Destination Plate Barcode:</p>\n" +
-    "        <div ng-repeat=\"plate in destinationPlates\">\n" +
+    "        <p ng-class=\"{'twst-invisible': !destinationPlates.length}\" class=\"twst-input-label-block\">Destination Plate Barcode:</p>\n" +
+    "        <div ng-repeat=\"plate in destinationPlates\" class=\"twst-input-label-row\">\n" +
     "          <input type=\"text\" ng-model=\"plate.text\" class=\"form-control\">\n" +
+    "          <twst-thumb-validation-icon validation=\"plate.text\"></twst-thumb-validation-icon>\n" +
     "        </div>\n" +
     "      </div>\n" +
     "    </div>\n" +
-    "    <button ng-class=\"{'twst-disabled-button' : !sampleTrackFormReady()}\" ng-click=\"submitStep()\" class=\"twst-button twst-blue-button\">Submit</button><a ng-click=\"clearForm()\" class=\"twst-sample-track-clear-btn\">Clear Form</a>\n" +
+    "    <div class=\"twst-sample-track-main-buttons\">\n" +
+    "      <div ng-if=\"submittingStep\" class=\"twst-spinner twst-step-submitting-spinner\"></div>\n" +
+    "      <button ng-class=\"{'twst-disabled-button' : !sampleTrackFormReady()}\" ng-click=\"submitStep()\" class=\"twst-button twst-blue-button\">Submit</button><a ng-click=\"clearForm()\" class=\"twst-sample-track-clear-btn\">Clear Form</a>\n" +
+    "    </div>\n" +
     "  </form>\n" +
     "</div>");
 }]);

@@ -42,6 +42,10 @@ module.exports = function(grunt) {
                 files: 'app/static/source/jade/other_templates/**/*.jade'
                 ,tasks: ['clean:compiled_templates', 'jade:compile_templates', 'html2js']
             }
+            ,images: {
+                files: 'app/static/source/images/**/*'
+                ,tasks: ['copy:source_images']
+            }
         }
 
         ,uglify: {

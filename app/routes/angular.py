@@ -85,7 +85,7 @@ def sample_tranfer_types():
     sample_tranfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.name);
     simplified_results = []
     for row in sample_tranfer_types2:
-        simplified_results.append({"text": row.name, "value": row.id})
+        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count})
     returnData = {
         "success": True
         ,"results": simplified_results 

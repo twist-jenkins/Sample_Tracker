@@ -21,21 +21,40 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackSampleController', ['$scope', '$state', 'Api', '$sce', 
-    function ($scope, $state, Api, $sce) {
+.controller('trackSampleController', ['$scope', '$state', 'Api', '$sce', '$timeout', 
+    function ($scope, $state, Api, $sce, $timeout) {
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
             return {text: ''};
         }
         $scope.stepTypeDropdownValue = 'Select a Step';
-        $scope.stepTypeOptions = [];
         $scope.sourcePlates = [returnEmptyPlate()];      /* backs both the field interator and the entered data */
         $scope.destinationPlates = [returnEmptyPlate()]; /* backs both the field interator and the entered data */
 
+
+        var setPlateArrays = function () {
+            /* we need to expand or contract the plate arrays to match the selected step type */
+            while ($scope.sourcePlates.length != $scope.selectedStepType.source_plate_count) {
+                if ($scope.sourcePlates.length < $scope.selectedStepType.source_plate_count) {
+                    $scope.sourcePlates.push(returnEmptyPlate());
+                } else if ($scope.sourcePlates.length > $scope.selectedStepType.source_plate_count) {
+                    $scope.sourcePlates.splice($scope.sourcePlates.length - ($scope.sourcePlates.length - $scope.selectedStepType.source_plate_count));
+                }
+            }
+            while ($scope.destinationPlates.length != $scope.selectedStepType.destination_plate_count) {
+                if ($scope.destinationPlates.length < $scope.selectedStepType.destination_plate_count) {
+                    $scope.destinationPlates.push(returnEmptyPlate());
+                } else if ($scope.destinationPlates.length > $scope.selectedStepType.destination_plate_count) {
+                    $scope.destinationPlates.splice($scope.destinationPlates.length - ($scope.destinationPlates.length - $scope.selectedStepType.destination_plate_count));
+                }
+            }
+        };
+
         $scope.selectStepType = function (option) {
-            $scope.stepTypeDropdownValue = option.text;
             $scope.selectedStepType = option;
+            $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
+            setPlateArrays();
         }
 
         $scope.getTypeAheadBarcodes = function (queryText) {
@@ -45,26 +64,28 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }
 
         $scope.sampleTrackFormReady = function () {
-            var ready = true;
+
+            if (!$scope.selectedStepType) {
+                return false;
+            }
 
             for (var i=0; i< $scope.sourcePlates.length; i++) {
                 if ($scope.sourcePlates[i].text == '') {
-                    ready = false;
-                    break;
+                    return false;
                 }
             }
 
             for (var i=0; i< $scope.destinationPlates.length; i++) {
                 if ($scope.destinationPlates[i].text == '') {
-                    ready = false;
-                    break;
+                    return false;
                 }
             }
 
-            return ready;
+            return true;
         }
 
         $scope.clearForm = function () {
+            $scope.selectedStepType = null;
             $scope.stepTypeDropdownValue = 'Select a Step';
             $scope.sourcePlates = [returnEmptyPlate()];
             $scope.destinationPlates = [returnEmptyPlate()];
@@ -72,7 +93,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         var getSampleTrackSubmitData = function () {
             var data = {
-                sampleTransferTypeId: $scope.selectedStepType.value
+                sampleTransferTypeId: $scope.selectedStepType.id
                 ,sourceBarcodeId: $scope.sourcePlates[0].text
                 ,destinationBarcodeId: $scope.destinationPlates[0].text
             };
@@ -81,10 +102,31 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.submitStep = function () {
-            if ($scope.sampleTrackFormReady) {
+            if (!$scope.submitting && $scope.sampleTrackFormReady()) {
+
+                $scope.submittingStep = true;
                 Api.submitSampleStep(getSampleTrackSubmitData()).success(function (data) {
-                    $scope.submissionResultMessage = '<span class="twst-checkmark">&#x2713;</span> This <span class="twst-step-text">' + $scope.selectedStepType.text + '</span> step was successfully recorded.';
+
+                    if (data.success) {
+                        $scope.submittingStep = false;
+                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.selectedStepType.text + '</span> step was successfully recorded.';
+                        $scope.submissionResultVisible = 1;
+                        $scope.clearForm();
+                    } else {
+                        $scope.submissionResultMessage = 'Error: ' + data.errorMessage + '.';
+                        $scope.submissionResultVisible = -1;
+                        $scope.submittingStep = false;
+                    }
+
+                    $timeout(function () {
+                        $scope.submissionResultVisible = 0;
+                        $timeout(function () {
+                            $scope.submissionResultMessage = null;
+                        }, 400);
+                    }, 5000);
+                    
                 }).error(function (data) {
+                    $scope.submittingStep = false;
                     console.log('ERROR!');
                 });
             }
