@@ -5,27 +5,15 @@
 # File: app/routes/api.py
 #
 # These are the handlers for all JSON/REST API routes used by this application.
-# 
+#
 ######################################################################################
 
-import csv 
-
-import os, sys
-
+import csv
+import os
 import time
-
-import hashlib 
-
-import random
-
-import xlrd
-
-import collections
-
 import json
 
-from flask import ( g, Flask, render_template, make_response, request, Response, redirect, url_for, 
-    abort, session, send_from_directory, jsonify )
+from flask import g, make_response, request, Response, session, jsonify
 
 from sqlalchemy import and_
 
@@ -33,12 +21,15 @@ from werkzeug import secure_filename
 
 from app import app, db
 
-from app.dbmodels import (create_unique_object_id, Operator, Sample, SampleTransfer, SampleTransferType, SamplePlate,
-    SampleTransferDetail, SamplePlateLayout, SamplePlateType)
+from app.dbmodels import (create_unique_object_id, Sample, SampleTransfer,
+                          SamplePlate, SamplePlateLayout, SamplePlateType)
 
-from well_mappings import ( get_col_and_row_for_well_id_48, get_well_id_for_col_and_row_48,
-       get_col_and_row_for_well_id_96, get_well_id_for_col_and_row_96, get_col_and_row_for_well_id_384,
-       get_well_id_for_col_and_row_384 )
+from well_mappings import (get_col_and_row_for_well_id_48,
+                           get_well_id_for_col_and_row_48,
+                           get_col_and_row_for_well_id_96,
+                           get_well_id_for_col_and_row_96,
+                           get_col_and_row_for_well_id_384,
+                           get_well_id_for_col_and_row_384)
 
 import StringIO
 
@@ -56,7 +47,7 @@ def allowed_file(filename):
 
 
 #
-# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
+# The route to which the web page posts the spreadsheet detailing the well-to-well movements of
 # samples.
 #
 def dragndrop():
@@ -82,7 +73,7 @@ def dragndrop():
         def get_col_and_row_for_well_id_96(well_id):
     cell = well_id_to_cell_map_96[well_id]
     return cell["col_and_row"]
-    
+
 def get_well_id_for_col_and_row_96(col_and_row):
     cell = col_and_row_to_cell_map_96[col_and_row]
     return cell["well_id"]
@@ -90,7 +81,7 @@ def get_well_id_for_col_and_row_96(col_and_row):
 def get_col_and_row_for_well_id_384(well_id):
     cell = well_id_to_cell_map_384[well_id]
     return cell["col_and_row"]
-    
+
 def get_well_id_for_col_and_row_384(col_and_row):
     cell = col_and_row_to_cell_map_384[col_and_row]
     return cell["well_id"]
@@ -118,7 +109,7 @@ def get_well_id_for_col_and_row_384(col_and_row):
                 #"destination_well_id":worksheet.cell_value(curr_row,5),
                 "destination_col_and_row":worksheet.cell_value(curr_row,3),
                 "destination_well_count":worksheet.cell_value(curr_row,4)
-            } 
+            }
             row = worksheet.row(curr_row)
             task_items.append(task_item)
 
@@ -130,7 +121,7 @@ def get_well_id_for_col_and_row_384(col_and_row):
         logger.info(" %s uploaded a spreadsheet into the sample transfer form" % (g.user.first_and_last_name))
 
 
-    return jsonify(response)  
+    return jsonify(response)
 
 
 #
@@ -196,13 +187,13 @@ def sample_plate_external_barcode(sample_plate_id):
         #
         sample_plate_with_this_barcode = db.session.query(SamplePlate).filter_by(external_barcode=external_barcode).first()
         if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
-            logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" % 
+            logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
                 (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
             response = {
                 "success":False,
                 "errorMessage":"The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.sample_plate_id)
             }
-            return jsonify(response)  
+            return jsonify(response)
 
 
         sample_plate.external_barcode = external_barcode
@@ -214,7 +205,7 @@ def sample_plate_external_barcode(sample_plate_id):
 
         logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
 
-        return jsonify(response)  
+        return jsonify(response)
 
 
 #
@@ -239,7 +230,7 @@ def sample_report(sample_id, format):
         SamplePlateLayout.well_id==SampleTransferDetail.source_well_id,
         SamplePlate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
 
-    first_row = None 
+    first_row = None
 
 
 
@@ -248,7 +239,7 @@ def sample_report(sample_id, format):
 
         number_clusters = plate.sample_plate_type.number_clusters
 
-        #print "number_clusters: ", number_clusters 
+        #print "number_clusters: ", number_clusters
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
@@ -256,7 +247,7 @@ def sample_report(sample_id, format):
             384:get_col_and_row_for_well_id_384
         }.get(number_clusters,lambda well_id:"missing map")
 
-        first_row = { 
+        first_row = {
                "date_created": str(well.date_created),
                "date_created_formatted":well.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
                "destination_plate_barcode": plate.external_barcode,
@@ -284,7 +275,7 @@ def sample_report(sample_id, format):
             384:get_col_and_row_for_well_id_384
         }.get(number_clusters,lambda well_id:"missing map")
 
-        row = { 
+        row = {
            "date_created":str(well.date_created),
            "date_created_formatted":well.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
            "destination_plate_barcode": plate.external_barcode,
@@ -293,7 +284,7 @@ def sample_report(sample_id, format):
            "task": transfer.sample_transfer_type.name
         }
         report.append(row)
-       
+
 
     if first_row:
         report.insert(0,first_row)
@@ -325,7 +316,7 @@ def sample_report(sample_id, format):
         #csv2 += """,SAMPLE ID, CREATION DATE/TIME,CREATED BY\n """
         #csv2 += "," + sample.sample_id + "," + "\"" + sample.date_created.strftime("%A, %B %d, %Y %I:%M%p") + "\"" + "," + sample.operator.first_and_last_name
 
- 
+
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["PLATE-TO-PLATE HISTORY"])
@@ -343,14 +334,14 @@ def sample_report(sample_id, format):
 
 
         csvout = si.getvalue().strip('\r\n')
-        
+
         logger.info(" %s downloaded the SAMPLE DETAILS REPORT for sample with id [%s]" % (g.user.first_and_last_name,sample_id))
 
 
         #print "CSV: ", csvout
 
 
-        # We need to modify the response, so the first thing we 
+        # We need to modify the response, so the first thing we
         # need to do is create a response out of the CSV string
         response = make_response(csvout)
         # This is the key: Set the right header for the response
@@ -381,7 +372,7 @@ def plate_report(sample_plate_barcode, format):
     sample_plate_id = sample_plate.sample_plate_id
     number_clusters = sample_plate.sample_plate_type.number_clusters
 
-    #print "number_clusters: ", number_clusters 
+    #print "number_clusters: ", number_clusters
 
     well_to_col_and_row_mapping_fn = {
         48:get_col_and_row_for_well_id_48,
@@ -405,12 +396,12 @@ def plate_report(sample_plate_barcode, format):
                 "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
             parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
-    
+
 
     rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
         SampleTransferDetail.source_sample_plate_id==sample_plate_id,
         SamplePlate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
-    
+
     this_to_child_task_name = None
     seen=[]
     child_plates=[]
@@ -516,7 +507,7 @@ def plate_report(sample_plate_barcode, format):
 
         logger.info(" %s downloaded the PLATE DETAILS REPORT for plate with barcode [%s]" % (g.user.first_and_last_name,sample_plate_barcode))
 
-        # We need to modify the response, so the first thing we 
+        # We need to modify the response, so the first thing we
         # need to do is create a response out of the CSV string
         response = make_response(csvout)
         # This is the key: Set the right header for the response
@@ -525,7 +516,7 @@ def plate_report(sample_plate_barcode, format):
         return response
 
 #
-# If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we 
+# If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
 # process that spreadsheet data.
 #
 def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_id,wells):
@@ -596,15 +587,15 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         # 96 well, plastic
         #
         sample_plate_type = source_plate.sample_plate_type
-        plate_size = None 
+        plate_size = None
         if sample_plate_type.name == "48 well, plastic":
-            plate_size = "48" 
+            plate_size = "48"
         elif sample_plate_type.name == "96 well, plastic":
-            plate_size = "96" 
+            plate_size = "96"
         elif sample_plate_type.name == "384 well, plastic":
-            plate_size = "384" 
+            plate_size = "384"
         else:
-            plate_size = None 
+            plate_size = None
 
         print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (source_plate.external_barcode,sample_plate_type.name)
         logger.info("SOURCE PLATE, barcode: %s  plate type: [%s]" % (source_plate.external_barcode,sample_plate_type.name))
@@ -621,7 +612,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
             logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, source_col_and_row))
             print "calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, source_col_and_row)
-        
+
         #else:
         #    source_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
         #    logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column))
@@ -710,13 +701,13 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
 
 
         if sample_plate_type.name == "48 well, plastic":
-            plate_size = "48" 
+            plate_size = "48"
         elif sample_plate_type.name == "96 well, plastic":
-            plate_size = "96" 
+            plate_size = "96"
         elif sample_plate_type.name == "384 well, plastic":
-            plate_size = "384" 
+            plate_size = "384"
         else:
-            plate_size = None 
+            plate_size = None
 
         if not source_plate_well:
             error_well_id = source_well_id
@@ -774,7 +765,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
             SamplePlateLayout.well_id==destination_well_id
             )).first()
 
-        #existing_sample_plate_layout = True 
+        #existing_sample_plate_layout = True
 
         if existing_sample_plate_layout:
             return {
@@ -829,7 +820,7 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
 
 
 #
-# If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in 
+# If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in
 # the "source" plate will be moved to the exact same locations in the "destination" plate.
 #
 def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_id,source_barcode,destination_barcode):
@@ -857,7 +848,7 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
 
     #print "SOURCE PLATE: ", source_plate
 
-    source_plate_type_id = source_plate.type_id 
+    source_plate_type_id = source_plate.type_id
     storage_location_id = source_plate.storage_location_id
 
     destination_plate_name = create_unique_object_id("PLATE_")
@@ -892,7 +883,7 @@ def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_
             SamplePlateLayout.well_id==source_plate_well.well_id
             )).first()
 
-        #existing_sample_plate_layout = True 
+        #existing_sample_plate_layout = True
 
         if existing_sample_plate_layout:
             return {
@@ -942,7 +933,7 @@ def create_sample_movement():
     wells = data.get("wells",None)
 
     #
-    # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we 
+    # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
     # process that spreadsheet data.
     #
     if wells:
@@ -954,7 +945,7 @@ def create_sample_movement():
 
 
     #
-    # If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in 
+    # If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in
     # the "source" plate will be moved to the exact same locations in the "destination" plate.
     #
     else:
@@ -979,7 +970,7 @@ def get_sample_plates_list():
     plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
 
     plate_ids = [plate.sample_plate_id for plate in plates]
-    
+
     resp = Response(response=json.dumps(plate_ids),
         status=200, \
         mimetype="application/json")
@@ -994,7 +985,7 @@ def get_sample_plate_barcodes_list():
     plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
-    
+
     resp = Response(response=json.dumps(plate_barcodes),
         status=200, \
         mimetype="application/json")
@@ -1010,7 +1001,7 @@ def get_samples_list():
     sample_ids = []
     for row in result:
         sample_ids.append(row[0])
-     
+
     resp = Response(response=json.dumps(sample_ids),
         status=200, \
         mimetype="application/json")
