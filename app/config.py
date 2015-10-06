@@ -4,8 +4,8 @@
 #
 # File: config.py
 #
-# This is configuration file for the Flask app. 
-# 
+# This is configuration file for the Flask app.
+#
 ######################################################################################
 
 class Config(object):
@@ -13,7 +13,7 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
 
-    
+
 
     SQLALCHEMY_ECHO = False
 
@@ -30,6 +30,7 @@ class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" #"postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb_prod"
     SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
 
+
 class StagingConfig(Config):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" #"postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
 
@@ -39,4 +40,11 @@ class DevConfig(Config):
     #SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
     #SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:jOf-yIf-cE-hunT-@10.10.21.38/synapp_test"
     DEBUG = True
-    
+
+
+class UnittestConfig(Config):
+    TESTING = True
+    DEBUG = True
+    # WTF_CSRF_ENABLED = True
+    DATABASE = ":memory:"  # tempfile.mkstemp()
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE
