@@ -11,6 +11,7 @@ os.environ["WEBSITE_ENV"] = "Unittest"
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
 from app import app
+from app import db
 
 
 class TestCase(unittest.TestCase):
@@ -20,19 +21,20 @@ class TestCase(unittest.TestCase):
         assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
+        db.create_all()
 
     def tearDown(self):
-        # os.unlink(FLASK_APP.config['DATABASE'])
+        # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 
     def test_get_404(self):
         rv = self.client.get('/testing_404_1982341982374')
         assert rv.status_code == 404
 
-    def disabled_test_get_samples(self):
+    def test_get_samples(self):
         rv = self.client.get('/samples')
         assert rv.status_code == 200
-        assert rv.data == "foo"
+        assert rv.data == '[]'
 
     """
     def test_scores_calculate_test3(self):
