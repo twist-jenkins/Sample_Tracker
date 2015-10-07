@@ -1,4 +1,4 @@
-div(class="twst-sample-track-main") 
+div(class="twst-sample-track-main twst-child-page") 
     h1 Record Step
     div(class="twst-spinner" ng-if="!stepTypeOptions")
     form(class="twst-sample-track-main-inputs" ng-show="stepTypeOptions")
@@ -14,22 +14,27 @@ div(class="twst-sample-track-main")
                     a(ng-click="selectStepType(option)") {{option.text}}
         div(class="twst-sample-track-plate-barcodes")
             div(class="twst-sample-track-plate-barcodes-left")
-                p(class="twst-input-label-block")
+                p(class="twst-block-header")
                     span(ng-if="destinationPlates.length") Source&nbsp;
-                    span Plate Barcode:
-                div(class="twst-input-label-row" ng-repeat="plate in sourcePlates")
-                    input(type="text" class="form-control" ng-model="plate.text" typeahead="barcode for barcode in getTypeAheadBarcodes($index)" typeahead-loading="loadingLocations" typeahead-no-results="noResults")
-                    twst-thumb-validation-icon(validation="plate.text")
-                    i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh")
-                    div(ng-show="noResults")
-                      i(class="glyphicon glyphicon-remove") No Results Found
+                    span Plate Barcode{{sourcePlates.length > 1 ?'s':''}}:
+                div(class="twst-sample-track-plate-row" ng-repeat="plate in sourcePlates")
+                    div(class="twst-sample-track-plate-title" ng-if="plate.title" ng-bind-html="plate.title")
+                    div(class="twst-sample-track-plate-input")
+                        input(type="text" class="form-control" ng-model="plate.text" typeahead="barcode for barcode in getTypeAheadBarcodes($index)" typeahead-loading="loadingLocations" typeahead-no-results="noResults")
+                        twst-thumb-validation-icon(validation="plate.text.length > 5")
+                        i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh")
+                        div(ng-show="noResults")
+                          i(class="glyphicon glyphicon-remove") No Results Found
             div(class="twst-sample-track-plate-barcodes-left")
-                p(class="twst-input-label-block" ng-class="{'twst-invisible': !destinationPlates.length}") Destination Plate Barcode:
-                div(class="twst-input-label-row" ng-repeat="plate in destinationPlates")
-                    input(type="text" class="form-control" ng-model="plate.text")
-                    twst-thumb-validation-icon(validation="plate.text")
+                p(class="twst-block-header" ng-class="{'twst-invisible': !destinationPlates.length}") Destination Plate Barcode{{destinationPlates.length > 1 ?'s':''}}:
+                div(class="twst-sample-track-plate-row" ng-repeat="plate in destinationPlates")
+                    div(class="twst-sample-track-plate-title" ng-if="plate.title" ng-bind-html="plate.title")
+                    div(class="twst-sample-track-plate-input")
+                        input(type="text" class="form-control" ng-model="plate.text")
+                        twst-thumb-validation-icon(validation="plate.text.length > 5")
         div(class="twst-sample-track-main-buttons")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
             button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
-            a(class="twst-sample-track-clear-btn" ng-click="clearForm()") Clear Form
+            a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
+        div(ui-view ng-if="stepTypeOptions")
 

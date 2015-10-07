@@ -315,8 +315,8 @@ class SampleTransferType(db.Model):
     #def __init__(self, name ):
     #    self.name = name
 
-    def __repr__(self):
-        return '<SampleTransferType id: [%d] name: [%s] template: [%s] source_plate_count: [%s] destination_plate_count: [%s]>' % (self.id,self.name,self.sample_transfer_template.name, self.source_plate_count, self.destination_plate_count)
+    #def __repr__(self):
+    #    return '<SampleTransferType id: [%d] name: [%s] template: [%s] source_plate_count: [%s] destination_plate_count: [%s]>' % (self.id,self.name,self.sample_transfer_template.name, self.source_plate_count, self.destination_plate_count)
 
 
 

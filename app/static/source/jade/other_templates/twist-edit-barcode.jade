@@ -1,0 +1,29 @@
+div(class="twst-edit-barcode-main twst-child-page")
+    h1 Edit Plate Barcode
+    form(class="twst-edit-barcode-main-inputs")
+        div(class="twst-edit-barcode-main-inputs-left")
+            p(class="twst-block-header") Plate Id
+            input(type="text" class="form-control" ng-model="plateId" typeahead="plateId for plateId in getTypeAheadPlateIds()" typeahead-loading="loadingLocations" typeahead-no-results="noResults" typeahead-on-select="plateInfoEntered()" ng-keypress="plateInfoKeypress($event)")
+            i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh")
+            div(ng-show="noResults")
+              i(class="glyphicon glyphicon-remove") No Results Found
+            div(class="twst-update-barcode-result-message")
+                twst-message(message="submissionResultMessage" visible-and-valid="submissionResultVisible")
+        div(class="twst-edit-barcode-main-inputs-right")
+            p(class="twst-block-header") Plate Name
+            p(class="twst-field-value-readout") {{selectedPlate.name}}
+
+            p(class="twst-block-header") Plate Type
+            p(class="twst-field-value-readout") {{selectedPlate.samplePlateType}}
+
+            p(class="twst-block-header") Storage Location
+            p(class="twst-field-value-readout") {{selectedPlate.storageLocation}}
+
+            div(class="twst-edit-barcode-main-barcode-controls")
+                p(class="twst-block-header") Barcode
+                input(type="text" class="form-control twst-edit-barcode-main-barcode-input" ng-model="selectedPlate.externalBarcode")
+                twst-thumb-validation-icon(validation="selectedPlate.externalBarcode.length > 5 && currentBarcode != selectedPlate.externalBarcode")
+                p(class="twst-update-barcode-buttons")
+                    button(class="twst-button twst-blue-button twst-update-barcode-button" ng-class="{'twst-disabled-button' : !barcodeChanged()}" ng-click="updateBarcode()") Update Barcode
+                    a(class="twst-update-barcode-cancel" ng-click="clearForm()") cancel
+        div(ui-view)
