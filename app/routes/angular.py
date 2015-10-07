@@ -149,4 +149,47 @@ def update_plate_barcode():
 
     logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
 
-    return jsonify(response)        
+    return jsonify(response)
+
+def sample_transfers():
+    rows = db.session.query(SampleTransfer, SampleTransferDetail).filter(
+        SampleTransferDetail.sample_transfer_id==SampleTransfer.id).order_by(
+        SampleTransfer.date_transfer.desc()).all()
+
+    sample_transfer_details = []
+
+    seen = []
+
+    for transfer,details in rows:
+        if (transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id) not in seen:
+            seen.append((transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id))
+            sample_transfer_details.append((transfer,details))  
+
+    transfers_data = {}
+
+    # and create a serializable data array for the response
+    for sample_transfer, details in sample_transfer_details:
+        if (sample_transfer.id not in transfers_data):
+            transfers_data[sample_transfer.id] = {
+                "id": sample_transfer.id
+                ,"name": sample_transfer.sample_transfer_type.name
+                ,"date": sample_transfer.date_transfer.strftime("%A, %B %d %Y, %I:%M%p")
+                ,"operator": sample_transfer.operator.first_and_last_name
+                ,"source_barcodes": [details.source_plate.external_barcode]
+                ,"destination_barcodes": [details.destination_plate.external_barcode]
+            };
+        else:
+            transfers_data[sample_transfer.id]["destination_barcodes"].append(details.destination_plate.external_barcode)
+            sourceAlready = False;
+            for barcode in transfers_data[sample_transfer.id]["source_barcodes"]:
+                if barcode == details.source_plate.external_barcode:
+                    sourceAlready = True
+                    break
+
+            if not sourceAlready:
+                transfers_data[sample_transfer.id]["source_barcodes"].append(details.source_plate.external_barcode) 
+
+    resp = Response(response=json.dumps(transfers_data),
+        status=200, \
+        mimetype="application/json")
+    return(resp)     

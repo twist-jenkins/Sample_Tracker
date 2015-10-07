@@ -103,6 +103,10 @@ app = angular.module('twist.app')
                 }
                 return $http(updatePlateReq);
             }
+            ,getPlateSteps: function () {
+                var transfersReq = ApiRequestObj.getGet('sample-transfers');
+                return $http(transfersReq);
+            }
         };
     }]
 )

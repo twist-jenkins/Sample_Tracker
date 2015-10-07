@@ -292,8 +292,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('editBarcodePlateSelectedController', ['$scope', '$state',  '$stateParams', 
     function ($scope, $state, $stateParams) {
         var plateId = $stateParams.selected_plate_id;
-        console.log(plateId);
         $scope.getPlateInfo(plateId);
+    }]
+)
+
+.controller('viewStepsController', ['$scope', '$state', 'Api', 
+    function ($scope, $state, Api) {
+        /* populate the sample types pulldown */
+        Api.getPlateSteps().success(function (data) {
+            $scope.plateSteps = data;
+        });
+
     }]
 )
 
@@ -360,6 +369,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:selected_plate_id'
             ,template: ''
             ,controller: 'editBarcodePlateSelectedController'
+        }).state('root.view_steps', {
+            url: 'view-steps'
+            ,templateUrl: 'twist-view-steps.html'
+            ,controller: 'viewStepsController'
         })
 
 
