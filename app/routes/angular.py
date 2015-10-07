@@ -8,24 +8,13 @@
 # 
 ######################################################################################
 
-import csv 
-
-import os, sys
-
+import csv
+import os
 import time
-
-import hashlib 
-
-import random
-
-import xlrd
-
-import collections
-
 import json
 
-from flask import ( g, Flask, render_template, make_response, request, Response, redirect, url_for, 
-    abort, session, send_from_directory, jsonify )
+from flask import g, make_response, request, Response, session, jsonify
+from math import floor
 
 from sqlalchemy import and_
 
@@ -33,12 +22,15 @@ from werkzeug import secure_filename
 
 from app import app, db, googlelogin
 
-from app.dbmodels import (create_unique_object_id, Operator, Sample, SampleTransfer, SampleTransferType, SamplePlate,
-    SampleTransferDetail, SamplePlateLayout, SamplePlateType)
+from app.dbmodels import (create_unique_object_id, Sample, SampleTransfer,
+                          SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
 
-from well_mappings import ( get_col_and_row_for_well_id_48, get_well_id_for_col_and_row_48,
-       get_col_and_row_for_well_id_96, get_well_id_for_col_and_row_96, get_col_and_row_for_well_id_384,
-       get_well_id_for_col_and_row_384 )
+from well_mappings import (get_col_and_row_for_well_id_48,
+                           get_well_id_for_col_and_row_48,
+                           get_col_and_row_for_well_id_96,
+                           get_well_id_for_col_and_row_96,
+                           get_col_and_row_for_well_id_384,
+                           get_well_id_for_col_and_row_384)
 
 import StringIO
 
