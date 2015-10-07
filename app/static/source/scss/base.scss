@@ -58,8 +58,10 @@ $twst-brown-black: #404041;
 $max-app-width: 1180px;
 $twst-minty-green: #dbffec;
 $twst-darker-green: #337251;
+$twst-medium-green: #80af97;
 $twst-dark-red: #7c0e0e;
 $twst-light-red: #ead3d3;
+$twst-minty-green-bg: #c7ddd2;
 
 @mixin after-clear {
     content: ".";
@@ -182,9 +184,13 @@ body {
     visibility: hidden;
 }
 
-.twst-input-label-block {
+.twst-block-header {
     margin-bottom: 0.3em;
     color: #aaa;    
+}
+
+strong {
+    font-weight: bold;
 }
 
 
@@ -369,6 +375,10 @@ body {
     opacity: 0;
     @include transition(opacity .3s ease);
 
+    .twst-message-text:before {
+        content: '\00a0 \00a0 ';
+    }
+
     &.twst-message-visible {
         opacity: 1;
     }
@@ -404,6 +414,28 @@ body {
         color: #000;
         font-weight: bold;
     }
+}
+
+.twst-child-page {
+    padding-top: 2em;
+    
+    h1 {
+        font-size: 2em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 1em;
+    }
+
+    input {
+        font-size: 1.2em;
+        padding: 1em 0.5em;
+    }
+
+}
+
+.twst-field-value-readout {
+    font-size: 1.2em;
+    color: #000;
 }
 
 
@@ -472,6 +504,49 @@ body {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
+/******* MAIN NAV
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-main-nav {
+    display: block;
+    width: 100%;
+    background-color: $twst-minty-green-bg;
+
+    .twst-main-nav-inner {
+        display: table;
+        width: 100%;
+        margin: 0 auto;
+        max-width: $max-app-width;
+
+        a {
+            display: table-cell;
+            width: 20%;
+            text-align: center;
+            font-size: 1.1em;
+            padding: 0.45em 0;
+            color: #000;
+
+            &:hover {
+                cursor: pointer;
+                text-decoration: none;
+                background-color: $twst-medium-green;
+            }
+
+            &.twst-nav-selected {
+                color: #fff;
+                background-color: $twst-darker-green;
+            }
+        }
+    }
+}
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
 /******* MAIN BODY
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -505,7 +580,7 @@ body {
     color: #555;
     text-align: center;
     width: 100%;
-    background-color: #c7ddd2;
+    background-color: $twst-minty-green-bg;
 }
 
 
@@ -540,15 +615,6 @@ body {
 /******************************************************************************************************************************************************/
 
 .twst-sample-track-main {
-    padding-top: 3em;
-    
-    h1 {
-        font-size: 2em;
-        padding-bottom: 0.3em;
-        border-bottom: 1px solid #ddd;
-        margin-bottom: 1em;
-    }
-
     .twst-sample-track-result-message {
         position: relative;
         float: right;
@@ -621,12 +687,23 @@ body {
                 padding-left: 2em;
             }
 
-            .twst-input-label-row {
+            .twst-sample-track-plate-row {
+                display: table;
+                width: 100%;
                 position: relative;
                 margin-top: 0.3em;
 
                 &:first-child {
                     margin-top: 0;
+                }
+
+                .twst-sample-track-plate-title, .twst-sample-track-plate-input {
+                    display: table-cell;
+                    vertical-align: middle;
+                }
+
+                .twst-sample-track-plate-input {
+                    width: 100%;
                 }
 
                 .twst-thumbs-validation-icon {
@@ -635,11 +712,6 @@ body {
                     right: -1.3em;
                     top: 0.15em;
                     font-size: 2em;
-                }
-
-                input {
-                    font-size: 1.2em;
-                    padding: 1em 0.5em;
                 }
             }
         }
@@ -668,6 +740,82 @@ body {
             cursor: pointer;
         }
 
+    }
+
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******* EDIT BARCODE
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-edit-barcode-main {
+    
+    .twst-edit-barcode-main-inputs {
+        display: table;
+        width: 100%;
+        padding: 0 2em;
+        position: relative;
+
+        .twst-edit-barcode-main-inputs-left, .twst-edit-barcode-main-inputs-right {
+            display: table-cell;
+        }
+
+        .twst-edit-barcode-main-inputs-left {
+            width: 40%;
+            min-width: 300px;
+
+            .twst-message {
+                margin-top: 1em;
+
+                .twst-message-text {
+                    line-height: 1.4em;
+                }
+            }
+        }
+
+        .twst-edit-barcode-main-inputs-right {
+            width: 60%;
+            padding-left: 3em;
+
+            .twst-field-value-readout {
+                margin-bottom: 2em;
+                padding: 0.25em 0.5em 0 0.5em;
+            }
+
+            .twst-edit-barcode-main-barcode-controls {
+                .twst-edit-barcode-main-barcode-input {
+                    width: 50%;
+                    display: inline-block;
+                }
+
+                .twst-thumbs-validation-icon {
+                    margin-left: 0.2em;
+                    position: relative;
+                    top: 0.35em;
+                    font-size: 2em;
+                }
+
+                .twst-update-barcode-buttons {
+                    margin-top: 1em;
+
+                    button {
+                        font-size: 1.2em;
+                    }
+
+                    .twst-update-barcode-cancel {
+                        margin-left: 1em;
+                        cursor: pointer;
+                    }
+                }
+            }
+        }
     }
 
 }

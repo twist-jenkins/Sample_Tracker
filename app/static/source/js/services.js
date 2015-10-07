@@ -87,6 +87,22 @@ app = angular.module('twist.app')
                 submitReq.data = data;
                 return $http(submitReq);
             }
+            ,getSamplePlatesList: function () {
+                var plateListReq = ApiRequestObj.getGet('sample-plates-list');
+                return $http(plateListReq);
+            }
+            ,getPlateInfo: function (plateId) {
+                var plateListReq = ApiRequestObj.getGet('plate-info/' +  plateId);
+                return $http(plateListReq);
+            }
+            ,updateBarcode: function (plateId, plateBarcode) {
+                var updatePlateReq = ApiRequestObj.getPost('update-barcode');
+                updatePlateReq.data = {
+                    plateId: plateId
+                    ,barcode: plateBarcode
+                }
+                return $http(updatePlateReq);
+            }
         };
     }]
 )

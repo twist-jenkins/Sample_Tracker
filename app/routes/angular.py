@@ -85,7 +85,7 @@ def sample_tranfer_types():
     sample_tranfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.name);
     simplified_results = []
     for row in sample_tranfer_types2:
-        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count})
+        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
     returnData = {
         "success": True
         ,"results": simplified_results 
@@ -108,3 +108,45 @@ def sample_plate_barcodes():
         status=200, \
         mimetype="application/json")
     return(resp)
+
+def update_plate_barcode():
+
+    data = request.json
+
+    sample_plate_id = data["plateId"]
+    external_barcode = data["barcode"]
+
+    sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
+
+
+    if not sample_plate:
+        response = {
+            "success":False,
+            "errorMessage":"There is no sample plate with the id: [%s]" % (sample_plate_id)
+        }
+        return jsonify(response)
+
+    #
+    # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
+    #
+    sample_plate_with_this_barcode = db.session.query(SamplePlate).filter_by(external_barcode=external_barcode).first()
+    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
+        logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" % 
+            (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
+        response = {
+            "success":False,
+            "errorMessage":"The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.sample_plate_id)
+        }
+        return jsonify(response)  
+
+
+    sample_plate.external_barcode = external_barcode
+    db.session.commit()
+    print "external_barcode: ", external_barcode
+    response = {
+        "success":True
+    }
+
+    logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
+
+    return jsonify(response)        

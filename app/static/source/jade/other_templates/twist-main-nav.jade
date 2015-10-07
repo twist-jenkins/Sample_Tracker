@@ -1,0 +1,3 @@
+div(class="twst-main-nav")
+    div(class="twst-main-nav-inner")
+        a(class="twst-main-nav-item" ng-class="{'twst-nav-selected' : currentNav.indexOf(item.link) == 0}" ng-click="navTo(item.link)" ng-repeat="item in navItems") {{item.text}}
