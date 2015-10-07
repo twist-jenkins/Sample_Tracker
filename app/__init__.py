@@ -377,6 +377,10 @@ def plate_info(sample_plate_id):
 def update_barcode():
     return routes.update_plate_barcode()
 
+@app.route('/api/v1/sample-transfers', methods=['GET'])
+def sample_transfers():
+    return routes.sample_transfers()
+
 
 
 

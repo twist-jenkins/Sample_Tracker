@@ -21,8 +21,10 @@ div(class="twst-edit-barcode-main twst-child-page")
 
             div(class="twst-edit-barcode-main-barcode-controls")
                 p(class="twst-block-header") Barcode
-                input(type="text" class="form-control twst-edit-barcode-main-barcode-input" ng-model="selectedPlate.externalBarcode")
-                twst-thumb-validation-icon(validation="selectedPlate.externalBarcode.length > 5 && currentBarcode != selectedPlate.externalBarcode")
+                div(class="twst-barcode-input-elements")
+                    input(type="text" class="form-control twst-edit-barcode-main-barcode-input" ng-model="selectedPlate.externalBarcode")
+                    div(class="twst-spinner twst-barcode-submitting-spinner" ng-if="updatingBarcode")
+                    twst-thumb-validation-icon(validation="selectedPlate.externalBarcode.length > 5 && currentBarcode != selectedPlate.externalBarcode")
                 p(class="twst-update-barcode-buttons")
                     button(class="twst-button twst-blue-button twst-update-barcode-button" ng-class="{'twst-disabled-button' : !barcodeChanged()}" ng-click="updateBarcode()") Update Barcode
                     a(class="twst-update-barcode-cancel" ng-click="clearForm()") cancel

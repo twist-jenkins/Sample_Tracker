@@ -23,7 +23,7 @@ from werkzeug import secure_filename
 from app import app, db
 
 from app.dbmodels import (create_unique_object_id, Sample, SampleTransfer,
-                          SamplePlate, SamplePlateLayout, SamplePlateType)
+                          SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail)
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
@@ -124,35 +124,6 @@ def get_well_id_for_col_and_row_384(col_and_row):
 
     return jsonify(response)
 
-
-#
-# Returns the JSON representation of a "sample plate" based on the plate's ID.
-#
-def get_sample_plate(sample_plate_id):
-    sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
-
-    if not sample_plate:
-        response = {
-            "success":False,
-            "errorMessage":"There is no plate with the id: [%s]" % (sample_plate_id)
-        }
-        return jsonify(response)
-
-    sample_plate_dict = {
-       "success":True,
-       "sample_plate_id":sample_plate_id,
-       "name":sample_plate.name,
-       "description":sample_plate.description,
-       "samplePlateType":sample_plate.sample_plate_type.name,
-       "storageLocation":sample_plate.storage_location.name,
-       "status":sample_plate.status,
-       "externalBarcode":sample_plate.external_barcode,
-    }
-
-    resp = Response(response=json.dumps(sample_plate_dict),
-        status=200, \
-        mimetype="application/json")
-    return(resp)
 
 
 #
@@ -818,6 +789,49 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         "success":True
     }
 
+
+
+
+#
+# Returns barcodes of all sample plates. (Used in the UI's "type ahead" field so that the user can specify
+# a sample plate by its barcode).
+#
+def get_sample_plate_barcodes_list():
+    plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
+
+    plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
+
+    resp = Response(response=json.dumps(plate_barcodes),
+        status=200, \
+        mimetype="application/json")
+    return(resp)
+
+
+#
+# Returns the list of sample ids. (Used in the UI's "type ahead" field so that the user can specify
+# a sample by its id).
+#
+def get_samples_list():
+    result = db.engine.execute('select sample_id from sample order by sample_id')
+    sample_ids = []
+    for row in result:
+        sample_ids.append(row[0])
+
+    resp = Response(response=json.dumps(sample_ids),
+        status=200, \
+        mimetype="application/json")
+    return(resp)
+
+
+##############################################################################################################################################################################
+##############################################################################################################################################################################
+##############################################################################################################################################################################
+######## ROUTES USED BY ANGULAR APP - To do: Move these to angular.py
+##############################################################################################################################################################################
+##############################################################################################################################################################################
+##############################################################################################################################################################################
+
+
 # creates a destination plate for a transfer
 def create_destination_plate(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
     destination_plate_name = create_unique_object_id("PLATE_")
@@ -1107,6 +1121,7 @@ def create_sample_movement():
         status=200, \
         mimetype="application/json")
 
+
 #
 # Returns ids of all sample plates. (Used in the UI's "type ahead" field so that the user can specify
 # a sample plate by its id).
@@ -1121,37 +1136,32 @@ def get_sample_plates_list():
         mimetype="application/json")
     return(resp)
 
-
 #
-# Returns barcodes of all sample plates. (Used in the UI's "type ahead" field so that the user can specify
-# a sample plate by its barcode).
+# Returns the JSON representation of a "sample plate" based on the plate's ID.
 #
-def get_sample_plate_barcodes_list():
-    plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
+def get_sample_plate(sample_plate_id):
+    sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
 
-    plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
+    if not sample_plate:
+        response = {
+            "success":False,
+            "errorMessage":"There is no plate with the id: [%s]" % (sample_plate_id)
+        }
+        return jsonify(response)
 
-    resp = Response(response=json.dumps(plate_barcodes),
+    sample_plate_dict = {
+       "success":True,
+       "sample_plate_id":sample_plate_id,
+       "name":sample_plate.name,
+       "description":sample_plate.description,
+       "samplePlateType":sample_plate.sample_plate_type.name,
+       "storageLocation":sample_plate.storage_location.name,
+       "status":sample_plate.status,
+       "externalBarcode":sample_plate.external_barcode,
+    }
+
+    resp = Response(response=json.dumps(sample_plate_dict),
         status=200, \
         mimetype="application/json")
     return(resp)
-
-
-#
-# Returns the list of sample ids. (Used in the UI's "type ahead" field so that the user can specify
-# a sample by its id).
-#
-def get_samples_list():
-    result = db.engine.execute('select sample_id from sample order by sample_id')
-    sample_ids = []
-    for row in result:
-        sample_ids.append(row[0])
-
-    resp = Response(response=json.dumps(sample_ids),
-        status=200, \
-        mimetype="application/json")
-    return(resp)
-
-
-
 
