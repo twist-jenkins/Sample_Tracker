@@ -1,18 +1,18 @@
 ######################################################################################
 #
-# Copyright (c) 2015 Twist Bioscience 
+# Copyright (c) 2015 Twist Bioscience
 #
 # File: __init__.py
 #
 # This is the "root" of the Flask application. It instantiates the "app" object that is used elsewhere.
-# 
+#
 ######################################################################################
 
 import os, sys
 
 import time
 
-import hashlib 
+import hashlib
 
 import random
 
@@ -28,7 +28,7 @@ from werkzeug import secure_filename
 
 from flask.ext.sqlalchemy import SQLAlchemy
 
-from sqlalchemy import func 
+from sqlalchemy import func
 
 import assets
 
@@ -170,8 +170,8 @@ def user_missing_from_operator_table():
 
 
 #
-# This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password). 
-# Google oauth calls this function - passing in (via URL query parameter) a "code" value if the user 
+# This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password).
+# Google oauth calls this function - passing in (via URL query parameter) a "code" value if the user
 # clicked the Accept/Allow button when first logging in. If the user clicked Cancel/Decline instead, then no
 # code value will be returned.
 #
@@ -247,7 +247,7 @@ def plate_report_page(plate_barcode):
 # ==========================
 
 #
-# The route to which the web page posts the spreadsheet detailing the well-to-well movements of 
+# The route to which the web page posts the spreadsheet detailing the well-to-well movements of
 # samples.
 #
 @app.route('/dragndrop', methods=['POST'])
