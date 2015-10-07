@@ -7,6 +7,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     function ($scope, $state, User) {
         $scope.user = User;
         $scope.current_year = (new Date).getFullYear();
+
+        $scope.navTo = function (where) {
+            $state.go(where);
+        }
+
+        $scope.$on('$stateChangeSuccess', function(event, toState) {
+            $scope.currentNav = toState.name;
+        });
     }]
 )
 
@@ -21,12 +29,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackSampleController', ['$scope', '$state', 'Api', '$sce', '$timeout', 
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 
     function ($scope, $state, Api, $sce, $timeout) {
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
-            return {text: ''};
+            return {text: '', title: ''};
         }
         $scope.stepTypeDropdownValue = 'Select a Step';
         $scope.sourcePlates = [returnEmptyPlate()];      /* backs both the field interator and the entered data */
@@ -49,12 +57,49 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.destinationPlates.splice($scope.destinationPlates.length - ($scope.destinationPlates.length - $scope.selectedStepType.destination_plate_count));
                 }
             }
+
+            switch ($scope.selectedStepType.transfer_template_id) {
+                case 1:
+                    for (var i=0; i<$scope.destinationPlates.length; i++) {
+                        $scope.destinationPlates[i].title = '';
+                    }
+                    break;
+                case 13:
+                    for (var i=0; i<$scope.destinationPlates.length; i++) {
+                        $scope.destinationPlates[i].title = 'Quadrant&nbsp;' + (i + 1) + ':&nbsp;';
+                    }
+                    break;
+                case 14:
+                    $scope.destinationPlates[0].title = 'Left:&nbsp;&nbsp;';
+                    $scope.destinationPlates[1].title = 'Right:&nbsp;';
+                    break;
+                case 18:
+                    for (var i=0; i<$scope.sourcePlates.length; i++) {
+                        $scope.sourcePlates[i].title = 'Quadrant&nbsp;' + (i + 1) + ':&nbsp;';
+                    }
+                    break;
+                default :
+                    /* do nothing */
+                    break;
+            }
         };
 
         $scope.selectStepType = function (option) {
-            $scope.selectedStepType = option;
-            $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
-            setPlateArrays();
+            $state.go('root.record_step.step_type_selected', {
+                selected_step_type_id: option.id
+            });
+        }
+
+        $scope.setSelectedOption = function (optionId) {
+            for (var i=0; i< $scope.stepTypeOptions.length;i++) {
+                var option = $scope.stepTypeOptions[i];
+                if (option.id == optionId) {
+                    $scope.selectedStepType = option;
+                    $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
+                    setPlateArrays();
+                    break;
+                }
+            }
         }
 
         $scope.getTypeAheadBarcodes = function (queryText) {
@@ -72,11 +117,15 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             for (var i=0; i< $scope.sourcePlates.length; i++) {
                 if ($scope.sourcePlates[i].text == '') {
                     return false;
+                } else if ($scope.sourcePlates[i].text.length < 6) {
+                    return false;
                 }
             }
 
             for (var i=0; i< $scope.destinationPlates.length; i++) {
                 if ($scope.destinationPlates[i].text == '') {
+                    return false;
+                } else if ($scope.destinationPlates[i].text.length < 6) {
                     return false;
                 }
             }
@@ -89,14 +138,29 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.stepTypeDropdownValue = 'Select a Step';
             $scope.sourcePlates = [returnEmptyPlate()];
             $scope.destinationPlates = [returnEmptyPlate()];
+            $state.go('root.record_step');
         };
 
         var getSampleTrackSubmitData = function () {
             var data = {
                 sampleTransferTypeId: $scope.selectedStepType.id
-                ,sourceBarcodeId: $scope.sourcePlates[0].text
-                ,destinationBarcodeId: $scope.destinationPlates[0].text
+                ,sampleTransferTemplateId: $scope.selectedStepType.transfer_template_id
+                ,sourcePlates: []
+                ,destinationPlates: []
             };
+
+            for (var i=0; i< $scope.sourcePlates.length; i++) {
+                data.sourcePlates.push($scope.sourcePlates[i].text);
+            }
+
+            for (var i=0; i< $scope.destinationPlates.length; i++) {
+                data.destinationPlates.push($scope.destinationPlates[i].text);
+            }
+
+            /* if this is a non-movement step (source=destinstion), add source as destination */
+            if ($scope.selectedStepType.destination_plate_count == 0) {
+                data.destinationPlates.push($scope.sourcePlates[0].text);
+            }
 
             return data;
         };
@@ -141,6 +205,98 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
+.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        var selectedTranferTypeId = $stateParams.selected_step_type_id;
+        $scope.setSelectedOption(selectedTranferTypeId);
+    }]
+)
+
+.controller('editBarcodeController', ['$scope', '$state',  '$http', 'Api', '$timeout',  
+    function ($scope, $state, $http, Api, $timeout) {
+
+
+
+        $scope.getTypeAheadPlateIds = function (queryText) {
+            return Api.getSamplePlatesList(queryText).then(function (resp) {
+                return resp.data; 
+            });
+        };
+
+        $scope.plateInfoEntered = function () {
+            if ($scope.plateId && $scope.plateId.length > 1) {
+                $state.go('root.edit_barcode.plate_selected', {
+                    selected_plate_id: $scope.plateId
+                });
+            }
+        };
+
+        $scope.getPlateInfo = function (plateId) {
+            $scope.plateId = plateId;
+            Api.getPlateInfo($scope.plateId).then(function (resp) {
+                $scope.selectedPlate = resp.data;
+                $scope.currentBarcode = $scope.selectedPlate.externalBarcode + '';
+            });  
+        }
+
+        $scope.plateInfoKeypress = function ($event) {
+            if ($event.keyCode == 13) {
+                $scope.plateInfoEntered();
+            }
+        };
+
+        $scope.updateBarcode = function () {
+            if ($scope.currentBarcode != $scope.selectedPlate.externalBarcode && $scope.selectedPlate.externalBarcode && $scope.selectedPlate.externalBarcode.length > 5) {
+
+                $scope.updatingBarcode = true;
+
+                Api.updateBarcode($scope.selectedPlate.sample_plate_id, $scope.selectedPlate.externalBarcode).success(function (data) {
+                    if (data.success) {
+                        $scope.updatingBarcode = false;
+                        $scope.submissionResultMessage = 'The barcode for plate <span class="twst-step-text">' + $scope.selectedPlate.sample_plate_id + '</span> has been updated to <span class="twst-step-text">' + $scope.selectedPlate.externalBarcode + '</span>.';
+                        $scope.submissionResultVisible = 1;
+                        $scope.clearForm();
+                    } else {
+                        $scope.submissionResultMessage = 'Error: ' + data.errorMessage + '.';
+                        $scope.submissionResultVisible = -1;
+                        $scope.updatingBarcode = false;
+                    }
+
+                    $timeout(function () {
+                        $scope.submissionResultVisible = 0;
+                        $timeout(function () {
+                            $scope.submissionResultMessage = null;
+                        }, 400);
+                    }, 5000);
+                });
+            }
+        }
+
+        $scope.barcodeChanged = function () {
+            if (!$scope.selectedPlate) {
+                return false
+            } else {
+                return $scope.currentBarcode != $scope.selectedPlate.externalBarcode && $scope.selectedPlate.externalBarcode && $scope.selectedPlate.externalBarcode.length > 5;
+            }
+        }
+
+        $scope.clearForm = function () {
+            $scope.plateId = null;
+            $scope.selectedPlate = null;
+            $scope.currentBarcode = null;
+            $state.go('root.edit_barcode');
+        }
+    }]
+)
+
+.controller('editBarcodePlateSelectedController', ['$scope', '$state',  '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        var plateId = $stateParams.selected_plate_id;
+        console.log(plateId);
+        $scope.getPlateInfo(plateId);
+    }]
+)
+
 .run(['$state', 'User', '$location', '$timeout',
     function($state, User, $location, $timeout) {
         var routeUrl = window.location.hash.substr(1);
@@ -165,6 +321,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
+.config(['$httpProvider', 
+    function($httpProvider) {
+        if (!$httpProvider.defaults.headers.get) {
+            $httpProvider.defaults.headers.get = {};    
+        }    
+        //disable IE ajax request caching
+        $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
+        // extra
+        $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
+        $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+    }]
+)
+
 .config(['$stateProvider', 
     function($stateProvider) {
         return $stateProvider.state('root', {
@@ -175,11 +344,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: 'login'
             ,templateUrl: 'twist-login.html'
             ,controller: 'loginController'
-        }).state('root.content', {
+        }).state('root.record_step', {
             url: 'track-step'
             ,templateUrl: 'twist-track-sample.html'
-            ,controller: 'trackSampleController'
-        });
+            ,controller: 'trackStepController'
+        }).state('root.record_step.step_type_selected', {
+            url: '/:selected_step_type_id'
+            ,template: ''
+            ,controller: 'stepTypeSelectedController'
+        }).state('root.edit_barcode', {
+            url: 'edit-barcode'
+            ,templateUrl: 'twist-edit-barcode.html'
+            ,controller: 'editBarcodeController'
+        }).state('root.edit_barcode.plate_selected', {
+            url: '/:selected_plate_id'
+            ,template: ''
+            ,controller: 'editBarcodePlateSelectedController'
+        })
+
+
+        ;
     }
 ])
 

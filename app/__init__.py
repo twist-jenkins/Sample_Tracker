@@ -365,6 +365,18 @@ def sample_plate_barcodes():
 def track_sample_step():
     return routes.create_sample_movement()
 
+@app.route('/api/v1/sample-plates-list', methods=['GET'])
+def sample_plates_list():
+    return routes.get_sample_plates_list()
+
+@app.route('/api/v1/plate-info/<sample_plate_id>', methods=['GET'])
+def plate_info(sample_plate_id):
+    return routes.get_sample_plate(sample_plate_id)
+
+@app.route('/api/v1/update-barcode', methods=['POST'])
+def update_barcode():
+    return routes.update_plate_barcode()
+
 
 
 

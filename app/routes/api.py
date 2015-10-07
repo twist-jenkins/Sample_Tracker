@@ -14,6 +14,7 @@ import time
 import json
 
 from flask import g, make_response, request, Response, session, jsonify
+from math import floor
 
 from sqlalchemy import and_
 
@@ -206,7 +207,6 @@ def sample_plate_external_barcode(sample_plate_id):
         logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
 
         return jsonify(response)
-
 
 #
 # Returns the "Sample Plate" report for a specified sample (specified by id). This can return the
@@ -818,97 +818,239 @@ def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_i
         "success":True
     }
 
+# creates a destination plate for a transfer
+def create_destination_plate(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
+    destination_plate_name = create_unique_object_id("PLATE_")
+    destination_plate_description = create_unique_object_id("PLATEDESC_")
+    destination_plates.append(SamplePlate(source_plate_type_id,operator.operator_id,storage_location_id,
+        destination_plate_name, destination_plate_description, destination_barcode))
+    db.session.add(destination_plates[len(destination_plates) - 1])
 
 #
 # If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in
 # the "source" plate will be moved to the exact same locations in the "destination" plate.
 #
-def create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_id,source_barcode,destination_barcode):
-    print "source_barcode: ", source_barcode
-    print "destination_barcode: ", destination_barcode
 
-    source_plate = db.session.query(SamplePlate).filter_by(external_barcode=source_barcode).first()
-    if not source_plate:
-        logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: [%s]" % (g.user.first_and_last_name,source_barcode))
-        return {
-            "success":False,
-            "errorMessage":"There is no source plate with the barcode: [%s]" % (source_barcode)
-        }
-    #print "SOURCE PLATE: ", source_plate
+def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id):
+    print "source_barcode: ", source_barcodes
+    print "destination_barcode: ", destination_barcodes
 
-    """
-    destination_plate = db.session.query(SamplePlate).filter_by(external_barcode=destination_barcode).first()
-    if destination_plate:
-        logger.info(" %s encountered error creating sample transfer. A plate with the destination plate barcode: [%s] already exists" % (g.user.first_and_last_name,destination_barcode))
-        return {
-            "success":False,
-            "errorMessage":"A plate XXX with the destination plate barcode: [%s] already exists" % (destination_barcode)
-        }
-    """
+    destination_plates = []
 
-    #print "SOURCE PLATE: ", source_plate
+    if (len(source_barcodes) < 2): # single source plate
+        source_barcode = source_barcodes[0]
 
-    source_plate_type_id = source_plate.type_id
-    storage_location_id = source_plate.storage_location_id
-
-    destination_plate_name = create_unique_object_id("PLATE_")
-    destination_plate_description = create_unique_object_id("PLATEDESC_")
-
-    #
-    # 1. Create the destination sample plate.
-    #
-    destination_plate = SamplePlate(source_plate_type_id,operator.operator_id,storage_location_id,
-        destination_plate_name, destination_plate_description, destination_barcode)
-    db.session.add(destination_plate)
-    db.session.flush()
-
-    #
-    # 2. Create a "sample_transfer" row representing this entire transfer.
-    #
-    sample_transfer = SampleTransfer(sample_transfer_type_id, operator.operator_id)
-    db.session.add(sample_transfer)
-    db.session.flush()
-
-
-    #
-    # 3. Iterate through all the wells in the "source" plate. We'll create similar wells for the
-    # destination plate.
-    #
-    order_number = 1
-    for source_plate_well in source_plate.wells:
-
-        existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
-            SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
-            SamplePlateLayout.sample_id==source_plate_well.sample_id,
-            SamplePlateLayout.well_id==source_plate_well.well_id
-            )).first()
-
-        #existing_sample_plate_layout = True
-
-        if existing_sample_plate_layout:
+        source_plate = db.session.query(SamplePlate).filter_by(external_barcode=source_barcode).first()
+        if not source_plate:
+            logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: [%s]" % (g.user.first_and_last_name,source_barcode))
             return {
                 "success":False,
-                "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
-                    source_plate_well.sample_id,source_plate_well.well_id)
+                "errorMessage":"There is no source plate with the barcode: [%s]" % (source_barcode)
             }
 
-        #
-        # 3a. Create a row representing a well in the desination plate.
-        #
-        destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-            source_plate_well.sample_id,source_plate_well.well_id,operator.operator_id,source_plate_well.row,source_plate_well.column)
-        db.session.add(destination_plate_well)
+        source_plate_type_id = source_plate.type_id
+        storage_location_id = source_plate.storage_location_id
 
         #
-        # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
-        # in the "desination" plate.
+        # 1. Create a "sample_transfer" row representing this entire transfer.
         #
-        source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
-           source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
-           destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
-        db.session.add(source_to_destination_well_transfer)
+        sample_transfer = SampleTransfer(sample_transfer_type_id, operator.operator_id)
+        db.session.add(sample_transfer)
 
-        order_number += 1
+        # create destination plate(s)
+        if sample_transfer_template_id == 1:
+            create_destination_plate(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
+        elif sample_transfer_template_id == 13 or sample_transfer_template_id == 14: # 1 to multiple
+            for destination_barcode in destination_barcodes:
+                create_destination_plate(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id)
+        else:
+            return {
+                "success":False,
+                "errorMessage":"Unrecognized sample transfer template id: [%s]" % (sample_transfer_template_id)
+            }
+
+        db.session.flush()
+
+        #
+        # 3. Iterate through all the wells in the "source" plate. We'll create similar wells for the
+        # destination plate.
+        #
+
+        order_number = 1
+
+        for source_plate_well in source_plate.wells:
+
+
+            #determine the destination plate
+            if sample_transfer_template_id == 1: # same source well count to destination well count
+                destination_plate_index = 0
+                destination_plate_well_id = source_plate_well.well_id
+            elif sample_transfer_template_id == 13: # 384 -> 4x96
+                # for 1-to-4 transfer, we go in quadrants - everyo-other column + every-other row
+                src_row_length = 24
+                dest_row_length = 12
+                rowIndex = floor(source_plate_well.well_id/src_row_length) + 1
+                destination_plate_row_index = floor(rowIndex/2) + rowIndex%2
+                normalized_well_id = source_plate_well.well_id - src_row_length*(rowIndex - 1)
+                normalized_row_index = floor(normalized_well_id/2) + normalized_well_id%2
+                destination_plate_well_id = normalized_row_index + dest_row_length*(destination_plate_row_index-1)
+                #destination_plate_well_id =
+
+                if rowIndex % 2 == 0:
+                    #quad 3 or 4
+                    if source_plate_well.well_id % 2 == 0:
+                        destination_plate_index = 3
+                    else:
+                        destination_plate_index = 2
+                else:
+                    #quad 1 or 2
+                    if source_plate_well.well_id % 2 == 0:
+                        destination_plate_index = 1
+                    else:
+                        destination_plate_index = 0
+            elif sample_transfer_template_id == 14: # 96 -> 2x48
+                src_row_length = 12
+                dest_row_length = 6
+                rowIndex = floor(source_plate_well.well_id/src_row_length) + 1
+                normalized_row_index = source_plate_well.well_id%src_row_length
+
+                if normalized_row_index > 6 or normalized_row_index == 0:
+                    destination_plate_index = 1
+                    destination_row_index = normalized_row_index;
+                else:
+                    destination_plate_index = 0
+                    destination_row_index = source_plate_well.well_id%dest_row_length
+
+                destination_plate_well_id = destination_row_index + dest_row_length*(rowIndex - 1)
+
+
+            destination_plate = destination_plates[destination_plate_index]
+
+            existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
+                SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                SamplePlateLayout.sample_id==source_plate_well.sample_id,
+                SamplePlateLayout.well_id==destination_plate_well_id
+                )).first()
+
+            #existing_sample_plate_layout = True
+
+            #print source_plate_well.well_id
+
+            if existing_sample_plate_layout:
+                return {
+                    "success":False,
+                    "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
+                        source_plate_well.sample_id,source_plate_well.well_id)
+                }
+
+            #
+            # 3a. Create a row representing a well in the desination plate.
+            #
+            destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
+                source_plate_well.sample_id,destination_plate_well_id,operator.operator_id,source_plate_well.row,source_plate_well.column)
+
+            db.session.add(destination_plate_well)
+
+            #
+            # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
+            # in the "desination" plate.
+            #
+            source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
+               source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
+               destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
+            db.session.add(source_to_destination_well_transfer)
+
+            order_number += 1
+
+        else:
+            if sample_transfer_template_id == 18: # 4x96 -> 384
+                source_plates = []
+
+                for barcode in source_barcodes: #load our source plates into an array for looping
+                    source_plates.append(db.session.query(SamplePlate).filter_by(external_barcode=barcode).first())
+
+                ind = 0;
+                for plate in source_plates: #validate we have source plates
+                    if not plate:
+                        logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: [%s]" % (g.user.first_and_last_name,source_barcodes[ind]))
+                        return {
+                            "success":False,
+                            "errorMessage":"There is no source plate with the barcode: [%s]" % (source_barcodes[ind])
+                        }
+                    ind += 1
+
+                #
+                # 1. Create a "sample_transfer" row representing this entire transfer.
+                #
+                sample_transfer = SampleTransfer(sample_transfer_type_id, operator.operator_id)
+                db.session.add(sample_transfer)
+
+                # create destination plate
+                create_destination_plate(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
+
+                destination_plate = destination_plates[0]
+
+                db.session.flush()
+
+                order_number = 1
+
+                for destination_plate_well in destination_plates[0].wells:
+                    # for 1-to-4 transfer, we go in quadrants - everyo-other column + every-other row
+                    dest_row_length = 24
+                    src_row_length = 12
+                    rowIndex = floor(order_number/dest_row_length) + 1;
+
+                    if rowIndex % 2 == 0:
+                        #quad 3 or 4
+                        if order_number % 2 == 0:
+                            source_plate_index = 3
+                        else:
+                            source_plate_index = 2
+                    else:
+                        #quad 1 or 2
+                        if order_number % 2 == 0:
+                            source_plate_index = 1
+                        else:
+                            source_plate_index = 0
+
+                    source_plate = source_plates[source_plate_index];
+
+                    source_plate_row_index = floor(rowIndex/2) + rowIndex%2;
+                    normalized_well_id = order_number - dest_row_length*(rowIndex - 1)
+                    normalized_row_index = floor(normalized_well_id/2) + normalized_well_id%2
+                    source_plate_well_id = normalized_row_index + src_row_length*(source_plate_row_index-1)
+
+                    existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
+                        SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                        SamplePlateLayout.sample_id==source_plate.wells[source_plate_well_id].sample_id,
+                        SamplePlateLayout.well_id==order_number
+                        )).first()
+
+                    if existing_sample_plate_layout:
+                        return {
+                            "success":False,
+                            "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
+                                source_plate.wells[source_plate_well_id].sample_id,source_plate_well_id)
+                        }
+
+                    #
+                    # 3a. Create a row representing a well in the desination plate.
+                    #
+                    destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
+                        source_plate.wells[source_plate_well_id].sample_id,order_number,operator.operator_id,source_plate.wells[source_plate_well_id].row,source_plate.wells[source_plate_well_id].column)
+
+                    db.session.add(destination_plate_well)
+
+                    #
+                    # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
+                    # in the "desination" plate.
+                    #
+                    source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
+                       source_plate.sample_plate_id, source_plate_well_id, source_plate.wells[source_plate_well_id].sample_id,
+                       destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
+                    db.session.add(source_to_destination_well_transfer)
+
+                    order_number += 1
 
     #
     # Commit the transaction here.
@@ -930,6 +1072,8 @@ def create_sample_movement():
 
     sample_transfer_type_id = data["sampleTransferTypeId"]
 
+    sample_trasfer_template_id = data["sampleTransferTemplateId"]
+
     wells = data.get("wells",None)
 
     #
@@ -949,14 +1093,15 @@ def create_sample_movement():
     # the "source" plate will be moved to the exact same locations in the "destination" plate.
     #
     else:
-        source_barcode = data["sourceBarcodeId"]
-        destination_barcode = data["destinationBarcodeId"]
 
-        response = create_one_plate_to_one_plate_sample_movement(operator,sample_transfer_type_id,source_barcode,destination_barcode)
+        source_barcodes = data["sourcePlates"]
+        destination_barcodes = data["destinationPlates"]
 
-        if response["success"]:
-            logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))
+        response = create_plate_sample_movement(operator,sample_transfer_type_id,source_barcodes,destination_barcodes,sample_trasfer_template_id)
 
+        #if response["success"]:
+            #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))
+            #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcodes))
 
     return Response(response=json.dumps(response),
         status=200, \

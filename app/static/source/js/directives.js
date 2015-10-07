@@ -14,6 +14,26 @@ app = angular.module("twist.app")
     }
 ])
 
+.directive('twistMainNav', [ 
+    function() {
+        return {
+            restrict: 'E'
+            ,templateUrl: 'twist-main-nav.html'
+            ,controller: ['$scope', 
+                function ($scope) {
+                    $scope.navItems = [
+                        {text: 'Record Step', 'link': 'root.record_step'}
+                        ,{text: 'Plate Details', 'link': 'root.plate_details'}
+                        ,{text: 'Edit Plate Barcode', 'link': 'root.edit_barcode'}
+                        ,{text: 'View Steps', 'link': 'root.view_steps'} 
+                        ,{text: 'Sample Details', 'link': 'root.sample_details'}
+                    ];
+                }
+            ]
+        };
+    }
+])
+
 .directive('twstSpinner', ['$interval',  
     function($interval) {
         return {
