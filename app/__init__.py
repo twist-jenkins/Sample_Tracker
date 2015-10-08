@@ -353,9 +353,9 @@ def user_data():
 def google_login():
     return routes.google_login()
 
-@app.route('/api/v1/sample-tranfer-types', methods=['GET'])
+@app.route('/api/v1/sample-transfer-types', methods=['GET'])
 def sample_tranfer_types():
-    return routes.sample_tranfer_types()
+    return routes.sample_transfer_types()
 
 @app.route('/api/v1/sample-plate-barcodes', methods=['GET'])
 def sample_plate_barcodes():
@@ -363,7 +363,7 @@ def sample_plate_barcodes():
 
 @app.route('/api/v1/track-sample-step', methods=['POST'])
 def track_sample_step():
-    return routes.create_sample_movement()
+    return routes.create_step_record()
 
 @app.route('/api/v1/sample-plates-list', methods=['GET'])
 def sample_plates_list():

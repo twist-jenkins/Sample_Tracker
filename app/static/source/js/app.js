@@ -177,7 +177,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         $scope.submissionResultVisible = 1;
                         $scope.clearForm();
                     } else {
-                        $scope.submissionResultMessage = 'Error: ' + data.errorMessage + '.';
+                        $scope.submissionResultMessage = 'Error: ' + data.errorMessage;
                         $scope.submissionResultVisible = -1;
                         $scope.submittingStep = false;
                     }

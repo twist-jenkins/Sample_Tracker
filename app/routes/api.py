@@ -1086,7 +1086,10 @@ def create_sample_movement():
 
     sample_transfer_type_id = data["sampleTransferTypeId"]
 
-    sample_trasfer_template_id = data["sampleTransferTemplateId"]
+    if "sampleTransferTemplateId" in data:
+        sample_transfer_template_id = data["sampleTransferTemplateId"]
+    else:
+        sample_transfer_template_id = 1
 
     wells = data.get("wells",None)
 
@@ -1108,10 +1111,10 @@ def create_sample_movement():
     #
     else:
 
-        source_barcodes = data["sourcePlates"]
-        destination_barcodes = data["destinationPlates"]
+        source_barcodes = [data["sourceBarcodeId"]]
+        destination_barcodes = [data["destinationBarcodeId"]]
 
-        response = create_plate_sample_movement(operator,sample_transfer_type_id,source_barcodes,destination_barcodes,sample_trasfer_template_id)
+        response = create_plate_sample_movement(operator,sample_transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id)
 
         #if response["success"]:
             #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))
