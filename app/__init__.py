@@ -354,7 +354,7 @@ def google_login():
     return routes.google_login()
 
 @app.route('/api/v1/sample-transfer-types', methods=['GET'])
-def sample_tranfer_types():
+def sample_transfer_types():
     return routes.sample_transfer_types()
 
 @app.route('/api/v1/sample-plate-barcodes', methods=['GET'])

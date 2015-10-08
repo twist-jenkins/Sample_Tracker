@@ -145,6 +145,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var data = {
                 sampleTransferTypeId: $scope.selectedStepType.id
                 ,sampleTransferTemplateId: $scope.selectedStepType.transfer_template_id
+                ,inverted: $scope.selectedStepType.inverted
                 ,sourcePlates: []
                 ,destinationPlates: []
             };

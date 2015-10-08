@@ -75,7 +75,7 @@ app = angular.module('twist.app')
 
         return {
             getSampleTransferTypes: function () {
-                var userReq = ApiRequestObj.getGet('sample-tranfer-types');
+                var userReq = ApiRequestObj.getGet('sample-transfer-types');
                 return $http(userReq);
             }
             ,getBarcodes: function () {
