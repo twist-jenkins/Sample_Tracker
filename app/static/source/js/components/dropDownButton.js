@@ -19,7 +19,7 @@ var DropDownButton = (function() {
 
    DropDownButton.prototype.init = function() {
       var handleClick = function($a) {
-         selectedItemId = $a.parent().data("sample-tranfer-type-id");
+         selectedItemId = $a.parent().data("sample-transfer-type-id");
          if (selectedItemId) {
             this.$hiddenSelectElem.val(selectedItemId);
             this.$buttonLabel.text($a.text());
@@ -43,7 +43,7 @@ var DropDownButton = (function() {
 
 
    DropDownButton.prototype.selectItemById = function(itemId) {
-      var itemAnchor = $('li[data-sample-tranfer-type-id=' + itemId + '] a ', this.$elem);
+      var itemAnchor = $('li[data-sample-transfer-type-id=' + itemId + '] a ', this.$elem);
       itemAnchor.trigger("click");
    }
 

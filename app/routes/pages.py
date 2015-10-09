@@ -35,8 +35,8 @@ from app.dbmodels import Operator, SampleTransferType, SampleTransfer, SampleTra
 # This is the "home" page, which is actually the "enter a sample movement" page.
 #
 def home():
-    sample_tranfer_types = db.session.query(SampleTransferType).order_by(SampleTransferType.name)
-    return render_template('recordSampleTransfer.html',sample_tranfer_types=sample_tranfer_types,
+    sample_transfer_types = db.session.query(SampleTransferType).order_by(SampleTransferType.name)
+    return render_template('recordSampleTransfer.html',sample_transfer_types=sample_transfer_types,
         current_user_first_and_last=g.user.first_and_last_name)
 
 #
