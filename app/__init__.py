@@ -36,15 +36,16 @@ import logging
 
 rootlogger = logging.getLogger()
 
-from logging.handlers import SysLogHandler
-syslog = SysLogHandler(address=('logs3.papertrailapp.com', 47028))
-rootlogger.addHandler(syslog)
-formatter = logging.Formatter('%(name)s : %(levelname)s - %(message)s')
-#formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-#formatter = logging.Formatter('%(name)s : %(message)s')
-
-formatter = logging.Formatter('[%(name)s : %(levelname)s] %(message)s')
-syslog.setFormatter(formatter)
+## old papertrail setup ##
+##  from logging.handlers import SysLogHandler
+##  syslog = SysLogHandler(address=('logs3.papertrailapp.com', 47028))
+##  rootlogger.addHandler(syslog)
+##  formatter = logging.Formatter('%(name)s : %(levelname)s - %(message)s')
+##  #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(##  message)s')
+##  #formatter = logging.Formatter('%(name)s : %(message)s')
+##
+##  formatter = logging.Formatter('[%(name)s : %(levelname)s] %(message)s')
+##  syslog.setFormatter(formatter)
 
 
 
