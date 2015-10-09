@@ -826,14 +826,14 @@ def get_samples_list():
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
-######## ROUTES USED BY ANGULAR APP - To do: Move these to angular.py
+######## ROUTES USED BY ANGULAR APP - Copying these to angular.py
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
 
 
 # creates a destination plate for a transfer
-def create_destination_plate(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
+def create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
     destination_plate_name = create_unique_object_id("PLATE_")
     destination_plate_description = create_unique_object_id("PLATEDESC_")
     destination_plates.append(SamplePlate(source_plate_type_id,operator.operator_id,storage_location_id,
@@ -873,10 +873,10 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
 
         # create destination plate(s)
         if sample_transfer_template_id == 1:
-            create_destination_plate(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
+            create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
         elif sample_transfer_template_id == 13 or sample_transfer_template_id == 14: # 1 to multiple
             for destination_barcode in destination_barcodes:
-                create_destination_plate(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id)
+                create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id)
         else:
             return {
                 "success":False,
@@ -1000,7 +1000,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                 db.session.add(sample_transfer)
 
                 # create destination plate
-                create_destination_plate(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
+                create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
 
                 destination_plate = destination_plates[0]
 
