@@ -29,8 +29,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter',
-    function ($scope, $state, Api, $sce, $timeout, Formatter) {
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead) {
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
@@ -102,11 +102,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         }
 
-        $scope.getTypeAheadBarcodes = function (queryText) {
-            return Api.getBarcodes(queryText).then(function (resp) {
-                return resp.data;
-            });
-        }
+        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
 
         $scope.sampleTrackFormReady = function () {
 
@@ -212,16 +208,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('editBarcodeController', ['$scope', '$state',  '$http', 'Api', '$timeout',
-    function ($scope, $state, $http, Api, $timeout) {
-
-
-
-        $scope.getTypeAheadPlateIds = function (queryText) {
-            return Api.getSamplePlatesList(queryText).then(function (resp) {
-                return resp.data;
-            });
-        };
+.controller('editBarcodeController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'TypeAhead', 
+    function ($scope, $state, $http, Api, $timeout, TypeAhead) {
+        
+        $scope.getTypeAheadPlateIds = TypeAhead.getTypeAheadPlateIds;
 
         $scope.plateInfoEntered = function () {
             if ($scope.plateId && $scope.plateId.length > 1) {
@@ -306,6 +296,40 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
+.controller('plateDetailsController', ['$scope', '$state', 'Api', 'TypeAhead', 
+    function ($scope, $state, Api, TypeAhead) {
+        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
+        $scope.plateBarcode = '';
+
+        $scope.getDetailsClicked = function () {
+            if ($scope.plateBarcode.length > 5) {
+                $state.go('root.plate_details.barcode_entered', {
+                    entered_barcode: $scope.plateBarcode
+                });
+            }
+        };
+
+        $scope.getPlateDetails = function (barcode) {
+            $scope.plateBarcode = barcode;
+
+            $scope.fetchingDetails = true;
+
+            Api.getPlateDetails(barcode).success(function (data) {
+                $scope.fetchingDetails = false;
+                $scope.plateDetails = data;
+                console.log($scope.plateDetails);
+            });
+        }
+    }]
+)
+
+.controller('plateDetailsBarcodeEnteredController', ['$scope', '$state',  '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        var barcode = $stateParams.entered_barcode;
+        $scope.getPlateDetails(barcode);
+    }]
+)
+
 .run(['$state', 'User', '$location', '$timeout',
     function($state, User, $location, $timeout) {
         var routeUrl = window.location.hash.substr(1);
@@ -361,7 +385,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:selected_step_type_id'
             ,template: ''
             ,controller: 'stepTypeSelectedController'
-        }).state('root.edit_barcode', {
+        }).state('root.edit_barcode', { 
             url: 'edit-barcode'
             ,templateUrl: 'twist-edit-barcode.html'
             ,controller: 'editBarcodeController'
@@ -373,6 +397,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: 'view-steps'
             ,templateUrl: 'twist-view-steps.html'
             ,controller: 'viewStepsController'
+        }).state('root.plate_details', {
+            url: 'plate-details'
+            ,templateUrl: 'twist-plate-details.html'
+            ,controller: 'plateDetailsController'
+        }).state('root.plate_details.barcode_entered', {
+            url: '/:entered_barcode'
+            ,template: ''
+            ,controller: 'plateDetailsBarcodeEnteredController'
         })
 
 
