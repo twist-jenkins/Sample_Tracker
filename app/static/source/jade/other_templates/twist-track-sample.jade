@@ -22,8 +22,8 @@ div(class="twst-sample-track-main twst-child-page")
                     div(class="twst-sample-track-plate-input")
                         input(type="text" class="form-control" ng-model="plate.text" typeahead="barcode for barcode in getTypeAheadBarcodes($index)" typeahead-loading="loadingLocations" typeahead-no-results="noResults")
                         twst-thumb-validation-icon(validation="plate.text.length > 5")
-                        i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh")
-                        div(ng-show="noResults")
+                        i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
+                        div(ng-show="noResults" class="twst-offscreen")
                           i(class="glyphicon glyphicon-remove") No Results Found
             div(class="twst-sample-track-plate-barcodes-left")
                 p(class="twst-block-header" ng-class="{'twst-invisible': !destinationPlates.length}") Destination Plate Barcode{{destinationPlates.length > 1 ?'s':''}}:

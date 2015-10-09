@@ -71,7 +71,10 @@ module.exports = function(grunt) {
                 options: {
                     pretty: true
                     ,doctype: 'html'
-                    ,data: {'githash': '<%= githash.main.short %>'}
+                    ,data: {
+                        'githash': '<%= githash.main.short %>'
+                        ,'app_domain_name': grunt.option('app_domain_name')
+                    }
                 }
                 ,files: {
                   "app/static/index.html": ["app/static/source/jade/index.jade"]
@@ -481,6 +484,5 @@ module.exports = function(grunt) {
         ,'copy:twist_app_other_css'
         //END NEW ANGULAR APP
     ]);
-
 
 };

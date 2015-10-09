@@ -308,7 +308,6 @@ class SampleTransferType(db.Model):
     source_plate_count = db.Column(db.Integer)
     destination_plate_count = db.Column(db.Integer)
     sample_transfer_template_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_template.id'))
-    inverted = db.Column(db.Boolean)
 
     sample_transfers = db.relationship('SampleTransfer')
     sample_transfer_template = db.relationship('SampleTransferTemplate')

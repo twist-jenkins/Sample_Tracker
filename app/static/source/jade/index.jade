@@ -18,6 +18,8 @@ html(lang="en" ng-app="twist.app")
         link(rel="stylesheet" type="text/css" href='/static/css/bootstrap.min.css')
         link(rel="stylesheet" type="text/css" href='/static/css/twist-app' + githash + '.css')
 
+        script var twist_api_url = '#{app_domain_name}'
+
         script(src="/static/js/jquery.min.js")
         script(src="/static/js/angular.min.js")
         script(src="/static/js/angular-ui-router.min.js")

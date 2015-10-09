@@ -79,7 +79,7 @@ def sample_transfer_types():
     sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.id);
     simplified_results = []
     for row in sample_transfer_types2:
-        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id, "inverted":row.inverted})
+        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
     returnData = {
         "success": True
         ,"results": simplified_results 
@@ -370,3 +370,164 @@ def create_step_record():
     return jsonify({
         "success":True
     })
+
+
+def plate_details(sample_plate_barcode, format):
+
+    #
+    # "ccccccc1234"
+    #
+    sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
+
+    if not sample_plate:
+        response = {
+            "success":False,
+            "errorMessage":"There is no plate with the barcode: [%s]" % (sample_plate_barcode)
+        }
+        return jsonify(response)
+
+    sample_plate_id = sample_plate.sample_plate_id
+    number_clusters = sample_plate.sample_plate_type.number_clusters
+
+    #print "number_clusters: ", number_clusters
+
+    well_to_col_and_row_mapping_fn = {
+        48:get_col_and_row_for_well_id_48,
+        96:get_col_and_row_for_well_id_96,
+        384:get_col_and_row_for_well_id_384
+    }.get(number_clusters,lambda well_id:"missing map")
+
+    rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
+        SampleTransferDetail.destination_sample_plate_id==sample_plate_id,
+        SamplePlate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
+
+    parent_to_this_task_name = None
+    seen=[]
+    parent_plates=[]
+    for parent_plate, details in rows:
+        if parent_plate.sample_plate_id not in seen:
+            seen.append(parent_plate.sample_plate_id)
+            parent_plates.append({
+                "externalBarcode":parent_plate.external_barcode,
+                "dateCreated":str(parent_plate.date_created),
+                "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+            })
+            parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
+
+
+    rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
+        SampleTransferDetail.source_sample_plate_id==sample_plate_id,
+        SamplePlate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
+
+    this_to_child_task_name = None
+    seen=[]
+    child_plates=[]
+    for child_plate, details in rows:
+        if child_plate.sample_plate_id not in seen:
+            seen.append(child_plate.sample_plate_id)
+            child_plates.append({
+                "externalBarcode":child_plate.external_barcode,
+                "dateCreated":str(child_plate.date_created),
+                "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+            })
+            this_to_child_task_name = details.sample_transfer.sample_transfer_type.name
+
+
+
+    wells = []
+
+    rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate_id).all()
+    for well in rows:
+        well_dict = {
+            "well_id":well.well_id,
+            "column_and_row":well_to_col_and_row_mapping_fn(well.well_id),
+            "sample_id":well.sample_id
+        }
+        wells.append(well_dict)
+
+
+    report = {
+        "success":True,
+        "parentPlates":parent_plates,
+        "parentToThisTaskName":parent_to_this_task_name,
+        "childPlates":child_plates,
+        "thisToChildTaskName":this_to_child_task_name,
+        "wells":wells,
+        "plateDetails":{
+            "dateCreated":str(sample_plate.date_created),
+            "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
+            "createdBy":str(sample_plate.operator.first_and_last_name)
+        }
+    }
+
+    if format == "json":
+        resp = Response(response=json.dumps(report),
+            status=200, \
+            mimetype="application/json")
+        return(resp)
+
+    elif format=="csv":
+
+
+        si = StringIO.StringIO()
+        cw = csv.writer(si)
+        #w.writerow(["foo","bar"])
+        #return
+
+        cw.writerow(["PLATE REPORT"])
+        cw.writerow("")
+        cw.writerow("")
+        cw.writerow(["","PLATE BARCODE", "CREATION DATE/TIME","CREATED BY"])
+        cw.writerow("")
+        cw.writerow(["",sample_plate_barcode, report["plateDetails"]["dateCreatedFormatted"],report["plateDetails"]["createdBy"]])
+
+        #csv = "PLATE REPORT\n\n"
+        #csv += """,PLATE BARCODE, CREATION DATE/TIME,CREATED BY\n """
+        #csv += "," + sample_plate_barcode + "," + "\"" + report["plateDetails"]["dateCreatedFormatted"] + "\" ," + report["plateDetails"]["createdBy"]
+
+        #
+        # dt.strftime("%A, %d. %B %Y %I:%M%p")
+        #
+
+        if len(parent_plates) > 0:
+            cw.writerow("")
+            cw.writerow("")
+            cw.writerow(["PARENT PLATES"])
+            cw.writerow(["","Task:" + report["parentToThisTaskName"]])
+            cw.writerow("")
+            cw.writerow(["","BAR CODE", "CREATION DATE/TIME"])
+            for plate in parent_plates:
+                cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
+
+
+        if len(child_plates) > 0:
+            cw.writerow("")
+            cw.writerow("")
+            cw.writerow(["CHILD PLATES"])
+            cw.writerow(["","Task:" + report["thisToChildTaskName"]])
+            cw.writerow("")
+            cw.writerow(["","BAR CODE", "CREATION DATE/TIME"])
+            for plate in child_plates:
+                cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
+
+
+        cw.writerow("")
+        cw.writerow("")
+        cw.writerow(["PLATE WELLS"])
+        cw.writerow(["","WELL ID", "COL/ROW", "SAMPLE ID"])
+
+
+        for well in wells:
+            cw.writerow(["",well["well_id"], well_to_col_and_row_mapping_fn(well["well_id"]), well["sample_id"]])
+
+        csvout = si.getvalue().strip('\r\n')
+
+        logger.info(" %s downloaded the PLATE DETAILS REPORT for plate with barcode [%s]" % (g.user.first_and_last_name,sample_plate_barcode))
+
+        # We need to modify the response, so the first thing we
+        # need to do is create a response out of the CSV string
+        response = make_response(csvout)
+        # This is the key: Set the right header for the response
+        # to be downloaded, instead of just printed on the browser
+        response.headers["Content-Disposition"] = "attachment; filename=Plate_" + sample_plate_barcode + "_Report.csv"
+        return response
