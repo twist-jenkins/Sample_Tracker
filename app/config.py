@@ -17,8 +17,8 @@ class Config(object):
 
     SQLALCHEMY_ECHO = False
 
-    GOOGLE_LOGIN_CLIENT_ID = "1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com"
-    GOOGLE_LOGIN_CLIENT_SECRET = "EWohyxtKDkcZyF1BBEPu_Jo1"
+    GOOGLE_LOGIN_CLIENT_ID = "751130267692-eed3irkpojv6euceh41bkopk3v9q9e97.apps.googleusercontent.com"
+    GOOGLE_LOGIN_CLIENT_SECRET = "BejdwirP4k6g0l8WDZyMBTwL"
     GOOGLE_LOGIN_CLIENT_SCOPES = "email"
 
     GOOGLE_OAUTH2_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
