@@ -17,30 +17,29 @@ update_template = ("update sample_transfer_type "
                    "set name = :name, "
                    "sample_transfer_template_id = :stti, "
                    "source_plate_count = :spc, "
-                   "destination_plate_count = :dpc, "
-                   "inverted = :inv "
+                   "destination_plate_count = :dpc "
                    "where id = :id")
 
-update_template_arg_names = ("id", "name", "stti", "spc", "dpc", "inv")
+update_template_arg_names = ("id", "name", "stti", "spc", "dpc")
 
 desired_values = [
-    [1, "Aliquoting for Quantification (384 plate)", 1, 1, 1, False],
-    [2, "Cloning (Insert hitpicking)", 1, 1, 1, False],
-    [3, "Cloning (Thermocyling)", 1, 1, 0, False],
-    [4, "Cloning (Vector hitpicking)", 1, 1, 0, False],
-    [5, "Denaturation / Reannealing", 1, 1, 1, False],
-    [6, "Error correction (ECR)", 1, 1, 1, False],
-    [7, "PCA", 1, 1, 0, False],
-    [8, "PCR", 1, 1, 0, False],
-    [9, "Purification (384 plate)", 1, 1, 1, False],
-    [10, "Transfer to EDC plate", 1, 1, 1, False],
-    [11, "Aliquoting for Frag analysis", 13, 1, 4, False],
-    [12, "Transformation", 13, 1, 4, False],
-    [13, "Plating on Hamilton", 14, 1, 2, False],
-    [14, "Picking: Manual to 96 plate x4", 16, 1, 4, False],
-    [15, "Picking: Qpix to 96 plate x4", 16, 1, 4, False],
-    [16, "Picking: Qpix to 384 plate", 17, 1, 1, False],
-    [17, "Glycerol stock: from 96 plate", 17, 4, 1, True],
+    [1, "Aliquoting for Quantification (384 plate)", 1, 1, 1],
+    [2, "Cloning (Insert hitpicking)", 1, 1, 1],
+    [3, "Cloning (Thermocyling)", 1, 1, 0],
+    [4, "Cloning (Vector hitpicking)", 1, 1, 0],
+    [5, "Denaturation / Reannealing", 1, 1, 1],
+    [6, "Error correction (ECR)", 1, 1, 1],
+    [7, "PCA", 1, 1, 0],
+    [8, "PCR", 1, 1, 0],
+    [9, "Purification (384 plate)", 1, 1, 1],
+    [10, "Transfer to EDC plate", 1, 1, 1],
+    [11, "Aliquoting for Frag analysis", 13, 1, 4],
+    [12, "Transformation", 13, 1, 4],
+    [13, "Plating on Hamilton", 14, 1, 2],
+    [14, "Picking: Manual to 96 plate x4", 16, 1, 4],
+    [15, "Picking: Qpix to 96 plate x4", 16, 1, 4],
+    [16, "Picking: Qpix to 384 plate", 17, 1, 1],
+    [17, "Glycerol stock: from 96 plate", 18, 4, 1],
 ]
 
 
@@ -52,9 +51,6 @@ def upgrade():
     op.add_column('sample_transfer_type',
                   sa.Column('destination_plate_count',
                             sa.Integer, default=1))
-    op.add_column('sample_transfer_type',
-                  sa.Column('inverted',
-                            sa.Boolean, default=False))
 
     for row_values in desired_values:
         args = dict(zip(update_template_arg_names, row_values))
@@ -65,5 +61,4 @@ def downgrade():
 
     op.drop_column('sample_transfer_type', 'source_plate_count')
     op.drop_column('sample_transfer_type', 'destination_plate_count')
-    op.drop_column('sample_transfer_type', 'inverted')
 
