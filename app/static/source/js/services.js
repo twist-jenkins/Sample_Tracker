@@ -1,7 +1,7 @@
 var app, server_url, api_base_url;
 
 api_base_url = 'api/v1/';
-server_url = 'http://sampletransfer-qa.twistbioscience.com/';
+server_url = twist_api_url;
 //server_url = 'http://localhost:80';
 //server_url = 'http://localhost:8080';
 
@@ -107,6 +107,10 @@ app = angular.module('twist.app')
                 var transfersReq = ApiRequestObj.getGet('sample-transfers');
                 return $http(transfersReq);
             }
+            ,getPlateDetails: function (barcode, format) {
+                var plateDetailsReq = ApiRequestObj.getGet('plate_barcodes/' + barcode + (format ? '/' + format : ''));
+                return $http(plateDetailsReq);
+            }
         };
     }]
 )
@@ -146,6 +150,23 @@ app = angular.module('twist.app')
                 return stripNonAlphaNumeric(str, dashOk);
             }
         }
+    }]
+)
+
+.factory('TypeAhead', ['Api',
+    function (Api) {
+        return {
+            getTypeAheadBarcodes: function (queryText) {
+                return Api.getBarcodes(queryText).then(function (resp) {
+                    return resp.data;
+                });
+            }
+            ,getTypeAheadPlateIds: function (queryText) {
+                return Api.getSamplePlatesList(queryText).then(function (resp) {
+                    return resp.data; 
+                });
+            }
+        };
     }]
 )
 
