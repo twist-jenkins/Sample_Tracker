@@ -3,7 +3,7 @@ var app;
 app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main', 'ngSanitize'])
 
 
-.controller('rootController', ['$scope', '$state', 'User', 
+.controller('rootController', ['$scope', '$state', 'User',
     function ($scope, $state, User) {
         $scope.user = User;
         $scope.current_year = (new Date).getFullYear();
@@ -18,7 +18,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('loginController', ['$scope', '$state',  '$http', 
+.controller('loginController', ['$scope', '$state',  '$http',
     function ($scope, $state, $http) {
 
         $http({url: '/google-login'}).success(function (data) {
@@ -184,7 +184,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                             $scope.submissionResultMessage = null;
                         }, 400);
                     }, 5000);
-                    
+
                 }).error(function (data) {
                     $scope.submittingStep = false;
                     console.log('ERROR!');
@@ -201,7 +201,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams', 
+.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams',
     function ($scope, $state, $stateParams) {
         var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
         $scope.setSelectedOption(selectedTranferTypeId);
@@ -210,9 +210,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('editBarcodeController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'TypeAhead', 
     function ($scope, $state, $http, Api, $timeout, TypeAhead) {
-
-
-
+        
         $scope.getTypeAheadPlateIds = TypeAhead.getTypeAheadPlateIds;
 
         $scope.plateInfoEntered = function () {
@@ -228,7 +226,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             Api.getPlateInfo($scope.plateId).then(function (resp) {
                 $scope.selectedPlate = resp.data;
                 $scope.currentBarcode = $scope.selectedPlate.externalBarcode + '';
-            });  
+            });
         }
 
         $scope.plateInfoKeypress = function ($event) {
@@ -281,14 +279,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('editBarcodePlateSelectedController', ['$scope', '$state',  '$stateParams', 
+.controller('editBarcodePlateSelectedController', ['$scope', '$state',  '$stateParams',
     function ($scope, $state, $stateParams) {
         var plateId = $stateParams.selected_plate_id;
         $scope.getPlateInfo(plateId);
     }]
 )
 
-.controller('viewStepsController', ['$scope', '$state', 'Api', 
+.controller('viewStepsController', ['$scope', '$state', 'Api',
     function ($scope, $state, Api) {
         /* populate the sample types pulldown */
         Api.getPlateSteps().success(function (data) {
@@ -355,11 +353,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.config(['$httpProvider', 
+.config(['$httpProvider',
     function($httpProvider) {
         if (!$httpProvider.defaults.headers.get) {
-            $httpProvider.defaults.headers.get = {};    
-        }    
+            $httpProvider.defaults.headers.get = {};
+        }
         //disable IE ajax request caching
         $httpProvider.defaults.headers.get['If-Modified-Since'] = 'Mon, 26 Jul 1997 05:00:00 GMT';
         // extra
@@ -368,7 +366,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.config(['$stateProvider', 
+.config(['$stateProvider',
     function($stateProvider) {
         return $stateProvider.state('root', {
             url: '/'

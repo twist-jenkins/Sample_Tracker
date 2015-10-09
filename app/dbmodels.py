@@ -4,8 +4,8 @@
 #
 # File: dbmodels.py
 #
-# The database models used by SQLAlchemy. 
-# 
+# The database models used by SQLAlchemy.
+#
 ######################################################################################
 
 
@@ -214,7 +214,7 @@ class SampleTransfer(db.Model):
 
     sample_transfer_type = db.relationship("SampleTransferType")
     operator = db.relationship("Operator")
-    
+
 
     def __init__(self, sample_transfer_type_id, operator_id):
         self.sample_transfer_type_id = sample_transfer_type_id
