@@ -13,4 +13,8 @@ div(class="twst-plate-details-main twst-child-page")
                 strong &nbsp;{{plateBarcode}}
             div(class="twst-spinner" ng-if="fetchingDetails")
 
+            div(class="twst-plate-details-readout" ng-if="plateDetails")
+                p Created By:&nbsp;
+                    span(class="twst-data-value") {{plateDetails.plateDetails.createdBy}}
+
     div(ui-view)

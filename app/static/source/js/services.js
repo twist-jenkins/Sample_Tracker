@@ -1,9 +1,7 @@
 var app, server_url, api_base_url;
 
-api_base_url = 'api/v1/';
+api_base_url = '/api/v1/';
 server_url = twist_api_url;
-//server_url = 'http://localhost:80';
-//server_url = 'http://localhost:8080';
 
 app = angular.module('twist.app')
 

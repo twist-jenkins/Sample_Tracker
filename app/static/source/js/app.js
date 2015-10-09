@@ -317,6 +317,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             Api.getPlateDetails(barcode).success(function (data) {
                 $scope.fetchingDetails = false;
                 $scope.plateDetails = data;
+                console.log($scope.plateDetails);
             });
         }
     }]
