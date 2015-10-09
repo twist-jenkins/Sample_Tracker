@@ -75,7 +75,7 @@ app = angular.module('twist.app')
 
         return {
             getSampleTransferTypes: function () {
-                var userReq = ApiRequestObj.getGet('sample-tranfer-types');
+                var userReq = ApiRequestObj.getGet('sample-transfer-types');
                 return $http(userReq);
             }
             ,getBarcodes: function () {
@@ -108,6 +108,44 @@ app = angular.module('twist.app')
                 return $http(transfersReq);
             }
         };
+    }]
+)
+
+.factory('Formatter', [
+    function () {
+
+        var alphaNumeric = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+        var stripNonAlphaNumeric = function (inString, dashOk) {
+
+            var okChars = alphaNumeric;
+            if (dashOk) {
+                okChars += '-';
+            }
+
+            var outString = inString;
+            if (inString != null) {
+                outString = '';
+                inString = inString.toLowerCase();
+                for (var i=0; i<inString.length;i++) {
+                    var thisChar = inString.charAt(i);
+                    if (okChars.indexOf(thisChar) != -1) {
+                        outString += thisChar;
+                    }
+                }
+            }
+
+            return outString;
+        };
+
+        return {
+            lowerCaseAndSpaceToDash: function (str) {
+                return str.toLowerCase().replace(/\s/g, '-');
+            }
+            ,stripNonAlphaNumeric: function (str, dashOk) {
+                return stripNonAlphaNumeric(str, dashOk);
+            }
+        }
     }]
 )
 

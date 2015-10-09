@@ -273,7 +273,7 @@ class SampleTransferTemplate(db.Model):
 
     __table_args__ = (db.CheckConstraint(is_one_to_one_transfer.in_(['Y','N'])), )
 
-    sample_tranfer_types = db.relationship('SampleTransferType')
+    sample_transfer_types = db.relationship('SampleTransferType')
 
     sample_transfer_template_details = db.relationship('SampleTransferTemplateDetails')
 
@@ -308,8 +308,9 @@ class SampleTransferType(db.Model):
     source_plate_count = db.Column(db.Integer)
     destination_plate_count = db.Column(db.Integer)
     sample_transfer_template_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_template.id'))
+    inverted = db.Column(db.Boolean)
 
-    sample_tranfers = db.relationship('SampleTransfer')
+    sample_transfers = db.relationship('SampleTransfer')
     sample_transfer_template = db.relationship('SampleTransferTemplate')
 
     #def __init__(self, name ):
