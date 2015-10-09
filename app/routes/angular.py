@@ -312,11 +312,11 @@ def create_step_record():
 
         db.session.flush()
 
-        transfer_plate_templates = templateData["plate_well_to_well_maps"]
+        plate_well_to_well_maps = templateData["plate_well_to_well_maps"]
 
         plate_number = 0;
         for source_plate in source_plates:
-            well_to_well_map = transfer_plate_templates[plate_number];
+            well_to_well_map = plate_well_to_well_maps[plate_number];
             plate_number+= 1
 
             order_number = 1

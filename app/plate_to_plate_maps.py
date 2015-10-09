@@ -410,4 +410,525 @@ def maps_json():
                 }
             ]
         }
+        ,14: {  # keyed to sample_transfer_template_id in the database
+            "description": "96 to 2x48"
+            ,"source": {
+                "plate_count": 1
+                ,"well_count": 96
+                ,"plate_type_id": "SPTT_0005"
+            }
+            ,"destination":{
+                "plate_count": 2
+                ,"well_count": 48
+                ,"plate_type_id": "SPTT_0004"
+            }
+            ,"plate_well_to_well_maps": [ # array of source plates
+                {   # index in plate_well_to_well_map array = source_plate_index
+                    1: {"destination_plate_number": 1 ,"destination_well_id": 1}
+                    ,2: {"destination_plate_number": 1 ,"destination_well_id": 2}
+                    ,3: {"destination_plate_number": 1 ,"destination_well_id": 3}
+                    ,4: {"destination_plate_number": 1 ,"destination_well_id": 4}
+                    ,5: {"destination_plate_number": 1 ,"destination_well_id": 5}
+                    ,6: {"destination_plate_number": 1 ,"destination_well_id": 6}
+                    ,7: {"destination_plate_number": 2 ,"destination_well_id": 1}
+                    ,8: {"destination_plate_number": 2 ,"destination_well_id": 2}
+                    ,9: {"destination_plate_number": 2 ,"destination_well_id": 3}
+                    ,10: {"destination_plate_number": 2 ,"destination_well_id": 4}
+                    ,11: {"destination_plate_number": 2 ,"destination_well_id": 5}
+                    ,12: {"destination_plate_number": 2 ,"destination_well_id": 6}
+                    ,13: {"destination_plate_number": 1 ,"destination_well_id": 7}
+                    ,14: {"destination_plate_number": 1 ,"destination_well_id": 8}
+                    ,15: {"destination_plate_number": 1 ,"destination_well_id": 9}
+                    ,16: {"destination_plate_number": 1 ,"destination_well_id": 10}
+                    ,17: {"destination_plate_number": 1 ,"destination_well_id": 11}
+                    ,18: {"destination_plate_number": 1 ,"destination_well_id": 12}
+                    ,19: {"destination_plate_number": 2 ,"destination_well_id": 7}
+                    ,20: {"destination_plate_number": 2 ,"destination_well_id": 8}
+                    ,21: {"destination_plate_number": 2 ,"destination_well_id": 9}
+                    ,22: {"destination_plate_number": 2 ,"destination_well_id": 10}
+                    ,23: {"destination_plate_number": 2 ,"destination_well_id": 11}
+                    ,24: {"destination_plate_number": 2 ,"destination_well_id": 12}
+                    ,25: {"destination_plate_number": 1 ,"destination_well_id": 13}
+                    ,26: {"destination_plate_number": 1 ,"destination_well_id": 14}
+                    ,27: {"destination_plate_number": 1 ,"destination_well_id": 15}
+                    ,28: {"destination_plate_number": 1 ,"destination_well_id": 16}
+                    ,29: {"destination_plate_number": 1 ,"destination_well_id": 17}
+                    ,30: {"destination_plate_number": 1 ,"destination_well_id": 18}
+                    ,31: {"destination_plate_number": 2 ,"destination_well_id": 13}
+                    ,32: {"destination_plate_number": 2 ,"destination_well_id": 14}
+                    ,33: {"destination_plate_number": 2 ,"destination_well_id": 15}
+                    ,34: {"destination_plate_number": 2 ,"destination_well_id": 16}
+                    ,35: {"destination_plate_number": 2 ,"destination_well_id": 17}
+                    ,36: {"destination_plate_number": 2 ,"destination_well_id": 18}
+                    ,37: {"destination_plate_number": 1 ,"destination_well_id": 19}
+                    ,38: {"destination_plate_number": 1 ,"destination_well_id": 20}
+                    ,39: {"destination_plate_number": 1 ,"destination_well_id": 21}
+                    ,40: {"destination_plate_number": 1 ,"destination_well_id": 22}
+                    ,41: {"destination_plate_number": 1 ,"destination_well_id": 23}
+                    ,42: {"destination_plate_number": 1 ,"destination_well_id": 24}
+                    ,43: {"destination_plate_number": 2 ,"destination_well_id": 19}
+                    ,44: {"destination_plate_number": 2 ,"destination_well_id": 20}
+                    ,45: {"destination_plate_number": 2 ,"destination_well_id": 21}
+                    ,46: {"destination_plate_number": 2 ,"destination_well_id": 22}
+                    ,47: {"destination_plate_number": 2 ,"destination_well_id": 23}
+                    ,48: {"destination_plate_number": 2 ,"destination_well_id": 24}
+                    ,49: {"destination_plate_number": 1 ,"destination_well_id": 25}
+                    ,50: {"destination_plate_number": 1 ,"destination_well_id": 26}
+                    ,51: {"destination_plate_number": 1 ,"destination_well_id": 27}
+                    ,52: {"destination_plate_number": 1 ,"destination_well_id": 28}
+                    ,53: {"destination_plate_number": 1 ,"destination_well_id": 29}
+                    ,54: {"destination_plate_number": 1 ,"destination_well_id": 30}
+                    ,55: {"destination_plate_number": 2 ,"destination_well_id": 25}
+                    ,56: {"destination_plate_number": 2 ,"destination_well_id": 26}
+                    ,57: {"destination_plate_number": 2 ,"destination_well_id": 27}
+                    ,58: {"destination_plate_number": 2 ,"destination_well_id": 28}
+                    ,59: {"destination_plate_number": 2 ,"destination_well_id": 29}
+                    ,60: {"destination_plate_number": 2 ,"destination_well_id": 30}
+                    ,61: {"destination_plate_number": 1 ,"destination_well_id": 31}
+                    ,62: {"destination_plate_number": 1 ,"destination_well_id": 32}
+                    ,63: {"destination_plate_number": 1 ,"destination_well_id": 33}
+                    ,64: {"destination_plate_number": 1 ,"destination_well_id": 34}
+                    ,65: {"destination_plate_number": 1 ,"destination_well_id": 35}
+                    ,66: {"destination_plate_number": 1 ,"destination_well_id": 36}
+                    ,67: {"destination_plate_number": 2 ,"destination_well_id": 31}
+                    ,68: {"destination_plate_number": 2 ,"destination_well_id": 32}
+                    ,69: {"destination_plate_number": 2 ,"destination_well_id": 33}
+                    ,70: {"destination_plate_number": 2 ,"destination_well_id": 34}
+                    ,71: {"destination_plate_number": 2 ,"destination_well_id": 35}
+                    ,72: {"destination_plate_number": 2 ,"destination_well_id": 36}
+                    ,73: {"destination_plate_number": 1 ,"destination_well_id": 37}
+                    ,74: {"destination_plate_number": 1 ,"destination_well_id": 38}
+                    ,75: {"destination_plate_number": 1 ,"destination_well_id": 39}
+                    ,76: {"destination_plate_number": 1 ,"destination_well_id": 40}
+                    ,77: {"destination_plate_number": 1 ,"destination_well_id": 41}
+                    ,78: {"destination_plate_number": 1 ,"destination_well_id": 42}
+                    ,79: {"destination_plate_number": 2 ,"destination_well_id": 37}
+                    ,80: {"destination_plate_number": 2 ,"destination_well_id": 38}
+                    ,81: {"destination_plate_number": 2 ,"destination_well_id": 39}
+                    ,82: {"destination_plate_number": 2 ,"destination_well_id": 40}
+                    ,83: {"destination_plate_number": 2 ,"destination_well_id": 41}
+                    ,84: {"destination_plate_number": 2 ,"destination_well_id": 42}
+                    ,85: {"destination_plate_number": 1 ,"destination_well_id": 43}
+                    ,86: {"destination_plate_number": 1 ,"destination_well_id": 44}
+                    ,87: {"destination_plate_number": 1 ,"destination_well_id": 45}
+                    ,88: {"destination_plate_number": 1 ,"destination_well_id": 46}
+                    ,89: {"destination_plate_number": 1 ,"destination_well_id": 47}
+                    ,90: {"destination_plate_number": 1 ,"destination_well_id": 48}
+                    ,91: {"destination_plate_number": 2 ,"destination_well_id": 43}
+                    ,92: {"destination_plate_number": 2 ,"destination_well_id": 44}
+                    ,93: {"destination_plate_number": 2 ,"destination_well_id": 45}
+                    ,94: {"destination_plate_number": 2 ,"destination_well_id": 46}
+                    ,95: {"destination_plate_number": 2 ,"destination_well_id": 47}
+                    ,96: {"destination_plate_number": 2 ,"destination_well_id": 48}
+                }
+            ]
+        }
+        ,18: {  # keyed to sample_transfer_template_id in the database
+            "description": "384 to 4x96"
+            ,"source": {
+                "plate_count": 4
+                ,"well_count": 96
+                ,"plate_type_id": "SPTT_0005"
+            }
+            ,"destination":{
+                "plate_count": 1
+                ,"well_count": 384
+                ,"plate_type_id": "SPTT_0006"
+            }
+            ,"plate_well_to_well_maps": [
+                {
+                    1:{"destination_plate_number":1,"destination_well_id":1}
+                    ,2:{"destination_plate_number":1,"destination_well_id":3}
+                    ,3:{"destination_plate_number":1,"destination_well_id":5}
+                    ,4:{"destination_plate_number":1,"destination_well_id":7}
+                    ,5:{"destination_plate_number":1,"destination_well_id":9}
+                    ,6:{"destination_plate_number":1,"destination_well_id":11}
+                    ,7:{"destination_plate_number":1,"destination_well_id":13}
+                    ,8:{"destination_plate_number":1,"destination_well_id":15}
+                    ,9:{"destination_plate_number":1,"destination_well_id":17}
+                    ,10:{"destination_plate_number":1,"destination_well_id":19}
+                    ,11:{"destination_plate_number":1,"destination_well_id":21}
+                    ,12:{"destination_plate_number":1,"destination_well_id":23}
+                    ,13:{"destination_plate_number":1,"destination_well_id":49}
+                    ,14:{"destination_plate_number":1,"destination_well_id":51}
+                    ,15:{"destination_plate_number":1,"destination_well_id":53}
+                    ,16:{"destination_plate_number":1,"destination_well_id":55}
+                    ,17:{"destination_plate_number":1,"destination_well_id":57}
+                    ,18:{"destination_plate_number":1,"destination_well_id":59}
+                    ,19:{"destination_plate_number":1,"destination_well_id":61}
+                    ,20:{"destination_plate_number":1,"destination_well_id":63}
+                    ,21:{"destination_plate_number":1,"destination_well_id":65}
+                    ,22:{"destination_plate_number":1,"destination_well_id":67}
+                    ,23:{"destination_plate_number":1,"destination_well_id":69}
+                    ,24:{"destination_plate_number":1,"destination_well_id":71}
+                    ,25:{"destination_plate_number":1,"destination_well_id":97}
+                    ,26:{"destination_plate_number":1,"destination_well_id":99}
+                    ,27:{"destination_plate_number":1,"destination_well_id":101}
+                    ,28:{"destination_plate_number":1,"destination_well_id":103}
+                    ,29:{"destination_plate_number":1,"destination_well_id":105}
+                    ,30:{"destination_plate_number":1,"destination_well_id":107}
+                    ,31:{"destination_plate_number":1,"destination_well_id":109}
+                    ,32:{"destination_plate_number":1,"destination_well_id":111}
+                    ,33:{"destination_plate_number":1,"destination_well_id":113}
+                    ,34:{"destination_plate_number":1,"destination_well_id":115}
+                    ,35:{"destination_plate_number":1,"destination_well_id":117}
+                    ,36:{"destination_plate_number":1,"destination_well_id":119}
+                    ,37:{"destination_plate_number":1,"destination_well_id":145}
+                    ,38:{"destination_plate_number":1,"destination_well_id":147}
+                    ,39:{"destination_plate_number":1,"destination_well_id":149}
+                    ,40:{"destination_plate_number":1,"destination_well_id":151}
+                    ,41:{"destination_plate_number":1,"destination_well_id":153}
+                    ,42:{"destination_plate_number":1,"destination_well_id":155}
+                    ,43:{"destination_plate_number":1,"destination_well_id":157}
+                    ,44:{"destination_plate_number":1,"destination_well_id":159}
+                    ,45:{"destination_plate_number":1,"destination_well_id":161}
+                    ,46:{"destination_plate_number":1,"destination_well_id":163}
+                    ,47:{"destination_plate_number":1,"destination_well_id":165}
+                    ,48:{"destination_plate_number":1,"destination_well_id":167}
+                    ,49:{"destination_plate_number":1,"destination_well_id":193}
+                    ,50:{"destination_plate_number":1,"destination_well_id":195}
+                    ,51:{"destination_plate_number":1,"destination_well_id":197}
+                    ,52:{"destination_plate_number":1,"destination_well_id":199}
+                    ,53:{"destination_plate_number":1,"destination_well_id":201}
+                    ,54:{"destination_plate_number":1,"destination_well_id":203}
+                    ,55:{"destination_plate_number":1,"destination_well_id":205}
+                    ,56:{"destination_plate_number":1,"destination_well_id":207}
+                    ,57:{"destination_plate_number":1,"destination_well_id":209}
+                    ,58:{"destination_plate_number":1,"destination_well_id":211}
+                    ,59:{"destination_plate_number":1,"destination_well_id":213}
+                    ,60:{"destination_plate_number":1,"destination_well_id":215}
+                    ,61:{"destination_plate_number":1,"destination_well_id":241}
+                    ,62:{"destination_plate_number":1,"destination_well_id":243}
+                    ,63:{"destination_plate_number":1,"destination_well_id":245}
+                    ,64:{"destination_plate_number":1,"destination_well_id":247}
+                    ,65:{"destination_plate_number":1,"destination_well_id":249}
+                    ,66:{"destination_plate_number":1,"destination_well_id":251}
+                    ,67:{"destination_plate_number":1,"destination_well_id":253}
+                    ,68:{"destination_plate_number":1,"destination_well_id":255}
+                    ,69:{"destination_plate_number":1,"destination_well_id":257}
+                    ,70:{"destination_plate_number":1,"destination_well_id":259}
+                    ,71:{"destination_plate_number":1,"destination_well_id":261}
+                    ,72:{"destination_plate_number":1,"destination_well_id":263}
+                    ,73:{"destination_plate_number":1,"destination_well_id":289}
+                    ,74:{"destination_plate_number":1,"destination_well_id":291}
+                    ,75:{"destination_plate_number":1,"destination_well_id":293}
+                    ,76:{"destination_plate_number":1,"destination_well_id":295}
+                    ,77:{"destination_plate_number":1,"destination_well_id":297}
+                    ,78:{"destination_plate_number":1,"destination_well_id":299}
+                    ,79:{"destination_plate_number":1,"destination_well_id":301}
+                    ,80:{"destination_plate_number":1,"destination_well_id":303}
+                    ,81:{"destination_plate_number":1,"destination_well_id":305}
+                    ,82:{"destination_plate_number":1,"destination_well_id":307}
+                    ,83:{"destination_plate_number":1,"destination_well_id":309}
+                    ,84:{"destination_plate_number":1,"destination_well_id":311}
+                    ,85:{"destination_plate_number":1,"destination_well_id":337}
+                    ,86:{"destination_plate_number":1,"destination_well_id":339}
+                    ,87:{"destination_plate_number":1,"destination_well_id":341}
+                    ,88:{"destination_plate_number":1,"destination_well_id":343}
+                    ,89:{"destination_plate_number":1,"destination_well_id":345}
+                    ,90:{"destination_plate_number":1,"destination_well_id":347}
+                    ,91:{"destination_plate_number":1,"destination_well_id":349}
+                    ,92:{"destination_plate_number":1,"destination_well_id":351}
+                    ,93:{"destination_plate_number":1,"destination_well_id":353}
+                    ,94:{"destination_plate_number":1,"destination_well_id":355}
+                    ,95:{"destination_plate_number":1,"destination_well_id":357}
+                    ,96:{"destination_plate_number":1,"destination_well_id":359}
+                }
+                ,{
+                    1:{"destination_plate_number":1,"destination_well_id":2}
+                    ,2:{"destination_plate_number":1,"destination_well_id":4}
+                    ,3:{"destination_plate_number":1,"destination_well_id":6}
+                    ,4:{"destination_plate_number":1,"destination_well_id":8}
+                    ,5:{"destination_plate_number":1,"destination_well_id":10}
+                    ,6:{"destination_plate_number":1,"destination_well_id":12}
+                    ,7:{"destination_plate_number":1,"destination_well_id":14}
+                    ,8:{"destination_plate_number":1,"destination_well_id":16}
+                    ,9:{"destination_plate_number":1,"destination_well_id":18}
+                    ,10:{"destination_plate_number":1,"destination_well_id":20}
+                    ,11:{"destination_plate_number":1,"destination_well_id":22}
+                    ,12:{"destination_plate_number":1,"destination_well_id":24}
+                    ,13:{"destination_plate_number":1,"destination_well_id":50}
+                    ,14:{"destination_plate_number":1,"destination_well_id":52}
+                    ,15:{"destination_plate_number":1,"destination_well_id":54}
+                    ,16:{"destination_plate_number":1,"destination_well_id":56}
+                    ,17:{"destination_plate_number":1,"destination_well_id":58}
+                    ,18:{"destination_plate_number":1,"destination_well_id":60}
+                    ,19:{"destination_plate_number":1,"destination_well_id":62}
+                    ,20:{"destination_plate_number":1,"destination_well_id":64}
+                    ,21:{"destination_plate_number":1,"destination_well_id":66}
+                    ,22:{"destination_plate_number":1,"destination_well_id":68}
+                    ,23:{"destination_plate_number":1,"destination_well_id":70}
+                    ,24:{"destination_plate_number":1,"destination_well_id":72}
+                    ,25:{"destination_plate_number":1,"destination_well_id":98}
+                    ,26:{"destination_plate_number":1,"destination_well_id":100}
+                    ,27:{"destination_plate_number":1,"destination_well_id":102}
+                    ,28:{"destination_plate_number":1,"destination_well_id":104}
+                    ,29:{"destination_plate_number":1,"destination_well_id":106}
+                    ,30:{"destination_plate_number":1,"destination_well_id":108}
+                    ,31:{"destination_plate_number":1,"destination_well_id":110}
+                    ,32:{"destination_plate_number":1,"destination_well_id":112}
+                    ,33:{"destination_plate_number":1,"destination_well_id":114}
+                    ,34:{"destination_plate_number":1,"destination_well_id":116}
+                    ,35:{"destination_plate_number":1,"destination_well_id":118}
+                    ,36:{"destination_plate_number":1,"destination_well_id":120}
+                    ,37:{"destination_plate_number":1,"destination_well_id":146}
+                    ,38:{"destination_plate_number":1,"destination_well_id":148}
+                    ,39:{"destination_plate_number":1,"destination_well_id":150}
+                    ,40:{"destination_plate_number":1,"destination_well_id":152}
+                    ,41:{"destination_plate_number":1,"destination_well_id":154}
+                    ,42:{"destination_plate_number":1,"destination_well_id":156}
+                    ,43:{"destination_plate_number":1,"destination_well_id":158}
+                    ,44:{"destination_plate_number":1,"destination_well_id":160}
+                    ,45:{"destination_plate_number":1,"destination_well_id":162}
+                    ,46:{"destination_plate_number":1,"destination_well_id":164}
+                    ,47:{"destination_plate_number":1,"destination_well_id":166}
+                    ,48:{"destination_plate_number":1,"destination_well_id":168}
+                    ,49:{"destination_plate_number":1,"destination_well_id":194}
+                    ,50:{"destination_plate_number":1,"destination_well_id":196}
+                    ,51:{"destination_plate_number":1,"destination_well_id":198}
+                    ,52:{"destination_plate_number":1,"destination_well_id":200}
+                    ,53:{"destination_plate_number":1,"destination_well_id":202}
+                    ,54:{"destination_plate_number":1,"destination_well_id":204}
+                    ,55:{"destination_plate_number":1,"destination_well_id":206}
+                    ,56:{"destination_plate_number":1,"destination_well_id":208}
+                    ,57:{"destination_plate_number":1,"destination_well_id":210}
+                    ,58:{"destination_plate_number":1,"destination_well_id":212}
+                    ,59:{"destination_plate_number":1,"destination_well_id":214}
+                    ,60:{"destination_plate_number":1,"destination_well_id":216}
+                    ,61:{"destination_plate_number":1,"destination_well_id":242}
+                    ,62:{"destination_plate_number":1,"destination_well_id":244}
+                    ,63:{"destination_plate_number":1,"destination_well_id":246}
+                    ,64:{"destination_plate_number":1,"destination_well_id":248}
+                    ,65:{"destination_plate_number":1,"destination_well_id":250}
+                    ,66:{"destination_plate_number":1,"destination_well_id":252}
+                    ,67:{"destination_plate_number":1,"destination_well_id":254}
+                    ,68:{"destination_plate_number":1,"destination_well_id":256}
+                    ,69:{"destination_plate_number":1,"destination_well_id":258}
+                    ,70:{"destination_plate_number":1,"destination_well_id":260}
+                    ,71:{"destination_plate_number":1,"destination_well_id":262}
+                    ,72:{"destination_plate_number":1,"destination_well_id":264}
+                    ,73:{"destination_plate_number":1,"destination_well_id":290}
+                    ,74:{"destination_plate_number":1,"destination_well_id":292}
+                    ,75:{"destination_plate_number":1,"destination_well_id":294}
+                    ,76:{"destination_plate_number":1,"destination_well_id":296}
+                    ,77:{"destination_plate_number":1,"destination_well_id":298}
+                    ,78:{"destination_plate_number":1,"destination_well_id":300}
+                    ,79:{"destination_plate_number":1,"destination_well_id":302}
+                    ,80:{"destination_plate_number":1,"destination_well_id":304}
+                    ,81:{"destination_plate_number":1,"destination_well_id":306}
+                    ,82:{"destination_plate_number":1,"destination_well_id":308}
+                    ,83:{"destination_plate_number":1,"destination_well_id":310}
+                    ,84:{"destination_plate_number":1,"destination_well_id":312}
+                    ,85:{"destination_plate_number":1,"destination_well_id":338}
+                    ,86:{"destination_plate_number":1,"destination_well_id":340}
+                    ,87:{"destination_plate_number":1,"destination_well_id":342}
+                    ,88:{"destination_plate_number":1,"destination_well_id":344}
+                    ,89:{"destination_plate_number":1,"destination_well_id":346}
+                    ,90:{"destination_plate_number":1,"destination_well_id":348}
+                    ,91:{"destination_plate_number":1,"destination_well_id":350}
+                    ,92:{"destination_plate_number":1,"destination_well_id":352}
+                    ,93:{"destination_plate_number":1,"destination_well_id":354}
+                    ,94:{"destination_plate_number":1,"destination_well_id":356}
+                    ,95:{"destination_plate_number":1,"destination_well_id":358}
+                    ,96:{"destination_plate_number":1,"destination_well_id":360}
+                }
+                ,{
+                    1:{"destination_plate_number":1,"destination_well_id":25}
+                    ,2:{"destination_plate_number":1,"destination_well_id":27}
+                    ,3:{"destination_plate_number":1,"destination_well_id":29}
+                    ,4:{"destination_plate_number":1,"destination_well_id":31}
+                    ,5:{"destination_plate_number":1,"destination_well_id":33}
+                    ,6:{"destination_plate_number":1,"destination_well_id":35}
+                    ,7:{"destination_plate_number":1,"destination_well_id":37}
+                    ,8:{"destination_plate_number":1,"destination_well_id":39}
+                    ,9:{"destination_plate_number":1,"destination_well_id":41}
+                    ,10:{"destination_plate_number":1,"destination_well_id":43}
+                    ,11:{"destination_plate_number":1,"destination_well_id":45}
+                    ,12:{"destination_plate_number":1,"destination_well_id":47}
+                    ,13:{"destination_plate_number":1,"destination_well_id":73}
+                    ,14:{"destination_plate_number":1,"destination_well_id":75}
+                    ,15:{"destination_plate_number":1,"destination_well_id":77}
+                    ,16:{"destination_plate_number":1,"destination_well_id":79}
+                    ,17:{"destination_plate_number":1,"destination_well_id":81}
+                    ,18:{"destination_plate_number":1,"destination_well_id":83}
+                    ,19:{"destination_plate_number":1,"destination_well_id":85}
+                    ,20:{"destination_plate_number":1,"destination_well_id":87}
+                    ,21:{"destination_plate_number":1,"destination_well_id":89}
+                    ,22:{"destination_plate_number":1,"destination_well_id":91}
+                    ,23:{"destination_plate_number":1,"destination_well_id":93}
+                    ,24:{"destination_plate_number":1,"destination_well_id":95}
+                    ,25:{"destination_plate_number":1,"destination_well_id":121}
+                    ,26:{"destination_plate_number":1,"destination_well_id":123}
+                    ,27:{"destination_plate_number":1,"destination_well_id":125}
+                    ,28:{"destination_plate_number":1,"destination_well_id":127}
+                    ,29:{"destination_plate_number":1,"destination_well_id":129}
+                    ,30:{"destination_plate_number":1,"destination_well_id":131}
+                    ,31:{"destination_plate_number":1,"destination_well_id":133}
+                    ,32:{"destination_plate_number":1,"destination_well_id":135}
+                    ,33:{"destination_plate_number":1,"destination_well_id":137}
+                    ,34:{"destination_plate_number":1,"destination_well_id":139}
+                    ,35:{"destination_plate_number":1,"destination_well_id":141}
+                    ,36:{"destination_plate_number":1,"destination_well_id":143}
+                    ,37:{"destination_plate_number":1,"destination_well_id":169}
+                    ,38:{"destination_plate_number":1,"destination_well_id":171}
+                    ,39:{"destination_plate_number":1,"destination_well_id":173}
+                    ,40:{"destination_plate_number":1,"destination_well_id":175}
+                    ,41:{"destination_plate_number":1,"destination_well_id":177}
+                    ,42:{"destination_plate_number":1,"destination_well_id":179}
+                    ,43:{"destination_plate_number":1,"destination_well_id":181}
+                    ,44:{"destination_plate_number":1,"destination_well_id":183}
+                    ,45:{"destination_plate_number":1,"destination_well_id":185}
+                    ,46:{"destination_plate_number":1,"destination_well_id":187}
+                    ,47:{"destination_plate_number":1,"destination_well_id":189}
+                    ,48:{"destination_plate_number":1,"destination_well_id":191}
+                    ,49:{"destination_plate_number":1,"destination_well_id":217}
+                    ,50:{"destination_plate_number":1,"destination_well_id":219}
+                    ,51:{"destination_plate_number":1,"destination_well_id":221}
+                    ,52:{"destination_plate_number":1,"destination_well_id":223}
+                    ,53:{"destination_plate_number":1,"destination_well_id":225}
+                    ,54:{"destination_plate_number":1,"destination_well_id":227}
+                    ,55:{"destination_plate_number":1,"destination_well_id":229}
+                    ,56:{"destination_plate_number":1,"destination_well_id":231}
+                    ,57:{"destination_plate_number":1,"destination_well_id":233}
+                    ,58:{"destination_plate_number":1,"destination_well_id":235}
+                    ,59:{"destination_plate_number":1,"destination_well_id":237}
+                    ,60:{"destination_plate_number":1,"destination_well_id":239}
+                    ,61:{"destination_plate_number":1,"destination_well_id":265}
+                    ,62:{"destination_plate_number":1,"destination_well_id":267}
+                    ,63:{"destination_plate_number":1,"destination_well_id":269}
+                    ,64:{"destination_plate_number":1,"destination_well_id":271}
+                    ,65:{"destination_plate_number":1,"destination_well_id":273}
+                    ,66:{"destination_plate_number":1,"destination_well_id":275}
+                    ,67:{"destination_plate_number":1,"destination_well_id":277}
+                    ,68:{"destination_plate_number":1,"destination_well_id":279}
+                    ,69:{"destination_plate_number":1,"destination_well_id":281}
+                    ,70:{"destination_plate_number":1,"destination_well_id":283}
+                    ,71:{"destination_plate_number":1,"destination_well_id":285}
+                    ,72:{"destination_plate_number":1,"destination_well_id":287}
+                    ,73:{"destination_plate_number":1,"destination_well_id":313}
+                    ,74:{"destination_plate_number":1,"destination_well_id":315}
+                    ,75:{"destination_plate_number":1,"destination_well_id":317}
+                    ,76:{"destination_plate_number":1,"destination_well_id":319}
+                    ,77:{"destination_plate_number":1,"destination_well_id":321}
+                    ,78:{"destination_plate_number":1,"destination_well_id":323}
+                    ,79:{"destination_plate_number":1,"destination_well_id":325}
+                    ,80:{"destination_plate_number":1,"destination_well_id":327}
+                    ,81:{"destination_plate_number":1,"destination_well_id":329}
+                    ,82:{"destination_plate_number":1,"destination_well_id":331}
+                    ,83:{"destination_plate_number":1,"destination_well_id":333}
+                    ,84:{"destination_plate_number":1,"destination_well_id":335}
+                    ,85:{"destination_plate_number":1,"destination_well_id":361}
+                    ,86:{"destination_plate_number":1,"destination_well_id":363}
+                    ,87:{"destination_plate_number":1,"destination_well_id":365}
+                    ,88:{"destination_plate_number":1,"destination_well_id":367}
+                    ,89:{"destination_plate_number":1,"destination_well_id":369}
+                    ,90:{"destination_plate_number":1,"destination_well_id":371}
+                    ,91:{"destination_plate_number":1,"destination_well_id":373}
+                    ,92:{"destination_plate_number":1,"destination_well_id":375}
+                    ,93:{"destination_plate_number":1,"destination_well_id":377}
+                    ,94:{"destination_plate_number":1,"destination_well_id":379}
+                    ,95:{"destination_plate_number":1,"destination_well_id":381}
+                    ,96:{"destination_plate_number":1,"destination_well_id":383}
+                }
+                ,{
+                    1:{"destination_plate_number":1,"destination_well_id":26}
+                    ,2:{"destination_plate_number":1,"destination_well_id":28}
+                    ,3:{"destination_plate_number":1,"destination_well_id":30}
+                    ,4:{"destination_plate_number":1,"destination_well_id":32}
+                    ,5:{"destination_plate_number":1,"destination_well_id":34}
+                    ,6:{"destination_plate_number":1,"destination_well_id":36}
+                    ,7:{"destination_plate_number":1,"destination_well_id":38}
+                    ,8:{"destination_plate_number":1,"destination_well_id":40}
+                    ,9:{"destination_plate_number":1,"destination_well_id":42}
+                    ,10:{"destination_plate_number":1,"destination_well_id":44}
+                    ,11:{"destination_plate_number":1,"destination_well_id":46}
+                    ,12:{"destination_plate_number":1,"destination_well_id":48}
+                    ,13:{"destination_plate_number":1,"destination_well_id":74}
+                    ,14:{"destination_plate_number":1,"destination_well_id":76}
+                    ,15:{"destination_plate_number":1,"destination_well_id":78}
+                    ,16:{"destination_plate_number":1,"destination_well_id":80}
+                    ,17:{"destination_plate_number":1,"destination_well_id":82}
+                    ,18:{"destination_plate_number":1,"destination_well_id":84}
+                    ,19:{"destination_plate_number":1,"destination_well_id":86}
+                    ,20:{"destination_plate_number":1,"destination_well_id":88}
+                    ,21:{"destination_plate_number":1,"destination_well_id":90}
+                    ,22:{"destination_plate_number":1,"destination_well_id":92}
+                    ,23:{"destination_plate_number":1,"destination_well_id":94}
+                    ,24:{"destination_plate_number":1,"destination_well_id":96}
+                    ,25:{"destination_plate_number":1,"destination_well_id":122}
+                    ,26:{"destination_plate_number":1,"destination_well_id":124}
+                    ,27:{"destination_plate_number":1,"destination_well_id":126}
+                    ,28:{"destination_plate_number":1,"destination_well_id":128}
+                    ,29:{"destination_plate_number":1,"destination_well_id":130}
+                    ,30:{"destination_plate_number":1,"destination_well_id":132}
+                    ,31:{"destination_plate_number":1,"destination_well_id":134}
+                    ,32:{"destination_plate_number":1,"destination_well_id":136}
+                    ,33:{"destination_plate_number":1,"destination_well_id":138}
+                    ,34:{"destination_plate_number":1,"destination_well_id":140}
+                    ,35:{"destination_plate_number":1,"destination_well_id":142}
+                    ,36:{"destination_plate_number":1,"destination_well_id":144}
+                    ,37:{"destination_plate_number":1,"destination_well_id":170}
+                    ,38:{"destination_plate_number":1,"destination_well_id":172}
+                    ,39:{"destination_plate_number":1,"destination_well_id":174}
+                    ,40:{"destination_plate_number":1,"destination_well_id":176}
+                    ,41:{"destination_plate_number":1,"destination_well_id":178}
+                    ,42:{"destination_plate_number":1,"destination_well_id":180}
+                    ,43:{"destination_plate_number":1,"destination_well_id":182}
+                    ,44:{"destination_plate_number":1,"destination_well_id":184}
+                    ,45:{"destination_plate_number":1,"destination_well_id":186}
+                    ,46:{"destination_plate_number":1,"destination_well_id":188}
+                    ,47:{"destination_plate_number":1,"destination_well_id":190}
+                    ,48:{"destination_plate_number":1,"destination_well_id":192}
+                    ,49:{"destination_plate_number":1,"destination_well_id":218}
+                    ,50:{"destination_plate_number":1,"destination_well_id":220}
+                    ,51:{"destination_plate_number":1,"destination_well_id":222}
+                    ,52:{"destination_plate_number":1,"destination_well_id":224}
+                    ,53:{"destination_plate_number":1,"destination_well_id":226}
+                    ,54:{"destination_plate_number":1,"destination_well_id":228}
+                    ,55:{"destination_plate_number":1,"destination_well_id":230}
+                    ,56:{"destination_plate_number":1,"destination_well_id":232}
+                    ,57:{"destination_plate_number":1,"destination_well_id":234}
+                    ,58:{"destination_plate_number":1,"destination_well_id":236}
+                    ,59:{"destination_plate_number":1,"destination_well_id":238}
+                    ,60:{"destination_plate_number":1,"destination_well_id":240}
+                    ,61:{"destination_plate_number":1,"destination_well_id":266}
+                    ,62:{"destination_plate_number":1,"destination_well_id":268}
+                    ,63:{"destination_plate_number":1,"destination_well_id":270}
+                    ,64:{"destination_plate_number":1,"destination_well_id":272}
+                    ,65:{"destination_plate_number":1,"destination_well_id":274}
+                    ,66:{"destination_plate_number":1,"destination_well_id":276}
+                    ,67:{"destination_plate_number":1,"destination_well_id":278}
+                    ,68:{"destination_plate_number":1,"destination_well_id":280}
+                    ,69:{"destination_plate_number":1,"destination_well_id":282}
+                    ,70:{"destination_plate_number":1,"destination_well_id":284}
+                    ,71:{"destination_plate_number":1,"destination_well_id":286}
+                    ,72:{"destination_plate_number":1,"destination_well_id":288}
+                    ,73:{"destination_plate_number":1,"destination_well_id":314}
+                    ,74:{"destination_plate_number":1,"destination_well_id":316}
+                    ,75:{"destination_plate_number":1,"destination_well_id":318}
+                    ,76:{"destination_plate_number":1,"destination_well_id":320}
+                    ,77:{"destination_plate_number":1,"destination_well_id":322}
+                    ,78:{"destination_plate_number":1,"destination_well_id":324}
+                    ,79:{"destination_plate_number":1,"destination_well_id":326}
+                    ,80:{"destination_plate_number":1,"destination_well_id":328}
+                    ,81:{"destination_plate_number":1,"destination_well_id":330}
+                    ,82:{"destination_plate_number":1,"destination_well_id":332}
+                    ,83:{"destination_plate_number":1,"destination_well_id":334}
+                    ,84:{"destination_plate_number":1,"destination_well_id":336}
+                    ,85:{"destination_plate_number":1,"destination_well_id":362}
+                    ,86:{"destination_plate_number":1,"destination_well_id":364}
+                    ,87:{"destination_plate_number":1,"destination_well_id":366}
+                    ,88:{"destination_plate_number":1,"destination_well_id":368}
+                    ,89:{"destination_plate_number":1,"destination_well_id":370}
+                    ,90:{"destination_plate_number":1,"destination_well_id":372}
+                    ,91:{"destination_plate_number":1,"destination_well_id":374}
+                    ,92:{"destination_plate_number":1,"destination_well_id":376}
+                    ,93:{"destination_plate_number":1,"destination_well_id":378}
+                    ,94:{"destination_plate_number":1,"destination_well_id":380}
+                    ,95:{"destination_plate_number":1,"destination_well_id":382}
+                    ,96:{"destination_plate_number":1,"destination_well_id":384}
+                }
+            ]
+
+        }
     }

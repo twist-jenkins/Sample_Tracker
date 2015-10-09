@@ -29,8 +29,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 
-    function ($scope, $state, Api, $sce, $timeout) {
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter) {
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
@@ -86,7 +86,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.selectStepType = function (option) {
             $state.go('root.record_step.step_type_selected', {
-                selected_step_type_id: option.id
+                selected_step_type_id: option.id + '-' + Formatter.stripNonAlphaNumeric(Formatter.lowerCaseAndSpaceToDash(option.text), true)
             });
         }
 
@@ -208,7 +208,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams', 
     function ($scope, $state, $stateParams) {
-        var selectedTranferTypeId = $stateParams.selected_step_type_id;
+        var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
         $scope.setSelectedOption(selectedTranferTypeId);
     }]
 )
