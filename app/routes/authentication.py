@@ -99,7 +99,7 @@ def create_or_update_user(token, userinfo, **params):
 
     #g.user = operator
 
-    return redirect(url_for('home'))
+    return redirect(url_for('new_home'))
 
 
 
@@ -120,7 +120,7 @@ def login():
 # The user logged in via their Gmail account, but they aren't in the "operator" table.
 #
 def user_missing_from_operator_table():
-    return render_template('user_missing_from_operator_table.html',login_url=url_for('login'))
+    return render_template('user_missing_from_operator_table.html',login_url=url_for('new_home'))
 
 #
 # This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password). 
@@ -145,7 +145,7 @@ def oauth2callback():
     # to our login page again.
     #
     else:
-        return redirect(url_for('login'))
+        return redirect(url_for('new_home'))
 
 
 
@@ -158,5 +158,5 @@ def logout():
 
     logout_user()
     g.user = None
-    return redirect(url_for('login'))
+    return redirect(url_for('new_home'))
 

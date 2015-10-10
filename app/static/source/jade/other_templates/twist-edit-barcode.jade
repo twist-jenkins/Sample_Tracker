@@ -3,29 +3,31 @@ div(class="twst-edit-barcode-main twst-child-page")
     form(class="twst-edit-barcode-main-inputs")
         div(class="twst-edit-barcode-main-inputs-left")
             p(class="twst-block-header") Plate Id
-            input(type="text" class="form-control" ng-model="plateId" typeahead="plateId for plateId in getTypeAheadPlateIds()" typeahead-loading="loadingLocations" typeahead-no-results="noResults" typeahead-on-select="plateInfoEntered()" ng-keypress="plateInfoKeypress($event)")
+            input(type="text" class="form-control" ng-model="plateId" typeahead="plateId for plateId in getTypeAheadPlateIds()" typeahead-loading="loadingLocations" typeahead-no-results="noResults" typeahead-on-select="plateInfoEntered()" ng-keypress="plateInfoKeypress($event)" placeholder="enter a plate barcode...")
             i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
             div(ng-show="noResults" class="twst-offscreen")
               i(class="glyphicon glyphicon-remove") No Results Found
             div(class="twst-update-barcode-result-message")
                 twst-message(message="submissionResultMessage" visible-and-valid="submissionResultVisible")
         div(class="twst-edit-barcode-main-inputs-right")
-            p(class="twst-block-header") Plate Name
-            p(class="twst-field-value-readout") {{selectedPlate.name}}
+            div(class="twst-spinner twst-fetching-plate-for-barcode-edit-spinner" ng-if="fetchingPlateForBarcodeEdit")
+            div(ng-if="selectedPlate")
+                p(class="twst-block-header") Plate Name
+                p(class="twst-field-value-readout") {{selectedPlate.name}}
 
-            p(class="twst-block-header") Plate Type
-            p(class="twst-field-value-readout") {{selectedPlate.samplePlateType}}
+                p(class="twst-block-header") Plate Type
+                p(class="twst-field-value-readout") {{selectedPlate.samplePlateType}}
 
-            p(class="twst-block-header") Storage Location
-            p(class="twst-field-value-readout") {{selectedPlate.storageLocation}}
+                p(class="twst-block-header") Storage Location
+                p(class="twst-field-value-readout") {{selectedPlate.storageLocation}}
 
-            div(class="twst-edit-barcode-main-barcode-controls")
-                p(class="twst-block-header") Barcode
-                div(class="twst-barcode-input-elements")
-                    input(type="text" class="form-control twst-edit-barcode-main-barcode-input" ng-model="selectedPlate.externalBarcode")
-                    div(class="twst-spinner twst-barcode-submitting-spinner" ng-if="updatingBarcode")
-                    twst-thumb-validation-icon(validation="selectedPlate.externalBarcode.length > 5 && currentBarcode != selectedPlate.externalBarcode")
-                p(class="twst-update-barcode-buttons")
-                    button(class="twst-button twst-blue-button twst-update-barcode-button" ng-class="{'twst-disabled-button' : !barcodeChanged()}" ng-click="updateBarcode()") Update Barcode
-                    a(class="twst-update-barcode-cancel" ng-click="clearForm()") cancel
+                div(class="twst-edit-barcode-main-barcode-controls")
+                    p(class="twst-block-header") Barcode
+                    div(class="twst-barcode-input-elements")
+                        input(type="text" class="form-control twst-edit-barcode-main-barcode-input" ng-model="selectedPlate.externalBarcode")
+                        div(class="twst-spinner twst-barcode-submitting-spinner" ng-if="updatingBarcode")
+                        twst-thumb-validation-icon(validation="selectedPlate.externalBarcode.length > 5 && currentBarcode != selectedPlate.externalBarcode")
+                    p(class="twst-update-barcode-buttons")
+                        button(class="twst-button twst-blue-button twst-update-barcode-button" ng-class="{'twst-disabled-button' : !barcodeChanged()}" ng-click="updateBarcode()") Update Barcode
+                        a(class="twst-update-barcode-cancel" ng-click="clearForm()") cancel
         div(ui-view)

@@ -223,7 +223,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.getPlateInfo = function (plateId) {
             $scope.plateId = plateId;
+            $scope.fetchingPlateForBarcodeEdit = true;
             Api.getPlateInfo($scope.plateId).then(function (resp) {
+                $scope.fetchingPlateForBarcodeEdit = false;
                 $scope.selectedPlate = resp.data;
                 $scope.currentBarcode = $scope.selectedPlate.externalBarcode + '';
             });
@@ -289,7 +291,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('viewStepsController', ['$scope', '$state', 'Api',
     function ($scope, $state, Api) {
         /* populate the sample types pulldown */
+        $scope.fetchingSteps = true;
         Api.getPlateSteps().success(function (data) {
+            $scope.fetchingSteps = false;
             $scope.plateSteps = data;
         });
 
@@ -310,6 +314,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.getPlateDetails = function (barcode) {
+            $scope.plateDetails = null;
             $scope.plateBarcode = barcode;
 
             $scope.fetchingDetails = true;
@@ -323,10 +328,22 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('plateDetailsBarcodeEnteredController', ['$scope', '$state',  '$stateParams', 
+.controller('plateDetailsBarcodeEnteredController', ['$scope', '$state', '$stateParams', 
     function ($scope, $state, $stateParams) {
-        var barcode = $stateParams.entered_barcode;
+        var barcode = decodeURIComponent($stateParams.entered_barcode);
         $scope.getPlateDetails(barcode);
+    }]
+)
+
+.controller('sampleDetailsController', ['$scope', '$state', 'Api',  
+    function ($scope, $state, Api) {
+        
+    }]
+)
+
+.controller('sampleDetailsSampleIdEnteredController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        
     }]
 )
 
@@ -340,7 +357,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             if (data.user) {
                 authChecked = true;
                 /* authorized! */
-                $location.path((routeUrl == '/login' || routeUrl == '/') ? '/track-step' : routeUrl);
+                $location.path((routeUrl == '' || routeUrl == '/' || routeUrl == '/login') ? '/track-step' : routeUrl);
             }
         });
 
@@ -405,6 +422,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:entered_barcode'
             ,template: ''
             ,controller: 'plateDetailsBarcodeEnteredController'
+        }).state('root.sample_details', {
+            url: 'sample-details'
+            ,templateUrl: 'twist-sample-details.html'
+            ,controller: 'sampleDetailsController'
+        }).state('root.sample_details.sample_id_entered', {
+            url: '/:entered_sample_id'
+            ,template: ''
+            ,controller: 'sampleDetailsSampleIdEnteredController'
         })
 
 
