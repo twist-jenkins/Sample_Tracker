@@ -175,17 +175,34 @@ def sample_transfers():
                 ,"destination_barcodes": [details.destination_plate.external_barcode]
             };
         else:
-            transfers_data[sample_transfer.id]["destination_barcodes"].append(details.destination_plate.external_barcode)
-            sourceAlready = False;
+            already = False;
             for barcode in transfers_data[sample_transfer.id]["source_barcodes"]:
                 if barcode == details.source_plate.external_barcode:
-                    sourceAlready = True
+                    already = True
                     break
-
-            if not sourceAlready:
+            if not already:
                 transfers_data[sample_transfer.id]["source_barcodes"].append(details.source_plate.external_barcode)
+            already = False;
+            for barcode in transfers_data[sample_transfer.id]["destination_barcodes"]:
+                if barcode == details.destination_plate.external_barcode:
+                    already = True
+                    break
+            if not already:
+                transfers_data[sample_transfer.id]["destination_barcodes"].append(details.destination_plate.external_barcode)
 
-    resp = Response(response=json.dumps(transfers_data),
+    # ugliness here to turn the map created above into an ordered array
+    transfersDataArray = []
+    for item in transfers_data:
+        transfersDataArray.insert(transfers_data[item]['id'], transfers_data[item])
+
+    fullDataArray = []
+    for item in transfersDataArray:
+        if item is not None:
+            fullDataArray.append(item);
+
+    fullDataArray.reverse()
+
+    resp = Response(response=json.dumps(fullDataArray),
         status=200, \
         mimetype="application/json")
     return(resp)

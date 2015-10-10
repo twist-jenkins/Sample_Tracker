@@ -1,22 +1,23 @@
 div(class="twst-view-steps-main twst-child-page")
     h1 View Plate Steps
     div(class="twst-plate-steps-rows")
-        p Data returning as an object not a newest-first array!
-        p ...
-        table(class="twst-plate-steps-row")
+        div(class="twst-spinner" ng-if="fetchingSteps")
+        table(class="twst-plate-steps twst-data-readout-table" ng-if="plateSteps")
             tr
-                td(class="twst-plate-step-header twst-plate-step-col twst-plate-step-col-id") Id
-                td(class="twst-plate-step-header twst-plate-step-col twst-plate-step-col-type") Transfer type
-                td(class="twst-plate-step-header twst-plate-step-col twst-plate-step-col-date") Date
-                td(class="twst-plate-step-header twst-plate-step-col twst-plate-step-col-user") User
-                td(class="twst-plate-step-header twst-plate-step-col twst-plate-step-col-from") Source Plate(s)
-                td(class="twst-plate-step-header twst-plate-step-col twst-plate-step-col-to") Destination Plate(s)
+                td(class="twst-data-readout-table-header twst-plate-step-col twst-plate-step-col-id") Id
+                td(class="twst-data-readout-table-header twst-plate-step-col twst-plate-step-col-type") Transfer type
+                td(class="twst-data-readout-table-header twst-plate-step-col twst-plate-step-col-date") Date
+                td(class="twst-data-readout-table-header twst-plate-step-col twst-plate-step-col-user") User
+                td(class="twst-data-readout-table-header twst-plate-step-col twst-plate-step-col-from") Source Plate(s)
+                td(class="twst-data-readout-table-header twst-plate-step-col twst-plate-step-col-to") Destination Plate(s)
             tr(class="twst-plate-steps-row" ng-repeat="plateStep in plateSteps")
                 td(class="twst-plate-step-col twst-plate-step-col-id") {{plateStep.id}}
                 td(class="twst-plate-step-col twst-plate-step-col-type") {{plateStep.name}}
                 td(class="twst-plate-step-col twst-plate-step-col-date") {{plateStep.date}}
                 td(class="twst-plate-step-col twst-plate-step-col-user") {{plateStep.operator}}
                 td(class="twst-plate-step-col twst-plate-step-col-from")
-                    p(class="twst-plate-step-plate-barcode-item" ng-repeat="barcode in plateStep.source_barcodes") {{barcode}}
+                    p(class="twst-plate-step-plate-barcode-item" ng-repeat="barcode in plateStep.source_barcodes")
+                        a(href="#/plate-details/{{barcode}}") {{barcode}}
                 td(class="twst-plate-step-col twst-plate-step-col-to")
-                    p(class="twst-plate-step-plate-barcode-item" ng-repeat="barcode in plateStep.destination_barcodes") {{barcode}}
+                    p(class="twst-plate-step-plate-barcode-item" ng-repeat="barcode in plateStep.destination_barcodes")
+                        a(href="#/plate-details/{{barcode}}") {{barcode}}

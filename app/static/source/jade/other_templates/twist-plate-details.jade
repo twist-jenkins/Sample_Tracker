@@ -14,7 +14,43 @@ div(class="twst-plate-details-main twst-child-page")
             div(class="twst-spinner" ng-if="fetchingDetails")
 
             div(class="twst-plate-details-readout" ng-if="plateDetails")
-                p Created By:&nbsp;
-                    span(class="twst-data-value") {{plateDetails.plateDetails.createdBy}}
-
+                p 
+                    span(class="twst-data-label") Date:&nbsp;
+                    strong {{plateDetails.plateDetails.dateCreatedFormatted}}
+                    span(class="twst-data-label") &nbsp; Created By:&nbsp;
+                    span {{plateDetails.plateDetails.createdBy}} &nbsp; 
+                div(class="twst-plate-details-readout-tables")
+                    div(class="twst-plate-details-readout-left" ng-if="plateDetails.parentPlates.length || plateDetails.childPlates.length")
+                        div(class="twst-plate-details-block twst-plate-details-readout-parent-plates" ng-if="plateDetails.parentPlates.length")
+                            p(class="twst-block-header") Parent Plate(s) 
+                            table(class="twst-data-readout-table")
+                                tr
+                                    td(class="twst-data-readout-table-header") Barcode
+                                    td(class="twst-data-readout-table-header") Creation Date
+                                tr(ng-repeat="parentPlate in plateDetails.parentPlates")
+                                    td
+                                        a(href="#/plate-details/{{parentPlate.externalBarcode}}") {{parentPlate.externalBarcode}}
+                                    td {{parentPlate.dateCreatedFormatted}}
+                        div(class="twst-plate-details-block twst-plate-details-readout-child-plates" ng-if="plateDetails.childPlates.length")
+                            p(class="twst-block-header") Child Plate(s)
+                            table(class="twst-data-readout-table")
+                                tr
+                                    td(class="twst-data-readout-table-header") Barcode
+                                    td(class="twst-data-readout-table-header") Creation Date
+                                tr(ng-repeat="childPlate in plateDetails.childPlates")
+                                    td
+                                        a(href="#/plate-details/{{childPlate.externalBarcode}}") {{childPlate.externalBarcode}}
+                                    td {{childPlate.dateCreatedFormatted}}
+                    div(class="twst-plate-details-readout-right")
+                        div(class="twst-plate-details-block twst-plate-details-readout-child-plates" ng-if="plateDetails.wells.length")
+                            p(class="twst-block-header") Wells ({{plateDetails.wells.length}} used)
+                            table(class="twst-data-readout-table")
+                                tr
+                                    td(class="twst-data-readout-table-header") Well Id
+                                    td(class="twst-data-readout-table-header") Col/Row
+                                    td(class="twst-data-readout-table-header") Sample Id
+                                tr(ng-repeat="well in plateDetails.wells")
+                                    td {{well.well_id}}
+                                    td {{well.column_and_row}}
+                                    td {{well.sample_id}}
     div(ui-view)

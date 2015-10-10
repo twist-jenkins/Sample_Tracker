@@ -196,11 +196,12 @@ def logout():
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
 #
+"""
 @app.route('/')
 @login_required
 def home():
     return routes.home()
-
+"""
 #
 # The list of sample transfers
 #
@@ -334,7 +335,7 @@ def get_samples_list():
 #
 # This is the new app - single page "home"
 #
-@app.route('/new-home')
+@app.route('/')
 def new_home():
     return routes.new_home()
 

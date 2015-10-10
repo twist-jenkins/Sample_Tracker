@@ -364,6 +364,22 @@ strong {
     font-size: 0.6em;
 }
 
+.twst-data-readout-table {
+    border-top: 1px solid #aaa;
+    border-left: 1px solid #aaa;
+
+    td {
+        padding: 0.5em 0.75em;
+        border-right: 1px solid #aaa;
+        border-bottom: 1px solid #aaa;
+
+        &.twst-data-readout-table-header {
+            background-color: #ddd;
+        }
+    }
+}
+
+
 /******************************/
 /*** END SPINNER ***/
 /******************************/
@@ -436,6 +452,10 @@ strong {
 .twst-field-value-readout {
     font-size: 1.2em;
     color: #000;
+}
+
+.twst-data-label {
+    color: #777;
 }
 
 
@@ -785,6 +805,11 @@ strong {
             width: 60%;
             padding-left: 3em;
 
+            .twst-fetching-plate-for-barcode-edit-spinner {
+                float: left;
+                top: 2.25em;
+            }
+
             .twst-field-value-readout {
                 margin-bottom: 2em;
                 padding: 0.25em 0.5em 0 0.5em;
@@ -857,10 +882,6 @@ strong {
             td {
                 padding: 0.5em 0 0.5em 0.5em;
             }
-
-            .twst-plate-step-header {
-                background-color: #ddd;
-            }
         }
     }
 }
@@ -923,7 +944,30 @@ strong {
             }
 
             .twst-plate-details-readout {
-                margin-top: 2em;
+                margin-top: 1.5em;
+
+                .twst-plate-details-readout-tables {
+                    display: table;
+                    width: 100%;
+
+                    .twst-plate-details-readout-left, .twst-plate-details-readout-right {
+                        display: table-cell;
+                        width: 50%;
+                    }
+
+                    .twst-plate-details-readout-left {
+                        padding-right: 1em;
+                    }
+
+                    .twst-plate-details-readout-right {
+                        padding-left: 1em;
+                    }
+
+                    .twst-plate-details-block {
+                        margin-top: 1.5em;
+                    }
+                }
+
             }
         }
     }

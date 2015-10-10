@@ -144,6 +144,12 @@ app = angular.module('twist.app')
             lowerCaseAndSpaceToDash: function (str) {
                 return str.toLowerCase().replace(/\s/g, '-');
             }
+            ,spaceToDash: function (str) {
+                return str.replace(/\s/g, '-');
+            }
+            ,dashToSpace: function (str) {
+                return str.replace('-', ' ');
+            }
             ,stripNonAlphaNumeric: function (str, dashOk) {
                 return stripNonAlphaNumeric(str, dashOk);
             }
