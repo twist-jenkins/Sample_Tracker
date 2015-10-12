@@ -238,8 +238,8 @@ def create_step_record():
 
     json_maps = maps_json()
 
-    if sample_transfer_template_id in json_maps:
-        templateData = json_maps[sample_transfer_template_id]
+    if sample_transfer_template_id in json_maps["transfer_maps"]:
+        templateData = json_maps["transfer_maps"][sample_transfer_template_id]
     else:
         return jsonify({
             "success": False
@@ -356,6 +356,7 @@ def create_step_record():
 
         for source_plate in source_plates:
             well_to_well_map = plate_well_to_well_maps[plate_number]
+
             plate_number += 1
 
             for source_plate_well in source_plate.wells:
@@ -369,7 +370,11 @@ def create_step_record():
                 destination_plate_number = map_item["destination_plate_number"]
                 destination_plate = destination_plates[destination_plate_number - 1]
 
-                logging.debug(destination_plate_well_id)
+                plate_map = json_maps["row_column_maps"][target_plate_type_id];
+
+                row_and_column = plate_map[destination_plate_well_id];
+
+                logging.debug(destination_plate_well_id, " ", row_and_column)
 
                 existing_sample_plate_layout = scoped_session.query(SamplePlateLayout).filter(and_(
                     SamplePlateLayout.sample_plate_id == destination_plate.sample_plate_id,
@@ -390,7 +395,7 @@ def create_step_record():
                 destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
                     source_plate_well.sample_id,
                     destination_plate_well_id,
-                    operator.operator_id, "Z", "-1") # TO DO: assign non-bogus row and column values
+                    operator.operator_id, row_and_column["row"], row_and_column["column"]) # TO DO: assign non-bogus row and column values
 
                 scoped_session.add(destination_plate_well)
 
