@@ -104,7 +104,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-    def test_4_to_1_golden(self):
+    def test_1_to_4_to_1_golden(self):
         data = {"sampleTransferTypeId": 11,
                 "sampleTransferTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
