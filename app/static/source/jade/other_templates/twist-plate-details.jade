@@ -5,8 +5,7 @@ div(class="twst-plate-details-main twst-child-page")
         input(type="text" class="form-control" ng-model="plateBarcode" typeahead="barcode for barcode in getTypeAheadBarcodes($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults")
         twst-thumb-validation-icon(validation="plateBarcode.length > 5")
         button(class="twst-get-plate-details-button twst-button twst-blue-button" ng-click="getDetailsClicked()" ng-class="{'twst-disabled-button' : plateBarcode.length < 6}") Get Details
-        a
-            Download Excel
+        a(class="twst-download-excel-link" ng-href="{{plateBarcode.length < 6 ? null : '/api/v1/plate_barcodes/' + plateBarcode + '/csv'}}" ng-class="{'twst-disabled-link' : plateBarcode.length < 6}") Download Excel
         i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
         div(ng-show="noResults" class="twst-offscreen")
           i(class="glyphicon glyphicon-remove") No Results Found

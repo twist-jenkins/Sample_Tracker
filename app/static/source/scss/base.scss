@@ -256,6 +256,16 @@ strong {
     }
 }
 
+.twst-disabled-link {
+    cursor: default;
+    color: #aaa;
+
+    &:hover {
+        color: #aaa;
+        text-decoration: none;
+    }
+}
+
 .twst-thumbs-validation-icon {
     display: inline-block;
 
@@ -920,6 +930,10 @@ strong {
         .twst-blue-button {
             font-size: 1.2em;
             outline: none;
+            margin-left: 2em;
+        }
+
+        .twst-download-excel-link {
             margin-left: 2em;
         }
 
