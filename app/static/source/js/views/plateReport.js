@@ -41,7 +41,7 @@ var controller = (function() {
 
       $('#barcode').typeahead({
          ajax: url,
-         items: 30
+         //items: 30
       });
    }
 
