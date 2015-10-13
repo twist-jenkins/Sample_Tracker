@@ -238,6 +238,8 @@ module.exports = function(grunt) {
                     ,'angular-bootstrap/ui-bootstrap-tpls.min.js'
                     ,'angular-sanitize/angular-sanitize.min.js'
                     ,'angular-sanitize/angular-sanitize.min.js.map'
+                    ,'js-xlsx/dist/xlsx.full.min.js'
+                    ,'js-xlsx/dist/xlsx.full.min.map'
                 ]
                 ,dest: 'app/static/js'
                 ,flatten: true
