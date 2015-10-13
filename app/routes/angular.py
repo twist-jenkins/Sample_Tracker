@@ -301,10 +301,11 @@ def create_step_record():
 
                 destination_plate_well_id = source_plate_well.well_id
 
-                existing_sample_plate_layout = db_session.query(SamplePlateLayout).filter(and_(
-                    SamplePlateLayout.sample_plate_id == destination_plate.sample_plate_id,
-                    SamplePlateLayout.sample_id == source_plate_well.sample_id,
-                    SamplePlateLayout.well_id == destination_plate_well_id
+                spl = SamplePlateLayout
+                existing_sample_plate_layout = db_session.query(spl).filter(and_(
+                    spl.sample_plate_id == destination_plate.sample_plate_id,
+                    spl.sample_id == source_plate_well.sample_id,
+                    spl.well_id == destination_plate_well_id
                 )).first()
 
                 # error if there is already a sample in this dest well
@@ -333,7 +334,9 @@ def create_step_record():
                 # Create a row representing a transfer from a well in the "source" plate to a well
                 # in the "destination" plate.
 
-                source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
+                source_to_destination_well_transfer = SampleTransferDetail(
+                    sample_transfer.id,
+                    order_number,
                     source_plate.sample_plate_id,
                     source_plate_well.well_id,
                     source_plate_well.sample_id,
@@ -381,17 +384,18 @@ def create_step_record():
                     destination_plate_number = map_item["destination_plate_number"]
                     destination_plate = destination_plates[destination_plate_number - 1]
 
-                    plate_map = json_maps["row_column_maps"][target_plate_type_id];
+                    plate_map = json_maps["row_column_maps"][target_plate_type_id]
 
-                    row_and_column = plate_map[destination_plate_well_id];
+                    row_and_column = plate_map[destination_plate_well_id]
 
                     logging.debug(destination_plate_well_id, " ", row_and_column)
 
-                    existing_sample_plate_layout = db_session.query(SamplePlateLayout).filter(and_(
-                        SamplePlateLayout.sample_plate_id == destination_plate.sample_plate_id,
-                        SamplePlateLayout.sample_id == source_plate_well.sample_id,
-                        SamplePlateLayout.well_id == destination_plate_well_id
-                        )).first()
+                    spl = SamplePlateLayout
+                    existing_sample_plate_layout = db_session.query(spl).filter(and_(
+                        spl.sample_plate_id == destination_plate.sample_plate_id,
+                        spl.sample_id == source_plate_well.sample_id,
+                        spl.well_id == destination_plate_well_id
+                    )).first()
 
                     # error if there is already a sample in this dest well
                     if existing_sample_plate_layout:
@@ -406,7 +410,8 @@ def create_step_record():
                         })
 
                     # create a row representing a well in the destination plate.
-                    destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
+                    destination_plate_well = SamplePlateLayout(
+                        destination_plate.sample_plate_id,
                         source_plate_well.sample_id,
                         destination_plate_well_id,
                         operator.operator_id,
@@ -418,7 +423,8 @@ def create_step_record():
                     # Create a row representing a transfer from a well in the "source" plate to a well
                     # in the "destination" plate.
 
-                    source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
+                    source_to_destination_well_transfer = SampleTransferDetail(
+                        sample_transfer.id, order_number,
                         source_plate.sample_plate_id,
                         source_plate_well.well_id,
                         source_plate_well.sample_id,
