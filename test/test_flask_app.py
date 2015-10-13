@@ -35,7 +35,6 @@ class AutomatedTestingUser(AnonymousUserMixin):
         return "Automated Testing"
 
 
-
 class RootPlate(object):
 
     def create_in_db(self, db_engine=None):
@@ -95,78 +94,6 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert result["success"] is True
-
-    def test_aliquot_standard_template_golden(self):
-        data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplateId": 1,  # ??
-                "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["test_aliquot_01a"]}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert result["success"] is True
-
-    def test_aliquot_standard_template_badsource(self):
-        data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplateId": 1,  # ??
-                "sourcePlates": [self.root_plate_barcode + '_FAKE_ERROR'],
-                "destinationPlates": ["test_aliquot_01a"]}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert result["success"] is False
-
-    def FUTURE_test_aliquot_user_defined_template_golden(self):
-        data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplate": {"foo": 3},  # ??
-                "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["test_aliquot_02a"]}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert result["success"] is True
-
-    def test_1_to_4_golden(self):
-        data = {"sampleTransferTypeId": 11,
-                "sampleTransferTemplateId": 13,
-                "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["tst14a", "tst14b", "tst14c", "tst14d"]}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert result["success"] is True
-
-    def test_1_to_4_to_1_golden(self):
-        intermediate_plates = ["tst41a", "tst41b", "tst41c", "tst41d"]
-        data = {"sampleTransferTypeId": 11,
-                "sampleTransferTemplateId": 13,
-                "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": intermediate_plates}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-
-        data = {"sampleTransferTypeId": 17,
-                "sampleTransferTemplateId": 18,
-                "sourcePlates": intermediate_plates,
-                "destinationPlates": ["tst41abcd"]}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert result["success"] is True
-
-
 
 
 if __name__ == '__main__':
