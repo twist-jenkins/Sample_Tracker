@@ -163,7 +163,6 @@ app = angular.module('twist.app')
             getTypeAheadBarcodes: function (queryText) {
 
                 return Api.getBarcodes(queryText).then(function (resp) {
-
                     queryText = queryText.toLowerCase();
 
                     var goodData = [];
@@ -173,13 +172,11 @@ app = angular.module('twist.app')
                             goodData.push(resp.data[i]);
                         }
                     }
-
                     return goodData;
                 });
             }
             ,getTypeAheadPlateIds: function (queryText) {
                 return Api.getSamplePlatesList(queryText).then(function (resp) {
-
                     queryText = queryText.toLowerCase();
 
                     var goodData = [];
@@ -189,9 +186,6 @@ app = angular.module('twist.app')
                             goodData.push(resp.data[i]);
                         }
                     }
-
-
-                    console.log(goodData);
                     return goodData;
                 });
             }
