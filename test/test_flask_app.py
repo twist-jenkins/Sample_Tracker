@@ -79,20 +79,22 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200
         assert rv.data == '[]'
 
-    def xtest_get_plate_404(self):
+    def test_get_plate_404(self):
+        random_string = "2tp84ytcnp29cmty41p3984myt"
         rv = self.client.get('/api/v1/plate_barcodes/%s'
-                             % self.root_plate_barcode,
+                             % random_string,
                              content_type='application/json')
-        assert rv.status_code == 200
+        assert rv.status_code == 200  # TODO: this should be 404
         result = json.loads(rv.data)
         assert result["success"] is False
 
-    def xtest_get_root_plate_golden(self):
+    def TODO_test_get_root_plate_golden(self):
         rv = self.client.get('/api/v1/plate_barcodes/%s'
                              % self.root_plate_barcode,
                              content_type='application/json')
         assert rv.status_code == 200
         result = json.loads(rv.data)
+        print result
         assert result["success"] is True
 
 

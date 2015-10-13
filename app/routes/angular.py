@@ -386,6 +386,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                          source_plate, source_plate_well,
                          destination_plate, destination_plate_well_id,
                          row, column):
+    """helper function for create_step_record"""
 
     spl = SamplePlateLayout
     existing_sample_plate_layout = db_session.query(spl).filter(and_(
@@ -428,7 +429,6 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     db_session.add(source_to_dest_well_transfer)
 
 
-
 def plate_details(sample_plate_barcode, format):
 
     #
@@ -438,12 +438,20 @@ def plate_details(sample_plate_barcode, format):
 
     if not sample_plate:
         response = {
-            "success":False,
-            "errorMessage":"There is no plate with the barcode: [%s]" % (sample_plate_barcode)
+            "success": False,
+            "errorMessage": "There is no plate with the barcode: [%s]" % (sample_plate_barcode)
         }
         return jsonify(response)
 
     sample_plate_id = sample_plate.sample_plate_id
+
+    if not sample_plate.sample_plate_type:
+        response = {
+            "success": False,
+            "errorMessage": "Plate with barcode [%s] has no plate type" % (sample_plate_barcode)
+        }
+        return jsonify(response)
+
     number_clusters = sample_plate.sample_plate_type.number_clusters
 
     #print "number_clusters: ", number_clusters
