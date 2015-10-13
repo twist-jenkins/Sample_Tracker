@@ -108,6 +108,18 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
+    def test_aliquot_standard_template_badsource(self):
+        data = {"sampleTransferTypeId": 1,
+                "sampleTransferTemplateId": 1,  # ??
+                "sourcePlates": [self.root_plate_barcode + '_FAKE_ERROR'],
+                "destinationPlates": ["test_aliquot_01a"]}
+        rv = self.client.post('/api/v1/track-sample-step',
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert result["success"] is False
+
     def FUTURE_test_aliquot_user_defined_template_golden(self):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplate": {"foo": 3},  # ??

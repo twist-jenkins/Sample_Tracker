@@ -301,49 +301,18 @@ def create_step_record():
 
                 destination_plate_well_id = source_plate_well.well_id
 
-                spl = SamplePlateLayout
-                existing_sample_plate_layout = db_session.query(spl).filter(and_(
-                    spl.sample_plate_id == destination_plate.sample_plate_id,
-                    spl.sample_id == source_plate_well.sample_id,
-                    spl.well_id == destination_plate_well_id
-                )).first()
-
-                # error if there is already a sample in this dest well
-                if existing_sample_plate_layout:
-                    err = ("Plate [%s] already contains "
-                           "sample %s in well %s") % (
-                               destination_plate.external_barcode,
-                               source_plate_well.sample_id,
-                               source_plate_well.well_id)
+                try:
+                    create_well_transfer(
+                        db_session, operator, sample_transfer,
+                        order_number, source_plate, source_plate_well,
+                        destination_plate, destination_plate_well_id,
+                        source_plate_well.row, source_plate_well.column
+                    )
+                except IndexError as err:
                     return jsonify({
                         "success": False,
                         "errorMessage": err
                     })
-
-                # create a row representing a well in the destination plate.
-                destination_plate_well = SamplePlateLayout(
-                    destination_plate.sample_plate_id,
-                    source_plate_well.sample_id,
-                    destination_plate_well_id,
-                    operator.operator_id,
-                    source_plate_well.row,
-                    source_plate_well.column)
-
-                db_session.add(destination_plate_well)
-
-                # Create a row representing a transfer from a well in the "source" plate to a well
-                # in the "destination" plate.
-
-                source_to_destination_well_transfer = SampleTransferDetail(
-                    sample_transfer.id,
-                    order_number,
-                    source_plate.sample_plate_id,
-                    source_plate_well.well_id,
-                    source_plate_well.sample_id,
-                    destination_plate.sample_plate_id,
-                    destination_plate_well.well_id,
-                    destination_plate_well.sample_id)
-                db_session.add(source_to_destination_well_transfer)
 
                 order_number += 1
 
@@ -390,56 +359,74 @@ def create_step_record():
 
                     logging.debug(destination_plate_well_id, " ", row_and_column)
 
-                    spl = SamplePlateLayout
-                    existing_sample_plate_layout = db_session.query(spl).filter(and_(
-                        spl.sample_plate_id == destination_plate.sample_plate_id,
-                        spl.sample_id == source_plate_well.sample_id,
-                        spl.well_id == destination_plate_well_id
-                    )).first()
-
-                    # error if there is already a sample in this dest well
-                    if existing_sample_plate_layout:
-                        err = ("Plate [%s] already contains "
-                               "sample %s in well %s") % (
-                                   destination_plate.external_barcode,
-                                   source_plate_well.sample_id,
-                                   source_plate_well.well_id)
+                    try:
+                        create_well_transfer(
+                            db_session, operator, sample_transfer,
+                            order_number, source_plate, source_plate_well,
+                            destination_plate, destination_plate_well_id,
+                            row_and_column["row"], row_and_column["column"]
+                        )
+                        # TO DO: assign non-bogus row and column values)
+                    except IndexError as err:
                         return jsonify({
                             "success": False,
                             "errorMessage": err
                         })
-
-                    # create a row representing a well in the destination plate.
-                    destination_plate_well = SamplePlateLayout(
-                        destination_plate.sample_plate_id,
-                        source_plate_well.sample_id,
-                        destination_plate_well_id,
-                        operator.operator_id,
-                        row_and_column["row"],
-                        row_and_column["column"])  # TO DO: assign non-bogus row and column values
-
-                    db_session.add(destination_plate_well)
-
-                    # Create a row representing a transfer from a well in the "source" plate to a well
-                    # in the "destination" plate.
-
-                    source_to_destination_well_transfer = SampleTransferDetail(
-                        sample_transfer.id, order_number,
-                        source_plate.sample_plate_id,
-                        source_plate_well.well_id,
-                        source_plate_well.sample_id,
-                        destination_plate.sample_plate_id,
-                        destination_plate_well.well_id,
-                        destination_plate_well.sample_id)
-                    db_session.add(source_to_destination_well_transfer)
 
                     order_number += 1
 
                 db_session.flush()  # insert one plate at time
 
     return jsonify({
-        "success":True
+        "success": True
     })
+
+
+def create_well_transfer(db_session, operator, sample_transfer, order_number,
+                         source_plate, source_plate_well,
+                         destination_plate, destination_plate_well_id,
+                         row, column):
+
+    spl = SamplePlateLayout
+    existing_sample_plate_layout = db_session.query(spl).filter(and_(
+        spl.sample_plate_id == destination_plate.sample_plate_id,
+        spl.sample_id == source_plate_well.sample_id,
+        spl.well_id == destination_plate_well_id
+    )).first()
+
+    # error if there is already a sample in this dest well
+    if existing_sample_plate_layout:
+        err = ("Plate [%s] already contains "
+               "sample %s in well %s") % (
+                   destination_plate.external_barcode,
+                   source_plate_well.sample_id,
+                   source_plate_well.well_id)
+        raise IndexError(err)
+
+    # create a row representing a well in the destination plate.
+    destination_plate_well = SamplePlateLayout(
+        destination_plate.sample_plate_id,
+        source_plate_well.sample_id,
+        destination_plate_well_id,
+        operator.operator_id,
+        row,
+        column)
+
+    db_session.add(destination_plate_well)
+
+    # Create a row representing a transfer from a well in
+    # the "source" plate to a well in the "destination" plate.
+    source_to_dest_well_transfer = SampleTransferDetail(
+        sample_transfer.id,
+        order_number,
+        source_plate.sample_plate_id,
+        source_plate_well.well_id,
+        source_plate_well.sample_id,
+        destination_plate.sample_plate_id,
+        destination_plate_well.well_id,
+        destination_plate_well.sample_id)
+    db_session.add(source_to_dest_well_transfer)
+
 
 
 def plate_details(sample_plate_barcode, format):
