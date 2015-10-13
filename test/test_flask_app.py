@@ -37,15 +37,15 @@ class AutomatedTestingUser(AnonymousUserMixin):
 
 class RootPlate(object):
 
-    def create_in_db(self, db_engine=None):
+    def create_in_db(self, barcode="TEST_ROOT", db_engine=None):
         """ Make a fake root plate "permanently" in the DB.
         TODO: use an API call instead of tightly coupling into
         app.routes. """
         from app.utils import scoped_session
-        from app.routes.angular import create_destination_plate
+        from app.models import create_destination_plate
         with scoped_session(db.engine) as db_session:
             operator = AutomatedTestingUser()
-            destination_barcode = 'TEST_ROOT'
+            destination_barcode = barcode
             storage_location_id = 'TEST_STORAGE_LOC'
             source_plate_type_id = 1
             plate = create_destination_plate(db_session, operator,
@@ -57,16 +57,19 @@ class RootPlate(object):
 
 class TestCase(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         login_manager.anonymous_user = AutomatedTestingUser
-        self.client = app.test_client()
+        cls.client = app.test_client()
         assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
-        self.root_plate_barcode = RootPlate().create_in_db(db.engine)
+        cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
+        # cls._connection.destroy()
         # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 

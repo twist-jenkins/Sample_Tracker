@@ -16,18 +16,22 @@ from app import login_manager
 
 from test_flask_app import AutomatedTestingUser, RootPlate
 
+
 class TestCase(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         login_manager.anonymous_user = AutomatedTestingUser
-        self.client = app.test_client()
+        cls.client = app.test_client()
         assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
-        self.root_plate_barcode = RootPlate().create_in_db(db.engine)
+        cls.root_plate_barcode = RootPlate().create_in_db("ROOT", db.engine)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
+        # cls._connection.destroy()
         # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 

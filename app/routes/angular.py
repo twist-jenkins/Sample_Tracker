@@ -9,23 +9,20 @@
 ######################################################################################
 
 import csv
-import os
-import time
 import json
 import logging
+import StringIO
 
-from flask import g, make_response, request, Response, session, jsonify
-from math import floor
+from flask import g, make_response, request, Response, jsonify
 
 from sqlalchemy import and_
 from app.utils import scoped_session
 
-from werkzeug import secure_filename
-
 from app import app, db, googlelogin
 
-from app.dbmodels import (create_unique_object_id, Sample, SampleTransfer,
+from app.dbmodels import (SampleTransfer,
                           SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
+from app.models import create_destination_plate
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
@@ -33,8 +30,6 @@ from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_96,
                            get_col_and_row_for_well_id_384,
                            get_well_id_for_col_and_row_384)
-
-import StringIO
 
 from app.plate_to_plate_maps import maps_json
 
@@ -208,21 +203,6 @@ def sample_transfers():
     return(resp)
 
 
-# creates a destination plate for a transfer
-def create_destination_plate(db_session, operator, destination_barcode,
-                             source_plate_type_id, storage_location_id):
-    destination_plate_name = create_unique_object_id("PLATE_")
-    destination_plate_description = create_unique_object_id("PLATEDESC_")
-    plate = SamplePlate(source_plate_type_id,
-                        operator.operator_id,
-                        storage_location_id,
-                        destination_plate_name,
-                        destination_plate_description,
-                        destination_barcode)
-    db_session.add(plate)
-    return plate
-
-
 def create_step_record():
     data = request.json
     operator = g.user
@@ -259,8 +239,8 @@ def create_step_record():
 
     if problem_plates != "":
         return jsonify({
-            "success": False
-            , "errorMessage": "The number of %s plates does not match the template." % (problem_plates)
+            "success": False,
+            "errorMessage": "The number of %s plates does not match the template." % (problem_plates)
         })
 
     with scoped_session(db.engine) as db_session:
