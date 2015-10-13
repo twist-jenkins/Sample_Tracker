@@ -18,7 +18,7 @@ from flask import g, make_response, request, Response, session, jsonify
 from math import floor
 
 from sqlalchemy import and_
-from sqlalchemy.orm import sessionmaker
+from app.utils import scoped_session
 
 from werkzeug import secure_filename
 
@@ -263,144 +263,64 @@ def create_step_record():
             , "errorMessage": "The number of %s plates does not match the template." % (problem_plates)
         })
 
-    # create a configured "Session" class
-    Session = sessionmaker(bind=db.engine)
+    with scoped_session(db.engine) as db_session:
 
-    # create a Session
-    scoped_session = Session()
+        # Create a "sample_transfer" row representing this entire transfer.
+        sample_transfer = SampleTransfer(sample_transfer_type_id,
+                                         operator.operator_id)
+        db_session.add(sample_transfer)
 
-    # Create a "sample_transfer" row representing this entire transfer.
-    sample_transfer = SampleTransfer(sample_transfer_type_id,
-                                     operator.operator_id)
-    scoped_session.add(sample_transfer)
-
-    for barcode in source_barcodes:
-        # load our source plates into an array for looping
-        source_plate = scoped_session.query(SamplePlate).filter_by(external_barcode=barcode).first()
-        if not source_plate:
-            logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: %s" % (g.user.first_and_last_name, barcode))
-            return jsonify({
-                "success": False,
-                "errorMessage": "There is no source plate with the barcode: %s" % (barcode)
-            })
-        source_plates.append(source_plate)
-
-    # the easy case: source and destination plates have same layout and there's only 1 of each
-    if sample_transfer_template_id == 1:
-
-        order_number = 1
-        source_plate = source_plates[0]
-
-        # create the destination plate
-        plate = create_destination_plate(scoped_session, operator,
-                                         destination_barcodes[0],
-                                         source_plate.type_id,
-                                         source_plate.storage_location_id)
-        destination_plates.append(plate)
-        scoped_session.flush()
-
-        destination_plate = destination_plates[0]
-
-        for source_plate_well in source_plate.wells:
-
-            destination_plate_well_id = source_plate_well.well_id
-
-            existing_sample_plate_layout = scoped_session.query(SamplePlateLayout).filter(and_(
-                SamplePlateLayout.sample_plate_id == destination_plate.sample_plate_id,
-                SamplePlateLayout.sample_id == source_plate_well.sample_id,
-                SamplePlateLayout.well_id == destination_plate_well_id
-            )).first()
-
-            # error if there is already a sample in this dest well
-            if existing_sample_plate_layout:
+        for barcode in source_barcodes:
+            # load our source plates into an array for looping
+            source_plate = db_session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+            if not source_plate:
+                logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: %s" % (g.user.first_and_last_name, barcode))
                 return jsonify({
                     "success": False,
-                    "errorMessage": "Plate [%s] already contains sample %s in well %s" % (destination_plate.external_barcode,
-                                    source_plate_well.sample_id,
-                                    source_plate_well.well_id)
+                    "errorMessage": "There is no source plate with the barcode: %s" % (barcode)
                 })
+            source_plates.append(source_plate)
 
-            # create a row representing a well in the destination plate.
-            destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-                source_plate_well.sample_id,destination_plate_well_id,operator.operator_id,source_plate_well.row,source_plate_well.column)
+        # the easy case: source and destination plates have same layout and there's only 1 of each
+        if sample_transfer_template_id == 1:
 
-            scoped_session.add(destination_plate_well)
+            order_number = 1
+            source_plate = source_plates[0]
 
-            # Create a row representing a transfer from a well in the "source" plate to a well
-            # in the "destination" plate.
-
-            source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
-               source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
-               destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
-            scoped_session.add(source_to_destination_well_transfer)
-
-            order_number += 1
-
-    # source(s) and destination(s) are not the same plate type/layout
-    else:
-
-        storage_location_id = source_plates[0].storage_location_id
-        target_plate_type_id = templateData["destination"]["plate_type_id"]
-
-        # create the destination plate(s)
-        for destination_barcode in destination_barcodes:
-            plate = create_destination_plate(scoped_session, operator,
-                                             destination_barcode,
-                                             target_plate_type_id,
-                                             storage_location_id)
+            # create the destination plate
+            plate = create_destination_plate(db_session, operator,
+                                             destination_barcodes[0],
+                                             source_plate.type_id,
+                                             source_plate.storage_location_id)
             destination_plates.append(plate)
+            db_session.flush()
 
-        scoped_session.flush()
-
-        plate_well_to_well_maps = templateData["plate_well_to_well_maps"]
-
-        plate_number = 0
-        order_number = 1
-
-        for source_plate in source_plates:
-            well_to_well_map = plate_well_to_well_maps[plate_number]
-
-            plate_number += 1
+            destination_plate = destination_plates[0]
 
             for source_plate_well in source_plate.wells:
-                logging.debug(source_plate_well)
 
-                map_item = well_to_well_map[source_plate_well.well_id]
+                destination_plate_well_id = source_plate_well.well_id
 
-                logging.debug(map_item)
-
-                destination_plate_well_id = map_item["destination_well_id"]
-                destination_plate_number = map_item["destination_plate_number"]
-                destination_plate = destination_plates[destination_plate_number - 1]
-
-                plate_map = json_maps["row_column_maps"][target_plate_type_id];
-
-                row_and_column = plate_map[destination_plate_well_id];
-
-                logging.debug(destination_plate_well_id, " ", row_and_column)
-
-                existing_sample_plate_layout = scoped_session.query(SamplePlateLayout).filter(and_(
+                existing_sample_plate_layout = db_session.query(SamplePlateLayout).filter(and_(
                     SamplePlateLayout.sample_plate_id == destination_plate.sample_plate_id,
                     SamplePlateLayout.sample_id == source_plate_well.sample_id,
                     SamplePlateLayout.well_id == destination_plate_well_id
-                    )).first()
+                )).first()
 
                 # error if there is already a sample in this dest well
                 if existing_sample_plate_layout:
                     return jsonify({
                         "success": False,
                         "errorMessage": "Plate [%s] already contains sample %s in well %s" % (destination_plate.external_barcode,
-                            source_plate_well.sample_id,
-                            source_plate_well.well_id)
+                                        source_plate_well.sample_id,
+                                        source_plate_well.well_id)
                     })
 
                 # create a row representing a well in the destination plate.
                 destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-                    source_plate_well.sample_id,
-                    destination_plate_well_id,
-                    operator.operator_id, row_and_column["row"], row_and_column["column"]) # TO DO: assign non-bogus row and column values
+                    source_plate_well.sample_id,destination_plate_well_id,operator.operator_id,source_plate_well.row,source_plate_well.column)
 
-                scoped_session.add(destination_plate_well)
+                db_session.add(destination_plate_well)
 
                 # Create a row representing a transfer from a well in the "source" plate to a well
                 # in the "destination" plate.
@@ -408,13 +328,87 @@ def create_step_record():
                 source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
                    source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
                    destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
-                scoped_session.add(source_to_destination_well_transfer)
+                db_session.add(source_to_destination_well_transfer)
 
                 order_number += 1
 
-            scoped_session.flush()  # insert one plate at time
+        # source(s) and destination(s) are not the same plate type/layout
+        else:
 
-    scoped_session.commit()
+            storage_location_id = source_plates[0].storage_location_id
+            target_plate_type_id = templateData["destination"]["plate_type_id"]
+
+            # create the destination plate(s)
+            for destination_barcode in destination_barcodes:
+                plate = create_destination_plate(db_session, operator,
+                                                 destination_barcode,
+                                                 target_plate_type_id,
+                                                 storage_location_id)
+                destination_plates.append(plate)
+
+            db_session.flush()
+
+            plate_well_to_well_maps = templateData["plate_well_to_well_maps"]
+
+            plate_number = 0
+            order_number = 1
+
+            for source_plate in source_plates:
+                well_to_well_map = plate_well_to_well_maps[plate_number]
+
+                plate_number += 1
+
+                for source_plate_well in source_plate.wells:
+                    logging.debug(source_plate_well)
+
+                    map_item = well_to_well_map[source_plate_well.well_id]
+
+                    logging.debug(map_item)
+
+                    destination_plate_well_id = map_item["destination_well_id"]
+                    destination_plate_number = map_item["destination_plate_number"]
+                    destination_plate = destination_plates[destination_plate_number - 1]
+
+                    plate_map = json_maps["row_column_maps"][target_plate_type_id];
+
+                    row_and_column = plate_map[destination_plate_well_id];
+
+                    logging.debug(destination_plate_well_id, " ", row_and_column)
+
+                    existing_sample_plate_layout = db_session.query(SamplePlateLayout).filter(and_(
+                        SamplePlateLayout.sample_plate_id == destination_plate.sample_plate_id,
+                        SamplePlateLayout.sample_id == source_plate_well.sample_id,
+                        SamplePlateLayout.well_id == destination_plate_well_id
+                        )).first()
+
+                    # error if there is already a sample in this dest well
+                    if existing_sample_plate_layout:
+                        return jsonify({
+                            "success": False,
+                            "errorMessage": "Plate [%s] already contains sample %s in well %s" % (destination_plate.external_barcode,
+                                source_plate_well.sample_id,
+                                source_plate_well.well_id)
+                        })
+
+                    # create a row representing a well in the destination plate.
+                    destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
+                        source_plate_well.sample_id,
+                        destination_plate_well_id,
+                        operator.operator_id, row_and_column["row"], row_and_column["column"]) # TO DO: assign non-bogus row and column values
+
+                    db_session.add(destination_plate_well)
+
+                    # Create a row representing a transfer from a well in the "source" plate to a well
+                    # in the "destination" plate.
+
+                    source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
+                       source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
+                       destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
+                    db_session.add(source_to_destination_well_transfer)
+
+                    order_number += 1
+
+                db_session.flush()  # insert one plate at time
 
     return jsonify({
         "success":True
