@@ -111,7 +111,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
 
             if ($scope.uploadViaExcel) {
-                return ($scope.transferExcelAsJSON || false) && $scope.excelOk;
+                return ($scope.transferExcelAsJSON || false) && !$scope.excelErrors.length;
             } else {
 
                 for (var i=0; i< $scope.sourcePlates.length; i++) {
@@ -168,7 +168,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             } else {
                 data.transferMap = $scope.transferExcelAsJSON;
             }
-            
+
             return data;
         };
 
@@ -203,6 +203,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         };
 
+        $scope.excelFileStats = {};
+
         $scope.catchFile = function (fileData) {
             var workbook = XLSX.read(fileData, {type: 'binary'});
             var first_sheet_name = workbook.SheetNames[0];
@@ -212,6 +214,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transferExcelAsJSON = [];
             var thisRow = {};
             var firstRow = true;
+            var srcPlates = {};
+            var destPlates = {};
             for (z in worksheet) {
                 if(z[0] === '!') {continue;}
                 var col = z.substring(0,1);
@@ -219,12 +223,18 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 switch (col) {
                     case 'A':
                         thisRow.source_plate_barcode = val;
+                        if (!srcPlates[val]) {
+                            srcPlates[val] = 1;
+                        } else {
+                            srcPlates[val]++;
+                        }
                         break;
                     case 'B':
                         thisRow.source_well_name = val;
                         break;    
                     case 'C':
                         thisRow.destination_plate_barcode = val;
+                        destPlates[val] = val;
                         break;
                     case 'D':
                         thisRow.destination_well_name = val;
@@ -246,8 +256,30 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }
 
+            $scope.excelFileStats.sourceRowCounts = srcPlates;
+
             /* To Do:  Parse through file to confirm validity */
-            $scope.excelOk = true;
+            $scope.excelErrors = [];
+            var count = 0;
+            for (plate in srcPlates) {
+                count++;
+            }
+            $scope.excelFileStats.source_plate_count = count;
+
+            if (count != $scope.selectedStepType.source_plate_count) {
+                $scope.excelErrors.push('This transfer type expects ' + $scope.selectedStepType.source_plate_count + ' source plate(s) but only found ' + count + ' in the file');
+            }
+            var count = 0;
+            for (plate in destPlates) {
+                count++;
+            }
+            $scope.excelFileStats.destination_plate_count = count;
+            if (count != $scope.selectedStepType.destination_plate_count) {
+                $scope.excelErrors.push('This transfer type expects ' + $scope.selectedStepType.source_plate_count + ' destination plate(s) but only found ' + count + ' in the file');
+            }
+
+            console.log($scope.excelFileStats)
+            console.log($scope.excelErrors)
         };
 
         /* populate the sample types pulldown */

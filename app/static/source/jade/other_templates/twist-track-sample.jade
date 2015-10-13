@@ -38,8 +38,11 @@ div(class="twst-sample-track-main twst-child-page")
                         input(type="text" class="form-control" ng-model="plate.text")
                         twst-thumb-validation-icon(validation="plate.text.length > 5")
         div(class="twst-sample-track-main-excel-upload" ng-show="uploadViaExcel")
-            div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the excel tranfer file here
-            div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON") FILE READ!
+            div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the excel transfer file here
+            div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON")
+                h3 Excel File Pre-upload Summary:
+                    
+
         div(class="twst-sample-track-main-buttons")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
             button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit

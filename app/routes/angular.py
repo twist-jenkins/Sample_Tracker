@@ -352,9 +352,8 @@ def create_step_record():
 
             # create the destination plate(s)
             for destination_barcode in destination_barcodes:
-                create_destination_plate(scoped_session, operator,
-                                         destination_plates, destination_barcode,
-                                         target_plate_type_id, storage_location_id)
+                destination_plates.append(create_destination_plate(scoped_session, operator, destination_barcode,
+                                         target_plate_type_id, storage_location_id))
 
             scoped_session.flush()
 
