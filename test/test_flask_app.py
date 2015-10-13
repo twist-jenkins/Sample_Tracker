@@ -80,11 +80,39 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200
         assert rv.data == '[]'
 
-    def test_aliquot_golden(self):
+    def xtest_get_plate_404(self):
+        rv = self.client.get('/api/v1/plate_barcodes/%s'
+                             % self.root_plate_barcode,
+                             content_type='application/json')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert result["success"] is False
+
+    def xtest_get_root_plate_golden(self):
+        rv = self.client.get('/api/v1/plate_barcodes/%s'
+                             % self.root_plate_barcode,
+                             content_type='application/json')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert result["success"] is True
+
+    def test_aliquot_standard_template_golden(self):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplateId": 1,  # ??
                 "sourcePlates": [self.root_plate_barcode],
                 "destinationPlates": ["test_aliquot_01a"]}
+        rv = self.client.post('/api/v1/track-sample-step',
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert result["success"] is True
+
+    def FUTURE_test_aliquot_user_defined_template_golden(self):
+        data = {"sampleTransferTypeId": 1,
+                "sampleTransferTemplate": {"foo": 3},  # ??
+                "sourcePlates": [self.root_plate_barcode],
+                "destinationPlates": ["test_aliquot_02a"]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -105,10 +133,11 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def test_1_to_4_to_1_golden(self):
+        intermediate_plates = ["tst41a", "tst41b", "tst41c", "tst41d"]
         data = {"sampleTransferTypeId": 11,
                 "sampleTransferTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["tst41a", "tst41b", "tst41c", "tst41d"]}
+                "destinationPlates": intermediate_plates}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -116,7 +145,7 @@ class TestCase(unittest.TestCase):
 
         data = {"sampleTransferTypeId": 17,
                 "sampleTransferTemplateId": 18,
-                "sourcePlates": ["tst41a", "tst41b", "tst41c", "tst41d"],
+                "sourcePlates": intermediate_plates,
                 "destinationPlates": ["tst41abcd"]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
