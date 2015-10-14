@@ -13,14 +13,14 @@ down_revision = '16ac291fa1b9'
 from alembic import op
 import sqlalchemy as sa
 
-update_sql = ("update sample_transfer_type "
-              "set name = :name, "
-              "sample_transfer_template_id = :stti, "
-              "source_plate_count = :spc, "
-              "destination_plate_count = :dpc "
-              "where id = :id")
+update_template = ("update sample_transfer_type "
+                   "set name = :name, "
+                   "sample_transfer_template_id = :stti, "
+                   "source_plate_count = :spc, "
+                   "destination_plate_count = :dpc "
+                   "where id = :id")
 
-update_sql_param_names = ("id", "name", "stti", "spc", "dpc")
+update_template_arg_names = ("id", "name", "stti", "spc", "dpc")
 
 desired_values = [
     [1, "Aliquoting for Quantification (384 plate)", 1, 1, 1],
@@ -40,30 +40,30 @@ desired_values = [
     [15, "Picking: Qpix to 96 plate x4", 16, 1, 4],
     [16, "Picking: Qpix to 384 plate", 17, 1, 1],
     [17, "Glycerol stock: from 96 plate", 18, 4, 1],
-    [18, "Glycerol stock: from 384 plate", 1, 1, 1],
-    [19, "Aliquoting for RCA: from 96 plate", 18, 4, 1],
-    [20, "Aliquoting for RCA: from 384 plate", 1, 1, 1],
-    [21, "RCA: Stamp for denaturation", 1, 1, 1],
-    [22, "RCA: Stamp into templiphi plate", 1, 1, 1],
-    [23, "RCA: dilution step 1 (1:3)", 1, 1, 0],
-    [24, "RCA: dilution step 2 (1:75)", 1, 1, 1],
-    [25, "NGS prep: tagmentation", 1, 1, 0],
-    [26, "NGS prep: barcode hitpicking", 1, 1, 0],
-    [27, "NGS prep: PCR", 1, 1, 0],
-    [28, "Hitpicking for primer removal: from RCA", 19, 0, 0],
-    [29, "Hitpicking for primer removal: from Glycerol stock", 19, 0, 0],
-    [30, "PR: Phusion U MM addition", 1, 1, 0],
-    [31, "PR: PCR", 1, 1, 0],
-    [32, "PR: Pre-USER purification", 1, 1, 1],
-    [33, "PR: USER addition", 1, 1, 0],
-    [34, "PR: USER incubation", 1, 1, 0],
-    [35, "PR: Kappa polishing", 1, 1, 0],
-    [36, "Purification: 96 plate", 1, 1, 1],
-    [37, "Aliquoting for Frag analysis", 1, 1, 1],
-    [38, "Aliquoting for Quantification: 96 plate", 1, 1, 1],
-    [39, "Hitpicking for miniprep: from glycerol stock", 19, 0, 0],
-    [40, "Miniprep", 1, 1, 1],
-    [41, "Miniprep transfer to 96-PCR plate", 1, 1, 1],
+    [18, "Glycerol stock: from 384 plate", 1, 1, 1], 
+    [19, "Aliquoting for RCA: from 96 plate", 18, 4, 1], 
+    [20, "Aliquoting for RCA: from 384 plate", 1, 1, 1], 
+    [21, "RCA: Stamp for denaturation", 1, 1, 1], 
+    [22, "RCA: Stamp into templiphi plate", 1, 1, 1], 
+    [23, "RCA: dilution step 1 (1:3)", 1, 1, 0], 
+    [24, "RCA: dilution step 2 (1:75)", 1, 1, 1], 
+    [25, "NGS prep: tagmentation", 1, 1, 0], 
+    [26, "NGS prep: barcode hitpicking", 1, 1, 0], 
+    [27, "NGS prep: PCR", 1, 1, 0], 
+    [28, "Hitpicking for primer removal: from RCA", 19, 0, 0], 
+    [29, "Hitpicking for primer removal: from Glycerol stock", 19, 0, 0], 
+    [30, "PR: Phusion U MM addition", 1, 1, 0], 
+    [31, "PR: PCR", 1, 1, 0], 
+    [32, "PR: Pre-USER purification", 1, 1, 1], 
+    [33, "PR: USER addition", 1, 1, 0], 
+    [34, "PR: USER incubation", 1, 1, 0], 
+    [35, "PR: Kappa polishing", 1, 1, 0], 
+    [36, "Purification: 96 plate", 1, 1, 1], 
+    [37, "Aliquoting for Frag analysis", 1, 1, 1], 
+    [38, "Aliquoting for Quantification: 96 plate", 1, 1, 1], 
+    [39, "Hitpicking for miniprep: from glycerol stock", 19, 0, 0], 
+    [40, "Miniprep", 1, 1, 1], 
+    [41, "Miniprep transfer to 96-PCR plate", 1, 1, 1], 
     [42, "Hitpick for shipping", 20, 1, 0]
 ]
 
@@ -78,8 +78,8 @@ def upgrade():
                             sa.Integer, default=1))
 
     for row_values in desired_values:
-        args = dict(zip(update_sql_param_names, row_values))
-        op.execute(sa.text(update_sql).bindparams(**args))
+        args = dict(zip(update_template_arg_names, row_values))
+        op.execute(sa.text(update_template).bindparams(**args))
 
 
 def downgrade():

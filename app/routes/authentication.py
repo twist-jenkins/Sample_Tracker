@@ -5,14 +5,14 @@
 # File: app/routes/authentication.py
 #
 # These are the handlers for all authentication-related routes in this application.
-#
+# 
 ######################################################################################
 
 from flask import g, Flask, render_template, make_response, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
 
 from app import app, db
 
-from app.dbmodels import Operator
+from app.dbmodels import Operator 
 
 from app import login_manager
 
@@ -41,7 +41,7 @@ def before_request():
     g.user = current_user
 
 def login_to_google(code, redirect_uri):
-
+    
 
     token = requests.post(app.config['GOOGLE_OAUTH2_TOKEN_URL'], data=dict(
         code=code,
@@ -52,14 +52,14 @@ def login_to_google(code, redirect_uri):
     )).json
 
     if not token or token.get('error'):
-        logger.error("Error requesting auth token from Google")
+        logger.error("Error requesting auth token from Google") 
         abort(400)
 
     userinfo = requests.get(app.config['GOOGLE_OAUTH2_USERINFO_URL'], params=dict(
         access_token=token['access_token'],
     )).json
     if not userinfo or userinfo.get('error'):
-        logger.error("Error requesting user info from Google")
+        logger.error("Error requesting user info from Google") 
         abort(400)
 
     return token, userinfo
@@ -67,7 +67,7 @@ def login_to_google(code, redirect_uri):
 
 #
 # Magically called by google_login plumbing when "login_user" is invoked (see "create_or_update_user").
-#
+# 
 @login_manager.user_loader
 def load_user(email):
     return db.session.query(Operator).filter_by(email=email).first()
@@ -88,14 +88,14 @@ def create_or_update_user(token, userinfo, **params):
     if operator:
         logger.info(" User [%s - %s] logged in. Hello!" % (operator.first_and_last_name, operator.email))
     else:
-        logger.error("Login attempt for user with email [%s] but user not in operator table" % (user_email))
+        logger.error("Login attempt for user with email [%s] but user not in operator table" % (user_email)) 
         return redirect(url_for('user_missing_from_operator_table'))
 
-
+    
     #
     # This causes the "load_user" function to be called!!!
     #
-    login_user(operator)
+    login_user(operator)  
 
     #g.user = operator
 
@@ -123,8 +123,8 @@ def user_missing_from_operator_table():
     return render_template('user_missing_from_operator_table.html',login_url=url_for('new_home'))
 
 #
-# This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password).
-# Google oauth calls this function - passing in (via URL query parameter) a "code" value if the user
+# This is invoked when the user clicks the "Sign In" button and enters their Google login (email+password). 
+# Google oauth calls this function - passing in (via URL query parameter) a "code" value if the user 
 # clicked the Accept/Allow button when first logging in. If the user clicked Cancel/Decline instead, then no
 # code value will be returned.
 #
@@ -136,7 +136,7 @@ def oauth2callback():
     code = request.args.get('code')
 
     if code:
-        token, userinfo = login_to_google(code, url_for('oauth2callback',_external=True))
+        token, userinfo = login_to_google(code, url_for('oauth2callback',_external=True)) 
         return create_or_update_user(token, userinfo)
 
     #
