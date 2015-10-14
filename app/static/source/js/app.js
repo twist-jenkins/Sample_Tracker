@@ -85,7 +85,16 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.selectStepType = function (option) {
-            $state.go('root.record_step.step_type_selected', {
+
+            var route = 'root.record_step.step_type_selected';
+
+            if ($scope.templateTypeSelection) {
+                route += '.' + $scope.templateTypeSelection;
+            } else {
+                route += '.' + $scope.standard_template;
+            }
+
+            $state.go(route, {
                 selected_step_type_id: option.id + '-' + Formatter.stripNonAlphaNumeric(Formatter.lowerCaseAndSpaceToDash(option.text), true)
             });
         }
@@ -95,6 +104,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var option = $scope.stepTypeOptions[i];
                 if (option.id == optionId) {
                     $scope.clearExcelUploadData();
+                    $scope.submissionResultMessage = '';
+                    $scope.submissionResultVisible = 0;
                     $scope.selectedStepType = option;
                     $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
                     setPlateArrays();
@@ -114,7 +125,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 return false;
             }
 
-            if ($scope.uploadViaExcel) {
+            if ($scope.templateTypeSelection == $scope.excel_template) {
                 return ($scope.transferExcelAsJSON.length || false) && !$scope.excelErrors.length;
             } else {
 
@@ -144,9 +155,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.sourcePlates = [returnEmptyPlate()];
             $scope.destinationPlates = [returnEmptyPlate()];
             $scope.clearExcelUploadData();
-            $scope.uploadViaExcel = false;
+            $scope.templateTypeSelection = null;
             $scope.cachedFileData = null;
             $state.go('root.record_step');
+        };
+
+        $scope.excel_template = 'excel_upload';
+        $scope.standard_template = 'standard_template';
+
+        $scope.selectTransferTemplateType = function (which) {
+            var route = '';
+            if (which == $scope.excel_template) {
+                route = 'excel_upload';
+            } else if (which == $scope.standard_template) {
+                route = 'standard_template';
+            } 
+            $state.go('root.record_step.step_type_selected.' + route);
+        };
+
+        $scope.setTransferTemplate = function (which) {
+            $scope.templateTypeSelection = which;
         };
 
         var getSampleTrackSubmitData = function () {
@@ -155,7 +183,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 ,sampleTransferTemplateId: $scope.selectedStepType.transfer_template_id
             };
 
-            if ($scope.uploadViaExcel) {
+            if ($scope.templateTypeSelection == $scope.excel_template) {
                 data.transferMap = $scope.transferExcelAsJSON;
             } else {
                 data.sourcePlates = [];
@@ -179,6 +207,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.submitStep = function () {
+
+            var showError = function (data) {
+                $scope.submissionResultMessage = 'Error: ' + data.errorMessage;
+                $scope.submissionResultVisible = -1;
+                $scope.submittingStep = false;
+            }
+
+
             if (!$scope.submitting && $scope.sampleTrackFormReady()) {
 
                 $scope.submittingStep = true;
@@ -190,9 +226,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         $scope.submissionResultVisible = 1;
                         $scope.clearForm();
                     } else {
-                        $scope.submissionResultMessage = 'Error: ' + data.errorMessage;
-                        $scope.submissionResultVisible = -1;
-                        $scope.submittingStep = false;
+                        showError(data);
                     }
 
                     $timeout(function () {
@@ -204,7 +238,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                 }).error(function (data) {
                     $scope.submittingStep = false;
-                    console.log('ERROR!');
+                    showError(data);
                 });
             }
         };
@@ -232,6 +266,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var workbook = XLSX.read(fileData, {type: 'binary'});
             var first_sheet_name = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[first_sheet_name];
+
+            $scope.excelErrors = [];
 
             // parse through the sheet and compile the rows to json
             $scope.transferExcelAsJSON = [];
@@ -271,7 +307,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         break;
 
                     default :
-                        console.log('Error: Unknown column in input file: ' + col);
+                        $scope.excelErrors.push('Error: Unknown column in input file: ' + col);
                         break;
                 }
                 if (col == 'E') {
@@ -284,9 +320,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
 
             $scope.excelFileStats.sourceRowCounts = srcPlates;
-
-            /* To Do:  Parse through file to confirm validity */
-            $scope.excelErrors = [];
+            
             var count = 0;
             for (plate in srcPlates) {
                 count++;
@@ -302,7 +336,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
             $scope.excelFileStats.destination_plate_count = count;
             if (count != $scope.selectedStepType.destination_plate_count) {
-                $scope.excelErrors.push('This transfer expects ' + $scope.selectedStepType.source_plate_count + ' destination plate(s) but found ' + count + ' in the file');
+                $scope.excelErrors.push('This transfer expects ' + $scope.selectedStepType.destination_plate_count + ' destination plate(s) but found ' + count + ' in the file');
             }
 
             $scope.excelFileStats.sourcePlateRows = srcPlates;
@@ -319,8 +353,23 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams',
     function ($scope, $state, $stateParams) {
+        //inherits scope from trackStepController
         var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
         $scope.setSelectedOption(selectedTranferTypeId);
+    }]
+)
+
+.controller('customExcelUploadController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        //inherits scope from trackStepController via stepTypeSelectedController
+        $scope.setTransferTemplate($scope.excel_template);
+    }]
+)
+
+.controller('standardTemplateController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        //inherits scope from trackStepController via stepTypeSelectedController
+        $scope.setTransferTemplate($scope.standard_template);
     }]
 )
 
@@ -515,8 +564,16 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             ,controller: 'trackStepController'
         }).state('root.record_step.step_type_selected', {
             url: '/:selected_step_type_id'
-            ,template: ''
+            ,templateUrl: 'twist-track-sample-type-selected.html'
             ,controller: 'stepTypeSelectedController'
+        }).state('root.record_step.step_type_selected.excel_upload', {
+            url: '/custom-excel-upload'
+            ,template: ''
+            ,controller: 'customExcelUploadController'
+        }).state('root.record_step.step_type_selected.standard_template', {
+            url: '/standard-template'
+            ,template: ''
+            ,controller: 'standardTemplateController'
         }).state('root.edit_barcode', { 
             url: 'edit-barcode'
             ,templateUrl: 'twist-edit-barcode.html'
