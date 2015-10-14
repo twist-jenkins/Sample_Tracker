@@ -17,6 +17,7 @@ from flask import g, make_response, request, Response, jsonify
 
 from sqlalchemy import and_
 from app.utils import scoped_session
+from app.routes.spreadsheet import create_adhoc_sample_movement
 
 from app import app, db, googlelogin
 
@@ -203,6 +204,25 @@ def sample_transfers():
     return(resp)
 
 
+def create_step_record_adhoc(sample_transfer_type_id,
+                             sample_transfer_template_id,
+                             wells):
+
+    operator = g.user
+    with scoped_session(db.engine) as db_session:
+        result = create_adhoc_sample_movement(db_session, operator,
+                                              sample_transfer_type_id,
+                                              wells)
+        if result:
+            return jsonify({
+                "success": True
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "errorMessage": "Do some other thing!"
+            })
+
 def create_step_record():
     data = request.json
     operator = g.user
@@ -211,12 +231,10 @@ def create_step_record():
     sample_transfer_template_id = data["sampleTransferTemplateId"]
 
     if "transferMap" in data:
-        transfer_map = data["transferMap"];
-
-        return jsonify({
-            "success": False
-            , "errorMessage": "Do something, Charlie!"
-        })
+        transfer_map = data["transferMap"]
+        return create_step_record_adhoc(sample_transfer_type_id,
+                                        sample_transfer_template_id,
+                                        transfer_map)
 
     else:
         source_barcodes = data["sourcePlates"]
