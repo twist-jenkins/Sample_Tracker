@@ -94,9 +94,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             for (var i=0; i< $scope.stepTypeOptions.length;i++) {
                 var option = $scope.stepTypeOptions[i];
                 if (option.id == optionId) {
+                    $scope.clearExcelUploadData();
                     $scope.selectedStepType = option;
                     $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
                     setPlateArrays();
+                    if ($scope.cachedFileData) {
+                        $scope.catchFile()
+                    }
                     break;
                 }
             }
@@ -111,7 +115,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
 
             if ($scope.uploadViaExcel) {
-                return ($scope.transferExcelAsJSON || false) && !$scope.excelErrors.length;
+                return ($scope.transferExcelAsJSON.length || false) && !$scope.excelErrors.length;
             } else {
 
                 for (var i=0; i< $scope.sourcePlates.length; i++) {
@@ -139,6 +143,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.stepTypeDropdownValue = 'Select a Step';
             $scope.sourcePlates = [returnEmptyPlate()];
             $scope.destinationPlates = [returnEmptyPlate()];
+            $scope.clearExcelUploadData();
+            $scope.uploadViaExcel = false;
+            $scope.cachedFileData = null;
             $state.go('root.record_step');
         };
 
@@ -203,8 +210,25 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.excelFileStats = {};
+        $scope.excelErrors = [];
+
+        $scope.clearExcelUploadData = function () {
+            $scope.transferExcelAsJSON = [];
+            $scope.excelFileStats = {};
+            $scope.excelErrors = [];
+        };
+
+        $scope.cachedFileData;
 
         $scope.catchFile = function (fileData) {
+            $scope.clearExcelUploadData();
+
+            if (!fileData) {
+                fileData = $scope.cachedFileData;
+            } else {
+                $scope.cachedFileData = fileData;
+            };
+
             var workbook = XLSX.read(fileData, {type: 'binary'});
             var first_sheet_name = workbook.SheetNames[0];
             var worksheet = workbook.Sheets[first_sheet_name];
@@ -222,10 +246,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 switch (col) {
                     case 'A':
                         thisRow.source_plate_barcode = val;
-                        if (!srcPlates[val]) {
-                            srcPlates[val] = 1;
-                        } else {
-                            srcPlates[val]++;
+                        if (!firstRow) {
+                            if (!srcPlates[val]) {
+                                srcPlates[val] = 1;
+                            } else {
+                                srcPlates[val]++;
+                            }
                         }
                         break;
                     case 'B':
@@ -233,7 +259,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         break;    
                     case 'C':
                         thisRow.destination_plate_barcode = val;
-                        destPlates[val] = val;
+                        if (!firstRow) {
+                            destPlates[val] = val;
+                        }
                         break;
                     case 'D':
                         thisRow.destination_well_name = val;
@@ -266,7 +294,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.excelFileStats.source_plate_count = count;
 
             if (count != $scope.selectedStepType.source_plate_count) {
-                $scope.excelErrors.push('This transfer type expects ' + $scope.selectedStepType.source_plate_count + ' source plate(s) but only found ' + count + ' in the file');
+                $scope.excelErrors.push('This transfer expects ' + $scope.selectedStepType.source_plate_count + ' source plate(s) but found ' + count + ' in the file');
             }
             var count = 0;
             for (plate in destPlates) {
@@ -274,11 +302,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
             $scope.excelFileStats.destination_plate_count = count;
             if (count != $scope.selectedStepType.destination_plate_count) {
-                $scope.excelErrors.push('This transfer type expects ' + $scope.selectedStepType.source_plate_count + ' destination plate(s) but only found ' + count + ' in the file');
+                $scope.excelErrors.push('This transfer expects ' + $scope.selectedStepType.source_plate_count + ' destination plate(s) but found ' + count + ' in the file');
             }
 
-            console.log($scope.excelFileStats)
-            console.log($scope.excelErrors)
+            $scope.excelFileStats.sourcePlateRows = srcPlates;
         };
 
         /* populate the sample types pulldown */
