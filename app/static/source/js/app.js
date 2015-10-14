@@ -104,6 +104,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var option = $scope.stepTypeOptions[i];
                 if (option.id == optionId) {
                     $scope.clearExcelUploadData();
+                    $scope.submissionResultMessage = '';
+                    $scope.submissionResultVisible = 0;
                     $scope.selectedStepType = option;
                     $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
                     setPlateArrays();
@@ -207,9 +209,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.submitStep = function () {
 
             var showError = function (data) {
-
-                console.log(data);
-
                 $scope.submissionResultMessage = 'Error: ' + data.errorMessage;
                 $scope.submissionResultVisible = -1;
                 $scope.submittingStep = false;
