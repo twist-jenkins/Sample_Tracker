@@ -63,6 +63,7 @@ $twst-dark-red: #7c0e0e;
 $twst-light-red: #ead3d3;
 $twst-minty-green-bg: #c7ddd2;
 $twst-selected-blue: #1893E2;
+$twst-dark-red: #990000;
 
 @mixin after-clear {
     content: ".";
@@ -733,6 +734,14 @@ strong {
 /******************************************************************************************************************************************************/
 
 .twst-sample-track-main {
+
+    .twst-sample-track-main-download-link {
+        position: relative;
+        float: right;
+        position: relative;
+        top: 1em;
+    }
+
     .twst-sample-track-result-message {
         position: relative;
         float: right;
@@ -860,16 +869,76 @@ strong {
         .twst-sample-track-excel-upload-area, .twst-sample-track-excel-upload-summary {
             display: table-cell;
             width: 50%;
+            vertical-align: top;
         }
 
         .twst-sample-track-excel-upload-area {
             padding: 3em;
             text-align: center;
             border: 5px dotted $twst-medium-green;
+
+            .twst-thumbs-validation-icon {
+                display: block;
+                margin: 0.3em auto 0 auto;
+                font-size: 2.2em;
+            }
         }
 
         .twst-sample-track-excel-upload-summary {
-            padding-left: 1em;
+            padding-right: 1em;
+
+            h3 {
+                color: $twst-darker-green;
+                font-size: 1.1em;
+                font-weight: bold;
+                margin-bottom: 1em;
+            }
+
+            p {
+                margin: 0.75em 0;
+            }
+
+            .twst-sample-track-excel-upload-summary-row-count-item {
+                 margin-left: 0.5em;
+
+                li {
+                    margin-top: 0.5em;
+                    margin-left: 1em;
+                    list-style-type: disc;
+                }
+
+            }
+
+            .twst-sample-track-excel-upload-summary-errors {
+                background-color: #efd5d5;
+                padding: 0.5em;
+                border-radius: 0.3em;
+                margin-top: 1em;
+
+                h3 {
+                    color: $twst-dark-red;
+                    margin-bottom: 0;
+                }
+
+                ul {
+                    margin-left: 0.5em;
+
+                    li {
+                        margin-top: 0.5em;
+                        margin-left: 1em;
+                        list-style-type: disc;
+                    }
+                }
+                
+            }
+
+            .twst-sample-track-excel-upload-summary-ok {
+                padding: 0.5em;
+                border-radius: 0.3em;
+                margin-top: 1em;
+                background: $twst-minty-green-bg;
+                display: inline-block;
+            }
         }
     }
 

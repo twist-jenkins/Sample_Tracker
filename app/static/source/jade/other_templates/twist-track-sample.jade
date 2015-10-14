@@ -1,4 +1,5 @@
-div(class="twst-sample-track-main twst-child-page") 
+div(class="twst-sample-track-main twst-child-page")
+    a(class="twst-sample-track-main-download-link" ng-href="static/sampleTransferSpreadsheet.xlsx") Download blank transfer template
     h1 Record Step
     div(class="twst-spinner" ng-if="!stepTypeOptions")
     form(class="twst-sample-track-main-inputs" ng-show="stepTypeOptions")
@@ -16,7 +17,7 @@ div(class="twst-sample-track-main twst-child-page")
             div(class="twst-custom-radio twst-selected-{{!uploadViaExcel}}" ng-click="selectedStepType ? uploadViaExcel = false : false" val="uploadViaExcel")
             span(class="twst-custom-radio-label") Use standard template
             div(class="twst-custom-radio twst-selected-{{uploadViaExcel}} twst-upload-via-excel-radio" ng-click="selectedStepType ? uploadViaExcel = true : false" val="uploadViaExcel")
-            span(class="twst-custom-radio-label") Upload Excel Template
+            span(class="twst-custom-radio-label") Upload Excel Custom Transfer
         div(class="twst-sample-track-plate-barcodes" ng-show="!uploadViaExcel")
             div(class="twst-sample-track-plate-barcodes-left")
                 p(class="twst-block-header")
@@ -38,9 +39,23 @@ div(class="twst-sample-track-main twst-child-page")
                         input(type="text" class="form-control" ng-model="plate.text")
                         twst-thumb-validation-icon(validation="plate.text.length > 5")
         div(class="twst-sample-track-main-excel-upload" ng-show="uploadViaExcel")
-            div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the excel transfer file here
-            div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON")
+            div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON.length")
                 h3 Excel File Pre-upload Summary:
+                p Source Plate Count:
+                    strong &nbsp;{{excelFileStats.source_plate_count}}
+                    span &nbsp; &nbsp; Destination Plate Count:
+                    strong &nbsp;{{excelFileStats.destination_plate_count}}
+                p Row Counts:
+                ul(class="twst-sample-track-excel-upload-summary-row-count-item")
+                    li(ng-repeat="(key, val) in excelFileStats.sourcePlateRows") {{key}}: &nbsp;
+                        strong {{val}}
+                div(class="twst-sample-track-excel-upload-summary-errors" ng-if="excelErrors.length")
+                    h3 Errors!
+                    ul
+                        li(ng-repeat="error in excelErrors") {{error}}
+                h3(class="twst-sample-track-excel-upload-summary-ok" ng-if="excelErrors.length == 0") File is valid and ready for upload!
+            div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the excel transfer file here
+                twst-thumb-validation-icon(validation="transferExcelAsJSON.length")
         div(class="twst-sample-track-main-buttons")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
             button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
