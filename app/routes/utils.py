@@ -1,54 +1,118 @@
-from functools import wraps
-
-from sqlalchemy.exc import DBAPIError
-
-from time import sleep 
-
-from .. import db
-
-import logging
-
-from logging_wrapper import get_logger
-logger = get_logger(__name__)
+import os
+from contextlib import contextmanager
+__author__ = "Ryan Johnson"
+__version_info__ = ('0', '0', '8')
+__version__ = '.'.join(__version_info__)
+__module_name__ = 'hitpicking-utils-' + __version__
 
 
-DATABASE_RETRIES_MAX = 2
-
-def retry_after_database_error(f):
+def char2num(val):
     """
-    Add this to methods that hit the database. It looks for the exceptions you'd expect from a db whose connection died. 
-    It retries DATABASE_RETRIES_MAX times (that is it tries once then will "RETRY" DATABASE_RETRIES_MAX more times) if 
-    there is an error. This allows SQLAlchemy to recover the connection.
-
-    See this link (even tho SQLAlchemy detects and recovers from errors, it will throw execptions, we are hiding those
-    from the rest of the app here. See "Disconnect Handling" section): http://docs.sqlalchemy.org/en/rel_1_0/core/pooling.html
+    Convert the given unicode character into an integer.
     """
-    @wraps(f)
-    def wrapped(*args, **kwargs):
+    if isinstance(val, int):
+        return val
 
-        database_retries = 0
+    if not isinstance(val, unicode):
+        raise ValueError('invalid argument: {!r}'.format(val))
 
-        while database_retries < DATABASE_RETRIES_MAX:
-            try:
-                r = f(*args, **kwargs)
-                return r
-            except DBAPIError as exc:
-                logger.error("Duoh! Another database error. Rolling back transaction")
-                logger.error(exc) 
-                #
-                # Doing this because SQLAlchemy barfs it we are in a transaction and it tries to retry a database call.
-                #
-                db.session.rollback()
-                logger.error("Rolled back")
-            except:
-                raise 
+    val = val.upper()
 
-            # Try again!
-            database_retries += 1
-            logger.error("Trying database again. Retry # " + str(database_retries))
+    if not ((ord(val) >= ord(u'A')) and (ord(val) <= ord(u'Z'))):
+        raise ValueError('invalid argument: {!r}'.format(val))
 
-            #sleep(5)
+    return (ord(val) - ord(u'A')) + 1
 
-        raise 
 
-    return wrapped
+def num2char(val):
+    """
+    Convert the given integer into a unicode character.
+    """
+    if isinstance(val, unicode):
+        return val
+
+    if not (isinstance(val, int) and (val >= 1) and (val <= 26)):
+        raise ValueError('invalid argument: {!r}'.format(val))
+
+    return unichr(ord(u'A') + (val - 1))
+
+
+def chunked(iterable, size):
+    """
+    Breaks the iterable into lists of length "size".
+    """
+    chunk = []
+    for item in iterable:
+        chunk.append(item)
+        if len(chunk) == size:
+            yield chunk
+            chunk = []
+
+    if chunk:
+        yield chunk
+
+
+def get_path(output_dir, filename, default):
+    if output_dir and not os.path.exists(output_dir):
+        # Try to make the output directory if it doesn't already exist.
+        try:
+            os.makedirs(output_dir)
+        except os.error:
+            pass
+
+    if not output_dir:
+        output_dir = os.getcwd()
+
+    if not filename:
+        filename = default
+
+    return os.path.join(output_dir, filename)
+
+
+def write_delimited(filename, data, delimiter='\t'):
+    rows = data['rows']
+    headers = data['headers']
+    with open(filename, 'w') as f:
+        f.write(delimiter.join(h for h in headers) + '\n')
+        for row in rows:
+            f.write(delimiter.join('{!s}'.format(i) for i in row) + '\n')
+
+
+cached_session_factory = None
+
+
+def get_session_factory(db_engine=None):
+    global cached_session_factory
+
+    if cached_session_factory:
+        return cached_session_factory
+
+    from sqlalchemy.orm import sessionmaker
+
+    if not db_engine:
+        import sqlalchemy as SA
+        db_url = os.getenv('DATABASE_URL')
+        if not db_url:
+            raise RuntimeError('no database URL provided')
+        db_engine = SA.create_engine(db_url, echo=False)
+
+    Session = sessionmaker(bind=db_engine)
+    cached_session_factory = Session
+
+    return cached_session_factory
+
+
+@contextmanager
+def scoped_session(db_engine=None):
+    """
+    Provide a transactional scope around a series of operations.
+    """
+    session = get_session_factory(db_engine)()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
