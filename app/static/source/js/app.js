@@ -110,26 +110,20 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 return false;
             }
 
-            if ($scope.uploadViaExcel) {
-                return ($scope.transferExcelAsJSON || false) && $scope.excelOk;
-            } else {
-
-                for (var i=0; i< $scope.sourcePlates.length; i++) {
-                    if ($scope.sourcePlates[i].text == '') {
-                        return false;
-                    } else if ($scope.sourcePlates[i].text.length < 6) {
-                        return false;
-                    }
+            for (var i=0; i< $scope.sourcePlates.length; i++) {
+                if ($scope.sourcePlates[i].text == '') {
+                    return false;
+                } else if ($scope.sourcePlates[i].text.length < 6) {
+                    return false;
                 }
+            }
 
-                for (var i=0; i< $scope.destinationPlates.length; i++) {
-                    if ($scope.destinationPlates[i].text == '') {
-                        return false;
-                    } else if ($scope.destinationPlates[i].text.length < 6) {
-                        return false;
-                    }
+            for (var i=0; i< $scope.destinationPlates.length; i++) {
+                if ($scope.destinationPlates[i].text == '') {
+                    return false;
+                } else if ($scope.destinationPlates[i].text.length < 6) {
+                    return false;
                 }
-
             }
 
             return true;
@@ -147,28 +141,23 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var data = {
                 sampleTransferTypeId: $scope.selectedStepType.id
                 ,sampleTransferTemplateId: $scope.selectedStepType.transfer_template_id
+                ,sourcePlates: []
+                ,destinationPlates: []
             };
 
-            if (!$scope.uploadViaExcel) {
-                data.sourcePlates = [];
-                data.destinationPlates = []
-
-                for (var i=0; i< $scope.sourcePlates.length; i++) {
-                    data.sourcePlates.push($scope.sourcePlates[i].text);
-                }
-
-                for (var i=0; i< $scope.destinationPlates.length; i++) {
-                    data.destinationPlates.push($scope.destinationPlates[i].text);
-                }
-
-                /* if this is a non-movement step (source=destinstion), add source as destination */
-                if ($scope.selectedStepType.destination_plate_count == 0) {
-                    data.destinationPlates.push($scope.sourcePlates[0].text);
-                }
-            } else {
-                data.transferMap = $scope.transferExcelAsJSON;
+            for (var i=0; i< $scope.sourcePlates.length; i++) {
+                data.sourcePlates.push($scope.sourcePlates[i].text);
             }
-            
+
+            for (var i=0; i< $scope.destinationPlates.length; i++) {
+                data.destinationPlates.push($scope.destinationPlates[i].text);
+            }
+
+            /* if this is a non-movement step (source=destinstion), add source as destination */
+            if ($scope.selectedStepType.destination_plate_count == 0) {
+                data.destinationPlates.push($scope.sourcePlates[0].text);
+            }
+
             return data;
         };
 
@@ -201,53 +190,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     console.log('ERROR!');
                 });
             }
-        };
-
-        $scope.catchFile = function (fileData) {
-            var workbook = XLSX.read(fileData, {type: 'binary'});
-            var first_sheet_name = workbook.SheetNames[0];
-            var worksheet = workbook.Sheets[first_sheet_name];
-
-            // parse through the sheet and compile the rows to json
-            $scope.transferExcelAsJSON = [];
-            var thisRow = {};
-            var firstRow = true;
-            for (z in worksheet) {
-                if(z[0] === '!') {continue;}
-                var col = z.substring(0,1);
-                var val = worksheet[z].v;
-                switch (col) {
-                    case 'A':
-                        thisRow.source_plate_barcode = val;
-                        break;
-                    case 'B':
-                        thisRow.source_well_name = val;
-                        break;    
-                    case 'C':
-                        thisRow.destination_plate_barcode = val;
-                        break;
-                    case 'D':
-                        thisRow.destination_well_name = val;
-                        break;
-                    case 'E':
-                        thisRow.destination_plate_well_count = val;
-                        break;
-
-                    default :
-                        console.log('Error: Unknown column in input file: ' + col);
-                        break;
-                }
-                if (col == 'E') {
-                    if (!firstRow) {
-                        $scope.transferExcelAsJSON.push(thisRow);
-                    }
-                    firstRow = false;
-                    thisRow = {};
-                }
-            }
-
-            /* To Do:  Parse through file to confirm validity */
-            $scope.excelOk = true;
         };
 
         /* populate the sample types pulldown */

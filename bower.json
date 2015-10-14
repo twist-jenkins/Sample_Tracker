@@ -24,6 +24,5 @@
     ,"angular-ui-router": "~0.2.15"
     ,"angular-bootstrap": "~0.13.4"
     ,"angular-sanitize": "latest"
-    ,"js-xlsx": "~0.8"
   }
 }
