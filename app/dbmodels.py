@@ -8,17 +8,15 @@
 #
 ######################################################################################
 
+import bson
+import datetime
 
 from app import app
 from app import db
-import datetime
 
-import bson
 
 def create_unique_object_id(prefix=""):
-    return prefix+str(bson.ObjectId())
-
-
+    return prefix + str(bson.ObjectId())
 
 
 class Operator(db.Model):
