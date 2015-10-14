@@ -118,7 +118,7 @@ app = angular.module('twist.app')
 
         var alphaNumeric = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-        var stripNonAlphaNumeric = function (inString, dashOk) {
+        var stripNonAlphaNumeric = function (inString, dashOk, replaceWithSpace) {
 
             var okChars = alphaNumeric;
             if (dashOk) {
@@ -133,6 +133,8 @@ app = angular.module('twist.app')
                     var thisChar = inString.charAt(i);
                     if (okChars.indexOf(thisChar) != -1) {
                         outString += thisChar;
+                    } else if (replaceWithSpace) {
+                        outString += ' ';
                     }
                 }
             }
@@ -142,16 +144,16 @@ app = angular.module('twist.app')
 
         return {
             lowerCaseAndSpaceToDash: function (str) {
-                return str.toLowerCase().replace(/\s/g, '-');
+                return str.toLowerCase().replace(/\s+/g, '-');
             }
             ,spaceToDash: function (str) {
-                return str.replace(/\s/g, '-');
+                return str.replace(/\s+/g, '-');
             }
             ,dashToSpace: function (str) {
                 return str.replace('-', ' ');
             }
-            ,stripNonAlphaNumeric: function (str, dashOk) {
-                return stripNonAlphaNumeric(str, dashOk);
+            ,stripNonAlphaNumeric: function (str, dashOk, replaceWithSpace) {
+                return stripNonAlphaNumeric(str, dashOk, replaceWithSpace);
             }
         }
     }]

@@ -95,7 +95,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
 
             $state.go(route, {
-                selected_step_type_id: option.id + '-' + Formatter.stripNonAlphaNumeric(Formatter.lowerCaseAndSpaceToDash(option.text), true)
+                selected_step_type_id: option.id + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.stripNonAlphaNumeric(option.text, true, true).trim())
             });
         }
 

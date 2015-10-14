@@ -1,4 +1,4 @@
-div(class="twst-sample-track-main-tab-body")
+div(class="twst-sample-track-main-tab-body" ng-show="selectedStepType")
     div(class="twst-sample-track-plate-barcodes" ng-show="templateTypeSelection == standard_template")
         div(class="twst-sample-track-plate-barcodes-left")
             p(class="twst-block-header")
@@ -22,14 +22,15 @@ div(class="twst-sample-track-main-tab-body")
     div(class="twst-sample-track-main-excel-upload" ng-show="templateTypeSelection == excel_template")
         div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON.length")
             h3 Excel File Pre-upload Summary:
-            p Source Plate Count:
+            p Source plate count:
                 strong &nbsp;{{excelFileStats.source_plate_count}}
-                span &nbsp; &nbsp; Destination Plate Count:
+                span &nbsp; &nbsp; Destination plate count:
                 strong &nbsp;{{excelFileStats.destination_plate_count}}
-            p Row Counts:
+            p Source plate row counts:
             ul(class="twst-sample-track-excel-upload-summary-row-count-item")
-                li(ng-repeat="(key, val) in excelFileStats.sourcePlateRows") {{key}}: &nbsp;
-                    strong {{val}}
+                li(ng-repeat="(key, val) in excelFileStats.sourcePlateRows")
+                    a(href="#/plate-details/{{key}}") {{key}}
+                    strong : {{val}}
             div(class="twst-sample-track-excel-upload-summary-errors" ng-if="excelErrors.length")
                 h3 Errors!
                 ul
