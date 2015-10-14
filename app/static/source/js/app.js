@@ -110,19 +110,24 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 return false;
             }
 
-            for (var i=0; i< $scope.sourcePlates.length; i++) {
-                if ($scope.sourcePlates[i].text == '') {
-                    return false;
-                } else if ($scope.sourcePlates[i].text.length < 6) {
-                    return false;
-                }
-            }
+            if ($scope.uploadViaExcel) {
+                return ($scope.transferExcelAsJSON || false) && !$scope.excelErrors.length;
+            } else {
 
-            for (var i=0; i< $scope.destinationPlates.length; i++) {
-                if ($scope.destinationPlates[i].text == '') {
-                    return false;
-                } else if ($scope.destinationPlates[i].text.length < 6) {
-                    return false;
+                for (var i=0; i< $scope.sourcePlates.length; i++) {
+                    if ($scope.sourcePlates[i].text == '') {
+                        return false;
+                    } else if ($scope.sourcePlates[i].text.length < 6) {
+                        return false;
+                    }
+                }
+
+                for (var i=0; i< $scope.destinationPlates.length; i++) {
+                    if ($scope.destinationPlates[i].text == '') {
+                        return false;
+                    } else if ($scope.destinationPlates[i].text.length < 6) {
+                        return false;
+                    }
                 }
             }
 
@@ -190,6 +195,85 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     console.log('ERROR!');
                 });
             }
+        };
+
+        $scope.excelFileStats = {};
+
+        $scope.catchFile = function (fileData) {
+            var workbook = XLSX.read(fileData, {type: 'binary'});
+            var first_sheet_name = workbook.SheetNames[0];
+            var worksheet = workbook.Sheets[first_sheet_name];
+
+            // parse through the sheet and compile the rows to json
+            $scope.transferExcelAsJSON = [];
+            var thisRow = {};
+            var firstRow = true;
+            var srcPlates = {};
+            var destPlates = {};
+            for (z in worksheet) {
+                if(z[0] === '!') {continue;}
+                var col = z.substring(0,1);
+                var val = worksheet[z].v;
+                switch (col) {
+                    case 'A':
+                        thisRow.source_plate_barcode = val;
+                        if (!srcPlates[val]) {
+                            srcPlates[val] = 1;
+                        } else {
+                            srcPlates[val]++;
+                        }
+                        break;
+                    case 'B':
+                        thisRow.source_well_name = val;
+                        break;    
+                    case 'C':
+                        thisRow.destination_plate_barcode = val;
+                        destPlates[val] = val;
+                        break;
+                    case 'D':
+                        thisRow.destination_well_name = val;
+                        break;
+                    case 'E':
+                        thisRow.destination_plate_well_count = val;
+                        break;
+
+                    default :
+                        console.log('Error: Unknown column in input file: ' + col);
+                        break;
+                }
+                if (col == 'E') {
+                    if (!firstRow) {
+                        $scope.transferExcelAsJSON.push(thisRow);
+                    }
+                    firstRow = false;
+                    thisRow = {};
+                }
+            }
+
+            $scope.excelFileStats.sourceRowCounts = srcPlates;
+
+            /* To Do:  Parse through file to confirm validity */
+            $scope.excelErrors = [];
+            var count = 0;
+            for (plate in srcPlates) {
+                count++;
+            }
+            $scope.excelFileStats.source_plate_count = count;
+
+            if (count != $scope.selectedStepType.source_plate_count) {
+                $scope.excelErrors.push('This transfer type expects ' + $scope.selectedStepType.source_plate_count + ' source plate(s) but only found ' + count + ' in the file');
+            }
+            var count = 0;
+            for (plate in destPlates) {
+                count++;
+            }
+            $scope.excelFileStats.destination_plate_count = count;
+            if (count != $scope.selectedStepType.destination_plate_count) {
+                $scope.excelErrors.push('This transfer type expects ' + $scope.selectedStepType.source_plate_count + ' destination plate(s) but only found ' + count + ' in the file');
+            }
+
+            console.log($scope.excelFileStats)
+            console.log($scope.excelErrors)
         };
 
         /* populate the sample types pulldown */

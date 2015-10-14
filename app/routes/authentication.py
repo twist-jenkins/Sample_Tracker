@@ -159,4 +159,3 @@ def logout():
     logout_user()
     g.user = None
     return redirect(url_for('new_home'))
-
