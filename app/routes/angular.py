@@ -209,18 +209,18 @@ def sample_transfers():
 
 
 # creates a destination plate for a transfer
-def create_destination_plate(db_session, operator, destination_plates,
-                             destination_barcode, source_plate_type_id,
-                             storage_location_id):
+def create_destination_plate(db_session, operator, destination_barcode,
+                             source_plate_type_id, storage_location_id):
     destination_plate_name = create_unique_object_id("PLATE_")
     destination_plate_description = create_unique_object_id("PLATEDESC_")
-    destination_plates.append(SamplePlate(source_plate_type_id,
-                              operator.operator_id,
-                              storage_location_id,
-                              destination_plate_name,
-                              destination_plate_description,
-                              destination_barcode))
-    db_session.add(destination_plates[len(destination_plates) - 1])
+    plate = SamplePlate(source_plate_type_id,
+                        operator.operator_id,
+                        storage_location_id,
+                        destination_plate_name,
+                        destination_plate_description,
+                        destination_barcode)
+    db_session.add(plate)
+    return plate
 
 
 def create_step_record():
