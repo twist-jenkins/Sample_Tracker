@@ -12,12 +12,7 @@ div(class="twst-sample-track-main twst-child-page")
             ul(class="dropdown-menu" role="menu" aria-labelledby="single-button")
                 li(role="menuitem" ng-repeat="option in stepTypeOptions")
                     a(ng-click="selectStepType(option)") {{option.text}}
-        div(class="twst-sample-track-tranfer-toggle-controls")
-            div(class="twst-custom-radio twst-selected-{{!uploadViaExcel}}" ng-click="selectedStepType ? uploadViaExcel = false : false" val="uploadViaExcel")
-            span(class="twst-custom-radio-label") Use standard template
-            div(class="twst-custom-radio twst-selected-{{uploadViaExcel}} twst-upload-via-excel-radio" ng-click="selectedStepType ? uploadViaExcel = true : false" val="uploadViaExcel")
-            span(class="twst-custom-radio-label") Upload Excel Template
-        div(class="twst-sample-track-plate-barcodes" ng-show="!uploadViaExcel")
+        div(class="twst-sample-track-plate-barcodes")
             div(class="twst-sample-track-plate-barcodes-left")
                 p(class="twst-block-header")
                     span(ng-if="destinationPlates.length") Source&nbsp;
@@ -41,8 +36,6 @@ div(class="twst-sample-track-main twst-child-page")
             div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the excel transfer file here
             div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON")
                 h3 Excel File Pre-upload Summary:
-                    
-
         div(class="twst-sample-track-main-buttons")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
             button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
