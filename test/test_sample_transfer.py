@@ -27,7 +27,8 @@ class TestCase(unittest.TestCase):
         assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
-        cls.root_plate_barcode = RootPlate().create_in_db("ROOT", db.engine)
+        cls.root_plate_barcode = RootPlate().create_in_db("XFER_ROOT",
+                                                          db.engine)
 
     @classmethod
     def tearDownClass(cls):
@@ -105,6 +106,17 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
+    def test_small_adhoc_golden(self):
+        data = {"sampleTransferTypeId":13,
+                "sampleTransferTemplateId":14,
+                "transferMap":[{"source_plate_barcode":"XFER_ROOT","source_well_name":"A2","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"A1","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A3","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"A2","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A4","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"B6","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A5","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"A4","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A6","destination_plate_barcode":"ssdest000000141jul17_384_G","destination_well_name":"L1","destination_plate_well_count":384},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A8","destination_plate_barcode":"ssdest000000141jul17_384_G","destination_well_name":"L12","destination_plate_well_count":384}]
+                }
+        rv = self.client.post('/api/v1/track-sample-step',
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert result["success"] is True
 
 if __name__ == '__main__':
     unittest.main()

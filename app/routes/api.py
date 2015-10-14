@@ -652,7 +652,6 @@ def create_sample_movement():
             logger.info(" %s created a new sample movement using spreadsheet data." % (g.user.first_and_last_name))
 
 
-
     #
     # If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in
     # the "source" plate will be moved to the exact same locations in the "destination" plate.

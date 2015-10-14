@@ -32,6 +32,7 @@ from well_count_to_plate_type_name import well_count_to_plate_type_name
 def create_sample_movement_from_spreadsheet_data(operator,
                                                  sample_transfer_type_id,
                                                  wells):
+    logging.warn("ASDFASDFASFASSDFASDFASDF")
     with scoped_session(db.engine) as db_session:
         return create_adhoc_sample_movement(db_session, operator,
                                             sample_transfer_type_id, wells)
@@ -62,11 +63,11 @@ def create_adhoc_sample_movement(db_session, operator,
     }
 
     for well in wells:
-        source_plate_barcode = well["sourcePlateBarcode"]
-        source_col_and_row = well["sourceColAndRow"]
-        destination_plate_barcode = well["destinationPlateBarcode"]
-        destination_col_and_row = well["destinationColAndRow"]
-        destination_well_count = well["destinationWellCount"]
+        source_plate_barcode = well["source_plate_barcode"]
+        source_col_and_row = well["source_well_name"]
+        destination_plate_barcode = well["destination_plate_barcode"]
+        destination_col_and_row = well["destination_well_name"]
+        destination_well_count = str(well["destination_plate_well_count"])
 
         #print "WELL: ", well
 
