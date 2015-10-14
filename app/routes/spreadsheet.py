@@ -11,9 +11,11 @@
 import logging
 
 from flask import g
+from sqlalchemy import and_
 
 from app import app, db
 from app.utils import scoped_session
+from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
                           SamplePlate, SamplePlateLayout,
                           SamplePlateType, SampleTransferDetail)
@@ -213,7 +215,7 @@ def create_adhoc_sample_movement(db_session, operator,
         )).first()
 
         print "SOURCE PLATE WELL: %s " % str(source_plate_well)
-        logger.info("SOURCE PLATE WELL: %s " % str(source_plate_well))
+        logging.info("SOURCE PLATE WELL: %s ", str(source_plate_well))
 
 
         if sample_plate_type.name == "48 well, plastic":
@@ -244,7 +246,7 @@ def create_adhoc_sample_movement(db_session, operator,
                     except:
                         error_well_id = source_well_id
             print "*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
-            logger.info("*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode))
+            logging.info("*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]", error_well_id,source_plate_barcode)
             continue
 
             """
@@ -259,7 +261,7 @@ def create_adhoc_sample_movement(db_session, operator,
         #print "DESTINATION PLATE TYPE: ",sample_plate_type.name
 
         print "DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,sample_plate_type.name)
-        logger.info("DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,sample_plate_type.name))
+        logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",destination_plate.external_barcode,sample_plate_type.name)
 
         #if destination_well_id is None or destination_well_id.strip() == "":
         if plate_size is None:
@@ -269,7 +271,8 @@ def create_adhoc_sample_movement(db_session, operator,
             }
         else:
             destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
-            logger.info ("calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row))
+            logging.info("calculated DEST well id: %s from plate size: %s and column/row: %s", destination_well_id, plate_size,
+                         destination_col_and_row)
             print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row)
 
 
@@ -310,7 +313,7 @@ def create_adhoc_sample_movement(db_session, operator,
 
 
         print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
-        logger.info("DESTINATION PLATE WELL: %s " % (str(destination_plate_well)))
+        logging.info("DESTINATION PLATE WELL: %s ", destination_plate_well)
 
         #
         # 6. Create a row representing a transfer from a well in the "source" plate to a well
