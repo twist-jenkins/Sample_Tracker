@@ -17,7 +17,7 @@ div(class="twst-sample-track-main twst-child-page")
             span(class="twst-custom-radio-label") Use standard template
             div(class="twst-custom-radio twst-selected-{{uploadViaExcel}} twst-upload-via-excel-radio" ng-click="selectedStepType ? uploadViaExcel = true : false" val="uploadViaExcel")
             span(class="twst-custom-radio-label") Upload Excel Template
-        div(class="twst-sample-track-plate-barcodes")
+        div(class="twst-sample-track-plate-barcodes" ng-show="!uploadViaExcel")
             div(class="twst-sample-track-plate-barcodes-left")
                 p(class="twst-block-header")
                     span(ng-if="destinationPlates.length") Source&nbsp;
