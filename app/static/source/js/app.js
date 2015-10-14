@@ -146,21 +146,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var data = {
                 sampleTransferTypeId: $scope.selectedStepType.id
                 ,sampleTransferTemplateId: $scope.selectedStepType.transfer_template_id
-                ,sourcePlates: []
-                ,destinationPlates: []
             };
 
-            for (var i=0; i< $scope.sourcePlates.length; i++) {
-                data.sourcePlates.push($scope.sourcePlates[i].text);
-            }
+            if ($scope.uploadViaExcel) {
+                data.transferMap = $scope.transferExcelAsJSON;
+            } else {
+                data.sourcePlates = [];
+                data.destinationPlates = []
 
-            for (var i=0; i< $scope.destinationPlates.length; i++) {
-                data.destinationPlates.push($scope.destinationPlates[i].text);
-            }
+                for (var i=0; i< $scope.sourcePlates.length; i++) {
+                    data.sourcePlates.push($scope.sourcePlates[i].text);
+                }
 
-            /* if this is a non-movement step (source=destinstion), add source as destination */
-            if ($scope.selectedStepType.destination_plate_count == 0) {
-                data.destinationPlates.push($scope.sourcePlates[0].text);
+                for (var i=0; i< $scope.destinationPlates.length; i++) {
+                    data.destinationPlates.push($scope.destinationPlates[i].text);
+                }
+
+                /* if this is a non-movement step (source=destinstion), add source as destination */
+                if ($scope.selectedStepType.destination_plate_count == 0) {
+                    data.destinationPlates.push($scope.sourcePlates[0].text);
+                }
             }
 
             return data;
