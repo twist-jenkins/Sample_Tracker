@@ -13,52 +13,13 @@ div(class="twst-sample-track-main twst-child-page")
             ul(class="dropdown-menu" role="menu" aria-labelledby="single-button")
                 li(role="menuitem" ng-repeat="option in stepTypeOptions")
                     a(ng-click="selectStepType(option)") {{option.text}}
-        div(class="twst-sample-track-transfer-toggle-controls")
-            div(class="twst-custom-radio twst-selected-{{!uploadViaExcel}}" ng-click="selectedStepType ? uploadViaExcel = false : false" val="uploadViaExcel")
-            span(class="twst-custom-radio-label") Use standard template
-            div(class="twst-custom-radio twst-selected-{{uploadViaExcel}} twst-upload-via-excel-radio" ng-click="selectedStepType ? uploadViaExcel = true : false" val="uploadViaExcel")
-            span(class="twst-custom-radio-label") Upload Excel Custom Transfer
-        div(class="twst-sample-track-plate-barcodes" ng-show="!uploadViaExcel")
-            div(class="twst-sample-track-plate-barcodes-left")
-                p(class="twst-block-header")
-                    span(ng-if="destinationPlates.length") Source&nbsp;
-                    span Plate Barcode{{sourcePlates.length > 1 ?'s':''}}:
-                div(class="twst-sample-track-plate-row" ng-repeat="plate in sourcePlates")
-                    div(class="twst-sample-track-plate-title" ng-if="plate.title" ng-bind-html="plate.title")
-                    div(class="twst-sample-track-plate-input")
-                        input(type="text" class="form-control" ng-model="plate.text" typeahead="barcode for barcode in getTypeAheadBarcodes($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults")
-                        twst-thumb-validation-icon(validation="plate.text.length > 5")
-                        i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
-                        div(ng-show="noResults" class="twst-offscreen")
-                          i(class="glyphicon glyphicon-remove") No Results Found
-            div(class="twst-sample-track-plate-barcodes-left")
-                p(class="twst-block-header" ng-class="{'twst-invisible': !destinationPlates.length}") Destination Plate Barcode{{destinationPlates.length > 1 ?'s':''}}:
-                div(class="twst-sample-track-plate-row" ng-repeat="plate in destinationPlates")
-                    div(class="twst-sample-track-plate-title" ng-if="plate.title" ng-bind-html="plate.title")
-                    div(class="twst-sample-track-plate-input")
-                        input(type="text" class="form-control" ng-model="plate.text")
-                        twst-thumb-validation-icon(validation="plate.text.length > 5")
-        div(class="twst-sample-track-main-excel-upload" ng-show="uploadViaExcel")
-            div(class="twst-sample-track-excel-upload-summary" ng-if="transferExcelAsJSON.length")
-                h3 Excel File Pre-upload Summary:
-                p Source Plate Count:
-                    strong &nbsp;{{excelFileStats.source_plate_count}}
-                    span &nbsp; &nbsp; Destination Plate Count:
-                    strong &nbsp;{{excelFileStats.destination_plate_count}}
-                p Row Counts:
-                ul(class="twst-sample-track-excel-upload-summary-row-count-item")
-                    li(ng-repeat="(key, val) in excelFileStats.sourcePlateRows") {{key}}: &nbsp;
-                        strong {{val}}
-                div(class="twst-sample-track-excel-upload-summary-errors" ng-if="excelErrors.length")
-                    h3 Errors!
-                    ul
-                        li(ng-repeat="error in excelErrors") {{error}}
-                h3(class="twst-sample-track-excel-upload-summary-ok" ng-if="excelErrors.length == 0") File is valid and ready for upload!
-            div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the excel transfer file here
-                twst-thumb-validation-icon(validation="transferExcelAsJSON.length")
-        div(class="twst-sample-track-main-buttons")
-            div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
-            button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
-            a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
+        div(class="twst-sample-track-transfer-toggle-controls" ng-if="selectedStepType")
+            div(class="twst-sample-track-main-tab" ng-click="selectTransferTemplateType(standard_template)" ng-class="{'twst-active-tab': templateTypeSelection == standard_template}")
+                div(class="twst-custom-radio twst-selected-{{templateTypeSelection == standard_template}}" val="standard")
+                span(class="twst-custom-radio-label") Use standard template
+            div(class="twst-sample-track-main-tab" ng-click="selectTransferTemplateType(excel_template)" ng-class="{'twst-active-tab': templateTypeSelection == excel_template}")
+                div(class="twst-custom-radio twst-selected-{{templateTypeSelection == excel_template}} twst-upload-via-excel-radio" val="excel")
+                span(class="twst-custom-radio-label") Upload Excel Custom Transfer
         div(ui-view ng-if="stepTypeOptions")
+            
 
