@@ -16,6 +16,7 @@ import StringIO
 from flask import g, make_response, request, Response, jsonify
 
 from sqlalchemy import and_
+from sqlalchemy.orm import joinedload, subqueryload
 from app.utils import scoped_session
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
@@ -144,9 +145,20 @@ def update_plate_barcode():
     return jsonify(response)
 
 def sample_transfers():
-    rows = db.session.query(SampleTransfer, SampleTransferDetail).filter(
-        SampleTransferDetail.sample_transfer_id==SampleTransfer.id).order_by(
-        SampleTransfer.date_transfer.desc()).all()
+
+    rows = (
+        db.session.query(
+            SampleTransfer,
+            SampleTransferDetail
+        )
+        .options(subqueryload(SampleTransfer.sample_transfer_type))
+        .options(subqueryload(SampleTransfer.operator))
+        .options(subqueryload(SampleTransferDetail.source_plate))
+        .options(subqueryload(SampleTransferDetail.destination_plate))
+        .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
+        .order_by(SampleTransfer.date_transfer.desc())
+        .all()
+    )
 
     sample_transfer_details = []
 
