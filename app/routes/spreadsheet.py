@@ -27,6 +27,8 @@ from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_384)
 from well_count_to_plate_type_name import well_count_to_plate_type_name
 
+IGNORE_MISSING_SOURCE_PLATE_WELLS = True
+
 #
 # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
 # process that spreadsheet data.
@@ -34,7 +36,6 @@ from well_count_to_plate_type_name import well_count_to_plate_type_name
 def create_sample_movement_from_spreadsheet_data(operator,
                                                  sample_transfer_type_id,
                                                  wells):
-    logging.warn("ASDFASDFASFASSDFASDFASDF")
     with scoped_session(db.engine) as db_session:
         return create_adhoc_sample_movement(db_session, operator,
                                             sample_transfer_type_id, wells)
@@ -190,21 +191,14 @@ def create_adhoc_sample_movement(db_session, operator,
         destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
         if not destination_plate:
 
-            create_destination_plate(db_session,
-                                     operator,
-                                     destination_plate_barcode,
-                                     sample_plate_type.type_id,
-                                     storage_location_id)
+            destination_plate = create_destination_plate(
+                db_session,
+                operator,
+                destination_plate_barcode,
+                sample_plate_type.type_id,
+                storage_location_id)
 
-            destination_plate_name = create_unique_object_id("PLATE_")
-            destination_plate_description = create_unique_object_id("PLATEDESC_")
-
-            destination_plate = SamplePlate(sample_plate_type.type_id,operator.operator_id,storage_location_id,
-            destination_plate_name, destination_plate_description, destination_plate_barcode)
-            db_session.add(destination_plate)
-            db_session.flush()
             destination_plates_by_barcode[destination_plate_barcode] = destination_plate
-
 
         #
         # 4. Get the "source plate well"
@@ -245,16 +239,17 @@ def create_adhoc_sample_movement(db_session, operator,
                         error_well_id = get_col_and_row_for_well_id_384(source_well_id)
                     except:
                         error_well_id = source_well_id
-            print "*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
-            logging.info("*** WARNING ***: There is no well [%s] in the source plate with barcode: [%s]", error_well_id,source_plate_barcode)
-            continue
 
-            """
-            return {
-                "success":False,
-                "errorMessage":"There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id,source_plate_barcode)
-            }
-            """
+            msg = "There is no well [%s] in the source plate with barcode: [%s]" % (error_well_id, source_plate_barcode)
+            if IGNORE_MISSING_SOURCE_PLATE_WELLS:
+                logging.warn(msg)
+                continue
+            else:
+                logging.error(msg)
+                return {
+                    "success": False,
+                    "errorMessage": msg
+                }
 
 
 
