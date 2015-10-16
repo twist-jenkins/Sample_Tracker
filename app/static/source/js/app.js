@@ -29,42 +29,52 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 
-    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead) {
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps) {
 
         /* CONSTANTS */
         var constants = {
-            QPIX_TRANSFER_TEMPLATE_ID: 21
-            ,STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
-        }
-
-
+            STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
+            ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
+            ,STANDARD_TRANSFER_TYPE: 'standard'
+        };
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
             return {text: '', title: ''};
-        }
+        };
         $scope.stepTypeDropdownValue = constants.STEP_TYPE_DROPDOWN_LABEL;
         $scope.sourcePlates = [returnEmptyPlate()];      /* backs both the field interator and the entered data */
         $scope.destinationPlates = [returnEmptyPlate()]; /* backs both the field interator and the entered data */
 
+        $scope.transferMap = {}
+
+        $scope.setTransferMap = function (mapId) {
+            $scope.transferMap = Maps.transferTemplates[mapId];
+        };
 
         var setPlateArrays = function () {
+
+            var sourceCount = $scope.transferMap.source.plateCount;
+            var destCount = $scope.transferMap.destination.plateCount;
+
             /* we need to expand or contract the plate arrays to match the selected step type */
-            while ($scope.sourcePlates.length != $scope.selectedStepType.source_plate_count) {
-                if ($scope.sourcePlates.length < $scope.selectedStepType.source_plate_count) {
+            while ($scope.sourcePlates.length != sourceCount) {
+                if ($scope.sourcePlates.length < sourceCount) {
                     $scope.sourcePlates.push(returnEmptyPlate());
-                } else if ($scope.sourcePlates.length > $scope.selectedStepType.source_plate_count) {
-                    $scope.sourcePlates.splice($scope.sourcePlates.length - ($scope.sourcePlates.length - $scope.selectedStepType.source_plate_count));
+                } else if ($scope.sourcePlates.length > sourceCount) {
+                    $scope.sourcePlates.splice($scope.sourcePlates.length - ($scope.sourcePlates.length - sourceCount));
                 }
             }
-            while ($scope.destinationPlates.length != $scope.selectedStepType.destination_plate_count) {
-                if ($scope.destinationPlates.length < $scope.selectedStepType.destination_plate_count) {
+            while ($scope.destinationPlates.length != destCount) {
+                if ($scope.destinationPlates.length < destCount) {
                     $scope.destinationPlates.push(returnEmptyPlate());
-                } else if ($scope.destinationPlates.length > $scope.selectedStepType.destination_plate_count) {
-                    $scope.destinationPlates.splice($scope.destinationPlates.length - ($scope.destinationPlates.length - $scope.selectedStepType.destination_plate_count));
+                } else if ($scope.destinationPlates.length > destCount) {
+                    $scope.destinationPlates.splice($scope.destinationPlates.length - ($scope.destinationPlates.length - destCount));
                 }
             }
+
+            //TO DO - move labels into transfer map
 
             switch ($scope.selectedStepType.transfer_template_id) {
                 case 1:
@@ -94,13 +104,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.selectStepType = function (option) {
 
+            $scope.setTransferMap(option.transfer_template_id);
+
             var route = 'root.record_step.step_type_selected';
 
-            if ($scope.templateTypeSelection) {
-                route += '.' + $scope.templateTypeSelection;
+            if ($scope.transferMap.type == constants.USER_SPECIFIED_TRANSFER_TYPE) {
+                $scope.templateTypeSelection = $scope.excel_template;
             } else {
-                route += '.' + $scope.standard_template;
+                $scope.templateTypeSelection = $scope.standard_template;
             }
+
+            route += '.' + $scope.templateTypeSelection;
 
             $state.go(route, {
                 selected_step_type_id: option.id + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.stripNonAlphaNumeric(option.text, true, true).trim())
@@ -116,6 +130,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.submissionResultVisible = 0;
                     $scope.selectedStepType = option;
                     $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
+                    $scope.setTransferMap(option.transfer_template_id);
                     setPlateArrays();
                     if ($scope.cachedFileData) {
                         $scope.catchFile()

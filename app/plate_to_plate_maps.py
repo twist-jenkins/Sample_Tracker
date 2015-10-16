@@ -2,12 +2,21 @@ def maps_json():
     return {
         "transfer_maps": {
             1: {  # keyed to sample_transfer_template_id in the database
-                "description": "Spource and destination plate have same layout"
+                "description": "Source and destination are SAME TYPE."
                 ,"source": {
                     "plate_count": 1
                 }
                 ,"destination": {
                     "plate_count": 1
+                }
+            }
+            ,2: {  # keyed to sample_transfer_template_id in the database
+                "description": "Source and destination are SAME PLATE"
+                ,"source": {
+                    "plate_count": 1
+                }
+                ,"destination": {
+                    "plate_count": 0
                 }
             }
             ,13: {  # keyed to sample_transfer_template_id in the database
