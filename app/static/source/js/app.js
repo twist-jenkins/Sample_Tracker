@@ -32,11 +32,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 
     function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead) {
 
+        /* CONSTANTS */
+        var constants = {
+            QPIX_TRANSFER_TEMPLATE_ID: 21
+            ,STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
+        }
+
+
+
         /* interface backing vars */
         var returnEmptyPlate = function () {
             return {text: '', title: ''};
         }
-        $scope.stepTypeDropdownValue = 'Select a Step';
+        $scope.stepTypeDropdownValue = constants.STEP_TYPE_DROPDOWN_LABEL;
         $scope.sourcePlates = [returnEmptyPlate()];      /* backs both the field interator and the entered data */
         $scope.destinationPlates = [returnEmptyPlate()]; /* backs both the field interator and the entered data */
 
