@@ -144,30 +144,36 @@ def update_plate_barcode():
 
     return jsonify(response)
 
-def sample_transfers():
+def sample_transfers(limit=None):
 
-    rows = (
+    qry = (
         db.session.query(
             SampleTransfer,
             SampleTransferDetail
         )
-        .options(subqueryload(SampleTransfer.sample_transfer_type))
-        .options(subqueryload(SampleTransfer.operator))
         .options(subqueryload(SampleTransferDetail.source_plate))
         .options(subqueryload(SampleTransferDetail.destination_plate))
+        .options(subqueryload(SampleTransfer.sample_transfer_type))
+        .options(subqueryload(SampleTransfer.operator))
         .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
         .order_by(SampleTransfer.date_transfer.desc())
-        .all()
     )
+    if limit is None:
+        rows = qry.all()
+    else:
+        rows = qry.limit(limit)
 
     sample_transfer_details = []
 
     seen = []
 
-    for transfer,details in rows:
-        if (transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id) not in seen:
-            seen.append((transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id))
-            sample_transfer_details.append((transfer,details))
+    for transfer, details in rows:
+        key = (transfer.id,
+               details.source_sample_plate_id,
+               details.destination_sample_plate_id)
+        if key not in seen:
+            seen.append(key)
+            sample_transfer_details.append((transfer, details))
 
     transfers_data = {}
 
@@ -181,16 +187,16 @@ def sample_transfers():
                 ,"operator": sample_transfer.operator.first_and_last_name
                 ,"source_barcodes": [details.source_plate.external_barcode]
                 ,"destination_barcodes": [details.destination_plate.external_barcode]
-            };
+            }
         else:
-            already = False;
+            already = False
             for barcode in transfers_data[sample_transfer.id]["source_barcodes"]:
                 if barcode == details.source_plate.external_barcode:
                     already = True
                     break
             if not already:
                 transfers_data[sample_transfer.id]["source_barcodes"].append(details.source_plate.external_barcode)
-            already = False;
+            already = False
             for barcode in transfers_data[sample_transfer.id]["destination_barcodes"]:
                 if barcode == details.destination_plate.external_barcode:
                     already = True
@@ -206,7 +212,7 @@ def sample_transfers():
     fullDataArray = []
     for item in transfersDataArray:
         if item is not None:
-            fullDataArray.append(item);
+            fullDataArray.append(item)
 
     fullDataArray.reverse()
 
