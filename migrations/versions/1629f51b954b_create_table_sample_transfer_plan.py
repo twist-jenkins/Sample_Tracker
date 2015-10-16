@@ -12,14 +12,14 @@ down_revision = 'da20bea3e8f'
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 def upgrade():
 
     op.create_table(
         'sample_transfer_plan',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('transfer_plan', sa.JSON(), nullable=False),
+        sa.Column('transfer_plan', postgresql.JSON(), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
 
