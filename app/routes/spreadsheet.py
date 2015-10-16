@@ -191,12 +191,22 @@ def create_adhoc_sample_movement(db_session, operator,
         destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
         if not destination_plate:
 
-            destination_plate = create_destination_plate(
-                db_session,
-                operator,
-                destination_plate_barcode,
-                sample_plate_type.type_id,
-                storage_location_id)
+            try:
+                destination_plate = create_destination_plate(
+                    db_session,
+                    operator,
+                    destination_plate_barcode,
+                    sample_plate_type.type_id,
+                    storage_location_id)
+            except IndexError:
+                err_msg = ("Encountered error creating sample "
+                           "transfer. Could not create destination plate: [%s]"
+                           )
+                logging.info(err_msg, destination_plate_barcode)
+                return {
+                    "success": False,
+                    "errorMessage": err_msg % destination_plate_barcode
+                }
 
             destination_plates_by_barcode[destination_plate_barcode] = destination_plate
 
