@@ -75,31 +75,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
 
             //TO DO - move labels into transfer map
-
-            switch ($scope.selectedStepType.transfer_template_id) {
-                case 1:
-                    for (var i=0; i<$scope.destinationPlates.length; i++) {
-                        $scope.destinationPlates[i].title = '';
-                    }
-                    break;
-                case 13:
-                    for (var i=0; i<$scope.destinationPlates.length; i++) {
-                        $scope.destinationPlates[i].title = 'Quadrant&nbsp;' + (i + 1) + ':&nbsp;';
-                    }
-                    break;
-                case 14:
-                    $scope.destinationPlates[0].title = 'Left:&nbsp;&nbsp;';
-                    $scope.destinationPlates[1].title = 'Right:&nbsp;';
-                    break;
-                case 18:
-                    for (var i=0; i<$scope.sourcePlates.length; i++) {
-                        $scope.sourcePlates[i].title = 'Quadrant&nbsp;' + (i + 1) + ':&nbsp;';
-                    }
-                    break;
-                default :
-                    /* do nothing */
-                    break;
+            for (var i=0; i<$scope.sourcePlates.length; i++) {
+                $scope.sourcePlates[i].title = $scope.transferMap.source.plateTitles ? $scope.transferMap.source.plateTitles[i] || '' : '';
             }
+            for (var i=0; i<$scope.destinationPlates.length; i++) {
+                $scope.destinationPlates[i].title = $scope.transferMap.destination.plateTitles ? $scope.transferMap.destination.plateTitles[i] || '' : '';
+            }
+
         };
 
         $scope.selectStepType = function (option) {

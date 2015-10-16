@@ -36,6 +36,7 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
                     }
                     ,plateWellToWellMaps: [ // index in plate_well_to_well_map array = source_plate_index
                         {   // key= sopurce plate well id
@@ -438,6 +439,7 @@ app = angular.module('twist.app')
                         plateCount: 2
                         ,wellCount: 48
                         ,plateTypeId: 'SPTT_0004'
+                        ,plateTitles: ['Left:&nbsp;&nbsp;','Right:&nbsp;']
                     }
                     ,plateWellToWellMaps: [ // array of source plates
                         {   // index in plate_well_to_well_map array = source_plate_index
@@ -557,6 +559,7 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
                     }
                     ,destination:{
                         plateCount: 1
