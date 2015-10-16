@@ -3,7 +3,7 @@ div(class="twst-edit-barcode-main twst-child-page")
     form(class="twst-edit-barcode-main-inputs")
         div(class="twst-edit-barcode-main-inputs-left")
             p(class="twst-block-header") Plate Id
-            input(type="text" class="form-control" ng-model="plateId" typeahead="plateId for plateId in getTypeAheadPlateIds($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" typeahead-on-select="plateInfoEntered()" ng-keypress="plateInfoKeypress($event)" placeholder="enter a plate barcode...")
+            input(type="text" class="form-control" ng-model="plateId" typeahead="plateId for plateId in getTypeAheadPlateIds($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" typeahead-on-select="plateInfoEntered()" ng-keypress="plateInfoKeypress($event)" placeholder="enter a plate id...")
             i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
             div(ng-show="noResults" class="twst-offscreen")
               i(class="glyphicon glyphicon-remove") No Results Found

@@ -195,5 +195,69 @@ app = angular.module('twist.app')
     }]
 )
 
+.factory('TransferPlanner', ['Api', 
+    function (Api) {
+
+        var TransferPlan = function () {
+            var base = this;
+            base.updating = false;
+            base.sources = {};
+            base.errors = [];
+            base.map = null;
+
+            var updating = function () {
+                base.updating = true;
+            }
+
+            var ready = function () {
+                base.updating = false;
+            }
+
+            base.setTransferMap = function (map) {
+                base.map = map;
+            };
+
+            base.addPlateSource = function (barcode) {
+                if (base.sources[barcode]) {
+                    base.errors.push('Error: Plate ' + barcode + ' has already been added to this transfer plan.');
+                    return;
+                }
+                updating();
+                Api.getPlateDetails(barcode).success(function (data) {
+                    ready();
+                    base.sources[barcode] == data
+                }).error(function () {
+                    base.errors.push('Error: Plate info for ' + barcode + ' could not be found.');
+                });
+            }
+
+            var init = function () {
+                return base;
+            };
+
+            return init();
+        }
+
+        return {
+
+            newTransferPlan: function () {
+                return new TransferPlan();
+            }
+
+        }
+
+    }
+])
+
+.factory('Constants',[
+    function () {
+        return {
+            STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
+            ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
+            ,STANDARD_TRANSFER_TYPE: 'standard'
+        };
+    }]
+)
+
 
 ;
