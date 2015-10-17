@@ -29,34 +29,37 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 
-    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps) {
-
-        /* CONSTANTS */
-        var constants = {
-            STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
-            ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
-            ,STANDARD_TRANSFER_TYPE: 'standard'
-        };
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransferPlanner', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransferPlanner) {
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
             return {text: '', title: ''};
         };
-        $scope.stepTypeDropdownValue = constants.STEP_TYPE_DROPDOWN_LABEL;
+
+        $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
         $scope.sourcePlates = [returnEmptyPlate()];      /* backs both the field interator and the entered data */
         $scope.destinationPlates = [returnEmptyPlate()]; /* backs both the field interator and the entered data */
 
-        $scope.transferMap = {}
+        $scope.transferPlan = TransferPlanner.newTransferPlan();
+        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
+
+        $scope.excel_template = 'excel_upload';
+        $scope.standard_template = 'standard_template';
+
+        $scope.excelFileStats = {};
+        $scope.excelErrors = [];
+
+        $scope.cachedFileData = null;
 
         $scope.setTransferMap = function (mapId) {
-            $scope.transferMap = Maps.transferTemplates[mapId];
+            $scope.transferPlan.setTransferMap(Maps.transferTemplates[mapId]);
         };
 
         var setPlateArrays = function () {
 
-            var sourceCount = $scope.transferMap.source.plateCount;
-            var destCount = $scope.transferMap.destination.plateCount;
+            var sourceCount = $scope.transferPlan.map.source.plateCount;
+            var destCount = $scope.transferPlan.map.destination.plateCount;
 
             /* we need to expand or contract the plate arrays to match the selected step type */
             while ($scope.sourcePlates.length != sourceCount) {
@@ -76,10 +79,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             //TO DO - move labels into transfer map
             for (var i=0; i<$scope.sourcePlates.length; i++) {
-                $scope.sourcePlates[i].title = $scope.transferMap.source.plateTitles ? $scope.transferMap.source.plateTitles[i] || '' : '';
+                $scope.sourcePlates[i].title = $scope.transferPlan.map.source.plateTitles ? $scope.transferPlan.map.source.plateTitles[i] || '' : '';
             }
             for (var i=0; i<$scope.destinationPlates.length; i++) {
-                $scope.destinationPlates[i].title = $scope.transferMap.destination.plateTitles ? $scope.transferMap.destination.plateTitles[i] || '' : '';
+                $scope.destinationPlates[i].title = $scope.transferPlan.map.destination.plateTitles ? $scope.transferPlan.map.destination.plateTitles[i] || '' : '';
             }
 
         };
@@ -90,7 +93,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             var route = 'root.record_step.step_type_selected';
 
-            if ($scope.transferMap.type == constants.USER_SPECIFIED_TRANSFER_TYPE) {
+            if ($scope.transferPlan.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
                 $scope.templateTypeSelection = $scope.excel_template;
             } else {
                 $scope.templateTypeSelection = $scope.standard_template;
@@ -122,7 +125,25 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         }
 
-        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
+        /* refresh the current transfer plan based on changes to plates inputs or upload file */
+        $scope.updateTransferPlan = function () {
+
+            /* wether we start from source plate barcdoes or an uploaded excel file,
+            we want to build a list of plate data */
+
+            if ($scope.templateTypeSelection == $scope.standard_template) {
+
+
+                for (var i=0; i< $scope.sourcePlates.length ;i++) {
+
+                }
+
+            } else if ($scope.templateTypeSelection == $scope.excel_template) {
+
+            }
+        };
+
+        
 
         $scope.sampleTrackFormReady = function () {
 
@@ -156,7 +177,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.clearForm = function () {
             $scope.selectedStepType = null;
-            $scope.stepTypeDropdownValue = 'Select a Step';
+            $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
             $scope.sourcePlates = [returnEmptyPlate()];
             $scope.destinationPlates = [returnEmptyPlate()];
             $scope.clearExcelUploadData();
@@ -165,8 +186,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $state.go('root.record_step');
         };
 
-        $scope.excel_template = 'excel_upload';
-        $scope.standard_template = 'standard_template';
+        
 
         $scope.selectTransferTemplateType = function (which) {
             var route = '';
@@ -248,16 +268,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         };
 
-        $scope.excelFileStats = {};
-        $scope.excelErrors = [];
+        
 
         $scope.clearExcelUploadData = function () {
             $scope.transferExcelAsJSON = [];
             $scope.excelFileStats = {};
             $scope.excelErrors = [];
         };
-
-        $scope.cachedFileData;
 
         $scope.catchFile = function (fileData) {
             $scope.clearExcelUploadData();
@@ -345,6 +362,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
 
             $scope.excelFileStats.sourcePlateRows = srcPlates;
+
+            $scope.updateTransferPlan();
         };
 
         /* populate the sample types pulldown */
