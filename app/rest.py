@@ -1,5 +1,6 @@
 import flask_restful
-from flask_restful import reqparse
+#from flask_restful import reqparse
+from flask import request
 
 from app import app
 api = flask_restful.Api(app)
@@ -14,10 +15,10 @@ plans = {
 class Plan(flask_restful.Resource):
     """shows a single plan item, and lets you create / delete a plan item"""
 
-    def __init__(self):
-        self.parser = reqparse.RequestParser()
-        self.parser.add_argument('task')
-        super(Plan, self).__init__()
+    #def __init__(self):
+    #    self.parser = reqparse.RequestParser()
+    #    self.parser.add_argument('task')
+    #    super(Plan, self).__init__()
 
     def check_404(self, plan_id):
         if plan_id not in plans:
@@ -38,8 +39,8 @@ class Plan(flask_restful.Resource):
 
     def put(self, plan_id):
         """creates or replaces a single specific plan"""
-        args = self.parser.parse_args()
-        plans[plan_id] = {'task': args['task']}
+        #args = self.parser.parse_args()
+        plans[plan_id] = request.json #{'task': args['task']}
         response_headers = {'location': api.url_for(Plan, plan_id=plan_id),
                             'etag': "plan_id_%s" % plan_id}
         return plans[plan_id], 201, response_headers
