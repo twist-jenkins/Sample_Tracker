@@ -58,16 +58,11 @@ class TestCase(unittest.TestCase):
                               data=json.dumps(new_plan),
                               content_type="application/json")
         assert rv.status_code == 201
-        new_uri = rv.headers['location']
-        assert new_uri is not None
-
+        new_url = rv.headers['location']
+        assert new_url is not None
         result = json.loads(rv.data)
         assert result == new_plan  # this might be too heavy
-
-        rv2 = self.client.get(new_uri)
-        assert rv2.status_code == 200
-        result2 = json.loads(rv2.data)
-        assert len(result2) == 1
+        assert self.client.get(new_url).status_code == 200
 
     def test_put_get_golden(self):
         modified_plan = {"task": "modified_task_1"}
@@ -78,16 +73,22 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert uri in new_url
-
         result = json.loads(rv.data)
         assert result == modified_plan  # this might be too heavy
+        assert self.client.get(new_url).status_code == 200
 
-        rv2 = self.client.get(uri)
-        assert rv2.status_code == 200
-        result2 = json.loads(rv2.data)
-        assert len(result2) == 1
-        assert rv2.data == rv.data
-
+    def test_post_delete_get_golden(self):
+        new_plan = {"task": "delete_me"}
+        uri = '/api/v1/rest/transfer-plans'
+        rv = self.client.post(uri,
+                              data=json.dumps(new_plan),
+                              content_type="application/json")
+        assert rv.status_code == 201
+        new_url = rv.headers['location']
+        assert new_url is not None
+        assert self.client.get(new_url).status_code == 200
+        assert self.client.delete(new_url).status_code == 204
+        assert self.client.get(new_url).status_code == 404
 
 if __name__ == '__main__':
     unittest.main()

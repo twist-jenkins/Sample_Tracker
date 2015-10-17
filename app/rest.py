@@ -12,7 +12,7 @@ plans = {
 
 
 class Plan(flask_restful.Resource):
-    """shows a single plan item and lets you delete a plan item"""
+    """shows a single plan item, and lets you create / delete a plan item"""
 
     def __init__(self):
         self.parser = reqparse.RequestParser()
