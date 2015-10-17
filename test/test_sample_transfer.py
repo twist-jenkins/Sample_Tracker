@@ -51,7 +51,7 @@ class TestCase(unittest.TestCase):
     def test_aliquot_standard_template_bad_source(self):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplateId": 1,  # ??
-                "sourcePlates": [self.root_plate_barcode + '_FAKE_ERROR'],
+                "sourcePlates": [self.root_plate_barcode + '_WALDO'],
                 "destinationPlates": ["test_aliquot_01a"]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),

@@ -8,35 +8,20 @@
 #
 ######################################################################################
 
-import os, sys
+import os
+import logging
 
-import time
-
-import hashlib
-
-import random
-
-from flask import g, Flask, render_template, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
-
+from flask import Flask, request, send_from_directory
 from flask_assets import Environment
-
-from functools import wraps
-
 from webassets.loaders import PythonLoader as PythonAssetsLoader
-
-from werkzeug import secure_filename
-
 from flask.ext.sqlalchemy import SQLAlchemy
-
-from sqlalchemy import func
 
 import assets
 
-import logging
-
-rootlogger = logging.getLogger()
+#logfile_handler = logging.FileHandler('app.log')
 
 ## old papertrail setup ##
+##  rootlogger = logging.getLogger()
 ##  from logging.handlers import SysLogHandler
 ##  syslog = SysLogHandler(address=('logs3.papertrailapp.com', 47028))
 ##  rootlogger.addHandler(syslog)
@@ -47,6 +32,10 @@ rootlogger = logging.getLogger()
 ##  formatter = logging.Formatter('[%(name)s : %(levelname)s] %(message)s')
 ##  syslog.setFormatter(formatter)
 
+logging.basicConfig(level=logging.INFO)
+SHOW_SQLALCHEMY_TRACE = False
+if SHOW_SQLALCHEMY_TRACE:
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
 ######################################################################################
@@ -62,7 +51,7 @@ print "Using configuration environment [%s] and config object [%s]" % (env,confi
 app.config.from_object(config_object_name)
 app.config['ENV'] = env
 app.debug = True
-
+#app.logger.addHandler(logfile_handler)
 
 ######################################################################################
 #
@@ -129,7 +118,8 @@ login_manager.login_view = "login"
 ######################################################################################
 
 
-import routes
+from app import routes
+from app import rest
 
 
 # ==========================
@@ -388,7 +378,6 @@ def sample_transfers():
 def plate_details(sample_plate_barcode, format):
     return routes.plate_details(sample_plate_barcode,format)
 
+rest.api.add_resource(rest.PlanList, '/api/v1/rest/transfer-plans')
 
-
-
-
+rest.api.add_resource(rest.Plan, '/api/v1/rest/transfer-plans/<plan_id>')
