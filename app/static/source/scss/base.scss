@@ -510,6 +510,12 @@ strong {
             background-color: #fff;
         }
 
+        &:hover {
+            .twst-custom-checkbox-x {
+                stroke: #ddd;
+            }
+        }
+
         &.twst-selected-true, &.twst-selected-true:hover {
             background-color: #fff;
 
@@ -980,6 +986,20 @@ strong {
                     margin-top: 1em;
                     background: $twst-minty-green-bg;
                     display: inline-block;
+                }
+            }
+        }
+
+        .twst-transfer-plan {
+            margin-top: 2em;
+
+            .twst-transfer-plan-show-btn {
+                display: inline-block;
+                font-size: 1.2em;
+                cursor: pointer;
+
+                .twst-custom-radio {
+                    top: 0.1em;
                 }
             }
         }

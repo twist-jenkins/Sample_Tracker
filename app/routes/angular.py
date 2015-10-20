@@ -528,7 +528,8 @@ def plate_details(sample_plate_barcode, format):
         "plateDetails":{
             "dateCreated":str(sample_plate.date_created),
             "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
-            "createdBy":str(sample_plate.operator.first_and_last_name)
+            "createdBy":str(sample_plate.operator.first_and_last_name),
+            "type":str(sample_plate.type_id)
         }
     }
 

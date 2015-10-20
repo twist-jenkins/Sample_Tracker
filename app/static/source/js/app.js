@@ -38,8 +38,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
-        $scope.sourcePlates = [returnEmptyPlate()];      /* backs both the field interator and the entered data */
-        $scope.destinationPlates = [returnEmptyPlate()]; /* backs both the field interator and the entered data */
 
         $scope.transferPlan = TransferPlanner.newTransferPlan();
         $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
@@ -52,44 +50,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.cachedFileData = null;
 
-        $scope.setTransferMap = function (mapId) {
-            $scope.transferPlan.setTransferMap(Maps.transferTemplates[mapId]);
-        };
-
-        var setPlateArrays = function () {
-
-            var sourceCount = $scope.transferPlan.map.source.plateCount;
-            var destCount = $scope.transferPlan.map.destination.plateCount;
-
-            /* we need to expand or contract the plate arrays to match the selected step type */
-            while ($scope.sourcePlates.length != sourceCount) {
-                if ($scope.sourcePlates.length < sourceCount) {
-                    $scope.sourcePlates.push(returnEmptyPlate());
-                } else if ($scope.sourcePlates.length > sourceCount) {
-                    $scope.sourcePlates.splice($scope.sourcePlates.length - ($scope.sourcePlates.length - sourceCount));
-                }
-            }
-            while ($scope.destinationPlates.length != destCount) {
-                if ($scope.destinationPlates.length < destCount) {
-                    $scope.destinationPlates.push(returnEmptyPlate());
-                } else if ($scope.destinationPlates.length > destCount) {
-                    $scope.destinationPlates.splice($scope.destinationPlates.length - ($scope.destinationPlates.length - destCount));
-                }
-            }
-
-            //TO DO - move labels into transfer map
-            for (var i=0; i<$scope.sourcePlates.length; i++) {
-                $scope.sourcePlates[i].title = $scope.transferPlan.map.source.plateTitles ? $scope.transferPlan.map.source.plateTitles[i] || '' : '';
-            }
-            for (var i=0; i<$scope.destinationPlates.length; i++) {
-                $scope.destinationPlates[i].title = $scope.transferPlan.map.destination.plateTitles ? $scope.transferPlan.map.destination.plateTitles[i] || '' : '';
-            }
-
-        };
-
         $scope.selectStepType = function (option) {
-
-            $scope.setTransferMap(option.transfer_template_id);
+            $scope.transferPlan.setTransferTypeDetails(option);
 
             var route = 'root.record_step.step_type_selected';
 
@@ -113,10 +75,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.clearExcelUploadData();
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
-                    $scope.selectedStepType = option;
-                    $scope.stepTypeDropdownValue = $scope.selectedStepType.text;
-                    $scope.setTransferMap(option.transfer_template_id);
-                    setPlateArrays();
+                    $scope.transferPlan.setTransferTypeDetails(option);
+                    $scope.stepTypeDropdownValue = $scope.transferPlan.typeDetails.text;
                     if ($scope.cachedFileData) {
                         $scope.catchFile()
                     }
@@ -126,67 +86,37 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }
 
         /* refresh the current transfer plan based on changes to plates inputs or upload file */
-        $scope.updateTransferPlan = function () {
-
-            /* wether we start from source plate barcdoes or an uploaded excel file,
-            we want to build a list of plate data */
-
-            if ($scope.templateTypeSelection == $scope.standard_template) {
-
-
-                for (var i=0; i< $scope.sourcePlates.length ;i++) {
-
+        $scope.updateTransferPlan = function (val, which, itemIndex) {
+            if (val.length > 5) {
+                if (which == Constants.PLATE_SOURCE) {
+                    $scope.transferPlan.addSourcePlate(itemIndex);
+                } else if (which == Constants.PLATE_DESTINATION) {
+                    $scope.transferPlan.addDestinationPlate(itemIndex);
                 }
-
-            } else if ($scope.templateTypeSelection == $scope.excel_template) {
-
             }
         };
 
-        
-
         $scope.sampleTrackFormReady = function () {
 
-            if (!$scope.selectedStepType) {
+            if (!$scope.transferPlan.typeDetails) {
                 return false;
             }
 
-            if ($scope.templateTypeSelection == $scope.excel_template) {
-                return ($scope.transferExcelAsJSON.length || false) && !$scope.excelErrors.length;
-            } else {
-
-                for (var i=0; i< $scope.sourcePlates.length; i++) {
-                    if ($scope.sourcePlates[i].text == '') {
-                        return false;
-                    } else if ($scope.sourcePlates[i].text.length < 6) {
-                        return false;
-                    }
-                }
-
-                for (var i=0; i< $scope.destinationPlates.length; i++) {
-                    if ($scope.destinationPlates[i].text == '') {
-                        return false;
-                    } else if ($scope.destinationPlates[i].text.length < 6) {
-                        return false;
-                    }
-                }
+            if (!$scope.transferPlan.plateTransfers.length) {
+                return false
             }
 
             return true;
         }
 
         $scope.clearForm = function () {
-            $scope.selectedStepType = null;
             $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
-            $scope.sourcePlates = [returnEmptyPlate()];
-            $scope.destinationPlates = [returnEmptyPlate()];
+            $scope.transferPlan = TransferPlanner.newTransferPlan();
             $scope.clearExcelUploadData();
             $scope.templateTypeSelection = null;
             $scope.cachedFileData = null;
             $state.go('root.record_step');
         };
-
-        
 
         $scope.selectTransferTemplateType = function (which) {
             var route = '';
@@ -194,6 +124,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 route = 'excel_upload';
             } else if (which == $scope.standard_template) {
                 route = 'standard_template';
+                $scope.transferPlan.transferFromFile(false);
             } 
             $state.go('root.record_step.step_type_selected.' + route);
         };
@@ -204,29 +135,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         var getSampleTrackSubmitData = function () {
             var data = {
-                sampleTransferTypeId: $scope.selectedStepType.id
-                ,sampleTransferTemplateId: $scope.selectedStepType.transfer_template_id
+                sampleTransferTypeId: $scope.transferPlan.typeDetails.id
+                ,sampleTransferTemplateId: $scope.transferPlan.typeDetails.transfer_template_id
             };
 
-            if ($scope.templateTypeSelection == $scope.excel_template) {
-                data.transferMap = $scope.transferExcelAsJSON;
-            } else {
-                data.sourcePlates = [];
-                data.destinationPlates = []
-
-                for (var i=0; i< $scope.sourcePlates.length; i++) {
-                    data.sourcePlates.push($scope.sourcePlates[i].text);
-                }
-
-                for (var i=0; i< $scope.destinationPlates.length; i++) {
-                    data.destinationPlates.push($scope.destinationPlates[i].text);
-                }
-
-                /* if this is a non-movement step (source=destinstion), add source as destination */
-                if ($scope.selectedStepType.destination_plate_count == 0) {
-                    data.destinationPlates.push($scope.sourcePlates[0].text);
-                }
-            }
+            data.transferMap = $scope.transferPlan.plateTransfers;
 
             return data;
         };
@@ -239,15 +152,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.submittingStep = false;
             }
 
-
-            if (!$scope.submitting && $scope.sampleTrackFormReady()) {
+            if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transferPlan.updating) {
 
                 $scope.submittingStep = true;
                 Api.submitSampleStep(getSampleTrackSubmitData()).success(function (data) {
 
                     if (data.success) {
                         $scope.submittingStep = false;
-                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.selectedStepType.text + '</span> step was successfully recorded.';
+                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transferPlan.typeDetails.text + '</span> step was successfully recorded.';
                         $scope.submissionResultVisible = 1;
                         $scope.clearForm();
                     } else {
@@ -267,8 +179,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 });
             }
         };
-
-        
 
         $scope.clearExcelUploadData = function () {
             $scope.transferExcelAsJSON = [];
@@ -292,7 +202,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.excelErrors = [];
 
             // parse through the sheet and compile the rows to json
-            $scope.transferExcelAsJSON = [];
+            var transferJSON = [];
             var thisRow = {};
             var firstRow = true;
             var srcPlates = {};
@@ -334,13 +244,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
                 if (col == 'E') {
                     if (!firstRow) {
-                        $scope.transferExcelAsJSON.push(thisRow);
+                        transferJSON.push(thisRow);
                     }
                     firstRow = false;
                     thisRow = {};
                 }
             }
-
+            
             $scope.excelFileStats.sourceRowCounts = srcPlates;
             
             var count = 0;
@@ -349,21 +259,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
             $scope.excelFileStats.source_plate_count = count;
 
-            if (count != $scope.selectedStepType.source_plate_count) {
-                $scope.excelErrors.push('This transfer expects ' + $scope.selectedStepType.source_plate_count + ' source plate(s) but found ' + count + ' in the file');
+            if (count != $scope.transferPlan.map.source.plateCount) {
+                $scope.excelErrors.push('This transfer expects ' + $scope.transferPlan.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
             }
             var count = 0;
             for (plate in destPlates) {
                 count++;
             }
             $scope.excelFileStats.destination_plate_count = count;
-            if (count != $scope.selectedStepType.destination_plate_count) {
-                $scope.excelErrors.push('This transfer expects ' + $scope.selectedStepType.destination_plate_count + ' destination plate(s) but found ' + count + ' in the file');
+            if (count != $scope.transferPlan.map.destination.plateCount) {
+                $scope.excelErrors.push('This transfer expects ' + $scope.transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
             }
 
             $scope.excelFileStats.sourcePlateRows = srcPlates;
 
-            $scope.updateTransferPlan();
+            if (!$scope.excelErrors.length) {
+                $scope.transferPlan.transferFromFile(true, transferJSON);
+            }
+
+            console.log($scope.transferPlan);
+
         };
 
         /* populate the sample types pulldown */

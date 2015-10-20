@@ -1525,6 +1525,20 @@ app = angular.module('twist.app')
                 }
 
             }
+            ,plateTypeInfo: {
+                "SPTT_0004": {
+                    description: 'Generic 48 well plastic plate'
+                    ,wellCount: 48
+                }
+                ,"SPTT_0005": {
+                    description: 'Generic 96 well plastic plate'
+                    ,wellCount: 96
+                }
+                ,"SPTT_0006": {
+                    description: 'Generic 384 well plastic plate'
+                    ,wellCount: 384
+                }
+            }
         };
     }
 ]);
