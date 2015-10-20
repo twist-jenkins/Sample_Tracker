@@ -48,3 +48,10 @@ class UnittestConfig(Config):
     # WTF_CSRF_ENABLED = True
     DATABASE = ":memory:"  # tempfile.mkstemp()
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE
+
+
+class LocalunittestConfig(Config):
+    TESTING = True
+    DEBUG = True
+    # WTF_CSRF_ENABLED = True
+    SQLALCHEMY_DATABASE_URI = "postgresql://cledogar:postgres@localhost/dev"

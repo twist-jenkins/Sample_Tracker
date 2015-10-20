@@ -16,6 +16,7 @@ from app import app
 from app import db
 
 from sqlalchemy.types import TypeDecorator, VARCHAR
+from sqlalchemy.dialects import postgresql
 
 
 def create_unique_object_id(prefix=""):
@@ -111,12 +112,14 @@ class SamplePlate(db.Model):
     sample_plate_id = db.Column(db.String(40), primary_key=True)
     type_id = db.Column(db.String(40), db.ForeignKey('sample_plate_type.type_id'))
     operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
-    storage_location_id = db.Column(db.String(10), db.ForeignKey('storage_location.storage_location_id'))
+    storage_location_id = db.Column(db.String(40), db.ForeignKey('storage_location.storage_location_id'))
     date_created = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
     name = db.Column(db.String(100))
     description = db.Column(db.String(2048))
     external_barcode = db.Column(db.String(100))
-    status = db.Column(db.Enum('disposed','in_use','new'),default="new")
+    status = db.Column(db.Enum('disposed', 'in_use', 'new',
+                               name="enum_sample_plate_status"
+                               ), default="new")
 
     #
     # Relationships. ORM magicalness.
@@ -160,7 +163,9 @@ class SamplePlateLayout(db.Model):
     column = db.Column(db.Integer)
     date_created = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
     notes = db.Column(db.String(512))
-    status = db.Column(db.Enum('active','deleted','failure','inactive'),default="active")
+    status = db.Column(db.Enum('active', 'deleted', 'failure', 'inactive',
+                               name='enum_sample_status'
+                               ), default="active")
 
     def __init__(self, sample_plate_id, sample_id, well_id, operator_id, row, column, status="active"):
         self.sample_plate_id = sample_plate_id
@@ -192,10 +197,16 @@ class SamplePlateType(db.Model):
     name = db.Column(db.String(100))
     description = db.Column(db.String(2048))
     number_clusters = db.Column(db.Integer)
-    sample_plate_type = db.Column(db.Enum('custom_plastic_16','custom_plastic_30','nw_ct_0004_96',
-        'nw_ct_0006_108','nw_ct_0008_96','nw_ct_0012_108','plastic_1','plastic_12','plastic_1536','plastic_24',
-        'plastic_3456','plastic_384','plastic_48','plastic_6','plastic_96','plastic_9600'))
-    status = db.Column(db.Enum('active','retired'),default="active")
+    sample_plate_type = db.Column(
+        db.Enum('custom_plastic_16', 'custom_plastic_30', 'nw_ct_0004_96',
+                'nw_ct_0006_108', 'nw_ct_0008_96', 'nw_ct_0012_108',
+                'plastic_1', 'plastic_12', 'plastic_1536', 'plastic_24',
+                'plastic_3456', 'plastic_384', 'plastic_48',
+                'plastic_6', 'plastic_96', 'plastic_9600',
+                name="enum_sample_plate_type"))
+    status = db.Column(db.Enum('active','retired',
+                               name="enum_sample_plate_type_status"),
+                       default="active")
     rows_alpha = db.Column(db.String(100))
     cols_num = db.Column(db.Integer)
 
@@ -220,7 +231,7 @@ class SampleTransfer(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     sample_transfer_type_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_type.id'))
-    operator_id = db.Column(db.Integer, db.ForeignKey('operator.operator_id'))
+    operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
     date_transfer = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
 
     #
@@ -250,12 +261,12 @@ class SampleTransferDetail(db.Model):
     sample_transfer_id = db.Column(db.Integer, db.ForeignKey('sample_transfer.id'), primary_key=True)
     item_order_number = db.Column(db.Integer, primary_key=True)
     source_sample_plate_id = db.Column(db.String(40), db.ForeignKey('sample_plate.sample_plate_id'))
-    source_well_id = db.Column(db.Integer, db.ForeignKey('sample_plate_layout.well_id'))
-    source_sample_id = db.Column(db.String(40), db.ForeignKey('sample_plate_layout.sample_id'))
+    source_well_id = db.Column(db.Integer)#, db.ForeignKey('sample_plate_layout.well_id'))
+    source_sample_id = db.Column(db.String(40))#, db.ForeignKey('sample_plate_layout.sample_id'))
 
     destination_sample_plate_id = db.Column(db.String(40), db.ForeignKey('sample_plate.sample_plate_id'))
-    destination_well_id = db.Column(db.Integer, db.ForeignKey('sample_plate_layout.well_id'))
-    destination_sample_id = db.Column(db.String(40), db.ForeignKey('sample_plate_layout.sample_id'))
+    destination_well_id = db.Column(db.Integer)#, db.ForeignKey('sample_plate_layout.well_id'))
+    destination_sample_id = db.Column(db.String(40))#, db.ForeignKey('sample_plate_layout.sample_id'))
 
     #
     # Relationships. ORM magicalness.
@@ -355,11 +366,16 @@ class SampleType(db.Model):
 class StorageLocation(db.Model):
 
     storage_location_id = db.Column(db.String(40), primary_key=True)
-    parent_storage_location_id = db.Column(db.Integer, db.ForeignKey('storage_location.storage_location_id'))
+    parent_storage_location_id = db.Column(db.String(40), db.ForeignKey('storage_location.storage_location_id'))
     name = db.Column(db.String(100))
     description = db.Column(db.String(2048))
-    location_type = db.Column(db.Enum('disposal','plate_storage','storage','work_station'),default="plate_storage")
-    status = db.Column(db.Enum('active','inactive'),default="active")
+    location_type = db.Column(
+        db.Enum('disposal', 'plate_storage', 'storage', 'work_station',
+                name="enum_storage_location_type"),
+        default="plate_storage")
+    status = db.Column(
+        db.Enum('active', 'inactive', name="enum_storage_status"),
+        default="active")
 
     def __init__(self, name ):
         self.storage_location_id = create_unique_object_id("LOC_")
@@ -370,16 +386,13 @@ class StorageLocation(db.Model):
 class TransferPlan(db.Model):
 
     plan_id = db.Column(db.String(40), primary_key=True)
-    id_prefix = db.Column(db.String(40))
-    name = db.Column(db.String(100))
-    description = db.Column(db.Text())
+    plan = db.Column(postgresql.JSON(), nullable=False)
 
-    def __init__(self, type_id, id_prefix, name ):
-        self.type_id = type_id
-        self.id_prefix = id_prefix
-        self.name = name
+    def __init__(self, plan_id, plan):
+        self.plan_id = plan_id
+        self.plan = plan
 
     def __repr__(self):
-        return '<SampleType id: [%d] name: [%s] >' % (self.id,self.name)
+        return '<Transfer Plan id: [%s]>' % (self.plan_id, )
 
 

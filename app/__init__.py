@@ -33,7 +33,7 @@ import assets
 ##  syslog.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO)
-SHOW_SQLALCHEMY_TRACE = False
+SHOW_SQLALCHEMY_TRACE = True
 if SHOW_SQLALCHEMY_TRACE:
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -378,6 +378,8 @@ def sample_transfers():
 def plate_details(sample_plate_barcode, format):
     return routes.plate_details(sample_plate_barcode,format)
 
-rest.api.add_resource(rest.PlanList, '/api/v1/rest/transfer-plans')
+rest.api.add_resource(rest.PlanListResource,
+                      '/api/v1/rest/transfer-plans')
 
-rest.api.add_resource(rest.Plan, '/api/v1/rest/transfer-plans/<plan_id>')
+rest.api.add_resource(rest.PlanResource,
+                      '/api/v1/rest/transfer-plans/<plan_id>')

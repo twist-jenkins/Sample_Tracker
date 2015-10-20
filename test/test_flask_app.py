@@ -47,7 +47,7 @@ class RootPlate(object):
             operator = AutomatedTestingUser()
             destination_barcode = barcode
             storage_location_id = 'TEST_STORAGE_LOC'
-            source_plate_type_id = 1
+            source_plate_type_id = "SPTT_0006"
             plate = create_destination_plate(db_session, operator,
                                              destination_barcode,
                                              source_plate_type_id,
