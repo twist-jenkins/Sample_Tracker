@@ -199,7 +199,6 @@ app = angular.module("twist.app")
                         $element.removeClass('twst-file-drag-over');
 
                         var f = $event.originalEvent.dataTransfer.files[0];
-                        console.log(f)
                         var reader = new FileReader();
                         reader.onload = function(e) {
                             var data = e.target.result;

@@ -199,16 +199,21 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.cachedFileData = fileData;
                 };
 
-                var result = FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan);
+                FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
+                    $scope.excelFileStats = resultData.stats;
+                    $scope.fileErrors = resultData.errors;
 
-                $scope.excelFileStats = result.stats;
-                $scope.fileErrors = result.errors;
+                    if (!resultData.errors.length) {
+                        $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
+                    }  
 
-                if (!result.errors.length) {
-                    $scope.transferPlan.transferFromFile(true, result.transferJSON);
-                }  
+                    $scope.parsingFile = false;
 
-                $scope.parsingFile = false; 
+                }, function (errorData) {
+                    $scope.fileErrors = 'Error: Unknown error while parsing this file.';
+                    $scope.parsingFile = false;
+                });
+ 
             }, 150);
         };
 
@@ -354,9 +359,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             $scope.fetchingDetails = true;
 
+            $scope.retrievedPlateBarcode = '';
+
             Api.getPlateDetails(barcode).success(function (data) {
                 $scope.fetchingDetails = false;
                 $scope.plateDetails = data;
+                $scope.retrievedPlateBarcode = $scope.plateBarcode + '';
             });
         }
     }]

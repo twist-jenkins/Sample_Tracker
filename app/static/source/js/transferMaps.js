@@ -1489,7 +1489,7 @@ app = angular.module('twist.app')
                     ,9: {row: 'B', column: 3}
                     ,10: {row: 'B', column: 4}
                     ,11: {row: 'B', column: 5}
-                    ,12: {row: 'C', column: 6}
+                    ,12: {row: 'B', column: 6}
                     ,13: {row: 'C', column: 1}
                     ,14: {row: 'C', column: 2}
                     ,15: {row: 'C', column: 3}

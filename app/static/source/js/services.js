@@ -106,8 +106,15 @@ app = angular.module('twist.app')
                 return $http(transfersReq);
             }
             ,getPlateDetails: function (barcode, format) {
-                var plateDetailsReq = ApiRequestObj.getGet('plate_barcodes/' + barcode + (format ? '/' + format : ''));
+                var plateDetailsReq = ApiRequestObj.getGet('plate-barcodes/' + barcode + (format ? '/' + format : ''));
                 return $http(plateDetailsReq);
+            }
+            ,getSourcePlateWellData: function (barcodes) {
+                var wellDatasReq = ApiRequestObj.getPost('source-plate-well-data');
+                wellDatasReq.data = {
+                    plateBarcodes: barcodes
+                }
+                return $http(wellDatasReq);
             }
         };
     }]
@@ -249,8 +256,6 @@ app = angular.module('twist.app')
                             var plate = base.sources[i];
                             var wellsMap = base.map.plateWellToWellMaps[i];
 
-                            console.log(wellsMap);
-
                             for (var j=0; j<plate.data.wells.length;j++) {
                                 var sourceWell = plate.data.wells[j];
                                 var destWell = wellsMap[sourceWell.well_id];
@@ -269,9 +274,7 @@ app = angular.module('twist.app')
                     }
 
                     base.plateTransfers = transfers;
-                    console.log(base.plateTransfers);
                 } else {
-                    console.log('NOT TRANS READY!!!');
                     clearPlateTransfers();
                 }
             };
@@ -336,6 +339,7 @@ app = angular.module('twist.app')
             base.addSourcePlate = function (sourceIndex) {
                 var sourceItem = base.sources[sourceIndex];
                 delete sourceItem.error;
+                delete sourceItem.data;
                 var barcode = sourceItem.text;
 
                 var onError = function (sourceItem, msg) {
@@ -351,7 +355,6 @@ app = angular.module('twist.app')
                 sourceItem.updating = true;
                 Api.getPlateDetails(barcode).success(function (data) {
                     if (data.success) {
-                        console.log('TO DO: validate proper plate type etc');
 
                         if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
                             onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
@@ -368,7 +371,6 @@ app = angular.module('twist.app')
                         }
                         ready();
                         sourceItem.updating = false;
-                        console.log(base);
                     } else {
                         onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
                     }  
@@ -378,9 +380,9 @@ app = angular.module('twist.app')
             }
 
             base.addDestinationPlate = function (destIndex) {
-                console.log('ADD DESTINATION PLATE');
                 var destItem = base.destinations[destIndex];
                 delete destItem.error;
+                delete destItem.data;
                 var barcode = destItem.text;
 
                 var onError = function (destItem, msg) {
@@ -397,19 +399,19 @@ app = angular.module('twist.app')
                     Api.getPlateDetails(barcode).success(function (data) {
                         if (data.success) {
                             onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
-                            console.log(base.errors);
-                            console.log(base);
                         } else { 
-                            /* then we're good to go - check if we have all the required destination barcodes */
+                            /* then we're good to go */
+                            destItem.data = {dummyData: true}; /* shows the "valid" icon for this input */
+
+                            /* check if we have all the required destination barcodes */
                             for (var i=0; i<base.destinations.length; i++) {
-                                if (base.destinations[i].length < 6) {
+                                if (base.destinations[i].text.length < 6) {
                                     onError(destItem);
                                     return;
                                 }
                             }
                             base.destinationsReady = true;
                             updateTransferList();
-                            console.log('[[[[[[[' + base.destinationsReady);
                         }
                         ready();  
                     });
@@ -417,7 +419,6 @@ app = angular.module('twist.app')
                 } else {
                     onError();
                 }
-                console.log(']]]]]]]' + base.destinationsReady);
             };
 
             base.transferFromFile = function (engaged, transfersJSON) {
@@ -460,8 +461,8 @@ app = angular.module('twist.app')
     }]
 )
 
-.factory('FileParser',['Maps', 
-    function (Maps) {
+.factory('FileParser',['Maps', '$q', 'Api',  
+    function (Maps, $q, Api) {
 
         var getNormalRowColumnFromQPix = function (rowColumn, plateType) {
 
@@ -493,6 +494,8 @@ app = angular.module('twist.app')
 
             var fileErrors = [];
             var fileStats = {};
+
+            var asyncReturn = $q.defer();
 
             var setStats = function (validateStats, isQpix) {
 
@@ -529,8 +532,14 @@ app = angular.module('twist.app')
                 var transferTypeId = transferPlan.typeDetails.transfer_template_id;
                 if (transferTypeId != 16 && transferTypeId != 21 && transferTypeId != 22) {
                     fileErrors.push('This transfer type (' + transferTypeId + ') does not expect a log file as input.');
+                    var result = {
+                        errors: fileErrors
+                        ,stats: fileStats
+                        ,transferJSON: transferJSON
+                    };
+                    asyncReturn.reject(result);
                 } else {
-                    var fileData = fileData.split('\n');
+                    var fileData = fileData.split('\r\n');
 
                     var transferStartIndex = fileData.length;
 
@@ -566,14 +575,8 @@ app = angular.module('twist.app')
                         }
                     }
 
-                    /* and now we need to retrieve the sample_ids for these wells by referring to the Hamilton step 
-
-                        NEED TO USE PROMISE(S) FOR THIS
-                    */
-
-
-
-                    setStats(false, true)
+                    setStats(false, true);
+                    
                 }
                 
             } else {
@@ -629,15 +632,43 @@ app = angular.module('twist.app')
                 }
 
                 setStats(true);
+
             }
 
-            var result = {
-                errors: fileErrors
-                ,stats: fileStats
-                ,transferJSON: transferJSON
-            };
+            var packageResponse = function (respData, thisError) {
+
+                if (!respData.success || thisError) {
+                    fileErrors.push('Sample information could not be retrieved for these source plates.');
+                } else {
+                    for (var i=0; i< transferJSON.length; i++) {
+                        var row = transferJSON[i];
+                        var sourceBarcode = row.source_plate_barcode;
+                        var sourcePlateWellData = respData.plateWellData[sourceBarcode];
+                        transferJSON[i]['source_sample_id'] = sourcePlateWellData.wells[row.source_well_name] ? sourcePlateWellData.wells[row.source_well_name]['sample_id'] : 'empty';
+                    }
+                }
+
+                var result = {
+                    errors: fileErrors
+                    ,stats: fileStats
+                    ,transferJSON: transferJSON
+                };
+
+                asyncReturn.resolve(result);
+            }
+
+            var barcodes = [];
+            for (barcode in srcPlates) {
+                barcodes.push(barcode);
+            }
+
+            Api.getSourcePlateWellData(barcodes).success(function (data) {
+                packageResponse(data);
+            }).error(function (data) {
+                packageResponse(data, true);
+            });
                 
-            return result;
+            return asyncReturn.promise;
         }
         return {
             getTransferRowsFromFile: getTransferRowsFromFile
