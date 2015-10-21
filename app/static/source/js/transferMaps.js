@@ -543,13 +543,15 @@ app = angular.module('twist.app')
                     ]
                 }
                 ,16: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Manual picking to 4x96'
+                    description: 'Manual picking to nx 96'
                     ,type: 'user_specified'
                     ,source: {
-                        plateCount: 0
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0004'
                     }
                     ,destination: {
-                        plateCount: 4
+                        plateCount: 0
+                        ,plateTypeId: 'SPTT_0005'
                     }
                 }
                 ,18: {  // keyed to sample_transfer_template_id in the database
@@ -962,24 +964,26 @@ app = angular.module('twist.app')
                     ]
                 }
                 ,21: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Qpix Log Reading to 4x96'
+                    description: 'Qpix Log Reading to nx 96'
                     ,type: 'user_specified'
                     ,source: {
-                        plateCount: 0
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0004'
                     }
                     ,destination: {
-                        plateCount: 4
+                        plateCount: 0
                         ,plateTypeId: 'SPTT_0005'
                     }
                 }
                 ,22: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Qpix Log Reading to 1x384'
+                    description: 'Qpix Log Reading to nx 384'
                     ,type: 'user_specified'
                     ,source: {
-                        plateCount: 0
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0004'
                     }
                     ,destination: {
-                        plateCount: 1
+                        plateCount: 0
                         ,plateTypeId: 'SPTT_0006'
                     }
                 }
@@ -1522,6 +1526,57 @@ app = angular.module('twist.app')
                     ,46: {row: 'H', column: 4}
                     ,47: {row: 'H', column: 5}
                     ,48: {row: 'H', column: 6}
+                }
+                ,QPIX_SPTT_0004: {
+                    // 48 well plate as understood by qpix
+                    1: {row: 'A', column: 1}
+                    ,2: {row: 'B', column: 1}
+                    ,3: {row: 'C', column: 1}
+                    ,4: {row: 'D', column: 1}
+                    ,5: {row: 'E', column: 1}
+                    ,6: {row: 'F', column: 1}
+                    ,7: {row: 'A', column: 2}
+                    ,8: {row: 'B', column: 2}
+                    ,9: {row: 'C', column: 2}
+                    ,10: {row: 'D', column: 2}
+                    ,11: {row: 'E', column: 2}
+                    ,12: {row: 'F', column: 2}
+                    ,13: {row: 'A', column: 3}
+                    ,14: {row: 'B', column: 3}
+                    ,15: {row: 'C', column: 3}
+                    ,16: {row: 'D', column: 3}
+                    ,17: {row: 'E', column: 3}
+                    ,18: {row: 'F', column: 3}
+                    ,19: {row: 'A', column: 4}
+                    ,20: {row: 'B', column: 4}
+                    ,21: {row: 'C', column: 4}
+                    ,22: {row: 'D', column: 4}
+                    ,23: {row: 'E', column: 4}
+                    ,24: {row: 'F', column: 4}
+                    ,25: {row: 'A', column: 5}
+                    ,26: {row: 'B', column: 5}
+                    ,27: {row: 'C', column: 5}
+                    ,28: {row: 'D', column: 5}
+                    ,29: {row: 'E', column: 5}
+                    ,30: {row: 'F', column: 5}
+                    ,31: {row: 'A', column: 6}
+                    ,32: {row: 'B', column: 6}
+                    ,33: {row: 'C', column: 6}
+                    ,34: {row: 'D', column: 6}
+                    ,35: {row: 'E', column: 6}
+                    ,36: {row: 'F', column: 6}
+                    ,37: {row: 'A', column: 7}
+                    ,38: {row: 'B', column: 7}
+                    ,39: {row: 'C', column: 7}
+                    ,40: {row: 'D', column: 7}
+                    ,41: {row: 'E', column: 7}
+                    ,42: {row: 'F', column: 7}
+                    ,43: {row: 'A', column: 8}
+                    ,44: {row: 'B', column: 8}
+                    ,45: {row: 'C', column: 8}
+                    ,46: {row: 'D', column: 8}
+                    ,47: {row: 'E', column: 8}
+                    ,48: {row: 'F', column: 8}
                 }
 
             }

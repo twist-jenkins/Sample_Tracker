@@ -88,14 +88,39 @@ app = angular.module("twist.app")
     }
 ])
 
-.directive('twstThumbValidationIcon', [ 
-    function() {
+.directive('twstThumbValidationIcon', ['$sce', 
+    function($sce) {
         return {
             restrict: 'E'
             ,scope: {
                 validation: '='
+                ,error: '='
+                ,errorsInvisible: '='
             }
-            ,template: '<ng-include class="twst-thumbs-validation-icon" src="\'static/images/thumbs-up.svg\'" ng-class="{\'twst-thumbs-validation-icon-valid\': validation}"></ng-include>'
+            ,template: '<div class="twst-thumbs-validation-icon" ng-class="{\'twst-thumbs-validation-icon-valid\': validation, \'twst-thumbs-validation-icon-error\': error}"><ng-include src="\'static/images/thumbs-up.svg\'"></ng-include><span ng-if="!errorsInvisible" class="twst-thumbs-validation-error" ng-bind-html="formatErrors(error)"></span></div>'
+            ,controller: ['$scope', 
+                function ($scope) {
+                    $scope.formatErrors = function (errors) {
+
+                        if (!errors) {
+                            errors = '';
+                        }
+
+                        if (errors.toString() === errors) {
+                            /* one error */
+                            return errors.toString();
+                        } else {
+                            /* multiple errors */
+                            var list = '<ul>';
+                            for (var i=0; i< errors.length; i++) {
+                                list += '<li>' + errors[i] + '</li>';
+                            }
+                            list += '</ul>';
+                            return list;
+                        }
+                    }
+                }
+            ]
         };
     }
 ])
@@ -161,20 +186,32 @@ app = angular.module("twist.app")
                     $element.on('dragover', function ($event) {
                         $event.preventDefault();
                         $event.stopPropagation();
+                        $element.addClass('twst-file-drag-over');
+                    });
+
+                     $element.on('dragleave', function ($event) {
+                        $element.removeClass('twst-file-drag-over');
                     });
 
                     $element.on('drop', function ($event) {
                         $event.preventDefault();
                         $event.stopPropagation();
+                        $element.removeClass('twst-file-drag-over');
 
                         var f = $event.originalEvent.dataTransfer.files[0];
+                        console.log(f)
                         var reader = new FileReader();
                         reader.onload = function(e) {
                             var data = e.target.result;
                             $scope.twstDropTarget(data);
                             $scope.$apply(); // must call manually since the onload event is not angularized
                         };
-                        reader.readAsBinaryString(f);
+                        if (f.type.indexOf('spreadsheet') != -1) {
+                            reader.readAsBinaryString(f);
+                        } else if (f.type.indexOf('csv') != -1) {
+                            reader.readAsText(f);
+                        } 
+                        
                     });
                 }
             ]

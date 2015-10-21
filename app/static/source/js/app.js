@@ -29,8 +29,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransferPlanner', 
-    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransferPlanner) {
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransferPlanner', 'FileParser', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransferPlanner, FileParser) {
 
         /* interface backing vars */
         var returnEmptyPlate = function () {
@@ -46,7 +46,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.standard_template = 'standard_template';
 
         $scope.excelFileStats = {};
-        $scope.excelErrors = [];
+        $scope.fileErrors = [];
 
         $scope.cachedFileData = null;
 
@@ -183,102 +183,33 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.clearExcelUploadData = function () {
             $scope.transferExcelAsJSON = [];
             $scope.excelFileStats = {};
-            $scope.excelErrors = [];
+            $scope.fileErrors = [];
         };
 
         $scope.catchFile = function (fileData) {
-            $scope.clearExcelUploadData();
+            $scope.parsingFile = true;
 
-            if (!fileData) {
-                fileData = $scope.cachedFileData;
-            } else {
-                $scope.cachedFileData = fileData;
-            };
+            // called in timeout to give the spinner time to render
+            $timeout(function () {
+                $scope.clearExcelUploadData();
 
-            var workbook = XLSX.read(fileData, {type: 'binary'});
-            var first_sheet_name = workbook.SheetNames[0];
-            var worksheet = workbook.Sheets[first_sheet_name];
+                if (!fileData) {
+                    fileData = $scope.cachedFileData;
+                } else {
+                    $scope.cachedFileData = fileData;
+                };
 
-            $scope.excelErrors = [];
+                var result = FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan);
 
-            // parse through the sheet and compile the rows to json
-            var transferJSON = [];
-            var thisRow = {};
-            var firstRow = true;
-            var srcPlates = {};
-            var destPlates = {};
-            for (z in worksheet) {
-                if(z[0] === '!') {continue;}
-                var col = z.substring(0,1);
-                var val = worksheet[z].v;
-                switch (col) {
-                    case 'A':
-                        thisRow.source_plate_barcode = val;
-                        if (!firstRow) {
-                            if (!srcPlates[val]) {
-                                srcPlates[val] = 1;
-                            } else {
-                                srcPlates[val]++;
-                            }
-                        }
-                        break;
-                    case 'B':
-                        thisRow.source_well_name = val;
-                        break;    
-                    case 'C':
-                        thisRow.destination_plate_barcode = val;
-                        if (!firstRow) {
-                            destPlates[val] = val;
-                        }
-                        break;
-                    case 'D':
-                        thisRow.destination_well_name = val;
-                        break;
-                    case 'E':
-                        thisRow.destination_plate_well_count = val;
-                        break;
+                $scope.excelFileStats = result.stats;
+                $scope.fileErrors = result.errors;
 
-                    default :
-                        $scope.excelErrors.push('Error: Unknown column in input file: ' + col);
-                        break;
-                }
-                if (col == 'E') {
-                    if (!firstRow) {
-                        transferJSON.push(thisRow);
-                    }
-                    firstRow = false;
-                    thisRow = {};
-                }
-            }
-            
-            $scope.excelFileStats.sourceRowCounts = srcPlates;
-            
-            var count = 0;
-            for (plate in srcPlates) {
-                count++;
-            }
-            $scope.excelFileStats.source_plate_count = count;
+                if (!result.errors.length) {
+                    $scope.transferPlan.transferFromFile(true, result.transferJSON);
+                }  
 
-            if (count != $scope.transferPlan.map.source.plateCount) {
-                $scope.excelErrors.push('This transfer expects ' + $scope.transferPlan.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
-            }
-            var count = 0;
-            for (plate in destPlates) {
-                count++;
-            }
-            $scope.excelFileStats.destination_plate_count = count;
-            if (count != $scope.transferPlan.map.destination.plateCount) {
-                $scope.excelErrors.push('This transfer expects ' + $scope.transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
-            }
-
-            $scope.excelFileStats.sourcePlateRows = srcPlates;
-
-            if (!$scope.excelErrors.length) {
-                $scope.transferPlan.transferFromFile(true, transferJSON);
-            }
-
-            console.log($scope.transferPlan);
-
+                $scope.parsingFile = false; 
+            }, 150);
         };
 
         /* populate the sample types pulldown */

@@ -278,7 +278,24 @@ strong {
             path {
                 fill: #5caa5e;
             }
+        }
+    }
 
+    &.twst-thumbs-validation-icon-error {
+        cursor: pointer;
+
+        svg {
+            path {
+                fill: #933030;
+            }
+        }
+    }
+
+    &:hover {
+        .twst-thumbs-validation-error {
+            display: inline-block;
+            visibility: visible;
+            opacity: 1;
         }
     }
 
@@ -289,6 +306,20 @@ strong {
         path {
             fill: #eee;
         }
+    }
+
+    .twst-thumbs-validation-error {
+        position: absolute;
+        margin-top: 0.1em;
+        opacity: 0;
+        width: 400px;
+        visibility: hidden;
+        right: 2.1em;
+        font-size: 0.5em;
+        background-color: $twst-light-red;
+        padding: 0.3em 0.5em;
+        border-radius: 0.3em;
+        @include transition(opacity .3s ease);
     }
 
 }
@@ -925,6 +956,10 @@ strong {
                 text-align: center;
                 border: 5px dotted $twst-medium-green;
 
+                &.twst-file-drag-over {
+                    background-color: $twst-minty-green;
+                }
+
                 .twst-thumbs-validation-icon {
                     display: block;
                     margin: 0.3em auto 0 auto;
@@ -1002,6 +1037,13 @@ strong {
                     top: 0.1em;
                 }
             }
+
+            .twst-transfer-plan-transfers-list {
+                .twst-transfer-plan-preview-table {
+                    margin: 1em auto 0 auto;
+                }
+            }
+
         }
 
         .twst-sample-track-main-buttons {

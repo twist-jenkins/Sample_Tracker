@@ -335,23 +335,26 @@ app = angular.module('twist.app')
 
             base.addSourcePlate = function (sourceIndex) {
                 var sourceItem = base.sources[sourceIndex];
+                delete sourceItem.error;
                 var barcode = sourceItem.text;
 
-                var onError = function (msg) {
+                var onError = function (sourceItem, msg) {
                     notReady('source');
                     sourceItem.data = null;
                     sourceItem.transferList = null;
-                    base.errors.push(msg);
+                    sourceItem.error = msg;
                     ready();
+                    sourceItem.updating = false;
                 };
 
                 updating();
+                sourceItem.updating = true;
                 Api.getPlateDetails(barcode).success(function (data) {
                     if (data.success) {
                         console.log('TO DO: validate proper plate type etc');
 
                         if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
-                            onError('Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
+                            onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
                         } else {
                             sourceItem.data = data;
                             for (var i=0; i<base.sources.length; i++) {
@@ -364,24 +367,26 @@ app = angular.module('twist.app')
                             updateTransferList();
                         }
                         ready();
+                        sourceItem.updating = false;
                         console.log(base);
                     } else {
-                        onError('Error: Plate info for ' + barcode + ' could not be found.');
+                        onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
                     }  
                 }).error(function () {
-                    onError('Error: Plate data for ' + barcode + ' could not be retrieved.');
+                    onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
                 });
             }
 
             base.addDestinationPlate = function (destIndex) {
                 console.log('ADD DESTINATION PLATE');
                 var destItem = base.destinations[destIndex];
+                delete destItem.error;
                 var barcode = destItem.text;
 
-                var onError = function (msg) {
+                var onError = function (destItem, msg) {
                     notReady('destination');
                     if (msg) {
-                        base.errors.push(msg);
+                        destItem.error = msg;
                     }
                     ready();
                 };
@@ -391,14 +396,14 @@ app = angular.module('twist.app')
                     updating();
                     Api.getPlateDetails(barcode).success(function (data) {
                         if (data.success) {
-                            onError('Error: A plate with barcode ' + barcode + ' already exists in the database.');
+                            onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
                             console.log(base.errors);
                             console.log(base);
                         } else { 
                             /* then we're good to go - check if we have all the required destination barcodes */
                             for (var i=0; i<base.destinations.length; i++) {
                                 if (base.destinations[i].length < 6) {
-                                    onError();
+                                    onError(destItem);
                                     return;
                                 }
                             }
@@ -455,9 +460,187 @@ app = angular.module('twist.app')
     }]
 )
 
-.factory('FileParser',[
-    function () {
+.factory('FileParser',['Maps', 
+    function (Maps) {
+
+        var getNormalRowColumnFromQPix = function (rowColumn, plateType) {
+
+            var qpixMap = Maps.rowColumnMaps['QPIX_SPTT_0004'];
+            var humanMap = Maps.rowColumnMaps['SPTT_0004'];
+
+            var row = rowColumn.substring(0, 1);
+            var column = rowColumn.substring(1) - 0;
+
+            for (well in qpixMap) {
+                if (row == qpixMap[well].row && column == qpixMap[well].column) {
+                    return humanMap[well].row + humanMap[well].column
+                }
+            }
+
+            return 'ERROR: Could not map ' + rowColumn + ' to human well id.';
+        };
+
+        var getTransferRowsFromFile = function (fileData, transferPlan) {
+
+            var map = transferPlan.map;
+            var transferTypeData = transferPlan.transferTypeData;
+
+            var transferJSON = [];
+            var thisRow = {};
+            var firstRow = true;
+            var srcPlates = {};
+            var destPlates = {};
+
+            var fileErrors = [];
+            var fileStats = {};
+
+            var setStats = function (validateStats, isQpix) {
+
+                fileStats.wellCountHeader = 'Source plate well counts:';
+                if (isQpix) {
+                    fileStats.wellCountHeader = 'Source plate pick counts:';
+                }
+
+                fileStats.sourceRowCounts = srcPlates;
+            
+                var count = 0;
+                for (plate in srcPlates) {
+                    count++;
+                }
+                fileStats.source_plate_count = count;
+
+                if (validateStats && count != transferPlan.map.source.plateCount) {
+                    fileErrors.push('This transfer expects ' + transferPlan.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
+                }
+                var count = 0;
+                for (plate in destPlates) {
+                    count++;
+                }
+                fileStats.destination_plate_count = count;
+                if (validateStats && count != transferPlan.map.destination.plateCount) {
+                    fileErrors.push('This transfer expects ' + transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
+                }
+
+                fileStats.sourcePlateRows = srcPlates;
+            }
+
+            if ( fileData.substring(0, 8) == 'Run Date') {
+                /* this is a csv log file from qpix */
+                var transferTypeId = transferPlan.typeDetails.transfer_template_id;
+                if (transferTypeId != 16 && transferTypeId != 21 && transferTypeId != 22) {
+                    fileErrors.push('This transfer type (' + transferTypeId + ') does not expect a log file as input.');
+                } else {
+                    var fileData = fileData.split('\n');
+
+                    var transferStartIndex = fileData.length;
+
+                    for (var i=0; i<fileData.length; i++) {
+                        var row = fileData[i];
+                        if (row.trim() == 'Source Barcode,Source Region,Feature Position X,Feature Position Y,Destination Barcode,Destination Well') {
+                            transferStartIndex = i + 1;
+                        } else if (i >= transferStartIndex) {
+                            var rowBits = row.split(',');
+
+                            var sourceBarcode = rowBits[0];
+                            var destinationBarcode = rowBits[4];
+                            var sourceWellName = rowBits[1];
+                            var destinationWellName = rowBits[5];
+
+                            if (!srcPlates[sourceBarcode]) {
+                                srcPlates[sourceBarcode] = 1;
+                            } else {
+                                srcPlates[sourceBarcode]++;
+                            }
+                            destPlates[destinationBarcode] = destinationBarcode;
+
+                            var rowBits = row.split(',');
+                            var destinationPlateTypeInfo = Maps.plateTypeInfo[map.destination.plateTypeId];
+                            var thisRow = {
+                                source_plate_barcode: sourceBarcode
+                                ,source_well_name: getNormalRowColumnFromQPix(sourceWellName)
+                                ,destination_plate_barcode: destinationBarcode
+                                ,destination_well_name: destinationWellName
+                                ,destination_plate_well_count: destinationPlateTypeInfo.wellCount
+                            }
+                            transferJSON.push(thisRow);
+                        }
+                    }
+
+                    /* and now we need to retrieve the sample_ids for these wells by referring to the Hamilton step 
+
+                        NEED TO USE PROMISE(S) FOR THIS
+                    */
+
+
+
+                    setStats(false, true)
+                }
+                
+            } else {
+                /* then we assume this is an excel file */
+                var workbook = XLSX.read(fileData, {type: 'binary'});
+
+                var first_sheet_name = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[first_sheet_name];
+
+                // parse through the sheet and compile the rows to json
+                for (z in worksheet) {
+                    if(z[0] === '!') {continue;}
+                    var col = z.substring(0,1);
+                    var val = worksheet[z].v;
+                    switch (col) {
+                        case 'A':
+                            thisRow.source_plate_barcode = val;
+                            if (!firstRow) {
+                                if (!srcPlates[val]) {
+                                    srcPlates[val] = 1;
+                                } else {
+                                    srcPlates[val]++;
+                                }
+                            }
+                            break;
+                        case 'B':
+                            thisRow.source_well_name = val;
+                            break;    
+                        case 'C':
+                            thisRow.destination_plate_barcode = val;
+                            if (!firstRow) {
+                                destPlates[val] = val;
+                            }
+                            break;
+                        case 'D':
+                            thisRow.destination_well_name = val;
+                            break;
+                        case 'E':
+                            thisRow.destination_plate_well_count = val;
+                            break;
+
+                        default :
+                            fileErrors.push('Error: Unknown column in input file: ' + col);
+                            break;
+                    }
+                    if (col == 'E') {
+                        if (!firstRow) {
+                            transferJSON.push(thisRow);
+                        }
+                        firstRow = false;
+                        thisRow = {};
+                    }
+                }
+
+                setStats(true);
+            }
+
+            var result = {
+                errors: fileErrors
+                ,stats: fileStats
+                ,transferJSON: transferJSON
+            };
+                
+            return result;
+        }
         return {
+            getTransferRowsFromFile: getTransferRowsFromFile
         };
     }]
 )
