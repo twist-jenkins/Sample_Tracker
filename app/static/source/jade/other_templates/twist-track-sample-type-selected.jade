@@ -8,18 +8,29 @@ div(class="twst-sample-track-main-tab-body" ng-show="transferPlan.typeDetails")
                 div(class="twst-sample-track-plate-title" ng-if="plate.title" ng-bind-html="plate.title")
                 div(class="twst-sample-track-plate-input")
                     input(type="text" class="form-control" ng-model="plate.text" typeahead="barcode for barcode in getTypeAheadBarcodes($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" ng-blur="updateTransferPlan(plate.text, 'source', $index)")
+                    div(class="twst-remove-plate-button" ng-click="transferPlan.removePlateInput('source', $index)" ng-if="$index || transferPlan.sources.length > 1")
+                        div(ng-include="'static/images/trash-can.svg'")
                     div(class="twst-spinner twst-plate-data-loading-spinner" ng-if="plate.updating")
                     twst-thumb-validation-icon(validation="plate.data != null" error="plate.error")
                     i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
                     div(ng-show="noResults" class="twst-offscreen")
                       i(class="glyphicon glyphicon-remove") No Results Found
+            div(class="twst-add-plate-button" ng-click="transferPlan.addPlateInput('source')" ng-if="transferPlan.map.source.variablePlateCount")
+                button(class="twst-button twst-blue-button") +
+                span Add Source Plate
         div(class="twst-sample-track-plate-barcodes-left")
             p(class="twst-block-header" ng-class="{'twst-invisible': !transferPlan.destinations.length}") Destination Plate Barcode{{transferPlan.destinations.length > 1 ?'s':''}}:
             div(class="twst-sample-track-plate-row" ng-repeat="plate in transferPlan.destinations")
                 div(class="twst-sample-track-plate-title" ng-if="plate.title" ng-bind-html="plate.title")
                 div(class="twst-sample-track-plate-input")
                     input(type="text" class="form-control" ng-model="plate.text" ng-blur="updateTransferPlan(plate.text, 'destination', $index)")
+                    div(class="twst-remove-plate-button" ng-click="transferPlan.removePlateInput('destination', $index)" ng-if="$index || transferPlan.destinations.lrngth > 1")
+                        ng-include(src="'static/images/trash-can.svg'")
+                    div(class="twst-spinner twst-plate-data-loading-spinner" ng-if="plate.updating")
                     twst-thumb-validation-icon(validation="plate.data != null" error="plate.error")
+            div(class="twst-add-plate-button" ng-click="transferPlan.addPlateInput('destination')" ng-if="transferPlan.map.destination.variablePlateCount")
+                button(class="twst-button twst-blue-button") +
+                span Add Destination Plate
     div(class="twst-sample-track-main-excel-upload" ng-show="templateTypeSelection == excel_template")
         div(class="twst-sample-track-excel-upload-summary" ng-if="transferPlan.planFromFile || fileErrors.length")
             h3 Excel File Pre-upload Summary:
@@ -40,6 +51,10 @@ div(class="twst-sample-track-main-tab-body" ng-show="transferPlan.typeDetails")
         div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the transfer file here
             twst-thumb-validation-icon(validation="transferPlan.plateTransfers.length" error="fileErrors.length" errors-invisible="true")
             div(class="twst-spinner twst-parsing-file-spinner" ng-if="parsingFile")
+    div(class="twst-sample-track-main-buttons")
+        div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
+        button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
+        a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
     div(class="twst-transfer-plan")
         div(class="twst-transfer-plan-show-btn" ng-click="showTransferPlan = !showTransferPlan")
             div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")
@@ -61,9 +76,4 @@ div(class="twst-sample-track-main-tab-body" ng-show="transferPlan.typeDetails")
                     td {{row.destination_plate_barcode}}
                     td {{row.destination_well_name}}
                     td {{row.destination_plate_well_count}}
-
-    div(class="twst-sample-track-main-buttons")
-        div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
-        button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
-        a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
     div(ui-view ng-if="transferPlan.typeDetails")

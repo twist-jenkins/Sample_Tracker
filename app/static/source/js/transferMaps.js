@@ -9,9 +9,11 @@ app = angular.module('twist.app')
                     ,type: 'same-same'
                     ,source: {
                         plateCount: 1
+                        ,variablePlateCount: false
                     }
                     ,destination: {
                         plateCount: 1
+                        ,variablePlateCount: false
                     }
                 }
                 ,2: {  // keyed to sample_transfer_template_id in the database
@@ -19,9 +21,11 @@ app = angular.module('twist.app')
                     ,type: 'same-same'
                     ,source: {
                         plateCount: 1
+                        ,variablePlateCount: false
                     }
                     ,destination: {
                         plateCount: 0
+                        ,variablePlateCount: false
                     }
                 }
                 ,13: {  // keyed to sample_transfer_template_id in the database
@@ -31,11 +35,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,wellCount: 384
                         ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
                     }
                     ,destination:{
                         plateCount: 4
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: false
                         ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
                     }
                     ,plateWellToWellMaps: [ // index in plate_well_to_well_map array = source_plate_index
@@ -434,11 +440,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: false
                     }
                     ,destination:{
                         plateCount: 2
                         ,wellCount: 48
                         ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: false
                         ,plateTitles: ['Left:&nbsp;&nbsp;','Right:&nbsp;']
                     }
                     ,plateWellToWellMaps: [ // array of source plates
@@ -548,10 +556,12 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: true
                     }
                 }
                 ,18: {  // keyed to sample_transfer_template_id in the database
@@ -561,12 +571,14 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: false
                         ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
                     }
                     ,destination:{
                         plateCount: 1
                         ,wellCount: 384
                         ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
                     }
                     ,plateWellToWellMaps: [
                         {
@@ -969,10 +981,12 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: true
                     }
                 }
                 ,22: {  // keyed to sample_transfer_template_id in the database
@@ -981,10 +995,23 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
+                    }
+                },23: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Plate Merge'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 1
+                        ,variablePlateCount: false
                     }
                 }
             }

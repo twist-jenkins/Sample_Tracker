@@ -91,6 +91,7 @@ $twst-common-border: 1px solid #aaa;
     border: 1px solid $twst-brown-black;
     opacity: 0.85;
     color: #444;
+    outline: none;
 
     &:hover {
         opacity: 1;
@@ -274,6 +275,13 @@ strong {
 
     &.twst-thumbs-validation-icon-valid {
         @include validThumbIcon;
+
+        &:hover {
+            .twst-thumbs-validation-error {
+                display: none;
+            }
+        }
+
         svg {
             path {
                 fill: #5caa5e;
@@ -284,18 +292,18 @@ strong {
     &.twst-thumbs-validation-icon-error {
         cursor: pointer;
 
+        &:hover {
+            .twst-thumbs-validation-error {
+                display: inline-block;
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+
         svg {
             path {
                 fill: #933030;
             }
-        }
-    }
-
-    &:hover {
-        .twst-thumbs-validation-error {
-            display: inline-block;
-            visibility: visible;
-            opacity: 1;
         }
     }
 
@@ -910,6 +918,28 @@ strong {
                     padding-left: 2em;
                 }
 
+                .twst-add-plate-button {
+                    cursor: pointer;
+                    opacity: 0.8;
+                    margin-top: 0.3em;
+                    display: inline-block;
+
+                    &:hover {
+                        opacity: 1;
+                    }
+                    .twst-blue-button {
+                        padding: 0 0.2em;
+                        font-size: 1em;
+                        line-height: 1em;
+                        margin-right: 0.3em;
+                    }
+
+                    span {
+                        position: relative;
+                        top: 0.1em
+                    }
+                }
+
                 .twst-sample-track-plate-row {
                     display: table;
                     width: 100%;
@@ -927,6 +957,40 @@ strong {
 
                     .twst-sample-track-plate-input {
                         width: 100%;
+
+                        .twst-plate-data-loading-spinner {
+                            position: absolute;
+                            right: 1em;
+                            font-size: 0.65em;
+                            top: 1.3em;
+                        }
+
+                        .twst-remove-plate-button {
+                                position: absolute;
+                                right: 0.5em;
+                                font-size: 1em;
+                                top: 0.75em;
+                                opacity: 0.8;
+                                cursor: pointer;
+
+                            svg {
+                                height: 1em;
+
+                                g {
+                                    fill: #ccc;
+                                }
+                            }
+
+                            &:hover {
+                                opacity: 1;
+
+                                svg {
+                                    g {
+                                        fill: $twst-dark-red;
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     .twst-thumbs-validation-icon {
@@ -1061,7 +1125,6 @@ strong {
 
             .twst-blue-button {
                 font-size: 1.2em;
-                outline: none;
             }
 
             .twst-sample-track-clear-btn {
