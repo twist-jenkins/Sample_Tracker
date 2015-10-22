@@ -546,7 +546,8 @@ def plate_details(sample_plate_barcode, format):
         "plateDetails":{
             "dateCreated":str(sample_plate.date_created),
             "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
-            "createdBy":str(sample_plate.operator.first_and_last_name)
+            "createdBy":str(sample_plate.operator.first_and_last_name),
+            "type":str(sample_plate.type_id)
         }
     }
 
@@ -621,3 +622,52 @@ def plate_details(sample_plate_barcode, format):
         # to be downloaded, instead of just printed on the browser
         response.headers["Content-Disposition"] = "attachment; filename=Plate_" + sample_plate_barcode + "_Report.csv"
         return response
+
+def source_plate_well_data():
+    data = request.json
+    plateBarcodes = data["plateBarcodes"]
+    plateWellData = {}
+
+    for barcode in plateBarcodes:
+
+        sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+
+        if not sample_plate:
+            response = {
+                "success": False,
+                "errorMessage": "There is no plate with the barcode: [%s]" % (barcode)
+            }
+            return jsonify(response)
+        
+        rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
+
+        well_to_col_and_row_mapping_fn = {
+            48:get_col_and_row_for_well_id_48,
+            96:get_col_and_row_for_well_id_96,
+            384:get_col_and_row_for_well_id_384
+        }.get(sample_plate.sample_plate_type.number_clusters,lambda well_id:"missing map")
+
+        wells = {}
+        for well in rows:
+
+            col_row = well_to_col_and_row_mapping_fn(well.well_id)
+
+            well_data = {
+                "well_id":well.well_id,
+                "column_and_row":col_row,
+                "sample_id":well.sample_id
+            }
+            wells[col_row] = well_data;
+
+        plateWellData[barcode] = {
+            "wells": wells
+        }
+
+    respData = {
+        "success": True
+        ,"plateWellData": plateWellData
+    }
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)

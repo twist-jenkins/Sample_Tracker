@@ -11,7 +11,7 @@ div(class="twst-plate-details-main twst-child-page")
           i(class="glyphicon glyphicon-remove") No Results Found
         div(class="twst-plate-details-display" ng-if="fetchingDetails || plateDetails")
             h2 Details for plate
-                strong &nbsp;{{plateBarcode}}
+                strong &nbsp;{{retrievedPlateBarcode}}
             div(class="twst-spinner" ng-if="fetchingDetails")
 
             div(class="twst-plate-details-readout" ng-if="plateDetails")
