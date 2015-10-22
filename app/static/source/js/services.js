@@ -202,8 +202,8 @@ app = angular.module('twist.app')
     }]
 )
 
-.factory('TransferPlanner', ['Api', 'Maps', 
-    function (Api, Maps) {
+.factory('TransferPlanner', ['Api', 'Maps', 'Constants', 
+    function (Api, Maps, Constants) {
 
         var TransferPlan = function () {
             var base = this;
@@ -249,26 +249,55 @@ app = angular.module('twist.app')
                             };
                             transfers.push(transferRow);
                         }
-                        base.plateTransfers = transfers;
                     } else {
                         /* source and destination are different size and/or layout*/
-                        for (var i=0;i< base.sources.length;i++) {
-                            var plate = base.sources[i];
-                            var wellsMap = base.map.plateWellToWellMaps[i];
+                        if (base.typeDetails.transfer_template_id == 23) {
+                            /* merge source plate(s) into single destination plate */
+                            var overlapCheckMap = {};
+                            for (var i=0;i< base.sources.length;i++) {
+                                var plate = base.sources[i];
 
-                            for (var j=0; j<plate.data.wells.length;j++) {
-                                var sourceWell = plate.data.wells[j];
-                                var destWell = wellsMap[sourceWell.well_id];
-                                var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
-                                var transferRow = {
-                                    source_plate_barcode: plate.text
-                                    ,source_well_name: sourceWell.column_and_row
-                                    ,source_sample_id: sourceWell.sample_id
-                                    ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].text
-                                    ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
-                                    ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
-                                };
-                                transfers.push(transferRow);
+                                for (var j=0; j<plate.data.wells.length;j++) {
+                                    var sourceWell = plate.data.wells[j];
+
+                                    if (overlapCheckMap[sourceWell.column_and_row]) {
+                                        base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.text + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
+                                        return;
+                                    } else {
+                                        overlapCheckMap[sourceWell.column_and_row] = plate.text;
+                                    }
+
+                                    var transferRow = {
+                                        source_plate_barcode: plate.text
+                                        ,source_well_name: sourceWell.column_and_row
+                                        ,source_sample_id: sourceWell.sample_id
+                                        ,destination_plate_barcode: base.destinations[0].text
+                                        ,destination_well_name: sourceWell.column_and_row
+                                        ,destination_plate_well_count: Maps.plateTypeInfo[plate.data.plateDetails.type].wellCount
+                                    };
+                                    transfers.push(transferRow);
+                                }
+                            }
+                        } else {
+                            /* all others */
+                            for (var i=0;i< base.sources.length;i++) {
+                                var plate = base.sources[i];
+                                var wellsMap = base.map.plateWellToWellMaps[i];
+
+                                for (var j=0; j<plate.data.wells.length;j++) {
+                                    var sourceWell = plate.data.wells[j];
+                                    var destWell = wellsMap[sourceWell.well_id];
+                                    var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
+                                    var transferRow = {
+                                        source_plate_barcode: plate.text
+                                        ,source_well_name: sourceWell.column_and_row
+                                        ,source_sample_id: sourceWell.sample_id
+                                        ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].text
+                                        ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
+                                        ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
+                                    };
+                                    transfers.push(transferRow);
+                                }
                             }
                         }
                     }
@@ -284,9 +313,9 @@ app = angular.module('twist.app')
             };
 
             var notReady = function (which) {
-                if (which == 'source') {
+                if (which == Constants.PLATE_SOURCE) {
                     base.sourcesReady = false;
-                } else if (which == 'destination') {
+                } else if (which == Constants.PLATE_DESTINATION) {
                     base.destinationsReady = false;
                 }
                 clearPlateTransfers();
@@ -301,8 +330,11 @@ app = angular.module('twist.app')
             }
 
             base.setTransferMap = function (map) {
-                base.map = map;
+                base.map = angular.copy(map);
+                base.updateInputs();
+            };
 
+            base.updateInputs = function () {
                 var sourceCount = base.map.source.plateCount;
                 var destCount = base.map.destination.plateCount;
 
@@ -322,7 +354,6 @@ app = angular.module('twist.app')
                     }
                 }
 
-                //TO DO - move labels into transfer map
                 for (var i=0; i<base.sources.length; i++) {
                     base.sources[i].title = base.map.source.plateTitles ? base.map.source.plateTitles[i] || '' : '';
                 }
@@ -333,8 +364,31 @@ app = angular.module('twist.app')
                 if (!base.map.destination.plateCount) {
                     base.destinationsReady = true;
                 }
+            }
 
-            };
+            base.addPlateInput = function (which, howMany) {
+                if (!howMany) {
+                    howMany = 1;
+                }
+                base.map[which].plateCount += howMany;
+                base.updateInputs();
+                updateTransferList();
+            }
+
+            base.removePlateInput = function (which, plateIndex) {
+                base.map[which].plateCount--;
+                
+                var newSources = [];
+                var plates = base[which + 's'];
+                for (var i=0; i<plates.length; i++) {
+                    if (i != plateIndex) {
+                        newSources.push(plates[i]);
+                    }
+                }
+                base[which + 's'] = newSources;
+                base.updateInputs();
+                updateTransferList();
+            }
 
             base.addSourcePlate = function (sourceIndex) {
                 var sourceItem = base.sources[sourceIndex];
@@ -347,19 +401,19 @@ app = angular.module('twist.app')
                     sourceItem.data = null;
                     sourceItem.transferList = null;
                     sourceItem.error = msg;
-                    ready();
                     sourceItem.updating = false;
+                    ready();
                 };
 
                 updating();
                 sourceItem.updating = true;
                 Api.getPlateDetails(barcode).success(function (data) {
                     if (data.success) {
-
                         if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
                             onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
                         } else {
                             sourceItem.data = data;
+                            sourceItem.updating = false;
                             for (var i=0; i<base.sources.length; i++) {
                                 if (base.sources[i].data == null) {
                                     notReady('source');
@@ -390,19 +444,21 @@ app = angular.module('twist.app')
                     if (msg) {
                         destItem.error = msg;
                     }
+                    destItem.updating = false;
                     ready();
                 };
 
                 if (barcode.length > 5) {
 
                     updating();
+                    destItem.updating = true;
                     Api.getPlateDetails(barcode).success(function (data) {
                         if (data.success) {
                             onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
                         } else { 
                             /* then we're good to go */
                             destItem.data = {dummyData: true}; /* shows the "valid" icon for this input */
-
+                            destItem.updating = false;
                             /* check if we have all the required destination barcodes */
                             for (var i=0; i<base.destinations.length; i++) {
                                 if (base.destinations[i].text.length < 6) {
