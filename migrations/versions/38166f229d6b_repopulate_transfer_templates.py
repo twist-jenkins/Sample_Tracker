@@ -1,14 +1,14 @@
 """Repopulate transfer templates
 
 Revision ID: 38166f229d6b
-Revises: da20bea3e8f
+Revises: 16ac291fa1b9
 Create Date: 2015-10-12 21:02:01.150025
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '38166f229d6b'
-down_revision = 'da20bea3e8f'
+down_revision = '16ac291fa1b9'
 
 from alembic import op
 import sqlalchemy as sa
@@ -25,12 +25,13 @@ insert_sql = ("insert into sample_transfer_template  "
               " destination_plate_well_count) "
               "select :id, :name, :ioto, :spwc, :dpwc "
               "where not exists "
-              "(select * from sample_transfer_type where id = :id)")
+              "(select * from sample_transfer_template where id = :id)")
 
 sql_param_names = ("id", "name", "ioto", "spwc", "dpwc")
 
 desired_values = [
-    [1, "One to One Transfer", "T", None, None],
+    [1, "Same to same transfer", "T", None, None],
+    [2, "Same plate", "T", None, None],
     [12, "384 to 48", "F", 384, 48],
     [13, "384 to 96 ", "F", 384, 96],
     [14, "96 to 48", "F", 96, 48],
@@ -39,6 +40,8 @@ desired_values = [
     [18, "96 to 384", "F", 96, 384],
     [19, "384 to 96 VARIABLE", "F", 384, 96],
     [20, "96 to VARIABLE", "F", 96, None],
+    [21, "Qpix to 4x96", "F", None, None],
+    [22, "Qpix to 1x384", "F", None, None],
 ]
 
 

@@ -9,14 +9,31 @@
 ######################################################################################
 
 import bson
+import json
 import datetime
 
 from app import app
 from app import db
 
+from sqlalchemy.types import TypeDecorator, VARCHAR
+
 
 def create_unique_object_id(prefix=""):
     return prefix + str(bson.ObjectId())
+
+
+class JSONEncodedDict(TypeDecorator):
+    impl = VARCHAR
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        return json.dumps(value, use_decimal=True)
+
+    def process_result_value(self, value, dialect):
+        if not value:
+            return None
+        return json.loads(value, use_decimal=True)
 
 
 class Operator(db.Model):
@@ -348,5 +365,21 @@ class StorageLocation(db.Model):
         self.storage_location_id = create_unique_object_id("LOC_")
         self.name = name
 
+
+
+class TransferPlan(db.Model):
+
+    plan_id = db.Column(db.String(40), primary_key=True)
+    id_prefix = db.Column(db.String(40))
+    name = db.Column(db.String(100))
+    description = db.Column(db.Text())
+
+    def __init__(self, type_id, id_prefix, name ):
+        self.type_id = type_id
+        self.id_prefix = id_prefix
+        self.name = name
+
+    def __repr__(self):
+        return '<SampleType id: [%d] name: [%s] >' % (self.id,self.name)
 
 

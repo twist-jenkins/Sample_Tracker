@@ -51,7 +51,7 @@ class TestCase(unittest.TestCase):
     def test_aliquot_standard_template_bad_source(self):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplateId": 1,  # ??
-                "sourcePlates": [self.root_plate_barcode + '_FAKE_ERROR'],
+                "sourcePlates": [self.root_plate_barcode + '_WALDO'],
                 "destinationPlates": ["test_aliquot_01a"]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -106,7 +106,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-    def test_small_adhoc_golden(self):
+    def DISABLED_test_small_adhoc_golden(self):
         data = {"sampleTransferTypeId":13,
                 "sampleTransferTemplateId":14,
                 "transferMap":[{"source_plate_barcode":"XFER_ROOT","source_well_name":"A2","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"A1","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A3","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"A2","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A4","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"B6","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A5","destination_plate_barcode":"ssdest000000141jul17_G","destination_well_name":"A4","destination_plate_well_count":96},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A6","destination_plate_barcode":"ssdest000000141jul17_384_G","destination_well_name":"L1","destination_plate_well_count":384},{"source_plate_barcode":"XFER_ROOT","source_well_name":"A8","destination_plate_barcode":"ssdest000000141jul17_384_G","destination_well_name":"L12","destination_plate_well_count":384}]
