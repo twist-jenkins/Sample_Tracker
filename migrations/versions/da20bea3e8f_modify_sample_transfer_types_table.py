@@ -71,7 +71,7 @@ desired_values = [
     [39, "Hitpicking for miniprep: from glycerol stock", 19, 0, 0],
     [40, "Miniprep", 1, 1, 1],
     [41, "Miniprep transfer to 96-PCR plate", 1, 1, 1],
-    [42, "Hitpick for shipping", 20, 1, 0]
+    [42, "Hitpick for shipping", 20, 1, 0],
     [43, "Plate Merge", 23, 1, 1]
 ]
 
