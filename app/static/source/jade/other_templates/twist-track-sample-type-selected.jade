@@ -62,7 +62,7 @@ div(class="twst-sample-track-main-tab-body" ng-show="transferPlan.typeDetails")
         div(class="twst-transfer-plan-transfers-list" ng-show="showTransferPlan")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="transferPlan.updating")
             div(ng-show="!transferPlan.updating && transferPlan.plateTransfers.length")
-                a(class="twst-sample-track-download-transfer-plan-excel" ng-click="transferPlan.getExcel()") Download plan in excel format
+                a(class="twst-sample-track-download-transfer-plan-excel" ng-click="transferPlan.getAsExcel()") Download plan in excel format
                 table(class="twst-data-readout-table twst-transfer-plan-preview-table")
                     tr
                         td(class="twst-data-readout-table-header") Sample Id

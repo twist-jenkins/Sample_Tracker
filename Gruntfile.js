@@ -240,6 +240,7 @@ module.exports = function(grunt) {
                     ,'angular-sanitize/angular-sanitize.min.js.map'
                     ,'js-xlsx/dist/xlsx.full.min.js'
                     ,'js-xlsx/dist/xlsx.full.min.map'
+                    ,'file-saver/FileSaver.min.js'
                 ]
                 ,dest: 'app/static/js'
                 ,flatten: true

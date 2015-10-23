@@ -181,7 +181,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.clearExcelUploadData = function () {
-            $scope.transferExcelAsJSON = [];
             $scope.excelFileStats = {};
             $scope.fileErrors = [];
         };
