@@ -7,6 +7,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 os.environ["WEBSITE_ENV"] = "Localunittest"
+
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.

@@ -19,8 +19,8 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         self.client = app.test_client()
         assert "Unittest" in os.environ["WEBSITE_ENV"]
-        assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
-        assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
+        assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
+        assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
 
     def tearDown(self):

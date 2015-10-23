@@ -8,7 +8,8 @@ logging.basicConfig(level=logging.INFO)
 
 from flask_login import AnonymousUserMixin
 
-os.environ["WEBSITE_ENV"] = "Unittest"
+os.environ["WEBSITE_ENV"] = "Localunittest"
+
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
@@ -48,10 +49,13 @@ class RootPlate(object):
             destination_barcode = barcode
             storage_location_id = 'TEST_STORAGE_LOC'
             source_plate_type_id = "SPTT_0006"
-            plate = create_destination_plate(db_session, operator,
+            try:
+                plate = create_destination_plate(db_session, operator,
                                              destination_barcode,
                                              source_plate_type_id,
                                              storage_location_id)
+            except:
+                pass
         return destination_barcode
 
 
@@ -62,8 +66,8 @@ class TestCase(unittest.TestCase):
         login_manager.anonymous_user = AutomatedTestingUser
         cls.client = app.test_client()
         assert "Unittest" in os.environ["WEBSITE_ENV"]
-        assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
-        assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
+        assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
+        assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
         cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)
 
