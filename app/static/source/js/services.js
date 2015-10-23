@@ -321,7 +321,7 @@ app = angular.module('twist.app')
                 clearPlateTransfers();
             };
 
-            var sourcesReady
+            var sourcesReady;
 
             base.setTransferTypeDetails = function (typeObj) {
                 base.typeDetails = typeObj;
@@ -484,6 +484,92 @@ app = angular.module('twist.app')
                 } else {
                     clearPlateTransfers();
                 }
+            };
+
+            base.getAsExcel = function () {
+
+                var orderRowKeys = [
+                    'source_plate_barcode'
+                    ,'source_well_name'
+                    ,'destination_plate_barcode'
+                    ,'destination_well_name'
+                    ,'destination_plate_well_count'
+                ]
+
+                var columnTitles = [
+                    'Source Plate Barcode'
+                    ,'Source Well'
+                    ,'Destination Plate Barcode'
+                    ,'Destination Well'
+                    ,'Destination Well Count'
+                ]
+
+                /* excel file writing helpers */
+
+                var Workbook = function () {
+                    if(!(this instanceof Workbook)) return new Workbook();
+                    this.SheetNames = [];
+                    this.Sheets = {};
+                };
+
+                var datenum = function (v, date1904) {
+                    if(date1904) v+=1462;
+                    var epoch = Date.parse(v);
+                    return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+                }
+
+                var setCellDataType = function (cell) {
+                    if(typeof cell.v === 'number') cell.t = 'n';
+                    else if(typeof cell.v === 'boolean') cell.t = 'b';
+                    else if(cell.v instanceof Date) {
+                        cell.t = 'n'; cell.z = XLSX.SSF._table[14];
+                        cell.v = datenum(cell.v);
+                    }
+                    else cell.t = 's';
+                }
+
+                /* end excel file writing helpers */
+
+                var writeHeaderRow = function () {
+                    for (var i=0; i<columnTitles.length; i++) {
+                        var cell = {v: columnTitles[i]};
+                        var cell_ref = XLSX.utils.encode_cell({c:i,r:0});
+                        setCellDataType(cell);
+                        ws[cell_ref] = cell;
+                    }
+                }
+
+                var wb = new Workbook();
+                wb.SheetNames.push('Twist Transfer Plan');
+
+                var ws = {};
+                writeHeaderRow();
+                /* range is s = starting row and col value; e = ending row and col value */
+                /* basically, it should be 0,0 to col_count, row_count */
+                var range = {s: {c:0, r:0}, e: {c:4, r: base.plateTransfers.length + 1}};
+                for(var i = 0; i != base.plateTransfers.length; i++) {
+                    row = base.plateTransfers[i];
+                    for (var j=0; j<orderRowKeys.length; j++) {
+                        var cell = {v: row[orderRowKeys[j]]};
+                        var cell_ref = XLSX.utils.encode_cell({c:j,r:i + 1});
+                        setCellDataType(cell);
+                        ws[cell_ref] = cell;
+                    }
+                }
+                if(range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
+
+                wb.Sheets['Twist Transfer Plan'] = ws;
+                var wbout = XLSX.write(wb, {bookType:'xlsx', bookSST:true, type: 'binary'});
+
+                var s2ab = function (s) {
+                    var buf = new ArrayBuffer(s.length);
+                    var view = new Uint8Array(buf);
+                    for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+                    return buf;
+                }
+                
+                /*  saveAs is a global method supported natively or with FileSaver */
+                saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
             };
 
             var init = function () {
