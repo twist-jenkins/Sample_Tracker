@@ -61,19 +61,21 @@ div(class="twst-sample-track-main-tab-body" ng-show="transferPlan.typeDetails")
             span(class="twst-custom-radio-label") Preview Transfer Plan
         div(class="twst-transfer-plan-transfers-list" ng-show="showTransferPlan")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="transferPlan.updating")
-            table(class="twst-data-readout-table twst-transfer-plan-preview-table" ng-show="!transferPlan.updating && transferPlan.plateTransfers.length")
-                tr
-                    td(class="twst-data-readout-table-header") Sample Id
-                    td(class="twst-data-readout-table-header") Source Plate
-                    td(class="twst-data-readout-table-header") Source Well
-                    td(class="twst-data-readout-table-header") Destination Plate
-                    td(class="twst-data-readout-table-header") Destination Well
-                    td(class="twst-data-readout-table-header") Destination Well Count  
-                tr(ng-repeat="row in transferPlan.plateTransfers")
-                    td {{row.source_sample_id}}
-                    td {{row.source_plate_barcode}}
-                    td {{row.source_well_name}}
-                    td {{row.destination_plate_barcode}}
-                    td {{row.destination_well_name}}
-                    td {{row.destination_plate_well_count}}
+            div(ng-show="!transferPlan.updating && transferPlan.plateTransfers.length")
+                a(class="twst-sample-track-download-transfer-plan-excel" ng-click="transferPlan.getExcel()") Download plan in excel format
+                table(class="twst-data-readout-table twst-transfer-plan-preview-table")
+                    tr
+                        td(class="twst-data-readout-table-header") Sample Id
+                        td(class="twst-data-readout-table-header") Source Plate
+                        td(class="twst-data-readout-table-header") Source Well
+                        td(class="twst-data-readout-table-header") Destination Plate
+                        td(class="twst-data-readout-table-header") Destination Well
+                        td(class="twst-data-readout-table-header") Destination Well Count  
+                    tr(ng-repeat="row in transferPlan.plateTransfers")
+                        td {{row.source_sample_id}}
+                        td {{row.source_plate_barcode}}
+                        td {{row.source_well_name}}
+                        td {{row.destination_plate_barcode}}
+                        td {{row.destination_well_name}}
+                        td {{row.destination_plate_well_count}}
     div(ui-view ng-if="transferPlan.typeDetails")
