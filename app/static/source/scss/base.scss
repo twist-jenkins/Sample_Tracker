@@ -1091,6 +1091,7 @@ strong {
 
         .twst-transfer-plan {
             margin-top: 2em;
+            position: relative;
 
             .twst-transfer-plan-show-btn {
                 display: inline-block;
@@ -1103,6 +1104,14 @@ strong {
             }
 
             .twst-transfer-plan-transfers-list {
+                .twst-sample-track-download-transfer-plan-excel {
+                        position: absolute;
+                        top: 0.5em;
+                        left: 20em;
+                        display: inline-block;
+                        cursor: pointer;
+                }
+
                 .twst-transfer-plan-preview-table {
                     margin: 1em auto 0 auto;
                 }
