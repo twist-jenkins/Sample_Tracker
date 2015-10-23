@@ -556,7 +556,15 @@ app = angular.module('twist.app')
                         ws[cell_ref] = cell;
                     }
                 }
-                if(range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range);
+                ws['!ref'] = XLSX.utils.encode_range(range);
+                var wscols = [
+                    {wch:40}
+                    ,{wch:20}
+                    ,{wch:40}
+                    ,{wch:20}
+                    ,{wch:15}
+                ];
+                ws['!cols'] = wscols;
 
                 wb.Sheets['Twist Transfer Plan'] = ws;
                 var wbout = XLSX.write(wb, {bookType:'xlsx', bookSST:true, type: 'binary'});
