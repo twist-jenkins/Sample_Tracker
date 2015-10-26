@@ -1002,7 +1002,8 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: true
                     }
-                },23: {  // keyed to sample_transfer_template_id in the database
+                }
+                ,23: {  // keyed to sample_transfer_template_id in the database
                     description: 'Plate Merge'
                     ,type: 'standard'
                     ,source: {
@@ -1012,6 +1013,18 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 1
                         ,variablePlateCount: false
+                    }
+                }
+                ,24: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Generic Transfer'
+                    ,type: 'user_specified'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 1
+                        ,variablePlateCount: true
                     }
                 }
             }
