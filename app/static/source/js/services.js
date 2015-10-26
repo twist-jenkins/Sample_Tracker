@@ -705,15 +705,15 @@ app = angular.module('twist.app')
                     };
                     asyncReturn.reject(result);
                 } else {
-                    var fileData = fileData.split('\r\n');
+                    var fileData = fileData.split('\r');
 
                     var transferStartIndex = fileData.length;
 
                     for (var i=0; i<fileData.length; i++) {
-                        var row = fileData[i];
+                        var row = fileData[i].trim();
                         if (row.trim() == 'Source Barcode,Source Region,Feature Position X,Feature Position Y,Destination Barcode,Destination Well') {
                             transferStartIndex = i + 1;
-                        } else if (i >= transferStartIndex) {
+                        } else if (i >= transferStartIndex && row != '') {
                             var rowBits = row.split(',');
 
                             var sourceBarcode = rowBits[0];
@@ -728,7 +728,6 @@ app = angular.module('twist.app')
                             }
                             destPlates[destinationBarcode] = destinationBarcode;
 
-                            var rowBits = row.split(',');
                             var destinationPlateTypeInfo = Maps.plateTypeInfo[map.destination.plateTypeId];
                             var thisRow = {
                                 source_plate_barcode: sourceBarcode
@@ -834,17 +833,22 @@ app = angular.module('twist.app')
 
             Api.getSourcePlateWellData(source_barcodes).success(function (data) {
                 var sourceData = data;
-                Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
-                    if (!data.success) {
-                        /* error - destination plates already exist */
-                        packageResponse(data, data.errorMessage);
-                    } else {
-                        /* destination plates are new - we're good to go */
-                        packageResponse(sourceData);
-                    }
-                }).error(function (data) {
-                    packageResponse(data, 'The server returned an error while checking information about the destination plate(s).');
-                });
+
+                if (sourceData.success) {
+                    Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
+                        if (!data.success) {
+                            /* error - destination plates already exist */
+                            packageResponse(sourceData, data.errorMessage);
+                        } else {
+                            /* destination plates are new - we're good to go */
+                            packageResponse(sourceData);
+                        }
+                    }).error(function (data) {
+                        packageResponse(sourceData, 'The server returned an error while checking information about the destination plate(s).');
+                    });
+                } else {
+                    packageResponse(sourceData, sourceData.errorMessage);
+                }
             }).error(function (data) {
                 packageResponse(data, 'Sample information could not be retrieved for these source plates.');
             });

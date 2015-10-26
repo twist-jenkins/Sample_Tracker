@@ -688,7 +688,7 @@ def check_plates_are_new():
     if len(existPlates):
         response = {
                 "success": False,
-                "errorMessage": "Plates(s): %s already exist in the database." % (', '.join(existPlates))
+                "errorMessage": "Plates already exist in the database: %s" % (', '.join(existPlates))
             }
         return jsonify(response)
 
