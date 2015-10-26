@@ -382,5 +382,9 @@ def plate_details(sample_plate_barcode, format):
 def source_plate_well_data():
     return routes.source_plate_well_data()
 
+@app.route('/api/v1/check-plates-are-new', methods=['POST'])
+def check_plates_are_new():
+    return routes.check_plates_are_new()
+
 rest.api.add_resource(rest.PlanList, '/api/v1/rest/transfer-plans')
 rest.api.add_resource(rest.Plan, '/api/v1/rest/transfer-plans/<plan_id>')

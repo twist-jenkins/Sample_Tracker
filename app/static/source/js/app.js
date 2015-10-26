@@ -204,7 +204,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                     if (!resultData.errors.length) {
                         $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
-                    }  
+                    } else {
+                        $scope.transferPlan.clearPlateTransfers();
+                    } 
 
                     $scope.parsingFile = false;
 

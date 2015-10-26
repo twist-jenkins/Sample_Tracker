@@ -116,6 +116,13 @@ app = angular.module('twist.app')
                 }
                 return $http(wellDatasReq);
             }
+            ,checkDestinationPlatesAreNew: function (barcodes) {
+                var checkReq = ApiRequestObj.getPost('check-plates-are-new');
+                checkReq.data = {
+                    plateBarcodes: barcodes
+                }
+                return $http(checkReq);
+            }
         };
     }]
 )
@@ -304,11 +311,11 @@ app = angular.module('twist.app')
 
                     base.plateTransfers = transfers;
                 } else {
-                    clearPlateTransfers();
+                    base.clearPlateTransfers();
                 }
             };
 
-            var clearPlateTransfers = function () {
+            base.clearPlateTransfers = function () {
                 base.plateTransfers = [];
             };
 
@@ -318,7 +325,7 @@ app = angular.module('twist.app')
                 } else if (which == Constants.PLATE_DESTINATION) {
                     base.destinationsReady = false;
                 }
-                clearPlateTransfers();
+                base.clearPlateTransfers();
             };
 
             var sourcesReady;
@@ -482,7 +489,7 @@ app = angular.module('twist.app')
                 if (engaged) {
                     base.plateTransfers = transfersJSON;
                 } else {
-                    clearPlateTransfers();
+                    base.clearPlateTransfers();
                 }
             };
 
@@ -787,8 +794,8 @@ app = angular.module('twist.app')
 
             var packageResponse = function (respData, thisError) {
 
-                if (!respData.success || thisError) {
-                    fileErrors.push('Sample information could not be retrieved for these source plates.');
+                if (thisError) {
+                    fileErrors.push(thisError);
                 } else {
                     for (var i=0; i< transferJSON.length; i++) {
                         var row = transferJSON[i];
@@ -807,15 +814,30 @@ app = angular.module('twist.app')
                 asyncReturn.resolve(result);
             }
 
-            var barcodes = [];
+            var source_barcodes = [];
             for (barcode in srcPlates) {
-                barcodes.push(barcode);
+                source_barcodes.push(barcode);
+            }
+            var destination_barcodes = [];
+            for (barcode in destPlates) {
+                destination_barcodes.push(barcode);
             }
 
-            Api.getSourcePlateWellData(barcodes).success(function (data) {
-                packageResponse(data);
+            Api.getSourcePlateWellData(source_barcodes).success(function (data) {
+                var sourceData = data;
+                Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
+                    if (!data.success) {
+                        /* error - destination plates already exist */
+                        packageResponse(data, data.errorMessage);
+                    } else {
+                        /* destination plates are new - we're good to go */
+                        packageResponse(sourceData);
+                    }
+                }).error(function (data) {
+                    packageResponse(data, 'The server returned an error while checking information about the destination plate(s).');
+                });
             }).error(function (data) {
-                packageResponse(data, true);
+                packageResponse(data, 'Sample information could not be retrieved for these source plates.');
             });
                 
             return asyncReturn.promise;
