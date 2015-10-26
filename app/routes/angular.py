@@ -671,3 +671,31 @@ def source_plate_well_data():
             status=200, \
             mimetype="application/json")
     return(resp)
+
+def check_plates_are_new():
+    data = request.json
+    plateBarcodes = data["plateBarcodes"]
+
+    existPlates = [];
+
+    for barcode in plateBarcodes:
+        sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+
+        if sample_plate:
+            existPlates.append(barcode)
+
+
+    if len(existPlates):
+        response = {
+                "success": False,
+                "errorMessage": "Plates(s): %s already exist in the database." % (', '.join(existPlates))
+            }
+        return jsonify(response)
+
+    respData = {
+        "success": True
+    }
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
