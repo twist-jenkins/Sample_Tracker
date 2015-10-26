@@ -662,6 +662,10 @@ app = angular.module('twist.app')
                 }
                 fileStats.source_plate_count = count;
 
+                if (fileStats.source_plate_count == 0) {
+                    fileErrors.push('This file contains no source plates.');
+                }
+
                 if (validateStats && count != transferPlan.map.source.plateCount) {
                     fileErrors.push('This transfer expects ' + transferPlan.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
                 }
@@ -670,6 +674,11 @@ app = angular.module('twist.app')
                     count++;
                 }
                 fileStats.destination_plate_count = count;
+
+                if (fileStats.destination_plate_count == 0) {
+                    fileErrors.push('This file contains no destination plates.');
+                }
+
                 if (validateStats && count != transferPlan.map.destination.plateCount) {
                     fileErrors.push('This transfer expects ' + transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
                 }
