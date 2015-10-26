@@ -72,7 +72,8 @@ desired_values = [
     [40, "Miniprep", 1, 1, 1],
     [41, "Miniprep transfer to 96-PCR plate", 1, 1, 1],
     [42, "Hitpick for shipping", 20, 1, 0],
-    [43, "Plate Merge", 23, 1, 1]
+    [43, "Plate Merge", 23, 1, 1],
+    [44, "Generic Transfer", 24, 1, 1]
 ]
 
 

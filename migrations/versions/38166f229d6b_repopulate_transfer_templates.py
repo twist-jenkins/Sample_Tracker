@@ -42,7 +42,8 @@ desired_values = [
     [20, "96 to VARIABLE", "F", 96, None],
     [21, "Qpix to 96 well plates", "F", None, None],
     [22, "Qpix to 384 well plates", "F", None, None],
-    [23, "Plate Merge", "F", None, None]
+    [23, "Plate Merge", "F", None, None],
+    [24, "Generic Transfer", "F", None, None]
 ]
 
 
