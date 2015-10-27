@@ -1,5 +1,0 @@
-{
-  "test_sample_transfer.py::TestCase::test_1_to_4_golden": true, 
-  "test_sample_transfer.py::TestCase::test_1_to_4_to_1_golden": true, 
-  "test_sample_transfer.py::TestCase::test_aliquot_standard_template_golden": true
-}
