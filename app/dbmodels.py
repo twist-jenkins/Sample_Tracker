@@ -58,7 +58,9 @@ class Operator(db.Model):
 
     @property
     def first_and_last_name(self):
-        return self.first_name + " " + self.last_name
+        if self.first_name is not None and self.last_name is not None:
+            return self.first_name + " " + self.last_name
+        return "Unknown"
 
     def is_active(self):
         """True, as all users are active."""

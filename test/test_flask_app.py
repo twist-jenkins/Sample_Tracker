@@ -23,6 +23,9 @@ class AutomatedTestingUser(AnonymousUserMixin):
     This is the object for representing an anonymous user.
     Here we add enough properties to work against existing API calls.
     '''
+    # first_name = "Automated"
+    # last_name = "Testing"
+
     @property
     def get_id(self):
         return "AutomatedTestingUser"
@@ -89,15 +92,13 @@ class TestCase(unittest.TestCase):
 
     def test_get_plate_404(self):
         random_string = "2tp84ytcnp29cmty41p3984myt"
-        rv = self.client.get('/api/v1/plate_barcodes/%s'
+        rv = self.client.get('/api/v1/plate-barcodes/%s'
                              % random_string,
                              content_type='application/json')
-        assert rv.status_code == 200  # TODO: this should be 404
-        result = json.loads(rv.data)
-        assert result["success"] is False
+        assert rv.status_code == 404
 
-    def TODO_test_get_root_plate_golden(self):
-        rv = self.client.get('/api/v1/plate_barcodes/%s'
+    def test_get_root_plate_golden(self):
+        rv = self.client.get('/api/v1/plate-barcodes/%s'
                              % self.root_plate_barcode,
                              content_type='application/json')
         assert rv.status_code == 200
