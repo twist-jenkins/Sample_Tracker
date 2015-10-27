@@ -24,7 +24,7 @@ class TestCase(unittest.TestCase):
     def setUpClass(cls):
         login_manager.anonymous_user = AutomatedTestingUser
         cls.client = app.test_client()
-        assert "Unittest" in os.environ["WEBSITE_ENV"]
+        # assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
