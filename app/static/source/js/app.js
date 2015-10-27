@@ -122,6 +122,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var route = '';
             if (which == $scope.excel_template) {
                 route = 'excel_upload';
+                if ($scope.cachedFileData) {
+                    $scope.transferPlan.setPlanFromFile(true);
+                }
             } else if (which == $scope.standard_template) {
                 route = 'standard_template';
                 $scope.transferPlan.transferFromFile(false);

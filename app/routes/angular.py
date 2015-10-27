@@ -230,15 +230,16 @@ def create_step_record_adhoc(sample_transfer_type_id,
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session, operator,
                                               sample_transfer_type_id,
+                                              sample_transfer_template_id,
                                               wells)
-        if result:
+        if result["success"]:
             return jsonify({
                 "success": True
             })
         else:
             return jsonify({
                 "success": False,
-                "errorMessage": "Do some other thing!"
+                "errorMessage": result["errorMessage"]
             })
 
 def create_step_record():
@@ -316,7 +317,8 @@ def create_step_record():
                 plate = create_destination_plate(db_session, operator,
                                                  destination_barcodes[0],
                                                  source_plate.type_id,
-                                                 source_plate.storage_location_id)
+                                                 source_plate.storage_location_id,
+                                                 sample_transfer_template_id)
                 destination_plates.append(plate)
                 db_session.flush()
 
@@ -352,7 +354,8 @@ def create_step_record():
                     plate = create_destination_plate(db_session, operator,
                                                      destination_barcode,
                                                      target_plate_type_id,
-                                                     storage_location_id)
+                                                     storage_location_id,
+                                                     sample_transfer_template_id)
                     destination_plates.append(plate)
 
                 db_session.flush()
