@@ -32,7 +32,15 @@ class ProdConfig(Config):
 
 
 class StagingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" #"postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
+    SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
+    """
+    synapp_test=#
+        create user sampletrack with password 'Of2dAd8cir5Y';
+        grant all on sampletrack to sampletrack ;
+        grant all privileges on all tables in schema sampletrack to sampletrack ;
+        GRANT SELECT ON ALL TABLES IN SCHEMA public TO sampletrack;
+        ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO sampletrack;
+    """
 
 
 class DevConfig(Config):

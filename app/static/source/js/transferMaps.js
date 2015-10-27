@@ -9,9 +9,11 @@ app = angular.module('twist.app')
                     ,type: 'same-same'
                     ,source: {
                         plateCount: 1
+                        ,variablePlateCount: false
                     }
                     ,destination: {
                         plateCount: 1
+                        ,variablePlateCount: false
                     }
                 }
                 ,2: {  // keyed to sample_transfer_template_id in the database
@@ -19,9 +21,11 @@ app = angular.module('twist.app')
                     ,type: 'same-same'
                     ,source: {
                         plateCount: 1
+                        ,variablePlateCount: false
                     }
                     ,destination: {
                         plateCount: 0
+                        ,variablePlateCount: false
                     }
                 }
                 ,13: {  // keyed to sample_transfer_template_id in the database
@@ -31,11 +35,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,wellCount: 384
                         ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
                     }
                     ,destination:{
                         plateCount: 4
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: false
                         ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
                     }
                     ,plateWellToWellMaps: [ // index in plate_well_to_well_map array = source_plate_index
@@ -434,11 +440,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: false
                     }
                     ,destination:{
                         plateCount: 2
                         ,wellCount: 48
                         ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: false
                         ,plateTitles: ['Left:&nbsp;&nbsp;','Right:&nbsp;']
                     }
                     ,plateWellToWellMaps: [ // array of source plates
@@ -543,13 +551,17 @@ app = angular.module('twist.app')
                     ]
                 }
                 ,16: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Manual picking to 4x96'
+                    description: 'Manual picking to nx 96'
                     ,type: 'user_specified'
                     ,source: {
-                        plateCount: 0
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 4
+                        plateCount: 0
+                        ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: true
                     }
                 }
                 ,18: {  // keyed to sample_transfer_template_id in the database
@@ -559,12 +571,14 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: false
                         ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
                     }
                     ,destination:{
                         plateCount: 1
                         ,wellCount: 384
                         ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
                     }
                     ,plateWellToWellMaps: [
                         {
@@ -962,25 +976,55 @@ app = angular.module('twist.app')
                     ]
                 }
                 ,21: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Qpix Log Reading to 4x96'
+                    description: 'Qpix Log Reading to nx 96'
                     ,type: 'user_specified'
                     ,source: {
-                        plateCount: 0
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 4
+                        plateCount: 0
                         ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: true
                     }
                 }
                 ,22: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Qpix Log Reading to 1x384'
+                    description: 'Qpix Log Reading to nx 384'
                     ,type: 'user_specified'
                     ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0004'
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
                         plateCount: 0
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
+                    }
+                }
+                ,23: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Plate Merge'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
                     }
                     ,destination: {
                         plateCount: 1
-                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                }
+                ,24: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Generic Transfer'
+                    ,type: 'user_specified'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 1
+                        ,variablePlateCount: true
                     }
                 }
             }
@@ -1485,7 +1529,7 @@ app = angular.module('twist.app')
                     ,9: {row: 'B', column: 3}
                     ,10: {row: 'B', column: 4}
                     ,11: {row: 'B', column: 5}
-                    ,12: {row: 'C', column: 6}
+                    ,12: {row: 'B', column: 6}
                     ,13: {row: 'C', column: 1}
                     ,14: {row: 'C', column: 2}
                     ,15: {row: 'C', column: 3}
@@ -1523,7 +1567,72 @@ app = angular.module('twist.app')
                     ,47: {row: 'H', column: 5}
                     ,48: {row: 'H', column: 6}
                 }
+                ,QPIX_SPTT_0004: {
+                    // 48 well plate as understood by qpix
+                    1: {row: 'A', column: 1}
+                    ,2: {row: 'B', column: 1}
+                    ,3: {row: 'C', column: 1}
+                    ,4: {row: 'D', column: 1}
+                    ,5: {row: 'E', column: 1}
+                    ,6: {row: 'F', column: 1}
+                    ,7: {row: 'A', column: 2}
+                    ,8: {row: 'B', column: 2}
+                    ,9: {row: 'C', column: 2}
+                    ,10: {row: 'D', column: 2}
+                    ,11: {row: 'E', column: 2}
+                    ,12: {row: 'F', column: 2}
+                    ,13: {row: 'A', column: 3}
+                    ,14: {row: 'B', column: 3}
+                    ,15: {row: 'C', column: 3}
+                    ,16: {row: 'D', column: 3}
+                    ,17: {row: 'E', column: 3}
+                    ,18: {row: 'F', column: 3}
+                    ,19: {row: 'A', column: 4}
+                    ,20: {row: 'B', column: 4}
+                    ,21: {row: 'C', column: 4}
+                    ,22: {row: 'D', column: 4}
+                    ,23: {row: 'E', column: 4}
+                    ,24: {row: 'F', column: 4}
+                    ,25: {row: 'A', column: 5}
+                    ,26: {row: 'B', column: 5}
+                    ,27: {row: 'C', column: 5}
+                    ,28: {row: 'D', column: 5}
+                    ,29: {row: 'E', column: 5}
+                    ,30: {row: 'F', column: 5}
+                    ,31: {row: 'A', column: 6}
+                    ,32: {row: 'B', column: 6}
+                    ,33: {row: 'C', column: 6}
+                    ,34: {row: 'D', column: 6}
+                    ,35: {row: 'E', column: 6}
+                    ,36: {row: 'F', column: 6}
+                    ,37: {row: 'A', column: 7}
+                    ,38: {row: 'B', column: 7}
+                    ,39: {row: 'C', column: 7}
+                    ,40: {row: 'D', column: 7}
+                    ,41: {row: 'E', column: 7}
+                    ,42: {row: 'F', column: 7}
+                    ,43: {row: 'A', column: 8}
+                    ,44: {row: 'B', column: 8}
+                    ,45: {row: 'C', column: 8}
+                    ,46: {row: 'D', column: 8}
+                    ,47: {row: 'E', column: 8}
+                    ,48: {row: 'F', column: 8}
+                }
 
+            }
+            ,plateTypeInfo: {
+                "SPTT_0004": {
+                    description: 'Generic 48 well plastic plate'
+                    ,wellCount: 48
+                }
+                ,"SPTT_0005": {
+                    description: 'Generic 96 well plastic plate'
+                    ,wellCount: 96
+                }
+                ,"SPTT_0006": {
+                    description: 'Generic 384 well plastic plate'
+                    ,wellCount: 384
+                }
             }
         };
     }

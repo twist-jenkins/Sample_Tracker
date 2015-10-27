@@ -91,6 +91,7 @@ $twst-common-border: 1px solid #aaa;
     border: 1px solid $twst-brown-black;
     opacity: 0.85;
     color: #444;
+    outline: none;
 
     &:hover {
         opacity: 1;
@@ -274,11 +275,35 @@ strong {
 
     &.twst-thumbs-validation-icon-valid {
         @include validThumbIcon;
+
+        &:hover {
+            .twst-thumbs-validation-error {
+                display: none;
+            }
+        }
+
         svg {
             path {
                 fill: #5caa5e;
             }
+        }
+    }
 
+    &.twst-thumbs-validation-icon-error {
+        cursor: pointer;
+
+        &:hover {
+            .twst-thumbs-validation-error {
+                display: inline-block;
+                visibility: visible;
+                opacity: 1;
+            }
+        }
+
+        svg {
+            path {
+                fill: #933030;
+            }
         }
     }
 
@@ -289,6 +314,20 @@ strong {
         path {
             fill: #eee;
         }
+    }
+
+    .twst-thumbs-validation-error {
+        position: absolute;
+        margin-top: 0.1em;
+        opacity: 0;
+        width: 400px;
+        visibility: hidden;
+        right: 2.1em;
+        font-size: 0.5em;
+        background-color: $twst-light-red;
+        padding: 0.3em 0.5em;
+        border-radius: 0.3em;
+        @include transition(opacity .3s ease);
     }
 
 }
@@ -508,6 +547,12 @@ strong {
 
         &:hover, &.twst-focused-true {
             background-color: #fff;
+        }
+
+        &:hover {
+            .twst-custom-checkbox-x {
+                stroke: #ddd;
+            }
         }
 
         &.twst-selected-true, &.twst-selected-true:hover {
@@ -873,6 +918,28 @@ strong {
                     padding-left: 2em;
                 }
 
+                .twst-add-plate-button {
+                    cursor: pointer;
+                    opacity: 0.8;
+                    margin-top: 0.3em;
+                    display: inline-block;
+
+                    &:hover {
+                        opacity: 1;
+                    }
+                    .twst-blue-button {
+                        padding: 0 0.2em;
+                        font-size: 1em;
+                        line-height: 1em;
+                        margin-right: 0.3em;
+                    }
+
+                    span {
+                        position: relative;
+                        top: 0.1em
+                    }
+                }
+
                 .twst-sample-track-plate-row {
                     display: table;
                     width: 100%;
@@ -890,6 +957,40 @@ strong {
 
                     .twst-sample-track-plate-input {
                         width: 100%;
+
+                        .twst-plate-data-loading-spinner {
+                            position: absolute;
+                            right: 1em;
+                            font-size: 0.65em;
+                            top: 1.3em;
+                        }
+
+                        .twst-remove-plate-button {
+                                position: absolute;
+                                right: 0.5em;
+                                font-size: 1em;
+                                top: 0.75em;
+                                opacity: 0.8;
+                                cursor: pointer;
+
+                            svg {
+                                height: 1em;
+
+                                g {
+                                    fill: #ccc;
+                                }
+                            }
+
+                            &:hover {
+                                opacity: 1;
+
+                                svg {
+                                    g {
+                                        fill: $twst-dark-red;
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     .twst-thumbs-validation-icon {
@@ -918,6 +1019,10 @@ strong {
                 padding: 3em;
                 text-align: center;
                 border: 5px dotted $twst-medium-green;
+
+                &.twst-file-drag-over {
+                    background-color: $twst-minty-green;
+                }
 
                 .twst-thumbs-validation-icon {
                     display: block;
@@ -984,6 +1089,36 @@ strong {
             }
         }
 
+        .twst-transfer-plan {
+            margin-top: 2em;
+            position: relative;
+
+            .twst-transfer-plan-show-btn {
+                display: inline-block;
+                font-size: 1.2em;
+                cursor: pointer;
+
+                .twst-custom-radio {
+                    top: 0.1em;
+                }
+            }
+
+            .twst-transfer-plan-transfers-list {
+                .twst-sample-track-download-transfer-plan-excel {
+                        position: absolute;
+                        top: 0.5em;
+                        left: 20em;
+                        display: inline-block;
+                        cursor: pointer;
+                }
+
+                .twst-transfer-plan-preview-table {
+                    margin: 1em auto 0 auto;
+                }
+            }
+
+        }
+
         .twst-sample-track-main-buttons {
             margin-top: 2em;
             position: relative;
@@ -999,7 +1134,6 @@ strong {
 
             .twst-blue-button {
                 font-size: 1.2em;
-                outline: none;
             }
 
             .twst-sample-track-clear-btn {

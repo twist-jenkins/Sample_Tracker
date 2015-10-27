@@ -43,9 +43,9 @@ desired_values = [
     [11, "Aliquoting for Frag analysis", 13, 1, 4],
     [12, "Transformation", 13, 1, 4],
     [13, "Plating on Hamilton", 14, 1, 2],
-    [14, "Picking: Manual to 96 plate x4", 16, 1, 4],
-    [15, "Picking: Qpix to 96 plate x4", 21, 1, 4],
-    [16, "Picking: Qpix to 384 plate", 22, 1, 1],
+    [14, "Picking: Manual to 96 plates", 16, 1, 4],
+    [15, "Picking: Qpix to 96 plates", 21, 1, 4],
+    [16, "Picking: Qpix to 384 plates", 22, 1, 1],
     [17, "Glycerol stock: from 96 plate", 18, 4, 1],
     [18, "Glycerol stock: from 384 plate", 1, 1, 1],
     [19, "Aliquoting for RCA: from 96 plate", 18, 4, 1],
@@ -71,7 +71,9 @@ desired_values = [
     [39, "Hitpicking for miniprep: from glycerol stock", 19, 0, 0],
     [40, "Miniprep", 1, 1, 1],
     [41, "Miniprep transfer to 96-PCR plate", 1, 1, 1],
-    [42, "Hitpick for shipping", 20, 1, 0]
+    [42, "Hitpick for shipping", 20, 1, 0],
+    [43, "Plate Merge", 23, 1, 1],
+    [44, "Generic Transfer", 24, 1, 1]
 ]
 
 
