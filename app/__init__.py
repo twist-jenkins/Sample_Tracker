@@ -62,7 +62,7 @@ app.debug = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',app.config['SQLALCHEMY_DATABASE_URI'])
 
-print "USING DATABASE: " , app.config['SQLALCHEMY_DATABASE_URI']
+print "USING DATABASE: ", app.config['SQLALCHEMY_DATABASE_URI']
 
 UPLOAD_FOLDER = 'app/static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
