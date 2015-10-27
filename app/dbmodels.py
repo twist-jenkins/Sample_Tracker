@@ -169,6 +169,12 @@ class SamplePlateLayout(db.Model):
                                name='enum_sample_status'
                                ), default="active")
 
+    #
+    # Relationships. ORM magicalness.
+    #
+
+    sample = db.relationship("Sample")
+
     def __init__(self, sample_plate_id, sample_id, well_id, operator_id, row, column, status="active"):
         self.sample_plate_id = sample_plate_id
         self.sample_id = sample_id
