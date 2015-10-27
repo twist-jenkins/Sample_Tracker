@@ -95,6 +95,8 @@ class TestCase(unittest.TestCase):
         rv = self.client.get('/api/v1/plate-barcodes/%s'
                              % random_string,
                              content_type='application/json')
+        result = json.loads(rv.data)
+        print result
         assert rv.status_code == 404
 
     def test_get_root_plate_golden(self):
