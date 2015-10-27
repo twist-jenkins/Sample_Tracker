@@ -811,7 +811,17 @@ app = angular.module('twist.app')
 
             }
 
-            var packageResponse = function (respData, thisError) {
+            var packageResponse = function () {
+                var result = {
+                    errors: fileErrors
+                    ,stats: fileStats
+                    ,transferJSON: transferJSON
+                };
+
+                asyncReturn.resolve(result);
+            };
+
+            var decorateResponse = function (respData, thisError) {
 
                 if (thisError) {
                     fileErrors.push(thisError);
@@ -824,53 +834,51 @@ app = angular.module('twist.app')
                     }
                 }
 
-                var result = {
-                    errors: fileErrors
-                    ,stats: fileStats
-                    ,transferJSON: transferJSON
-                };
-
-                asyncReturn.resolve(result);
+                packageResponse();
             }
 
-            var source_barcodes = [];
-            for (barcode in srcPlates) {
-                source_barcodes.push(barcode);
-            }
-            var destination_barcodes = [];
-            for (barcode in destPlates) {
-                destination_barcodes.push(barcode);
-            }
-
-            Api.getSourcePlateWellData(source_barcodes).success(function (data) {
-                var sourceData = data;
-
-                if (sourceData.success) {
-
-                    if (transferPlan.typeDetails.transfer_template_id != 2) {
-                        /* this is NOT a same-plate step, check that the destination plate is not already in the db */
-                        Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
-                            if (!data.success) {
-                                /* error - destination plates already exist */
-                                packageResponse(sourceData, data.errorMessage);
-                            } else {
-                                /* destination plates are new - we're good to go */
-                                packageResponse(sourceData);
-                            }
-                        }).error(function (data) {
-                            packageResponse(sourceData, 'The server returned an error while checking information about the destination plate(s).');
-                        });
-                    } else {
-                        /* this is a same-plate step so the dest plate will already exist - no need to check for it */
-                        packageResponse(sourceData);
-                    }
-                    
-                } else {
-                    packageResponse(sourceData, sourceData.errorMessage);
+            if (fileErrors.length) {
+                packageResponse();
+            } else {
+                var source_barcodes = [];
+                for (barcode in srcPlates) {
+                    source_barcodes.push(barcode);
                 }
-            }).error(function (data) {
-                packageResponse(data, 'Sample information could not be retrieved for these source plates.');
-            });
+                var destination_barcodes = [];
+                for (barcode in destPlates) {
+                    destination_barcodes.push(barcode);
+                }
+
+                Api.getSourcePlateWellData(source_barcodes).success(function (data) {
+                    var sourceData = data;
+
+                    if (sourceData.success) {
+
+                        if (transferPlan.typeDetails.transfer_template_id != 2) {
+                            /* this is NOT a same-plate step, check that the destination plate is not already in the db */
+                            Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
+                                if (!data.success) {
+                                    /* error - destination plates already exist */
+                                    decorateResponse(sourceData, data.errorMessage);
+                                } else {
+                                    /* destination plates are new - we're good to go */
+                                    decorateResponse(sourceData);
+                                }
+                            }).error(function (data) {
+                                decorateResponse(sourceData, 'The server returned an error while checking information about the destination plate(s).');
+                            });
+                        } else {
+                            /* this is a same-plate step so the dest plate will already exist - no need to check for it */
+                            decorateResponse(sourceData);
+                        }
+                        
+                    } else {
+                        decorateResponse(sourceData, sourceData.errorMessage);
+                    }
+                }).error(function (data) {
+                    decorateResponse(data, 'Sample information could not be retrieved for these source plates.');
+                });
+            }
                 
             return asyncReturn.promise;
         }
