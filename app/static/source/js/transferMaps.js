@@ -975,6 +975,19 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
+                ,20: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Hitpick for shipping'
+                    ,type: 'user_specified'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0005'
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                }
                 ,21: {  // keyed to sample_transfer_template_id in the database
                     description: 'Qpix Log Reading to nx 96'
                     ,type: 'user_specified'
