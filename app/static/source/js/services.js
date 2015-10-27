@@ -484,8 +484,12 @@ app = angular.module('twist.app')
                 }
             };
 
+            base.setPlanFromFile = function (planFromFile) {
+                base.planFromFile = planFromFile;
+            }
+
             base.transferFromFile = function (engaged, transfersJSON) {
-                base.planFromFile = engaged;
+                 base.setPlanFromFile(engaged);
                 if (engaged) {
                     base.plateTransfers = transfersJSON;
                 } else {
@@ -687,7 +691,14 @@ app = angular.module('twist.app')
                 }
 
                 if (validateStats && count != transferPlan.map.destination.plateCount) {
-                    fileErrors.push('This transfer expects ' + transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
+                    if (transferPlan.typeDetails.transfer_template_id == 2) {
+                        if (count != 1) {
+                            fileErrors.push('This transfer expects the same source and destination plate but found ' + count + ' destination plates in the file');
+                        }
+                    } else {
+                        fileErrors.push('This transfer expects ' + transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
+                    }
+                    
                 }
 
                 fileStats.sourcePlateRows = srcPlates;
@@ -835,17 +846,25 @@ app = angular.module('twist.app')
                 var sourceData = data;
 
                 if (sourceData.success) {
-                    Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
-                        if (!data.success) {
-                            /* error - destination plates already exist */
-                            packageResponse(sourceData, data.errorMessage);
-                        } else {
-                            /* destination plates are new - we're good to go */
-                            packageResponse(sourceData);
-                        }
-                    }).error(function (data) {
-                        packageResponse(sourceData, 'The server returned an error while checking information about the destination plate(s).');
-                    });
+
+                    if (transferPlan.typeDetails.transfer_template_id != 2) {
+                        /* this is NOT a same-plate step, check that the destination plate is not already in the db */
+                        Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
+                            if (!data.success) {
+                                /* error - destination plates already exist */
+                                packageResponse(sourceData, data.errorMessage);
+                            } else {
+                                /* destination plates are new - we're good to go */
+                                packageResponse(sourceData);
+                            }
+                        }).error(function (data) {
+                            packageResponse(sourceData, 'The server returned an error while checking information about the destination plate(s).');
+                        });
+                    } else {
+                        /* this is a same-plate step so the dest plate will already exist - no need to check for it */
+                        packageResponse(sourceData);
+                    }
+                    
                 } else {
                     packageResponse(sourceData, sourceData.errorMessage);
                 }

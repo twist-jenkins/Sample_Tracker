@@ -53,7 +53,8 @@ class RootPlate(object):
                 plate = create_destination_plate(db_session, operator,
                                              destination_barcode,
                                              source_plate_type_id,
-                                             storage_location_id)
+                                             storage_location_id,
+                                             1)
             except:
                 pass
         return destination_barcode
@@ -65,7 +66,7 @@ class TestCase(unittest.TestCase):
     def setUpClass(cls):
         login_manager.anonymous_user = AutomatedTestingUser
         cls.client = app.test_client()
-        assert "Unittest" in os.environ["WEBSITE_ENV"]
+        # assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
