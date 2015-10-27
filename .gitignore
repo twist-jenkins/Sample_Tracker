@@ -16,3 +16,4 @@ app/static/index.html
 app/static/source/jade/compiled_templates/
 app/static/source/js/templates.js
 test/.cache/
+test/.cache/v/cache/lastfailed
