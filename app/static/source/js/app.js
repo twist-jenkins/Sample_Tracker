@@ -188,37 +188,45 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.fileErrors = [];
         };
 
-        $scope.catchFile = function (fileData) {
+        $scope.catchFile = function (fileData, error) {
             $scope.parsingFile = true;
 
-            // called in timeout to give the spinner time to render
-            $timeout(function () {
+            if (error) {
                 $scope.clearExcelUploadData();
+                $scope.fileErrors.push(error);
+                $scope.excelFileStats = {};
+                $scope.transferPlan.clearPlateTransfers();
+                $scope.parsingFile = false;
+            } else {
+                // called in timeout to give the spinner time to render
+                $timeout(function () {
+                    $scope.clearExcelUploadData();
 
-                if (!fileData) {
-                    fileData = $scope.cachedFileData;
-                } else {
-                    $scope.cachedFileData = fileData;
-                };
-
-                FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
-                    $scope.excelFileStats = resultData.stats;
-                    $scope.fileErrors = resultData.errors;
-
-                    if (!resultData.errors.length) {
-                        $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
+                    if (!fileData) {
+                        fileData = $scope.cachedFileData;
                     } else {
-                        $scope.transferPlan.clearPlateTransfers();
-                    } 
+                        $scope.cachedFileData = fileData;
+                    };
 
-                    $scope.parsingFile = false;
+                    FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
+                        $scope.excelFileStats = resultData.stats;
+                        $scope.fileErrors = resultData.errors;
 
-                }, function (errorData) {
-                    $scope.fileErrors = 'Error: Unknown error while parsing this file.';
-                    $scope.parsingFile = false;
-                });
- 
-            }, 150);
+                        if (!resultData.errors.length) {
+                            $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
+                        } else {
+                            $scope.transferPlan.clearPlateTransfers();
+                        } 
+
+                        $scope.parsingFile = false;
+
+                    }, function (errorData) {
+                        $scope.fileErrors = 'Error: Unknown error while parsing this file.';
+                        $scope.parsingFile = false;
+                    });
+     
+                }, 150);
+            }
         };
 
         /* populate the sample types pulldown */
