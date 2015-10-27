@@ -51,7 +51,8 @@ class RootPlate(object):
             plate = create_destination_plate(db_session, operator,
                                              destination_barcode,
                                              source_plate_type_id,
-                                             storage_location_id)
+                                             storage_location_id,
+                                             1)
         return destination_barcode
 
 

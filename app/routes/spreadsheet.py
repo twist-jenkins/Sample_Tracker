@@ -35,14 +35,17 @@ IGNORE_MISSING_SOURCE_PLATE_WELLS = True
 #
 def create_sample_movement_from_spreadsheet_data(operator,
                                                  sample_transfer_type_id,
+                                                 sample_transfer_template_id,
                                                  wells):
     with scoped_session(db.engine) as db_session:
         return create_adhoc_sample_movement(db_session, operator,
-                                            sample_transfer_type_id, wells)
+                                            sample_transfer_type_id, 
+                                            sample_transfer_template_id, wells)
 
 
 def create_adhoc_sample_movement(db_session, operator,
-                                 sample_transfer_type_id, wells):
+                                 sample_transfer_type_id, 
+                                 sample_transfer_template_id, wells):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
     #
@@ -197,7 +200,8 @@ def create_adhoc_sample_movement(db_session, operator,
                     operator,
                     destination_plate_barcode,
                     sample_plate_type.type_id,
-                    storage_location_id)
+                    storage_location_id,
+                    sample_transfer_template_id)
             except IndexError:
                 err_msg = ("Encountered error creating sample "
                            "transfer. Could not create destination plate: [%s]"
