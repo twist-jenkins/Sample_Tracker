@@ -22,7 +22,7 @@ from app.routes.spreadsheet import create_adhoc_sample_movement
 
 from app import app, db, googlelogin
 
-from app.dbmodels import (SampleTransfer,
+from app.dbmodels import (SampleTransfer, GeneAssemblySampleView,
                           SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
 from app.models import create_destination_plate
 
@@ -40,6 +40,7 @@ from well_count_to_plate_type_name import well_count_to_plate_type_name
 from logging_wrapper import get_logger
 logger = get_logger(__name__)
 
+MAX_SAMPLE_TRANSFER_QUERY_ROWS = 100000
 
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
@@ -143,7 +144,7 @@ def update_plate_barcode():
 
     return jsonify(response)
 
-def sample_transfers(limit=None):
+def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     qry = (
         db.session.query(
@@ -490,9 +491,15 @@ def plate_details(sample_plate_barcode, format):
             parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
 
 
-    rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
-        SampleTransferDetail.source_sample_plate_id==sample_plate_id,
-        SamplePlate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
+    rows = (
+        db.session.query(SamplePlate, SampleTransferDetail)
+        .filter(and_(
+            SampleTransferDetail.source_sample_plate_id == sample_plate_id,
+            SamplePlate.sample_plate_id == \
+                SampleTransferDetail.destination_sample_plate_id
+        ))
+        .all()
+    )
 
     this_to_child_task_name = None
     seen=[]
@@ -507,19 +514,53 @@ def plate_details(sample_plate_barcode, format):
             })
             this_to_child_task_name = details.sample_transfer.sample_transfer_type.name
 
-
-
     wells = []
 
-    rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate_id).all()
-    for well in rows:
-        well_dict = {
-            "well_id":well.well_id,
-            "column_and_row":well_to_col_and_row_mapping_fn(well.well_id),
-            "sample_id":well.sample_id
-        }
-        wells.append(well_dict)
+    qry = (
+        db.session.query(
+            SamplePlateLayout,
+            GeneAssemblySampleView
+        )
+        .filter(
+            SamplePlateLayout.sample_id == GeneAssemblySampleView.sample_id
+        )
+        .filter_by(sample_plate_id=sample_plate_id)
+        .order_by(SamplePlateLayout.well_id)
+    )
+    rows = qry.all()
 
+    gene_assembly_sample_attrs = (
+        'sample_date_created',
+        'sample_date_created',
+        'sample_name',
+        'sample_operator_id',
+        'sample_operator_first_and_last_name',
+        'sample_description',
+        'sample_parent_process_id',
+        'sample_status',
+        'ga_sagi_id',
+        'sagi_sag_id',
+        'sagi_date_created',
+        'sagg_date_created',
+        'sagg_fivep_ps_id',
+        'sagg_threep_ps_id',
+        'sagg_fivep_as_id',
+        'sagg_fivep_as_dir',
+        'sagg_threep_as_id',
+        'sagg_threep_as_dir',
+        'gs_sequence_id'
+    )
+
+    for well, ga in rows:
+        well_dict = {
+            "well_id": well.well_id,
+            "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
+            "sample_id": well.sample_id,
+            "type_id": well.sample.type_id
+        }
+        for attr_name in gene_assembly_sample_attrs:
+            well_dict[attr_name] = str(getattr(ga, attr_name))
+        wells.append(well_dict)
 
     report = {
         "success":True,
@@ -590,11 +631,22 @@ def plate_details(sample_plate_barcode, format):
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
-        cw.writerow(["","WELL ID", "COL/ROW", "SAMPLE ID"])
+        col_header_names = ["","WELL ID", "COL/ROW", "SAMPLE ID", "TYPE ID"]
+        for attr_name in gene_assembly_sample_attrs:
+            col_header_names.append(attr_name)
+        cw.writerow(col_header_names)
 
 
         for well in wells:
-            cw.writerow(["",well["well_id"], well_to_col_and_row_mapping_fn(well["well_id"]), well["sample_id"]])
+            cols = ["",
+                    well["well_id"],
+                    well_to_col_and_row_mapping_fn(well["well_id"]),
+                    well["sample_id"],
+                    well["type_id"]
+                    ]
+            for attr_name in gene_assembly_sample_attrs:
+                cols.append(well_dict[attr_name])
+            cw.writerow(cols)
 
         csvout = si.getvalue().strip('\r\n')
 

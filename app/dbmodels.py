@@ -15,9 +15,12 @@ import datetime
 from app import app
 from app import db
 
+from sqlalchemy import MetaData
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.dialects import postgresql
+import sqlalchemy.exc
 
+db_metadata = MetaData(bind=db.engine)  # for autoload / schema reflection
 
 def create_unique_object_id(prefix=""):
     return prefix + str(bson.ObjectId())
@@ -79,8 +82,6 @@ class Operator(db.Model):
         return False
 
 
-
-
 class Sample(db.Model):
 
     sample_id = db.Column(db.String(40), primary_key=True)
@@ -107,6 +108,14 @@ class Sample(db.Model):
             self.type_id,self.operator_id, self.name)
 
 
+class GeneAssemblySampleView(db.Model):
+    view_name = "gene_assembly_sample_view"
+    pk_col = db.Column("sample_id", db.String(40), primary_key=True)
+    try:
+        __table__ = db.Table(view_name, db_metadata, pk_col, autoload=True)
+    except sqlalchemy.exc.NoSuchTableError:
+        # for migrations that haven't run yet
+        __table__ = db.Table(view_name, db_metadata, pk_col, autoload=False)
 
 
 class SamplePlate(db.Model):
