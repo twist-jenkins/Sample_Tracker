@@ -379,7 +379,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             $scope.retrievedPlateBarcode = '';
 
-            Api.getPlateDetails(barcode).success(function (data) {
+            Api.getBasicPlateDetails(barcode).success(function (data) {
                 $scope.fetchingDetails = false;
                 $scope.plateDetails = data;
                 $scope.retrievedPlateBarcode = $scope.plateBarcode + '';

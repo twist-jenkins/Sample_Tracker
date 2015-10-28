@@ -51,7 +51,7 @@ div(class="twst-plate-details-main twst-child-page")
                                     td(class="twst-data-readout-table-header") Col/Row
                                     td(class="twst-data-readout-table-header") Sample Id
                                 tr(ng-repeat="well in plateDetails.wells")
-                                    td {{well.well_id}}
-                                    td {{well.column_and_row}}
-                                    td {{well.sample_id}}
+                                    td {{::well.well_id}}
+                                    td {{::well.column_and_row}}
+                                    td {{::well.sample_id}}
     div(ui-view)
