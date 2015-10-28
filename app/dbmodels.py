@@ -18,7 +18,6 @@ from app import db
 from sqlalchemy import MetaData
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.dialects import postgresql
-import sqlalchemy.exc
 
 db_metadata = MetaData(bind=db.engine)  # for autoload / schema reflection
 
@@ -109,13 +108,9 @@ class Sample(db.Model):
 
 
 class GeneAssemblySampleView(db.Model):
-    view_name = "gene_assembly_sample_view"
-    pk_col = db.Column("sample_id", db.String(40), primary_key=True)
-    try:
-        __table__ = db.Table(view_name, db_metadata, pk_col, autoload=True)
-    except sqlalchemy.exc.NoSuchTableError:
-        # for migrations that haven't run yet
-        __table__ = db.Table(view_name, db_metadata, pk_col, autoload=False)
+    __table__ = db.Table("gene_assembly_sample_view", db_metadata,
+                         db.Column("sample_id", db.String(40),
+                                   primary_key=True), autoload=True)
 
 
 class SamplePlate(db.Model):
