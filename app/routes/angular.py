@@ -443,7 +443,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     db_session.add(source_to_dest_well_transfer)
 
 
-def plate_details(sample_plate_barcode, format):
+def plate_details(sample_plate_barcode, format, basicDataOnly=False):
 
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
@@ -517,17 +517,19 @@ def plate_details(sample_plate_barcode, format):
 
     wells = []
 
-    qry = (
-        db.session.query(
-            SamplePlateLayout,
-            GeneAssemblySampleView
+
+    if basicDataOnly:
+        dbQ = db.session.query(SamplePlateLayout)
+        
+    else:
+        dbQ = (
+            db.session.query(
+                SamplePlateLayout,
+                GeneAssemblySampleView
+            ).filter(SamplePlateLayout.sample_id == GeneAssemblySampleView.sample_id)
         )
-        .filter(
-            SamplePlateLayout.sample_id == GeneAssemblySampleView.sample_id
-        )
-        .filter_by(sample_plate_id=sample_plate_id)
-        .order_by(SamplePlateLayout.well_id)
-    )
+
+    qry = dbQ.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
     rows = qry.all()
 
     gene_assembly_sample_attrs = (
@@ -572,15 +574,24 @@ def plate_details(sample_plate_barcode, format):
         'gs_description'
     )
 
-    for well, ga in rows:
-        well_dict = {
-            "well_id": well.well_id,
-            "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-            "sample_id": well.sample_id
-        }
-        for attr_name in gene_assembly_sample_attrs:
-            well_dict[attr_name] = str(getattr(ga, attr_name))
-        wells.append(well_dict)
+    if basicDataOnly:
+        for well in rows:
+            wells.append({
+                "well_id": well.well_id,
+                "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
+                "sample_id": well.sample_id
+            })
+        
+    else:
+        for well, ga in rows:
+            well_dict = {
+                "well_id": well.well_id,
+                "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
+                "sample_id": well.sample_id
+            }
+            for attr_name in gene_assembly_sample_attrs:
+                well_dict[attr_name] = str(getattr(ga, attr_name))
+            wells.append(well_dict)
 
     report = {
         "success":True,
