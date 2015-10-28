@@ -109,6 +109,10 @@ app = angular.module('twist.app')
                 var plateDetailsReq = ApiRequestObj.getGet('plate-barcodes/' + barcode + (format ? '/' + format : ''));
                 return $http(plateDetailsReq);
             }
+            ,getBasicPlateDetails: function (barcode) {
+                var plateDetailsReq = ApiRequestObj.getGet('basic-plate-info/' + barcode);
+                return $http(plateDetailsReq);
+            }
             ,getSourcePlateWellData: function (barcodes) {
                 var wellDatasReq = ApiRequestObj.getPost('source-plate-well-data');
                 wellDatasReq.data = {
@@ -414,7 +418,7 @@ app = angular.module('twist.app')
 
                 updating();
                 sourceItem.updating = true;
-                Api.getPlateDetails(barcode).success(function (data) {
+                Api.getBasicPlateDetails(barcode).success(function (data) {
                     if (data.success) {
                         if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
                             onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
