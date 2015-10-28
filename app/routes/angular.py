@@ -575,13 +575,12 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
 
     if basicDataOnly:
         for well in rows:
-            well_dict = {
+            wells.append({
                 "well_id": well.well_id,
                 "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
                 "sample_id": well.sample_id,
                 "type_id": well.sample.type_id
-            }
-            wells.append(well_dict)
+            })
         
     else:
         for well, ga in rows:
