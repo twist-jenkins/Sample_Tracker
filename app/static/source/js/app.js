@@ -188,37 +188,45 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.fileErrors = [];
         };
 
-        $scope.catchFile = function (fileData) {
+        $scope.catchFile = function (fileData, error) {
             $scope.parsingFile = true;
 
-            // called in timeout to give the spinner time to render
-            $timeout(function () {
+            if (error) {
                 $scope.clearExcelUploadData();
+                $scope.fileErrors.push(error);
+                $scope.excelFileStats = {};
+                $scope.transferPlan.clearPlateTransfers();
+                $scope.parsingFile = false;
+            } else {
+                // called in timeout to give the spinner time to render
+                $timeout(function () {
+                    $scope.clearExcelUploadData();
 
-                if (!fileData) {
-                    fileData = $scope.cachedFileData;
-                } else {
-                    $scope.cachedFileData = fileData;
-                };
-
-                FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
-                    $scope.excelFileStats = resultData.stats;
-                    $scope.fileErrors = resultData.errors;
-
-                    if (!resultData.errors.length) {
-                        $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
+                    if (!fileData) {
+                        fileData = $scope.cachedFileData;
                     } else {
-                        $scope.transferPlan.clearPlateTransfers();
-                    } 
+                        $scope.cachedFileData = fileData;
+                    };
 
-                    $scope.parsingFile = false;
+                    FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
+                        $scope.excelFileStats = resultData.stats;
+                        $scope.fileErrors = resultData.errors;
 
-                }, function (errorData) {
-                    $scope.fileErrors = 'Error: Unknown error while parsing this file.';
-                    $scope.parsingFile = false;
-                });
- 
-            }, 150);
+                        if (!resultData.errors.length) {
+                            $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
+                        } else {
+                            $scope.transferPlan.clearPlateTransfers();
+                        } 
+
+                        $scope.parsingFile = false;
+
+                    }, function (errorData) {
+                        $scope.fileErrors = 'Error: Unknown error while parsing this file.';
+                        $scope.parsingFile = false;
+                    });
+     
+                }, 150);
+            }
         };
 
         /* populate the sample types pulldown */
@@ -348,18 +356,24 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     function ($scope, $state, Api, TypeAhead) {
         $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
         $scope.plateBarcode = '';
+        $scope.lastUsedBarcode = null;
 
         $scope.getDetailsClicked = function () {
             if ($scope.plateBarcode.length > 5) {
-                $state.go('root.plate_details.barcode_entered', {
-                    entered_barcode: $scope.plateBarcode
-                });
+                if ($scope.plateBarcode === $scope.lastUsedBarcode) {
+                    $scope.getPlateDetails($scope.plateBarcode);
+                } else {
+                    $state.go('root.plate_details.barcode_entered', {
+                        entered_barcode: $scope.plateBarcode
+                    });
+                }
             }
         };
 
         $scope.getPlateDetails = function (barcode) {
             $scope.plateDetails = null;
             $scope.plateBarcode = barcode;
+            $scope.lastUsedBarcode = barcode;
 
             $scope.fetchingDetails = true;
 

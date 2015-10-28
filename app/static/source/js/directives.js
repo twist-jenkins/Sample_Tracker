@@ -199,6 +199,7 @@ app = angular.module("twist.app")
                         $element.removeClass('twst-file-drag-over');
 
                         var f = $event.originalEvent.dataTransfer.files[0];
+
                         var reader = new FileReader();
                         reader.onload = function(e) {
                             var data = e.target.result;
@@ -209,7 +210,10 @@ app = angular.module("twist.app")
                             reader.readAsBinaryString(f);
                         } else if (f.type.indexOf('csv') != -1) {
                             reader.readAsText(f);
-                        } 
+                        } else {
+                            $scope.twstDropTarget({}, 'Unrecognized upload file type: ' + f.type);
+                            $scope.$apply(); // must call manually since the onload event is not angularized
+                        }
                         
                     });
                 }
