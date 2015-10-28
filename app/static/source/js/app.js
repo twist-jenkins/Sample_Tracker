@@ -379,11 +379,15 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             $scope.retrievedPlateBarcode = '';
 
-            Api.getPlateDetails(barcode).success(function (data) {
+            Api.getBasicPlateDetails(barcode).success(function (data) {
                 $scope.fetchingDetails = false;
                 $scope.plateDetails = data;
                 $scope.retrievedPlateBarcode = $scope.plateBarcode + '';
             });
+        }
+
+        $scope.getExcelHref = function () {
+            return $scope.plateBarcode.length < 6 ? null : '/api/v1/plate-barcodes/' + $scope.plateBarcode + '/csv';
         }
     }]
 )

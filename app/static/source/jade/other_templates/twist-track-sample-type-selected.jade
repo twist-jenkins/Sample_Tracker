@@ -72,10 +72,10 @@ div(class="twst-sample-track-main-tab-body" ng-show="transferPlan.typeDetails")
                         td(class="twst-data-readout-table-header") Destination Well
                         td(class="twst-data-readout-table-header") Destination Well Count  
                     tr(ng-repeat="row in transferPlan.plateTransfers")
-                        td {{row.source_sample_id}}
-                        td {{row.source_plate_barcode}}
-                        td {{row.source_well_name}}
-                        td {{row.destination_plate_barcode}}
-                        td {{row.destination_well_name}}
-                        td {{row.destination_plate_well_count}}
+                        td {{::row.source_sample_id}}
+                        td {{::row.source_plate_barcode}}
+                        td {{::row.source_well_name}}
+                        td {{::row.destination_plate_barcode}}
+                        td {{::row.destination_well_name}}
+                        td {{::row.destination_plate_well_count}}
     div(ui-view ng-if="transferPlan.typeDetails")
