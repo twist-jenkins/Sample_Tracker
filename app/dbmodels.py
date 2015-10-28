@@ -108,9 +108,14 @@ class Sample(db.Model):
 
 
 class GeneAssemblySampleView(db.Model):
-    __table__ = db.Table("gene_assembly_sample_view", db_metadata,
-                         db.Column("sample_id", db.String(40),
-                                   primary_key=True), autoload=True)
+    try:
+        __table__ = db.Table("gene_assembly_sample_view", db_metadata,
+                             db.Column("sample_id", db.String(40),
+                                       primary_key=True), autoload=True)
+    except:
+        __table__ = db.Table("gene_assembly_sample", db_metadata,
+                             db.Column("sample_id", db.String(40),
+                                       primary_key=True), autoload=False)
 
 
 class SamplePlate(db.Model):

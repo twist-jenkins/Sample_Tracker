@@ -445,9 +445,6 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
 def plate_details(sample_plate_barcode, format, basicDataOnly=False):
 
-    #
-    # "ccccccc1234"
-    #
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
     if not sample_plate:
@@ -490,21 +487,25 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
             })
             parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
 
-
     rows = (
-        db.session.query(SamplePlate, SampleTransferDetail)
-        .filter(and_(
-            SampleTransferDetail.source_sample_plate_id == sample_plate_id,
-            SamplePlate.sample_plate_id == \
-                SampleTransferDetail.destination_sample_plate_id
-        ))
+        db.session.query(
+            SamplePlate,
+            SampleTransfer,
+            SampleTransferDetail
+        )
+        .filter(SampleTransferDetail.source_sample_plate_id == sample_plate_id)
+        .filter(SamplePlate.sample_plate_id ==
+                SampleTransferDetail.destination_sample_plate_id)
+        .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
+        .options(subqueryload(SampleTransfer.sample_transfer_type))
+        # .options(subqueryload(SampleTransfer.operator))
         .all()
     )
 
     this_to_child_task_name = None
     seen=[]
     child_plates=[]
-    for child_plate, details in rows:
+    for child_plate, transfer, details in rows:
         if child_plate.sample_plate_id not in seen:
             seen.append(child_plate.sample_plate_id)
             child_plates.append({
@@ -578,8 +579,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
             wells.append({
                 "well_id": well.well_id,
                 "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-                "sample_id": well.sample_id,
-                "type_id": well.sample.type_id
+                "sample_id": well.sample_id
             })
         
     else:
@@ -587,8 +587,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
             well_dict = {
                 "well_id": well.well_id,
                 "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-                "sample_id": well.sample_id,
-                "type_id": well.sample.type_id
+                "sample_id": well.sample_id
             }
             for attr_name in gene_assembly_sample_attrs:
                 well_dict[attr_name] = str(getattr(ga, attr_name))
@@ -663,7 +662,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
-        col_header_names = ["","WELL ID", "COL/ROW", "SAMPLE ID", "TYPE ID"]
+        col_header_names = ["","WELL ID", "COL/ROW", "SAMPLE ID"]
         for attr_name in gene_assembly_sample_attrs:
             col_header_names.append(attr_name)
         cw.writerow(col_header_names)
@@ -673,8 +672,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
             cols = ["",
                     well["well_id"],
                     well_to_col_and_row_mapping_fn(well["well_id"]),
-                    well["sample_id"],
-                    well["type_id"]
+                    well["sample_id"]
                     ]
             for attr_name in gene_assembly_sample_attrs:
                 cols.append(well[attr_name])
