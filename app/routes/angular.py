@@ -13,7 +13,7 @@ import json
 import logging
 import StringIO
 
-from flask import g, make_response, request, Response, jsonify
+from flask import g, make_response, request, Response, jsonify, abort
 
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, subqueryload
@@ -22,7 +22,7 @@ from app.routes.spreadsheet import create_adhoc_sample_movement
 
 from app import app, db, googlelogin
 
-from app.dbmodels import (SampleTransfer,
+from app.dbmodels import (SampleTransfer, GeneAssemblySampleView,
                           SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
 from app.models import create_destination_plate
 
@@ -40,6 +40,7 @@ from well_count_to_plate_type_name import well_count_to_plate_type_name
 from logging_wrapper import get_logger
 logger = get_logger(__name__)
 
+MAX_SAMPLE_TRANSFER_QUERY_ROWS = 100000
 
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
@@ -48,12 +49,18 @@ def new_home():
     return app.send_static_file('index.html')
 
 
+def error_response(status_code, message):
+    response = jsonify({'success': False, 'message': message})
+    response.status_code = status_code
+    return response
+
+
 def user_data():
     user = None
 
     if hasattr(g, 'user') and hasattr(g.user, 'first_and_last_name'):
         user = {
-            "name" : g.user.first_and_last_name
+            "name": g.user.first_and_last_name
         }
 
     returnData = {
@@ -111,13 +118,9 @@ def update_plate_barcode():
 
     sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
 
-
     if not sample_plate:
-        response = {
-            "success":False,
-            "errorMessage":"There is no sample plate with the id: [%s]" % (sample_plate_id)
-        }
-        return jsonify(response)
+        errmsg = "There is no sample plate with the id: [%s]"
+        return error_response(404, errmsg % sample_plate_id)
 
     #
     # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
@@ -126,11 +129,8 @@ def update_plate_barcode():
     if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
         logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
             (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
-        response = {
-            "success":False,
-            "errorMessage":"The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.sample_plate_id)
-        }
-        return jsonify(response)
+        errmsg = "The barcode [%s] is already assigned to the plate with id: [%s]"
+        return error_response(400, errmsg % (external_barcode, sample_plate_with_this_barcode.sample_plate_id))
 
 
     sample_plate.external_barcode = external_barcode
@@ -144,7 +144,7 @@ def update_plate_barcode():
 
     return jsonify(response)
 
-def sample_transfers(limit=None):
+def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     qry = (
         db.session.query(
@@ -237,10 +237,7 @@ def create_step_record_adhoc(sample_transfer_type_id,
                 "success": True
             })
         else:
-            return jsonify({
-                "success": False,
-                "errorMessage": result["errorMessage"]
-            })
+            return error_response(400, result["errorMessage"])
 
 def create_step_record():
     data = request.json
@@ -267,10 +264,8 @@ def create_step_record():
         if sample_transfer_template_id in json_maps["transfer_maps"]:
             templateData = json_maps["transfer_maps"][sample_transfer_template_id]
         else:
-            return jsonify({
-                "success": False
-                , "errorMessage": "A template for this transfer type (%s) could not be found." % (sample_transfer_template_id)
-            })
+            errmsg = "A template for this transfer type (%s) could not be found."
+            return error_response(404, errmsg % sample_transfer_template_id)
 
         # validate that the plate counts/barcodes expected for a given template are present
         source_barcodes_count = len(source_barcodes)
@@ -284,10 +279,8 @@ def create_step_record():
             problem_plates = "destination"
 
         if problem_plates != "":
-            return jsonify({
-                "success": False,
-                "errorMessage": "The number of %s plates does not match the template." % (problem_plates)
-            })
+            errmsg = "The number of %s plates does not match the template."
+            return error_response(400, errmsg % problem_plates)
 
         with scoped_session(db.engine) as db_session:
 
@@ -300,11 +293,10 @@ def create_step_record():
                 # load our source plates into an array for looping
                 source_plate = db_session.query(SamplePlate).filter_by(external_barcode=barcode).first()
                 if not source_plate:
-                    logger.info(" %s encountered error creating sample transfer. There is no source plate with the barcode: %s" % (g.user.first_and_last_name, barcode))
-                    return jsonify({
-                        "success": False,
-                        "errorMessage": "There is no source plate with the barcode: %s" % (barcode)
-                    })
+                    errmsg = "There is no source plate with the barcode: %s"
+                    errmsg %= barcode
+                    logger.info(" %s encountered error creating sample transfer: " % g.user.first_and_last_name + errmsg)
+                    return error_response(404, errmsg)
                 source_plates.append(source_plate)
 
             # the easy case: source and destination plates have same layout and there's only 1 of each
@@ -336,10 +328,7 @@ def create_step_record():
                             source_plate_well.row, source_plate_well.column
                         )
                     except IndexError as err:
-                        return jsonify({
-                            "success": False,
-                            "errorMessage": err
-                        })
+                        return error_response(400, err)
 
                     order_number += 1
 
@@ -396,10 +385,7 @@ def create_step_record():
                             )
                             # TO DO: assign non-bogus row and column values)
                         except IndexError as err:
-                            return jsonify({
-                                "success": False,
-                                "errorMessage": err
-                            })
+                            return error_response(400, err)
 
                         order_number += 1
 
@@ -465,11 +451,8 @@ def plate_details(sample_plate_barcode, format):
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
     if not sample_plate:
-        response = {
-            "success": False,
-            "errorMessage": "There is no plate with the barcode: [%s]" % (sample_plate_barcode)
-        }
-        return jsonify(response)
+        errmsg = "There is no plate with the barcode: [%s]"
+        return error_response(404, errmsg % sample_plate_barcode)
 
     sample_plate_id = sample_plate.sample_plate_id
 
@@ -508,9 +491,15 @@ def plate_details(sample_plate_barcode, format):
             parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
 
 
-    rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
-        SampleTransferDetail.source_sample_plate_id==sample_plate_id,
-        SamplePlate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
+    rows = (
+        db.session.query(SamplePlate, SampleTransferDetail)
+        .filter(and_(
+            SampleTransferDetail.source_sample_plate_id == sample_plate_id,
+            SamplePlate.sample_plate_id == \
+                SampleTransferDetail.destination_sample_plate_id
+        ))
+        .all()
+    )
 
     this_to_child_task_name = None
     seen=[]
@@ -525,19 +514,53 @@ def plate_details(sample_plate_barcode, format):
             })
             this_to_child_task_name = details.sample_transfer.sample_transfer_type.name
 
-
-
     wells = []
 
-    rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate_id).all()
-    for well in rows:
-        well_dict = {
-            "well_id":well.well_id,
-            "column_and_row":well_to_col_and_row_mapping_fn(well.well_id),
-            "sample_id":well.sample_id
-        }
-        wells.append(well_dict)
+    qry = (
+        db.session.query(
+            SamplePlateLayout,
+            GeneAssemblySampleView
+        )
+        .filter(
+            SamplePlateLayout.sample_id == GeneAssemblySampleView.sample_id
+        )
+        .filter_by(sample_plate_id=sample_plate_id)
+        .order_by(SamplePlateLayout.well_id)
+    )
+    rows = qry.all()
 
+    gene_assembly_sample_attrs = (
+        'sample_date_created',
+        'sample_date_created',
+        'sample_name',
+        'sample_operator_id',
+        'sample_operator_first_and_last_name',
+        'sample_description',
+        'sample_parent_process_id',
+        'sample_status',
+        'ga_sagi_id',
+        'sagi_sag_id',
+        'sagi_date_created',
+        'sagg_date_created',
+        'sagg_fivep_ps_id',
+        'sagg_threep_ps_id',
+        'sagg_fivep_as_id',
+        'sagg_fivep_as_dir',
+        'sagg_threep_as_id',
+        'sagg_threep_as_dir',
+        'gs_sequence_id'
+    )
+
+    for well, ga in rows:
+        well_dict = {
+            "well_id": well.well_id,
+            "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
+            "sample_id": well.sample_id,
+            "type_id": well.sample.type_id
+        }
+        for attr_name in gene_assembly_sample_attrs:
+            well_dict[attr_name] = str(getattr(ga, attr_name))
+        wells.append(well_dict)
 
     report = {
         "success":True,
@@ -608,11 +631,22 @@ def plate_details(sample_plate_barcode, format):
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
-        cw.writerow(["","WELL ID", "COL/ROW", "SAMPLE ID"])
+        col_header_names = ["","WELL ID", "COL/ROW", "SAMPLE ID", "TYPE ID"]
+        for attr_name in gene_assembly_sample_attrs:
+            col_header_names.append(attr_name)
+        cw.writerow(col_header_names)
 
 
         for well in wells:
-            cw.writerow(["",well["well_id"], well_to_col_and_row_mapping_fn(well["well_id"]), well["sample_id"]])
+            cols = ["",
+                    well["well_id"],
+                    well_to_col_and_row_mapping_fn(well["well_id"]),
+                    well["sample_id"],
+                    well["type_id"]
+                    ]
+            for attr_name in gene_assembly_sample_attrs:
+                cols.append(well_dict[attr_name])
+            cw.writerow(cols)
 
         csvout = si.getvalue().strip('\r\n')
 
@@ -641,7 +675,7 @@ def source_plate_well_data():
                 "errorMessage": "There is no plate with the barcode: [%s]" % (barcode)
             }
             return jsonify(response)
-        
+
         rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
 
         well_to_col_and_row_mapping_fn = {

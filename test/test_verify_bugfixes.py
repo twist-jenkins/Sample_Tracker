@@ -6,7 +6,7 @@ import os
 import logging
 logging.basicConfig(level=logging.INFO)
 
-os.environ["WEBSITE_ENV"] = "Unittest"
+os.environ["WEBSITE_ENV"] = "Localunittest"
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
@@ -18,9 +18,9 @@ class TestCase(unittest.TestCase):
 
     def setUp(self):
         self.client = app.test_client()
-        assert "Unittest" in os.environ["WEBSITE_ENV"]
-        assert '@' not in app.config['SQLALCHEMY_DATABASE_URI']
-        assert 'sqlite' in app.config['SQLALCHEMY_DATABASE_URI']
+        # assert "Unittest" in os.environ["WEBSITE_ENV"]
+        assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
+        assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
 
     def tearDown(self):

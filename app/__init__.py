@@ -33,7 +33,7 @@ import assets
 ##  syslog.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO)
-SHOW_SQLALCHEMY_TRACE = False
+SHOW_SQLALCHEMY_TRACE = True
 if SHOW_SQLALCHEMY_TRACE:
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -62,7 +62,7 @@ app.debug = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',app.config['SQLALCHEMY_DATABASE_URI'])
 
-print "USING DATABASE: " , app.config['SQLALCHEMY_DATABASE_URI']
+print "USING DATABASE: ", app.config['SQLALCHEMY_DATABASE_URI']
 
 UPLOAD_FOLDER = 'app/static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -386,5 +386,8 @@ def source_plate_well_data():
 def check_plates_are_new():
     return routes.check_plates_are_new()
 
-rest.api.add_resource(rest.PlanList, '/api/v1/rest/transfer-plans')
-rest.api.add_resource(rest.Plan, '/api/v1/rest/transfer-plans/<plan_id>')
+rest.api.add_resource(rest.PlanListResource,
+                      '/api/v1/rest/transfer-plans')
+
+rest.api.add_resource(rest.PlanResource,
+                      '/api/v1/rest/transfer-plans/<plan_id>')
