@@ -665,7 +665,7 @@ def plate_details(sample_plate_barcode, format):
                     well["type_id"]
                     ]
             for attr_name in gene_assembly_sample_attrs:
-                cols.append(well_dict[attr_name])
+                cols.append(well[attr_name])
             cw.writerow(cols)
 
         csvout = si.getvalue().strip('\r\n')
