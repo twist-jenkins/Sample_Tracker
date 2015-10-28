@@ -1,6 +1,6 @@
 var app;
 
-app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main', 'ngSanitize'])
+app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main'])
 
 
 .controller('rootController', ['$scope', '$state', 'User',
