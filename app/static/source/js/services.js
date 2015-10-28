@@ -435,7 +435,7 @@ app = angular.module('twist.app')
                     } else {
                         onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
                     }  
-                }).error(function () {
+                }).error(function (data) {
                     onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
                 });
             }
@@ -459,11 +459,15 @@ app = angular.module('twist.app')
 
                     updating();
                     destItem.updating = true;
-                    Api.getPlateDetails(barcode).success(function (data) {
-                        if (data.success) {
+
+                    var barcodeArray = [barcode];
+
+                    Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
+                        if (!data.success) {
+                            /* error - destination plates already exist */
                             onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
-                        } else { 
-                            /* then we're good to go */
+                        } else {
+                            /* destination plate is new - we're good to go */
                             destItem.data = {dummyData: true}; /* shows the "valid" icon for this input */
                             destItem.updating = false;
                             /* check if we have all the required destination barcodes */
@@ -476,7 +480,9 @@ app = angular.module('twist.app')
                             base.destinationsReady = true;
                             updateTransferList();
                         }
-                        ready();  
+                        ready(); 
+                    }).error(function (data) {
+                        onError(destItem, 'The server returned an error while checking information about the destination plate.');
                     });
 
                 } else {
