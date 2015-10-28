@@ -531,13 +531,30 @@ def plate_details(sample_plate_barcode, format):
 
     gene_assembly_sample_attrs = (
         'sample_date_created',
-        'sample_date_created',
         'sample_name',
         'sample_operator_id',
         'sample_operator_first_and_last_name',
         'sample_description',
         'sample_parent_process_id',
         'sample_status',
+        'cor_order_id',
+        'cor_order_date',
+        'cor_customer_id',
+        'cid_institution_id',
+        'coi_order_item_id',
+        'coi_line_item_number',
+        'coi_order_configuration_id',
+        'coi_received_datetime',
+        'coi_due_datetime',
+        'coi_priority',
+        'coi_order_item_status_id',
+        'coi_order_item_type_id',
+        'coi_order_item_delivery_format_id',
+        'coi_customer_sequence_num',
+        'coi_customer_line_item_id',
+        'coi_customer_line_item_description',
+        'coi_description',
+        'coi_notes',
         'ga_sagi_id',
         'sagi_sag_id',
         'sagi_date_created',
@@ -548,7 +565,10 @@ def plate_details(sample_plate_barcode, format):
         'sagg_fivep_as_dir',
         'sagg_threep_as_id',
         'sagg_threep_as_dir',
-        'gs_sequence_id'
+        'gs_sequence_id',
+        'gs_seq',
+        'gs_name',
+        'gs_description'
     )
 
     for well, ga in rows:

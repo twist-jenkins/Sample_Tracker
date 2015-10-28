@@ -90,7 +90,7 @@ for name, bundle in assets_loader.load_bundles().iteritems():
 
 db = SQLAlchemy(app)
 
-from dbmodels import *
+# from dbmodels import *  ## this import does not seem compatible with autoload
 
 
 
