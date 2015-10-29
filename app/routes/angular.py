@@ -520,7 +520,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
 
     if basicDataOnly:
         dbQ = db.session.query(SamplePlateLayout)
-        
+
     else:
         dbQ = (
             db.session.query(
@@ -581,7 +581,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
                 "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
                 "sample_id": well.sample_id
             })
-        
+
     else:
         for well, ga in rows:
             well_dict = {
@@ -590,7 +590,10 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
                 "sample_id": well.sample_id
             }
             for attr_name in gene_assembly_sample_attrs:
-                well_dict[attr_name] = str(getattr(ga, attr_name))
+                val = getattr(ga, attr_name, None)
+                if val is not None:
+                    val = str(val)
+                well_dict[attr_name] = val
             wells.append(well_dict)
 
     report = {
