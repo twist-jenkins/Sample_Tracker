@@ -443,7 +443,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     db_session.add(source_to_dest_well_transfer)
 
 
-def plate_details(sample_plate_barcode, format, basicDataOnly=False):
+def plate_details(sample_plate_barcode, format, basic_data_only=False):
 
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
@@ -518,7 +518,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
     wells = []
 
 
-    if basicDataOnly:
+    if basic_data_only:
         dbQ = db.session.query(SamplePlateLayout)
 
     else:
@@ -574,7 +574,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
         'gs_description'
     )
 
-    if basicDataOnly:
+    if basic_data_only:
         for well in rows:
             wells.append({
                 "well_id": well.well_id,
