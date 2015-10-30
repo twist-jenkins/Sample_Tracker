@@ -18,9 +18,9 @@ def upgrade():
 
     op.create_table(
         'sample_transfer_plan',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('transfer_plan', postgresql.JSON(), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.Column('plan_id', sa.String(40), nullable=False),
+        sa.Column('plan', postgresql.JSON(), nullable=False),
+        sa.PrimaryKeyConstraint('plan_id')
     )
 
 

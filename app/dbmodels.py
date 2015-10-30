@@ -410,6 +410,6 @@ class SampleTransferPlan(db.Model):
         self.plan = plan
 
     def __repr__(self):
-        return '<SampleTransferPlan id: [%s]>' % (self.plan_id, )
+        return '<SampleTransfer Plan id: [%s]>' % (self.plan_id, )
 
 
