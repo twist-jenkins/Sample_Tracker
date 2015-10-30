@@ -8,7 +8,7 @@ from sqlalchemy.sql import func
 from app import app
 from app import db
 from app.utils import scoped_session
-from dbmodels import TransferPlan
+from dbmodels import SampleTransferPlan
 
 api = flask_restful.Api(app)
 
@@ -25,8 +25,8 @@ class PlanResource(flask_restful.Resource):
     def get(self, plan_id):
         """fetches a single plan"""
         with scoped_session(db.engine) as db_session:
-            plan = db_session.query(TransferPlan).filter(
-                TransferPlan.plan_id == plan_id).first()
+            plan = db_session.query(SampleTransferPlan).filter(
+                SampleTransferPlan.plan_id == plan_id).first()
             if plan:
                 db_session.expunge(plan)
                 return plan.plan
@@ -36,8 +36,8 @@ class PlanResource(flask_restful.Resource):
     def delete(self, plan_id):
         """deletes a single plan"""
         with scoped_session(db.engine) as db_session:
-            plan = db_session.query(TransferPlan).filter(
-                TransferPlan.plan_id == plan_id).first()
+            plan = db_session.query(SampleTransferPlan).filter(
+                SampleTransferPlan.plan_id == plan_id).first()
             if plan:
                 db_session.delete(plan)
                 db_session.commit()
@@ -50,11 +50,11 @@ class PlanResource(flask_restful.Resource):
         plan_contents = request.json
         if db_session is None:
             with scoped_session(db.engine) as db_session:
-                plan = TransferPlan(plan_id, plan_contents)
+                plan = SampleTransferPlan(plan_id, plan_contents)
                 db_session.add(plan)
                 db_session.commit()
         else:
-            plan = TransferPlan(plan_id, request.json)
+            plan = SampleTransferPlan(plan_id, request.json)
             db_session.add(plan)
             db_session.commit()
 
@@ -70,7 +70,7 @@ class PlanListResource(flask_restful.Resource):
     def get(self):
         """returns a list of all plans"""
         with scoped_session(db.engine) as db_session:
-            plans = db_session.query(TransferPlan).all()
+            plans = db_session.query(SampleTransferPlan).all()
             for plan in plans:
                 db_session.expunge(plan)
             return str(plans)
@@ -79,7 +79,8 @@ class PlanListResource(flask_restful.Resource):
     def post(self):
         """creates new plan returning a nice geeky Location header"""
         with scoped_session(db.engine) as db_session:
-            plan_id = db_session.query(func.max(TransferPlan.plan_id)).one()
+            plan_id = db_session.query(func.max(SampleTransferPlan.plan_id)
+                                       ).one()
             if plan_id is None or plan_id[0] is None:
                 max_id = 0
             else:

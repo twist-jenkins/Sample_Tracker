@@ -6,7 +6,7 @@ import os
 import logging
 logging.basicConfig(level=logging.INFO)
 
-os.environ["WEBSITE_ENV"] = "Localunittest"
+os.environ["WEBSITE_ENV"] = "Dev"
 
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
@@ -16,6 +16,7 @@ from app import db
 from app import login_manager
 
 from test_flask_app import AutomatedTestingUser, RootPlate
+# from sqlalchemy.exc import IntegrityError
 
 
 class TestCase(unittest.TestCase):
@@ -25,13 +26,13 @@ class TestCase(unittest.TestCase):
         login_manager.anonymous_user = AutomatedTestingUser
         cls.client = app.test_client()
         # assert "Unittest" in os.environ["WEBSITE_ENV"]
-        assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
+        #assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
         try:
             cls.root_plate_barcode = RootPlate().create_in_db("PLAN_ROOT2",
                                                               db.engine)
-        except IndexError:
+        except: #  IndexError, IntegrityError:
             pass
 
     @classmethod

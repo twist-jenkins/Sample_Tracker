@@ -400,7 +400,7 @@ class StorageLocation(db.Model):
 
 
 
-class TransferPlan(db.Model):
+class SampleTransferPlan(db.Model):
 
     plan_id = db.Column(db.String(40), primary_key=True)
     plan = db.Column(postgresql.JSON(), nullable=False)
@@ -410,6 +410,6 @@ class TransferPlan(db.Model):
         self.plan = plan
 
     def __repr__(self):
-        return '<Transfer Plan id: [%s]>' % (self.plan_id, )
+        return '<SampleTransfer Plan id: [%s]>' % (self.plan_id, )
 
 
