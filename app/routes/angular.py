@@ -558,6 +558,7 @@ def plate_details(sample_plate_barcode, format, basicDataOnly=False):
         'coi_customer_line_item_description',
         'coi_description',
         'coi_notes',
+        'clo_cloning_process_id',
         'ga_sagi_id',
         'sagi_sag_id',
         'sagi_date_created',
