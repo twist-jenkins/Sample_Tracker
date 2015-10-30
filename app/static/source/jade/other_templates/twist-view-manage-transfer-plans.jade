@@ -1,0 +1,17 @@
+div(class="twst-view-manage-transfer-plans-main")
+    h3 Saved Plans
+    div(class="twst-view-manage-transfer-plans-list")
+        table(class="twst-data-readout-table twst-transfer-plans-list")
+            tr
+                td(class="twst-data-readout-table-header") Plan Id
+                td(class="twst-data-readout-table-header") Source Plate(s)
+                td(class="twst-data-readout-table-header") Desination Plate(s)
+                td(class="twst-data-readout-table-header") Date Created
+                td(class="twst-data-readout-table-header") Status
+            tr(ng-repeat="plan in savedTransferPlans")
+                td {{}}
+                td {{}}
+                td {{}}
+                td {{}}
+                td {{}}
+                td {{}}

@@ -417,13 +417,21 @@ strong {
 }
 
 .twst-data-readout-table {
-    border-top: $twst-common-border;
-    border-left: $twst-common-border;
+
+    tr:first-child {
+        td {
+            border-top: $twst-common-border; 
+        }
+    }
 
     td {
         padding: 0.5em 0.75em;
         border-right: $twst-common-border;
         border-bottom: $twst-common-border;
+
+        &:first-child {
+            border-left: $twst-common-border;
+        }
 
         &.twst-data-readout-table-header {
             background-color: #ddd;
@@ -601,7 +609,57 @@ strong {
 }
 
 /*****************************/
-/*** CUSTOM RADIO ***/
+/*** END CUSTOM RADIO ***/
+/*****************************/
+
+/*****************************/
+/*** TABS ***/
+/*****************************/
+
+.twst-tab {
+    display: block;
+    float: left;
+    padding: 0.5em 1em;
+    border: $twst-common-border;
+    border-radius: 0.5em 0.5em 0 0;
+    position: relative;
+    top: 1px;
+    margin-right: 0.3em;
+    cursor: pointer;
+    color: #aaa;
+
+    &:hover {
+        color: #000;
+    }
+
+    &.twst-active-tab {
+        color: #000;
+        border-bottom-color: #fff;
+        /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#dbffec+0,ffffff+68 */
+        background: #dbffec; /* Old browsers */
+        background: -moz-linear-gradient(top,  #dbffec 0%, #ffffff 68%); /* FF3.6+ */
+        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#dbffec), color-stop(68%,#ffffff)); /* Chrome,Safari4+ */
+        background: -webkit-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* Chrome10+,Safari5.1+ */
+        background: -o-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* Opera 11.10+ */
+        background: -ms-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* IE10+ */
+        background: linear-gradient(to bottom,  #dbffec 0%,#ffffff 68%); /* W3C */
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbffec', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
+    }
+
+    .twst-custom-radio-label {
+        position: relative;
+        top: -0.2em;
+    }
+}
+
+.twst-tab-body {
+    padding: 1em;
+    border: $twst-common-border;
+    border-radius: 0 .5em 0.5em 0.5em;
+}
+
+/*****************************/
+/*** END TABS ***/
 /*****************************/
 
 
@@ -689,7 +747,7 @@ strong {
 
         a {
             display: table-cell;
-            width: 20%;
+            width: 16.667%;
             text-align: center;
             font-size: 1.1em;
             padding: 0.45em 0;
@@ -808,42 +866,6 @@ strong {
         &:after {
             @include after-clear;
         }
-
-        .twst-sample-track-main-tab {
-            display: block;
-            float: left;
-            padding: 0.5em 1em;
-            border: $twst-common-border;
-            border-radius: 0.5em 0.5em 0 0;
-            position: relative;
-            top: 1px;
-            margin-right: 0.3em;
-            cursor: pointer;
-            color: #aaa;
-
-            &:hover {
-                color: #000;
-            }
-
-            &.twst-active-tab {
-                color: #000;
-                border-bottom-color: #fff;
-                /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#dbffec+0,ffffff+68 */
-                background: #dbffec; /* Old browsers */
-                background: -moz-linear-gradient(top,  #dbffec 0%, #ffffff 68%); /* FF3.6+ */
-                background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#dbffec), color-stop(68%,#ffffff)); /* Chrome,Safari4+ */
-                background: -webkit-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* Chrome10+,Safari5.1+ */
-                background: -o-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* Opera 11.10+ */
-                background: -ms-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* IE10+ */
-                background: linear-gradient(to bottom,  #dbffec 0%,#ffffff 68%); /* W3C */
-                filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbffec', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
-            }
-
-            .twst-custom-radio-label {
-                position: relative;
-                top: -0.2em;
-            }
-        }
     }
 
     .twst-sample-track-main-inputs {
@@ -896,9 +918,6 @@ strong {
     }
 
     .twst-sample-track-main-tab-body {
-        padding: 1em;
-        border: $twst-common-border;
-        border-radius: 0 .5em 0.5em 0.5em;
 
         .twst-sample-track-plate-barcodes {
             display: table;
@@ -1356,4 +1375,41 @@ strong {
             }
         }
     }
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******* TRANSFER PLANS
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-transfer-plans-main {
+
+    .twst-transfer-plans-tabs {
+        display: block;
+        clear: both;
+        font-size: 1.2em;
+
+        &:after {
+            @include after-clear;
+        }
+    }
+
+    .twst-transfer-plans-body {
+        .twst-view-manage-transfer-plans-main {
+            h3 {
+                font-size: 1.2em;
+            }
+
+            .twst-transfer-plans-list {
+                margin-top: 0.5em;
+            }
+        }
+    }
+    
 }
