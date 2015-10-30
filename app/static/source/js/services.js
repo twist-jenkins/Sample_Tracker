@@ -218,6 +218,7 @@ app = angular.module('twist.app')
 
         var TransferPlan = function () {
             var base = this;
+            base.title = '';
             base.updating = false;
             base.sources = [];
             base.destinations = [];
@@ -601,6 +602,12 @@ app = angular.module('twist.app')
                 saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
             };
 
+            base.setCreateEditDefaults = function () {
+                base.title = 'New Transfer Plan';
+                base.sources.push(returnEmptyPlate());
+                base.destinations.push(returnEmptyPlate());
+            };
+
             var init = function () {
                 return base;
             };
@@ -897,6 +904,29 @@ app = angular.module('twist.app')
         };
     }]
 )
+
+.factory('Memory', [
+    function () {
+        var memory = {};
+        var closure = function (enclosee) {
+            return enclosee;
+        };
+        return {
+            remember: function (name, what) {
+                if (what != null) {
+                    memory[name] = what;
+                }
+
+                return memory[name];
+            }
+            ,forget: function (name) {
+                var forgotten = closure(memory[name]);
+                delete memory[name];
+                return forgotten;
+            }
+        };
+    }
+])
 
 
 ;

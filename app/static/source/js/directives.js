@@ -25,6 +25,7 @@ app = angular.module("twist.app")
                         {text: 'Record Step', 'link': 'root.record_step'}
                         ,{text: 'Plate Details', 'link': 'root.plate_details'}
                         ,{text: 'Edit Plate Barcode', 'link': 'root.edit_barcode'}
+                        ,{text: 'Transfer Plans', 'link': 'root.transfer_plans.view_manage'}
                         ,{text: 'View Steps', 'link': 'root.view_steps'} 
                         ,{text: 'Sample Details', 'link': 'root.sample_details'}
                     ];

@@ -123,7 +123,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             if (which == $scope.excel_template) {
                 route = 'excel_upload';
                 if ($scope.cachedFileData) {
-                    $scope.transferPlan.setPlanFromFile(true);
+                    $scope.catchFile();
                 }
             } else if (which == $scope.standard_template) {
                 route = 'standard_template';
@@ -411,6 +411,70 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
+.controller('transferPlansController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+
+        $scope.view_manage = 'view_manage';
+        $scope.edit = 'edit';
+
+        $scope.selectPlanTab = function (which) {
+            if ($scope.isEditing) {
+                alert('Editing!');
+            } else {
+                $scope.selectedPlanTab = which;
+                $state.go('root.transfer_plans.' + which);
+            }
+        };
+
+        $scope.setSelectedPlanTab = function (which) {
+            $scope.selectedPlanTab = which;
+        }
+
+        $scope.newTransferPlan = function () {
+            $state.go('root.transfer_plans.edit.new');
+        }
+
+        $scope.editTransferPlan = function (planId) {
+            $state.go('root.transfer_plans.edit.plan', {
+                planId: planId
+            });
+        }
+
+        $scope.editing = function () {
+            $scope.isEditing = true;
+        }
+
+        $scope.cancelEdit = function () {
+            $scope.isEditing = false;
+        }
+    }]
+)
+
+.controller('viewManageTransferPlansController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+
+
+        $scope.setSelectedPlanTab($scope.view_manage);
+    }]
+)
+
+.controller('editTransferPlansController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        $scope.transferPlan = null;
+        $scope.setSelectedPlanTab($scope.edit);
+    }]
+)
+
+.controller('transferPlanEditorController', ['$scope', '$state', '$stateParams', 'TransferPlanner',
+    function ($scope, $state, $stateParams, TransferPlanner) {
+        var plan = TransferPlanner.newTransferPlan(true);
+        plan.setCreateEditDefaults();
+        $scope.transferPlan = plan;
+        $scope.editing();
+        console.log($scope.transferPlan);
+    }]
+)
+
 .run(['$state', 'User', '$location', '$timeout',
     function($state, User, $location, $timeout) {
         var routeUrl = window.location.hash.substr(1);
@@ -502,6 +566,22 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:entered_sample_id'
             ,template: ''
             ,controller: 'sampleDetailsSampleIdEnteredController'
+        }).state('root.transfer_plans', {
+            url: 'transfer-plans'
+            ,templateUrl: 'twist-transfer-plans.html'
+            ,controller: 'transferPlansController'
+        }).state('root.transfer_plans.view_manage', {
+            url: '/view-manage'
+            ,templateUrl: 'twist-view-manage-transfer-plans.html'
+            ,controller: 'viewManageTransferPlansController'
+        }).state('root.transfer_plans.edit', {
+            url: '/edit'
+            ,templateUrl: 'twist-edit-transfer-plans.html'
+            ,controller: 'editTransferPlansController'
+        }).state('root.transfer_plans.edit.new', {
+            url: '/new'
+            ,templateUrl: 'twist-transfer-plan-editor.html'
+            ,controller: 'transferPlanEditorController'
         })
 
 
