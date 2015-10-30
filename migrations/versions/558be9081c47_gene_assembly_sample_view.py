@@ -53,6 +53,7 @@ def upgrade():
         COI.description as coi_description,
         COI.notes as coi_notes,
         -- COI.status_notes as coi_status_notes,
+        CLO.cloning_process_id AS clo_cloning_process_id,
         GA.sagi_id as ga_sagi_id,
         SAGI.sag_id as sagi_sag_id,
         SAGI.date_created as sagi_date_created,
@@ -75,6 +76,7 @@ def upgrade():
         inner join sequence SEQ on SEQ.sequence_id = GS.sequence_id
         inner join synthesis_cluster_sample_join SCSJ on SCSJ.sample_id = GA.sample_id
         inner join synthesis_cluster CLST on CLST.cluster_id = SCSJ.cluster_id -- and CLST.sagi_id = SAGI.sagi_id
+        left outer join cloning_plan clo on clo.cluster_id = clst.cluster_id
         left outer join order_item COI on COI.order_item_id = CLST.order_item_id
         left outer join "order" COR on COR.order_configuration_id = COI.order_configuration_id
         left outer join customer CID on CID.customer_id = COR.customer_id
