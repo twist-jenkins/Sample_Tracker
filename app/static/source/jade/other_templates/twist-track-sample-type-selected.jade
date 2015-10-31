@@ -59,10 +59,6 @@ div(class="twst-tab-body")
             div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the transfer file here
                 twst-thumb-validation-icon(validation="transferPlan.plateTransfers.length" error="fileErrors.length" errors-invisible="true")
                 div(class="twst-spinner twst-parsing-file-spinner" ng-if="parsingFile")
-        div(class="twst-sample-track-main-buttons")
-            div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
-            button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
-            a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
         div(class="twst-transfer-plan")
             div(class="twst-transfer-plan-show-btn" ng-click="showTransferPlan = !showTransferPlan")
                 div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")

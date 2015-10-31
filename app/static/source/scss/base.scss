@@ -873,6 +873,30 @@ strong {
         position: relative;
     }
 
+    .twst-sample-track-main-buttons {
+        margin-top: 2em;
+        position: relative;
+
+        .twst-spinner {
+            position: absolute;
+            font-size: 0.7em;
+            top: -1.4em;
+            left: 0.3em;
+            width: 7.5em;
+            z-index: 10;
+        }
+
+        .twst-blue-button {
+            font-size: 1.2em;
+        }
+
+        .twst-sample-track-clear-btn {
+            margin-left: 2em;
+            cursor: pointer;
+        }
+
+    }
+
     /****************************************/
     /* override bootstrap styles */
     /****************************************/
@@ -1138,29 +1162,6 @@ strong {
 
         }
 
-        .twst-sample-track-main-buttons {
-            margin-top: 2em;
-            position: relative;
-
-            .twst-spinner {
-                position: absolute;
-                font-size: 0.7em;
-                top: -1.4em;
-                left: 0.3em;
-                width: 7.5em;
-                z-index: 10;
-            }
-
-            .twst-blue-button {
-                font-size: 1.2em;
-            }
-
-            .twst-sample-track-clear-btn {
-                margin-left: 2em;
-                cursor: pointer;
-            }
-
-        }
     }
 
 }

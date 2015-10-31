@@ -14,5 +14,9 @@ div(class="twst-sample-track-main twst-child-page")
                 li(role="menuitem" ng-repeat="option in stepTypeOptions")
                     a(ng-click="selectStepType(option)") {{option.text}}
         div(ui-view ng-show="stepTypeOptions && templateTypeSelection")
+        div(class="twst-sample-track-main-buttons" ng-show="templateTypeSelection")
+            div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
+            button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
+            a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
             
 
