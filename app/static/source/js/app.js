@@ -230,7 +230,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         /* populate the sample types pulldown */
-        Api.getSampleTransferTypes().success(function (data) {
+        $scope.initTransferTypes = Api.getSampleTransferTypes();
+        $scope.initTransferTypes.success(function (data) {
             if (data.success) {
                 $scope.stepTypeOptions = data.results;
             }
@@ -241,8 +242,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams',
     function ($scope, $state, $stateParams) {
         //inherits scope from trackStepController
-        var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
-        $scope.setSelectedOption(selectedTranferTypeId);
+        $scope.initTransferTypes.success(function (data) {
+            var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
+            $scope.setSelectedOption(selectedTranferTypeId);
+        });
     }]
 )
 
