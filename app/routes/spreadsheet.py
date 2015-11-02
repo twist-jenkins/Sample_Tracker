@@ -39,12 +39,12 @@ def create_sample_movement_from_spreadsheet_data(operator,
                                                  wells):
     with scoped_session(db.engine) as db_session:
         return create_adhoc_sample_movement(db_session, operator,
-                                            sample_transfer_type_id, 
+                                            sample_transfer_type_id,
                                             sample_transfer_template_id, wells)
 
 
 def create_adhoc_sample_movement(db_session, operator,
-                                 sample_transfer_type_id, 
+                                 sample_transfer_type_id,
                                  sample_transfer_template_id, wells):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
@@ -279,7 +279,13 @@ def create_adhoc_sample_movement(db_session, operator,
                 "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
             }
         else:
-            destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
+            try:
+                destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
+            except KeyError:
+                return {
+                    "success":False,
+                    "errorMessage":"Destination plate well mapping failed."
+                }
             logging.info("calculated DEST well id: %s from plate size: %s and column/row: %s", destination_well_id, plate_size,
                          destination_col_and_row)
             print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row)
