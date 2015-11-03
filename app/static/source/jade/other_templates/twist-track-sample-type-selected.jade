@@ -82,4 +82,5 @@ div(class="twst-tab-body")
                             td {{::row.destination_plate_barcode}}
                             td {{::row.destination_well_name}}
                             td {{::row.destination_plate_well_count}}
+                div(class="twst-transfer-plan-transfers-list-empty-msg" ng-if="!transferPlan.updating && !transferPlan.plateTransfers.length") The supplied data is insufficient to build a transfer plan.
     div(ui-view ng-if="transferPlan.typeDetails")

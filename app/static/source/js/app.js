@@ -43,12 +43,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var route = 'root.record_step.step_type_selected';
 
             if ($scope.transferPlan.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
-                $scope.templateTypeSelection = 'excel_upload';
+                route += '.' + 'excel_upload';
             } else {
-                $scope.templateTypeSelection = 'standard_template';
+                route += '.' + 'standard_template';
             }
-
-            route += '.' + $scope.templateTypeSelection;
 
             $state.go(route, {
                 selected_step_type_id: option.id + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.stripNonAlphaNumeric(option.text, true, true).trim())
@@ -66,6 +64,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     break;
                 }
             }
+
+            if ($scope.transferPlan.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+                $scope.templateTypeSelection = 'excel_upload';
+            } else {
+                $scope.templateTypeSelection = 'standard_template';
+            }
         }
 
         $scope.sampleTrackFormReady = function () {
@@ -74,7 +78,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 return false;
             }
 
-            if (!$scope.transferPlan.plateTransfers.length) {
+            if (!$scope.transferPlan.plateTransfers || !$scope.transferPlan.plateTransfers.length) {
                 return false
             }
 
@@ -167,6 +171,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 } else if (which == Constants.PLATE_DESTINATION) {
                     $scope.transferPlan.addDestinationPlate(itemIndex);
                 }
+            } else {
+                if (which == Constants.PLATE_SOURCE) {
+                    $scope.transferPlan.checkSourcesReady();
+                } else if (which == Constants.PLATE_DESTINATION) {
+                    $scope.transferPlan.checkDestinationsReady();
+                }
             }
         };
 
@@ -218,7 +228,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         $scope.fileErrors = resultData.errors;
 
                         if (!resultData.errors.length) {
-                            $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
+                            $scope.transferPlan.transferFromFile(true, resultData);
                         } else {
                             $scope.transferPlan.clearPlateTransfers();
                         } 
