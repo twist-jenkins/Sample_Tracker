@@ -15,7 +15,7 @@ div(class="twst-sample-track-form")
                       i(class="glyphicon glyphicon-remove") No Results Found
             div(class="twst-add-plate-button" ng-click="transformSpec.addPlateInput('source')" ng-if="transformSpec.map.source.variablePlateCount")
                 button(class="twst-button twst-blue-button") +
-                span Add Source Plate
+                span Add Source
         div(class="twst-sample-track-plate-barcodes-left")
             p(class="twst-block-header" ng-class="{'twst-invisible': !transformSpec.destinations.length}") {{transformSpec.getDestinationsHeader()}}:
             div(class="twst-sample-track-plate-row" ng-repeat="plate in transformSpec.destinations")
@@ -28,7 +28,7 @@ div(class="twst-sample-track-form")
                     twst-thumb-validation-icon(validation="plate.data != null" error="plate.error")
             div(class="twst-add-plate-button" ng-click="transformSpec.addPlateInput('destination')" ng-if="transformSpec.map.destination.variablePlateCount")
                 button(class="twst-button twst-blue-button") +
-                span Add Destination Plate
+                span Add Destination
     div(class="twst-sample-track-main-excel-upload")
         div(class="twst-sample-track-excel-upload-summary" ng-if="transformSpec.planFromFile || fileErrors.length")
             h3 Excel File Pre-upload Summary:

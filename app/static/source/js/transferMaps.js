@@ -1029,7 +1029,7 @@ app = angular.module('twist.app')
                     }
                 }
                 ,24: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Generic Transfer'
+                    description: 'Generic Transform'
                     ,type: 'user_specified'
                     ,source: {
                         plateCount: 1
