@@ -344,7 +344,8 @@ def create_adhoc_sample_movement(db_session, operator,
         # 7.  Accession cloned_sample if necessary.
         #
         sample_type_handler(db_session, sample_transfer_type_id,
-                            source_plate_well.sample_id)
+                            source_plate_well.sample_id,
+                            destination_plate_well.well_id)
 
         order_number += 1
 
@@ -359,12 +360,15 @@ def create_adhoc_sample_movement(db_session, operator,
         "success":True
     }
 
-def sample_type_handler(db_session, sample_transfer_type_id, source_sample_id):
-    if sample_transfer_type_id == 15:  # QPix To 96 plates
-        source_id = 'foo'
-        colony_name = 'bar'
-        cs_id = sample_id = create_unique_object_id("CS_")
+def sample_type_handler(db_session, sample_transfer_type_id, source_sample_id,
+                        destination_plate_well_id):
+    if sample_transfer_type_id in (15, 16):  # QPix To 96/384 plates
+        source_id = create_unique_object_id("temp_")
+        colony_name = "%d-%s" % (12, destination_plate_well_id)
+
+        cs_id = create_unique_object_id("CS_")
         logging.warn(cs_id + '... ' + source_sample_id)
         cloned_sample = ClonedSample(cs_id, source_sample_id, source_id,
-                                     colony_name, None, None, None, None)
+                                     colony_name, None, None, None, 'CL')
         db_session.add(cloned_sample)
+

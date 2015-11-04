@@ -105,10 +105,66 @@ class Sample(db.Model):
     }
 
     # attr
-    operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
-    name = db.Column(db.String(100))
-    description = db.Column(db.String(2048))
-    date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+    #operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
+    #name = db.Column(db.String(100))
+    #description = db.Column(db.String(2048))
+    #date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+
+
+    # attr
+    date_created = db.Column(db.DateTime)
+    operator_id = db.Column(
+        db.String(10), db.ForeignKey("operator.operator_id"))
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(1024))
+    # external_barcode = db.Column(db.String(100), nullable=True)
+    # parent_process_id = db.Column(
+    #     db.String(40), db.ForeignKey("process.process_id"),
+    #     nullable=True)
+    # parent_transfer_process_id = db.Column(
+    #     db.String(40), db.ForeignKey("transfer_process.process_id"),
+    #     nullable=True)
+    status = db.Column(
+        db.Enum(
+            STATUS_ACTIVE, STATUS_CONSUMED, STATUS_DISPOSED,
+            STATUS_READY_TO_SHIP, STATUS_SHIPPED,
+            name="enum_sample_status"),
+        nullable=False)
+    # optional
+    # fwd_primer_ps_id = db.Column(
+    #     db.String(40),
+    #     db.ForeignKey("primer_sequence.sequence_id"), nullable=True)
+    # rev_primer_ps_id = db.Column(
+    #     db.String(40),
+    #     db.ForeignKey("primer_sequence.sequence_id"), nullable=True)
+    # reagent_type_set_lot_id = db.Column(
+    #     db.String(40),
+    #     db.ForeignKey("reagent_type_set_lot.reagent_type_set_lot_id"),
+    #     nullable=True)
+    # relations
+    # fwd_primer = db.relationship(
+    #     "PrimerSequence", uselist=False,
+    #     backref=db.backref("sample_fwd_primers"),
+    #     foreign_keys=fwd_primer_ps_id)
+    # rev_primer = db.relationship(
+    #     "PrimerSequence", uselist=False,
+    #     backref=db.backref("sample_rev_primers"),
+    #     foreign_keys=rev_primer_ps_id)
+    operator = db.relationship(
+        "Operator", uselist=False, backref=db.backref("samples"),
+        foreign_keys=operator_id)
+    sample_type = db.relationship(
+        "SampleType", uselist=False,
+        backref=db.backref("samples"),
+        foreign_keys=type_id)
+    # parent_process = db.relationship(
+    #     "Process", uselist=False,
+    #     backref=db.backref("child_samples"),
+    #     foreign_keys=parent_process_id)
+    # reagent_type_set_lot = db.relationship(
+    #     "ReagentTypeSetLot", uselist=False,
+    #     backref=db.backref("samples"),
+    #     foreign_keys=reagent_type_set_lot_id)
 
     #
     # Relationships. ORM magicalness.
@@ -502,15 +558,18 @@ class ClonedSample(Sample):
 
         # super
         date_created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+        operator_id = 'CL'
         parent_process_id = None
         external_barcode = None
         reagent_type_set_lot_id = None
-        status = None
+        status = self.STATUS_ACTIVE
         parent_transfer_process_id = None
+        fwd_primer_ps_id = None
+        rev_primer_ps_id = None
         Sample.__init__(
             self, sample_id, date_created, operator_id, name,
-            description, None, None, parent_process_id, external_barcode,
+            description, fwd_primer_ps_id, rev_primer_ps_id,
+            parent_process_id, external_barcode,
             reagent_type_set_lot_id, status, parent_transfer_process_id)
 
         if plate_id and well_id:
