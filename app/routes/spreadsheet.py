@@ -39,10 +39,10 @@ def create_sample_movement_from_spreadsheet_data(operator,
                                                  sample_transfer_template_id,
                                                  wells):
     with scoped_session(db.engine) as db_session:
-        return create_adhoc_sample_movement(db_session, operator,
+        result = create_adhoc_sample_movement(db_session, operator,
                                             sample_transfer_type_id,
                                             sample_transfer_template_id, wells)
-
+        return result
 
 def create_adhoc_sample_movement(db_session, operator,
                                  sample_transfer_type_id,
@@ -69,7 +69,7 @@ def create_adhoc_sample_movement(db_session, operator,
         "384": get_well_id_for_col_and_row_384
     }
 
-    for well in wells:
+    for ix, well in enumerate(wells):
         source_plate_barcode = well["source_plate_barcode"]
         source_col_and_row = well["source_well_name"]
         destination_plate_barcode = well["destination_plate_barcode"]
@@ -346,14 +346,15 @@ def create_adhoc_sample_movement(db_session, operator,
         #
         sample_type_handler(db_session, sample_transfer_type_id,
                             source_plate, source_plate_well,
-                            destination_plate_well)
+                            destination_plate_well, operator)
 
         order_number += 1
 
-    #return {
-    #    "success":False,
-    #    "errorMessage":"testing!!!"
-    #}
+    # db_session.rollback()
+    # return {
+    #     "success":False,
+    #     "errorMessage":"testing!!!"
+    # }
 
     db_session.commit()
 
@@ -363,7 +364,7 @@ def create_adhoc_sample_movement(db_session, operator,
 
 def sample_type_handler(db_session, sample_transfer_type_id,
                         source_plate, source_plate_well,
-                        destination_plate_well):
+                        destination_plate_well, operator):
     if sample_transfer_type_id not in (15, 16):  # QPix To 96/384 plates
         return
 
@@ -372,25 +373,23 @@ def sample_type_handler(db_session, sample_transfer_type_id,
 
     # Create CS
     cs_id = create_unique_object_id("CS_")
-    logging.warn(cs_id + '... ' + source_plate_well.sample_id)
     cloned_sample = ClonedSample(cs_id, source_plate_well.sample_id, source_id,
-                                 colony_name, None, None, None, 'TST')
+                                 colony_name, None, None, None,
+                                 operator.operator_id)
 
     # Add CLO
     clo = None
     qry = (
-        db.session.query(SamplePlateLayout, GeneAssemblySampleView)
-        .filter(SamplePlateLayout.sample_id
-                == GeneAssemblySampleView.sample_id)
-        .filter_by(sample_plate_id=source_plate.sample_plate_id)
-        .filter_by(well_id=source_plate_well.well_id)
+        db.session.query(GeneAssemblySampleView)
+        .filter_by(sample_id=source_plate_well.sample_id)
     )
     result = qry.first()
     if result:
-        well, ga_view = result
+        ga_view = result
         clo = ga_view.clo_cloning_process_id
-
     cloned_sample.parent_process_id = clo
+    logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
+                 cs_id, source_plate_well.sample_id, clo)
 
     # Commit
     db_session.add(cloned_sample)
