@@ -39,7 +39,7 @@ class TestCase(unittest.TestCase):
 
     def test_aliquot_standard_template_golden(self):
         data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplateId": 1,  # ??
+                "sampleTransferTemplateId": 2,  # ??
                 "sourcePlates": [self.root_plate_barcode],
                 "destinationPlates": ["test_aliquot_01a"]}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -57,7 +57,7 @@ class TestCase(unittest.TestCase):
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
-        assert rv.status_code == 200
+        assert rv.status_code == 404
         result = json.loads(rv.data)
         assert result["success"] is False
 
