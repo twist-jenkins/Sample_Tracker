@@ -29,23 +29,24 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransferPlanner', 'FileParser', 
-    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransferPlanner, FileParser) {
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
 
         $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
 
-        $scope.transferPlan = TransferPlanner.newTransferPlan();
-        
+        $scope.transformSpec = TransformBuilder.newTransformSpec();
+        $scope.transformSpec.setPlateStepDefaults();
 
         $scope.selectStepType = function (option) {
-            $scope.transferPlan.setTransferTypeDetails(option);
+            $scope.transformSpec.setTransferTypeDetails(option);
+            $scope.transformSpec.setTitle(option.text);
 
             var route = 'root.record_step.step_type_selected';
 
-            if ($scope.transferPlan.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
-                route += '.' + 'excel_upload';
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+                route += '.' + Constants.FILE_UPLOAD;
             } else {
-                route += '.' + 'standard_template';
+                route += '.' + Constants.STANDARD_TEMPLATE;
             }
 
             $state.go(route, {
@@ -59,26 +60,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 if (option.id == optionId) {
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
-                    $scope.transferPlan.setTransferTypeDetails(option);
-                    $scope.stepTypeDropdownValue = $scope.transferPlan.typeDetails.text;
+                    $scope.transformSpec.setTransferTypeDetails(option);
+                    $scope.stepTypeDropdownValue = $scope.transformSpec.typeDetails.text;
                     break;
                 }
             }
 
-            if ($scope.transferPlan.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
-                $scope.templateTypeSelection = 'excel_upload';
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+                $scope.templateTypeSelection = Constants.FILE_UPLOAD;
             } else {
-                $scope.templateTypeSelection = 'standard_template';
+                $scope.templateTypeSelection = Constants.STANDARD_TEMPLATE;
             }
         }
 
         $scope.sampleTrackFormReady = function () {
 
-            if (!$scope.transferPlan.typeDetails) {
+            if (!$scope.transformSpec.typeDetails) {
                 return false;
             }
 
-            if (!$scope.transferPlan.plateTransfers || !$scope.transferPlan.plateTransfers.length) {
+            if (!$scope.transformSpec.operations || !$scope.transformSpec.operations.length) {
                 return false
             }
 
@@ -87,11 +88,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         var getSampleTrackSubmitData = function () {
             var data = {
-                sampleTransferTypeId: $scope.transferPlan.typeDetails.id
-                ,sampleTransferTemplateId: $scope.transferPlan.typeDetails.transfer_template_id
+                sampleTransferTypeId: $scope.transformSpec.typeDetails.id
+                ,sampleTransferTemplateId: $scope.transformSpec.typeDetails.transfer_template_id
             };
 
-            data.transferMap = $scope.transferPlan.plateTransfers;
+            data.transferMap = $scope.transformSpec.operations;
 
             return data;
         };
@@ -104,14 +105,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.submittingStep = false;
             }
 
-            if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transferPlan.updating) {
+            if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
                 Api.submitSampleStep(getSampleTrackSubmitData()).success(function (data) {
 
                     if (data.success) {
                         $scope.submittingStep = false;
-                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transferPlan.typeDetails.text + '</span> step was successfully recorded.';
+                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.typeDetails.text + '</span> step was successfully recorded.';
                         $scope.submissionResultVisible = 1;
                         $scope.clearForm();
                     } else {
@@ -134,7 +135,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.clearForm = function () {
             $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
-            $scope.transferPlan = TransferPlanner.newTransferPlan();
+            $scope.transformSpec = TransformBuilder.newTransformSpec();
+            $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
             $state.go('root.record_step');
         };
@@ -149,102 +151,18 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransferPlanner', 'FileParser', 
-    function ($scope, $state, $stateParams, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransferPlanner, FileParser) {
-        //inherits scope from trackStepController
+.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, $stateParams, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
 
-        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
-
-        $scope.excel_template = 'excel_upload';
-        $scope.standard_template = 'standard_template';
-
-        $scope.excelFileStats = {};
-        $scope.fileErrors = [];
-
-        $scope.cachedFileData = null;
-
-        /* refresh the current transfer plan based on changes to plates inputs or upload file */
-        $scope.updateTransferPlan = function (val, which, itemIndex) {
-            if (val.length > 5) {
-                if (which == Constants.PLATE_SOURCE) {
-                    $scope.transferPlan.addSourcePlate(itemIndex);
-                } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transferPlan.addDestinationPlate(itemIndex);
-                }
-            } else {
-                if (which == Constants.PLATE_SOURCE) {
-                    $scope.transferPlan.checkSourcesReady();
-                } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transferPlan.checkDestinationsReady();
-                }
-            }
-        };
+        $scope.Constants = Constants;
 
         $scope.selectTransferTemplateType = function (which) {
-            var route = '';
-            if (which == $scope.excel_template) {
-                route = 'excel_upload';
-                if ($scope.cachedFileData) {
-                    $scope.catchFile();
-                }
-            } else if (which == $scope.standard_template) {
-                route = 'standard_template';
-                $scope.transferPlan.transferFromFile(false);
-            } 
-            $state.go('root.record_step.step_type_selected.' + route);
+            $state.go('root.record_step.step_type_selected.' + which);
         };
 
         $scope.setTransferTemplate = function (which) {
             $scope.templateTypeSelection = which;
         };
-
-        $scope.clearExcelUploadData = function () {
-            $scope.excelFileStats = {};
-            $scope.fileErrors = [];
-        };
-
-        $scope.catchFile = function (fileData, error) {
-            $scope.parsingFile = true;
-
-            if (error) {
-                $scope.clearExcelUploadData();
-                $scope.fileErrors.push(error);
-                $scope.excelFileStats = {};
-                $scope.transferPlan.clearPlateTransfers();
-                $scope.parsingFile = false;
-            } else {
-                // called in timeout to give the spinner time to render
-                $timeout(function () {
-                    $scope.clearExcelUploadData();
-
-                    if (!fileData) {
-                        fileData = $scope.cachedFileData;
-                    } else {
-                        $scope.cachedFileData = fileData;
-                    };
-
-                    FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
-                        $scope.excelFileStats = resultData.stats;
-                        $scope.fileErrors = resultData.errors;
-
-                        if (!resultData.errors.length) {
-                            $scope.transferPlan.transferFromFile(true, resultData);
-                        } else {
-                            $scope.transferPlan.clearPlateTransfers();
-                        } 
-
-                        $scope.parsingFile = false;
-
-                    }, function (errorData) {
-                        $scope.fileErrors = 'Error: Unknown error while parsing this file.';
-                        $scope.parsingFile = false;
-                    });
-     
-                }, 150);
-            }
-        };
-
-
 
         $scope.initTransferTypes.success(function (data) {
             var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
@@ -253,17 +171,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('customExcelUploadController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
+.controller('customExcelUploadController', ['$scope', '$state', '$stateParams', 'Constants', 
+    function ($scope, $state, $stateParams, Constants) {
         //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate($scope.excel_template);
+        $scope.setTransferTemplate(Constants.FILE_UPLOAD);
     }]
 )
 
-.controller('standardTemplateController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
+.controller('standardTemplateController', ['$scope', '$state', '$stateParams', 'Constants', 
+    function ($scope, $state, $stateParams, Constants) {
         //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate($scope.standard_template);
+        $scope.setTransferTemplate(Constants.STANDARD_TEMPLATE);
     }]
 )
 
@@ -418,7 +336,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('transferPlansController', ['$scope', '$state', '$stateParams', 
+.controller('transformSpecsController', ['$scope', '$state', '$stateParams', 
     function ($scope, $state, $stateParams) {
 
         $scope.view_manage = 'view_manage';
@@ -429,7 +347,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 alert('Editing!');
             } else {
                 $scope.selectedPlanTab = which;
-                $state.go('root.transfer_plans.' + which);
+                $state.go('root.transform_specs.' + which);
             }
         };
 
@@ -437,12 +355,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.selectedPlanTab = which;
         }
 
-        $scope.newTransferPlan = function () {
-            $state.go('root.transfer_plans.edit.new');
+        $scope.newTransformSpec = function () {
+            $state.go('root.transform_specs.edit.new');
         }
 
-        $scope.editTransferPlan = function (planId) {
-            $state.go('root.transfer_plans.edit.plan', {
+        $scope.editTransformSpec = function (planId) {
+            $state.go('root.transform_specs.edit.plan', {
                 planId: planId
             });
         }
@@ -454,31 +372,46 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.cancelEdit = function () {
             $scope.isEditing = false;
         }
+
+        $state.go('root.transform_specs.view_manage');
     }]
 )
 
-.controller('viewManageTransferPlansController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
+.controller('viewManageTransformSpecsController', ['$scope', '$state', '$stateParams', 'Api', 
+    function ($scope, $state, $stateParams, Api) {
 
+        $scope.transformSpecs = [];
 
-        $scope.setSelectedPlanTab($scope.view_manage);
+        var init = function () {
+            $scope.setSelectedPlanTab($scope.view_manage);
+            $scope.fetchingSpecs = true;
+
+            Api.getTransformSpecs().success(function (data) {
+                $scope.fetchingSpecs = false;
+                if (data[0] != '[') {
+                    $scope.transformSpecs = data;
+                } 
+            });
+        }
+
+        init();
     }]
 )
 
-.controller('editTransferPlansController', ['$scope', '$state', '$stateParams', 
+.controller('editTransformSpecsController', ['$scope', '$state', '$stateParams', 
     function ($scope, $state, $stateParams) {
-        $scope.transferPlan = null;
+        $scope.transformSpec = null;
         $scope.setSelectedPlanTab($scope.edit);
     }]
 )
 
-.controller('transferPlanEditorController', ['$scope', '$state', '$stateParams', 'TransferPlanner',
-    function ($scope, $state, $stateParams, TransferPlanner) {
-        var plan = TransferPlanner.newTransferPlan(true);
+.controller('transformSpecEditorController', ['$scope', '$state', '$stateParams', 'TransformBuilder',
+    function ($scope, $state, $stateParams, TransformBuilder) {
+        var plan = TransformBuilder.newTransformSpec();
         plan.setCreateEditDefaults();
-        $scope.transferPlan = plan;
+        $scope.transformSpec = plan;
         $scope.editing();
-        console.log($scope.transferPlan);
+        console.log($scope.transformSpec);
     }]
 )
 
@@ -537,8 +470,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:selected_step_type_id'
             ,templateUrl: 'twist-track-sample-type-selected.html'
             ,controller: 'stepTypeSelectedController'
-        }).state('root.record_step.step_type_selected.excel_upload', {
-            url: '/custom-excel-upload'
+        }).state('root.record_step.step_type_selected.file_upload', {
+            url: '/custom-file-upload'
             ,template: ''
             ,controller: 'customExcelUploadController'
         }).state('root.record_step.step_type_selected.standard_template', {
@@ -573,22 +506,22 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:entered_sample_id'
             ,template: ''
             ,controller: 'sampleDetailsSampleIdEnteredController'
-        }).state('root.transfer_plans', {
-            url: 'transfer-plans'
-            ,templateUrl: 'twist-transfer-plans.html'
-            ,controller: 'transferPlansController'
-        }).state('root.transfer_plans.view_manage', {
+        }).state('root.transform_specs', {
+            url: 'transform-specs'
+            ,templateUrl: 'twist-transform-specs.html'
+            ,controller: 'transformSpecsController'
+        }).state('root.transform_specs.view_manage', {
             url: '/view-manage'
-            ,templateUrl: 'twist-view-manage-transfer-plans.html'
-            ,controller: 'viewManageTransferPlansController'
-        }).state('root.transfer_plans.edit', {
+            ,templateUrl: 'twist-view-manage-transform-specs.html'
+            ,controller: 'viewManageTransformSpecsController'
+        }).state('root.transform_specs.edit', {
             url: '/edit'
-            ,templateUrl: 'twist-edit-transfer-plans.html'
-            ,controller: 'editTransferPlansController'
-        }).state('root.transfer_plans.edit.new', {
+            ,templateUrl: 'twist-edit-transform-specs.html'
+            ,controller: 'editTransformSpecsController'
+        }).state('root.transform_specs.edit.new', {
             url: '/new'
-            ,templateUrl: 'twist-transfer-plan-editor.html'
-            ,controller: 'transferPlanEditorController'
+            ,templateUrl: 'twist-transform-specs-editor.html'
+            ,controller: 'transformSpecEditorController'
         })
 
 

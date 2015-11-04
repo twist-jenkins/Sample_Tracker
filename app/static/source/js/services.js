@@ -127,6 +127,17 @@ app = angular.module('twist.app')
                 }
                 return $http(checkReq);
             }
+            ,getTransformSpecs: function () {
+                var transReq = ApiRequestObj.getGet('rest/transfer-plans');
+                return $http(transReq);
+            }
+            ,saveNewTransformSpec: function (planData) {
+                var transReq = transReq = ApiRequestObj.getPost('rest/transfer-plans');
+                transReq.data = {
+                    plan: planData
+                }
+                return $http(transReq);
+            }
         };
     }]
 )
@@ -213,23 +224,25 @@ app = angular.module('twist.app')
     }]
 )
 
-.factory('TransferPlanner', ['Api', 'Maps', 'Constants', 
+.factory('TransformBuilder', ['Api', 'Maps', 'Constants', 
     function (Api, Maps, Constants) {
 
-        var TransferPlan = function () {
+        var TransformSpec = function () {
             var base = this;
+            base.type = null;
             base.title = '';
-            base.updating = false;
             base.sources = [];
             base.destinations = [];
-            base.plateTransfers = [];
+            base.operations = [];
+
+            base.updating = false;
             base.errors = [];
             base.map = null;
             base.typeDetails = null;
             base.sourcesReady = false;
             base.destinationsReady = false;
             base.planFromFile = false;
-            base.autoUpdatePlan = true;
+            base.autoUpdateSpec = true;
 
             var updating = function () {
                 base.updating = true;
@@ -243,18 +256,18 @@ app = angular.module('twist.app')
                 return {text: '', title: ''};
             };
 
-            var updateTransferList = function () {
+            var updateOperationsList = function () {
 
-                if (base.autoUpdatePlan) {
+                if (base.autoUpdateSpec) {
                     if (base.sourcesReady && base.destinationsReady) {
-                        var transfers = [];
+                        var operations = [];
                         
                         if (base.typeDetails.transfer_template_id == 1 || base.typeDetails.transfer_template_id == 2) {
                             /* sopurce and destination plate are same size and layout */
                             var plate = base.sources[0];
                             for (var j=0; j<plate.data.wells.length;j++) {
                                 var sourceWell = plate.data.wells[j];
-                                var transferRow = {
+                                var operationRow = {
                                     source_plate_barcode: plate.text
                                     ,source_well_name: sourceWell.column_and_row
                                     ,source_sample_id: sourceWell.sample_id
@@ -262,7 +275,7 @@ app = angular.module('twist.app')
                                     ,destination_well_name: sourceWell.column_and_row
                                     ,destination_plate_well_count: Maps.plateTypeInfo[plate.data.plateDetails.type].wellCount
                                 };
-                                transfers.push(transferRow);
+                                operations.push(operationRow);
                             }
                         } else {
                             /* source and destination are different size and/or layout*/
@@ -282,7 +295,7 @@ app = angular.module('twist.app')
                                             overlapCheckMap[sourceWell.column_and_row] = plate.text;
                                         }
 
-                                        var transferRow = {
+                                        var operationRow = {
                                             source_plate_barcode: plate.text
                                             ,source_well_name: sourceWell.column_and_row
                                             ,source_sample_id: sourceWell.sample_id
@@ -290,7 +303,7 @@ app = angular.module('twist.app')
                                             ,destination_well_name: sourceWell.column_and_row
                                             ,destination_plate_well_count: Maps.plateTypeInfo[plate.data.plateDetails.type].wellCount
                                         };
-                                        transfers.push(transferRow);
+                                        operations.push(operationRow);
                                     }
                                 }
                             } else {
@@ -303,7 +316,7 @@ app = angular.module('twist.app')
                                         var sourceWell = plate.data.wells[j];
                                         var destWell = wellsMap[sourceWell.well_id];
                                         var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
-                                        var transferRow = {
+                                        var operationRow = {
                                             source_plate_barcode: plate.text
                                             ,source_well_name: sourceWell.column_and_row
                                             ,source_sample_id: sourceWell.sample_id
@@ -311,21 +324,17 @@ app = angular.module('twist.app')
                                             ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
                                             ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
                                         };
-                                        transfers.push(transferRow);
+                                        operations.push(operationRow);
                                     }
                                 }
                             }
                         }
 
-                        base.plateTransfers = transfers;
+                        base.operations = operations;
                     } else {
-                        base.clearPlateTransfers();
+                        base.clearOperationsList();
                     }
                 }
-            };
-
-            base.clearPlateTransfers = function () {
-                base.plateTransfers = [];
             };
 
             var notReady = function (which) {
@@ -334,10 +343,51 @@ app = angular.module('twist.app')
                 } else if (which == Constants.PLATE_DESTINATION) {
                     base.destinationsReady = false;
                 }
-                base.clearPlateTransfers();
+                base.clearOperationsList();
             };
 
             var sourcesReady;
+
+            base.setType = function (thisType) {
+                base.type = thisType;
+            };
+
+            base.setTitle = function (thisTitle) {
+                base.title = thisTitle;
+            }
+
+            base.getSourcesHeader = function () {
+                var header = '';
+
+                if (base.type == 'plate_step') {
+                    header = 'Plate Barcode';
+                    header+= base.sources.length > 1 ? 's' :'';
+                    if (base.destinations.length) {
+                        header = 'Source ' + header; 
+                    }
+                } else if (base.type == 'custom') {
+                    header = 'Source(s)'
+                }
+
+                return header;
+            };
+
+            base.getDestinationsHeader = function () {
+                var header = '';
+
+                if (base.type == 'plate_step') {
+                    header = 'Destination Plate Barcode';
+                    header+= base.destinations.length > 1 ? 's' :'';
+                } else if (base.type == 'custom') {
+                    header = 'Destination(s)'
+                }
+
+                return header;
+            };
+
+            base.clearOperationsList = function () {
+                base.operations = [];
+            };
 
             base.setTransferTypeDetails = function (typeObj) {
                 base.typeDetails = typeObj;
@@ -388,7 +438,7 @@ app = angular.module('twist.app')
                 }
                 base.map[which].plateCount += howMany;
                 base.updateInputs();
-                updateTransferList();
+                updateOperationsList();
             }
 
             base.removePlateInput = function (which, plateIndex) {
@@ -403,7 +453,7 @@ app = angular.module('twist.app')
                 }
                 base[which + 's'] = newSources;
                 base.updateInputs();
-                updateTransferList();
+                updateOperationsList();
             }
 
             base.checkSourcesReady = function () {
@@ -448,7 +498,7 @@ app = angular.module('twist.app')
                             } else {
                                 return;
                             } 
-                            updateTransferList();
+                            updateOperationsList();
                         }
                         ready();
                         sourceItem.updating = false;
@@ -509,7 +559,7 @@ app = angular.module('twist.app')
                                 }
                             }
                             base.destinationsReady = true;
-                            updateTransferList();
+                            updateOperationsList();
                         }
                         ready(); 
                     }).error(function (data) {
@@ -523,13 +573,13 @@ app = angular.module('twist.app')
 
             base.setPlanFromFile = function (planFromFile) {
                 base.planFromFile = planFromFile;
-                base.autoUpdatePlan = !planFromFile;
+                base.autoUpdateSpec = !planFromFile;
             }
 
             base.transferFromFile = function (engaged, resultData) {
                 base.setPlanFromFile(engaged);
                 if (engaged) {
-                    base.plateTransfers = resultData.transferJSON;
+                    base.operations = resultData.transferJSON;
                     if (resultData.stats.sources.length) {
                         base.sources = [];
                         for (var i=0; i<resultData.stats.sources.length;i++) {
@@ -550,7 +600,7 @@ app = angular.module('twist.app')
                         }
                     }
                 } else {
-                    base.clearPlateTransfers();
+                    base.clearOperationsList();
                 }
             };
 
@@ -614,9 +664,9 @@ app = angular.module('twist.app')
                 writeHeaderRow();
                 /* range is s = starting row and col value; e = ending row and col value */
                 /* basically, it should be 0,0 to col_count, row_count */
-                var range = {s: {c:0, r:0}, e: {c:4, r: base.plateTransfers.length + 1}};
-                for(var i = 0; i != base.plateTransfers.length; i++) {
-                    row = base.plateTransfers[i];
+                var range = {s: {c:0, r:0}, e: {c:4, r: base.operations.length + 1}};
+                for(var i = 0; i != base.operations.length; i++) {
+                    row = base.operations[i];
                     for (var j=0; j<orderRowKeys.length; j++) {
                         var cell = {v: row[orderRowKeys[j]]};
                         var cell_ref = XLSX.utils.encode_cell({c:j,r:i + 1});
@@ -648,8 +698,14 @@ app = angular.module('twist.app')
                 saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
             };
 
+            base.setPlateStepDefaults = function () {
+                base.setType('plate_step');
+            };
+
             base.setCreateEditDefaults = function () {
-                base.title = 'New Transfer Plan';
+                base.setTitle('New Transform Spec');
+                base.setType('custom');
+                base.autoUpdateSpec = false;
                 base.sources.push(returnEmptyPlate());
                 base.destinations.push(returnEmptyPlate());
             };
@@ -663,8 +719,8 @@ app = angular.module('twist.app')
 
         return {
 
-            newTransferPlan: function () {
-                return new TransferPlan();
+            newTransformSpec: function () {
+                return new TransformSpec();
             }
 
         }
@@ -679,8 +735,8 @@ app = angular.module('twist.app')
             ,PLATE_DESTINATION: 'destination'
             ,STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
             ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
-            ,STANDARD_TRANSFER_TYPE: 'standard'
-            ,EXCEL: 'excel'
+            ,STANDARD_TEMPLATE: 'standard_template'
+            ,FILE_UPLOAD: 'file_upload'
         };
     }]
 )
@@ -705,10 +761,10 @@ app = angular.module('twist.app')
             return 'ERROR: Could not map ' + rowColumn + ' to human well id.';
         };
 
-        var getTransferRowsFromFile = function (fileData, transferPlan) {
+        var getTransferRowsFromFile = function (fileData, transformSpec) {
 
-            var map = transferPlan.map;
-            var transferTypeData = transferPlan.transferTypeData;
+            var map = transformSpec.map;
+            var transferTypeData = transformSpec.transferTypeData;
 
             var transferJSON = [];
             var thisRow = {};
@@ -743,8 +799,8 @@ app = angular.module('twist.app')
                     fileErrors.push('This file contains no source plates.');
                 }
 
-                if (validateStats && !transferPlan.map.source.variablePlateCount && count != transferPlan.map.source.plateCount) {
-                    fileErrors.push('This transfer expects ' + transferPlan.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
+                if (validateStats && !transformSpec.map.source.variablePlateCount && count != transformSpec.map.source.plateCount) {
+                    fileErrors.push('This transfer expects ' + transformSpec.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
                 }
                 count = 0;
                 plates = [];
@@ -759,13 +815,13 @@ app = angular.module('twist.app')
                     fileErrors.push('This file contains no destination plates.');
                 }
 
-                if (validateStats && !transferPlan.map.destination.variablePlateCount && count != transferPlan.map.destination.plateCount) {
-                    if (transferPlan.typeDetails.transfer_template_id == 2) {
+                if (validateStats && !transformSpec.map.destination.variablePlateCount && count != transformSpec.map.destination.plateCount) {
+                    if (transformSpec.typeDetails.transfer_template_id == 2) {
                         if (count != 1) {
                             fileErrors.push('This transfer expects the same source and destination plate but found ' + count + ' destination plates in the file');
                         }
                     } else {
-                        fileErrors.push('This transfer expects ' + transferPlan.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
+                        fileErrors.push('This transfer expects ' + transformSpec.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
                     }
                     
                 }
@@ -775,7 +831,7 @@ app = angular.module('twist.app')
 
             if ( fileData.substring(0, 8) == 'Run Date') {
                 /* this is a csv log file from qpix */
-                var transferTypeId = transferPlan.typeDetails.transfer_template_id;
+                var transferTypeId = transformSpec.typeDetails.transfer_template_id;
                 if (transferTypeId != 16 && transferTypeId != 21 && transferTypeId != 22) {
                     fileErrors.push('This transfer type (' + transferTypeId + ') does not expect a log file as input.');
                     var result = {
@@ -923,7 +979,7 @@ app = angular.module('twist.app')
 
                     if (sourceData.success) {
 
-                        if (transferPlan.typeDetails.transfer_template_id != 2) {
+                        if (transformSpec.typeDetails.transfer_template_id != 2) {
                             /* this is NOT a same-plate step, check that the destination plate is not already in the db */
                             Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
                                 if (!data.success) {
