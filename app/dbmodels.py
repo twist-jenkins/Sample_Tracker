@@ -118,9 +118,9 @@ class Sample(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(1024))
     # external_barcode = db.Column(db.String(100), nullable=True)
-    # parent_process_id = db.Column(
-    #     db.String(40), db.ForeignKey("process.process_id"),
-    #     nullable=True)
+    parent_process_id = db.Column(
+        db.String(40), #db.ForeignKey("process.process_id"),
+        nullable=True)
     # parent_transfer_process_id = db.Column(
     #     db.String(40), db.ForeignKey("transfer_process.process_id"),
     #     nullable=True)
@@ -153,14 +153,14 @@ class Sample(db.Model):
     operator = db.relationship(
         "Operator", uselist=False, backref=db.backref("samples"),
         foreign_keys=operator_id)
-    sample_type = db.relationship(
-        "SampleType", uselist=False,
-        backref=db.backref("samples"),
-        foreign_keys=type_id)
-    # parent_process = db.relationship(
-    #     "Process", uselist=False,
-    #     backref=db.backref("child_samples"),
-    #     foreign_keys=parent_process_id)
+    #sample_type = db.relationship(
+    #    "SampleType", uselist=False,
+    #    backref=db.backref("samples"),
+    #    foreign_keys=type_id)
+    #parent_process = db.relationship(
+    #    "Process", uselist=False,
+    #    backref=db.backref("child_samples"),
+    #    foreign_keys=parent_process_id)
     # reagent_type_set_lot = db.relationship(
     #     "ReagentTypeSetLot", uselist=False,
     #     backref=db.backref("samples"),
@@ -558,7 +558,7 @@ class ClonedSample(Sample):
 
         # super
         date_created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        operator_id = 'CL'
+        # operator_id = operator_id
         parent_process_id = None
         external_barcode = None
         reagent_type_set_lot_id = None

@@ -369,6 +369,7 @@ def sample_type_handler(db_session, sample_transfer_type_id, source_sample_id,
         cs_id = create_unique_object_id("CS_")
         logging.warn(cs_id + '... ' + source_sample_id)
         cloned_sample = ClonedSample(cs_id, source_sample_id, source_id,
-                                     colony_name, None, None, None, 'CL')
+                                     colony_name, None, None, None, 'TST')
+        cloned_sample.parent_process_id = 'CLO_0019'
         db_session.add(cloned_sample)
 
