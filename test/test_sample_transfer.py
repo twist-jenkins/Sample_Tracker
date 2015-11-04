@@ -137,19 +137,28 @@ class TestCase(unittest.TestCase):
 
     def test_small_qpix_to_96_golden(self):
         dest_plate_barcode = 'test' + ''.join([random.choice(string.letters
-                                                           + string.digits)
-                                               for x in range(30)])
+                                                             + string.digits)
+                                               for _ in range(10)])
         transfer_map = [{
             "source_plate_barcode": "XFER_ROOT",
             "source_well_name": src_well,
-            "destination_plate_barcode": dest_plate_barcode,
+            "destination_plate_barcode": dest_plate_barcode + dest_plate,
             "destination_well_name": dest_well,
             "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_well, dest_well_count) in [
-            ('A2', 'A1', 96),
-            ('A3', 'A2', 96),
-            ('A4', 'B6', 96),
-            ('A5', 'A4', 96)
+        } for (src_well, dest_plate, dest_well, dest_well_count) in [
+            ('A1', '_1', 'A1', 96),
+            #('A1', '_1', 'A2', 96),
+            #('A1', '_1', 'A3', 96),
+            #('A1', '_1', 'A4', 96),
+            #('A1', '_1', 'A5', 96),
+            #('A1', '_1', 'A6', 96),
+            #('A2', '_1', 'A7', 96),
+            #('A2', '_1', 'A8', 96),
+            #('A2', '_1', 'B1', 96),
+            #('B1', '_2', 'A1', 96),
+            #('B1', '_2', 'A2', 96),
+            #('B1', '_2', 'A3', 96),
+            #('B1', '_2', 'A4', 96)
         ]]
         data = {"sampleTransferTypeId": 15,  # QPix To 96 plates
                 "sampleTransferTemplateId": 21,
@@ -160,6 +169,15 @@ class TestCase(unittest.TestCase):
                               content_type='application/json')
         assert rv.status_code == 200, rv.data
         result = json.loads(rv.data)
+        assert result["success"] is True
+
+        to_verify = dest_plate_barcode + '_1'
+        rv = self.client.get('/api/v1/plate-barcodes/%s'
+                             % to_verify,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        print result
         assert result["success"] is True
 
 if __name__ == '__main__':

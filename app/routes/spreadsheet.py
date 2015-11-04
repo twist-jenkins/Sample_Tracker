@@ -17,7 +17,7 @@ from app import app, db
 from app.utils import scoped_session
 from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
-                          SamplePlate, SamplePlateLayout,
+                          SamplePlate, SamplePlateLayout, ClonedSample,
                           SamplePlateType, SampleTransferDetail)
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
@@ -327,8 +327,9 @@ def create_adhoc_sample_movement(db_session, operator,
         db_session.add(destination_plate_well)
 
 
-        print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
+        # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
         logging.info("DESTINATION PLATE WELL: %s ", destination_plate_well)
+
 
         #
         # 6. Create a row representing a transfer from a well in the "source" plate to a well
@@ -338,6 +339,12 @@ def create_adhoc_sample_movement(db_session, operator,
            source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
            destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
         db_session.add(source_to_destination_well_transfer)
+
+        #
+        # 7.  Accession cloned_sample if necessary.
+        #
+        sample_type_handler(db_session, sample_transfer_type_id,
+                            source_plate_well.sample_id)
 
         order_number += 1
 
@@ -352,4 +359,12 @@ def create_adhoc_sample_movement(db_session, operator,
         "success":True
     }
 
-
+def sample_type_handler(db_session, sample_transfer_type_id, source_sample_id):
+    if sample_transfer_type_id == 15:  # QPix To 96 plates
+        source_id = 'foo'
+        colony_name = 'bar'
+        cs_id = sample_id = create_unique_object_id("CS_")
+        logging.warn(cs_id + '... ' + source_sample_id)
+        cloned_sample = ClonedSample(cs_id, source_sample_id, source_id,
+                                     colony_name, None, None, None, None)
+        db_session.add(cloned_sample)
