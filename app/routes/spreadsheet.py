@@ -17,8 +17,9 @@ from app import app, db
 from app.utils import scoped_session
 from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
-                          SamplePlate, SamplePlateLayout,
-                          SamplePlateType, SampleTransferDetail)
+                          SamplePlate, SamplePlateLayout, ClonedSample,
+                          SamplePlateType, SampleTransferDetail,
+                          GeneAssemblySampleView)
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -38,13 +39,13 @@ def create_sample_movement_from_spreadsheet_data(operator,
                                                  sample_transfer_template_id,
                                                  wells):
     with scoped_session(db.engine) as db_session:
-        return create_adhoc_sample_movement(db_session, operator,
-                                            sample_transfer_type_id, 
+        result = create_adhoc_sample_movement(db_session, operator,
+                                            sample_transfer_type_id,
                                             sample_transfer_template_id, wells)
-
+        return result
 
 def create_adhoc_sample_movement(db_session, operator,
-                                 sample_transfer_type_id, 
+                                 sample_transfer_type_id,
                                  sample_transfer_template_id, wells):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
@@ -68,7 +69,7 @@ def create_adhoc_sample_movement(db_session, operator,
         "384": get_well_id_for_col_and_row_384
     }
 
-    for well in wells:
+    for ix, well in enumerate(wells):
         source_plate_barcode = well["source_plate_barcode"]
         source_col_and_row = well["source_well_name"]
         destination_plate_barcode = well["destination_plate_barcode"]
@@ -279,7 +280,13 @@ def create_adhoc_sample_movement(db_session, operator,
                 "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
             }
         else:
-            destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
+            try:
+                destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
+            except KeyError:
+                return {
+                    "success":False,
+                    "errorMessage":"Destination plate well mapping failed."
+                }
             logging.info("calculated DEST well id: %s from plate size: %s and column/row: %s", destination_well_id, plate_size,
                          destination_col_and_row)
             print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row)
@@ -321,8 +328,9 @@ def create_adhoc_sample_movement(db_session, operator,
         db_session.add(destination_plate_well)
 
 
-        print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
+        # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
         logging.info("DESTINATION PLATE WELL: %s ", destination_plate_well)
+
 
         #
         # 6. Create a row representing a transfer from a well in the "source" plate to a well
@@ -333,12 +341,20 @@ def create_adhoc_sample_movement(db_session, operator,
            destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
         db_session.add(source_to_destination_well_transfer)
 
+        #
+        # 7.  Accession cloned_sample if necessary.
+        #
+        sample_type_handler(db_session, sample_transfer_type_id,
+                            source_plate, source_plate_well,
+                            destination_plate_well, operator)
+
         order_number += 1
 
-    #return {
-    #    "success":False,
-    #    "errorMessage":"testing!!!"
-    #}
+    # db_session.rollback()
+    # return {
+    #     "success":False,
+    #     "errorMessage":"testing!!!"
+    # }
 
     db_session.commit()
 
@@ -346,4 +362,35 @@ def create_adhoc_sample_movement(db_session, operator,
         "success":True
     }
 
+def sample_type_handler(db_session, sample_transfer_type_id,
+                        source_plate, source_plate_well,
+                        destination_plate_well, operator):
+    if sample_transfer_type_id not in (15, 16):  # QPix To 96/384 plates
+        return
+
+    source_id = create_unique_object_id("tmp_src_")
+    colony_name = "%d-%s" % (12, destination_plate_well.well_id)
+
+    # Create CS
+    cs_id = create_unique_object_id("CS_")
+    cloned_sample = ClonedSample(cs_id, source_plate_well.sample_id, source_id,
+                                 colony_name, None, None, None,
+                                 operator.operator_id)
+
+    # Add CLO
+    clo = None
+    qry = (
+        db.session.query(GeneAssemblySampleView)
+        .filter_by(sample_id=source_plate_well.sample_id)
+    )
+    result = qry.first()
+    if result:
+        ga_view = result
+        clo = ga_view.clo_cloning_process_id
+    cloned_sample.parent_process_id = clo
+    logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
+                 cs_id, source_plate_well.sample_id, clo)
+
+    # Commit
+    db_session.add(cloned_sample)
 

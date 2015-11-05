@@ -70,20 +70,21 @@ class PlanListResource(flask_restful.Resource):
     def get(self):
         """returns a list of all plans"""
         with scoped_session(db.engine) as db_session:
-            plans = db_session.query(SampleTransferPlan).all()
-            for plan in plans:
-                db_session.expunge(plan)
-            return str(plans)
+            rows = db_session.query(SampleTransferPlan).all()
+            result = {row.plan_id: row.plan for row in rows}
+            #for row in rows:
+            #    db_session.expunge(rows)
+            return result
         return []
 
     def post(self):
         """creates new plan returning a nice geeky Location header"""
         with scoped_session(db.engine) as db_session:
-            plan_id = db_session.query(func.max(SampleTransferPlan.plan_id)
+            row = db_session.query(func.max(SampleTransferPlan.plan_id)
                                        ).one()
-            if plan_id is None or plan_id[0] is None:
+            if row is None or row[0] is None:
                 max_id = 0
             else:
-                max_id = int(plan_id[0].split("_")[1])
+                max_id = int(row[0].split("_")[1])
             plan_id = 'plan_%i' % (max_id + 1)
         return PlanResource().put(plan_id, db_session=db_session)

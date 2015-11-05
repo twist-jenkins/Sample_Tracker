@@ -82,13 +82,89 @@ class Operator(db.Model):
 
 
 class Sample(db.Model):
+    __tablename__ = "sample"
+
+    # class
+    STATUS_ACTIVE = "active"
+    STATUS_CONSUMED = "consumed"
+    STATUS_READY_TO_SHIP = "ready_to_ship"
+    STATUS_SHIPPED = "shipped"
+    STATUS_DISPOSED = "disposed"
 
     sample_id = db.Column(db.String(40), primary_key=True)
-    type_id = db.Column(db.String(40), db.ForeignKey('sample_type.type_id'))
-    operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
-    name = db.Column(db.String(100))
-    description = db.Column(db.String(2048))
-    date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+
+    type_id = db.Column(
+        db.String(40), db.ForeignKey("sample_type.type_id"),
+        index=True, nullable=False)
+
+    # mapper
+    __mapper_args__ = {
+        "polymorphic_on": type_id,
+        "polymorphic_identity": "sample",
+        "with_polymorphic": "*"
+    }
+
+    # attr
+    #operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
+    #name = db.Column(db.String(100))
+    #description = db.Column(db.String(2048))
+    #date_created = db.Column(db.DateTime,default=datetime.datetime.utcnow)
+
+
+    # attr
+    date_created = db.Column(db.DateTime)
+    operator_id = db.Column(
+        db.String(10), db.ForeignKey("operator.operator_id"))
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(1024))
+    # external_barcode = db.Column(db.String(100), nullable=True)
+    parent_process_id = db.Column(
+        db.String(40), #db.ForeignKey("process.process_id"),
+        nullable=True)
+    # parent_transfer_process_id = db.Column(
+    #     db.String(40), db.ForeignKey("transfer_process.process_id"),
+    #     nullable=True)
+    status = db.Column(
+        db.Enum(
+            STATUS_ACTIVE, STATUS_CONSUMED, STATUS_DISPOSED,
+            STATUS_READY_TO_SHIP, STATUS_SHIPPED,
+            name="enum_sample_status"),
+        nullable=False)
+    # optional
+    # fwd_primer_ps_id = db.Column(
+    #     db.String(40),
+    #     db.ForeignKey("primer_sequence.sequence_id"), nullable=True)
+    # rev_primer_ps_id = db.Column(
+    #     db.String(40),
+    #     db.ForeignKey("primer_sequence.sequence_id"), nullable=True)
+    # reagent_type_set_lot_id = db.Column(
+    #     db.String(40),
+    #     db.ForeignKey("reagent_type_set_lot.reagent_type_set_lot_id"),
+    #     nullable=True)
+    # relations
+    # fwd_primer = db.relationship(
+    #     "PrimerSequence", uselist=False,
+    #     backref=db.backref("sample_fwd_primers"),
+    #     foreign_keys=fwd_primer_ps_id)
+    # rev_primer = db.relationship(
+    #     "PrimerSequence", uselist=False,
+    #     backref=db.backref("sample_rev_primers"),
+    #     foreign_keys=rev_primer_ps_id)
+    operator = db.relationship(
+        "Operator", uselist=False, backref=db.backref("samples"),
+        foreign_keys=operator_id)
+    #sample_type = db.relationship(
+    #    "SampleType", uselist=False,
+    #    backref=db.backref("samples"),
+    #    foreign_keys=type_id)
+    #parent_process = db.relationship(
+    #    "Process", uselist=False,
+    #    backref=db.backref("child_samples"),
+    #    foreign_keys=parent_process_id)
+    # reagent_type_set_lot = db.relationship(
+    #     "ReagentTypeSetLot", uselist=False,
+    #     backref=db.backref("samples"),
+    #     foreign_keys=reagent_type_set_lot_id)
 
     #
     # Relationships. ORM magicalness.
@@ -96,15 +172,39 @@ class Sample(db.Model):
 
     operator = db.relationship("Operator")
 
-    def __init__(self, sample_id, type_id, operator_id, name):
-        self.sample_id = create_unique_object_id("SMPL_")
-        self.type_id = type_id
+    def __init__(self, sample_id, date_created, operator_id,
+                 name, description, fwd_primer_ps_id, rev_primer_ps_id,
+                 parent_process_id, external_barcode, reagent_type_set_lot_id,
+                 status, parent_transfer_process_id):
+        """Init"""
+        self.sample_id = sample_id
+        self.date_created = datetime.datetime.strptime(
+            date_created, '%Y-%m-%d %H:%M:%S')
         self.operator_id = operator_id
-        self.name = name
+        if reagent_type_set_lot_id:
+            self.reagent_type_set_lot_id = reagent_type_set_lot_id
+        if status:
+            self.status = status
+        else:
+            self.status = self.STATUS_ACTIVE
+        if external_barcode:
+            self.external_barcode = external_barcode
+        if parent_process_id:
+            self.parent_process_id = parent_process_id
+        if name:
+            self.name = name
+        if description:
+            self.description = description
+        if fwd_primer_ps_id:
+            self.fwd_primer_ps_id = fwd_primer_ps_id
+        if rev_primer_ps_id:
+            self.rev_primer_ps_id = rev_primer_ps_id
+        if parent_transfer_process_id:
+            self.parent_transfer_process_id = parent_transfer_process_id
 
     def __repr__(self):
         return '<Sample sample_id: [%s] type_id: [%s] operator_id: [%s] name: [%s] >' % (self.sample_id,
-            self.type_id,self.operator_id, self.name)
+            self.type_id, self.operator_id, self.name)
 
 
 class GeneAssemblySampleView(db.Model):
@@ -411,5 +511,89 @@ class SampleTransferPlan(db.Model):
 
     def __repr__(self):
         return '<SampleTransfer Plan id: [%s]>' % (self.plan_id, )
+
+
+class ClonedSample(Sample):
+    """Cloned sample, simplified version of twist_core db_model.ClonedSample.
+    This version is also polymorphic."""
+    __tablename__ = "cloned_sample"
+
+    sample_id = db.Column(
+        db.String(40), db.ForeignKey("sample.sample_id"), primary_key=True)
+
+    __mapper_args__ = {
+       "polymorphic_identity": "cloned_sample",
+       'inherit_condition': (sample_id == Sample.sample_id)
+    }
+
+    # columns
+    parent_sample_id = db.Column(
+        db.String(40), db.ForeignKey("sample.sample_id"), nullable=False)
+    source_id = db.Column(db.String(40), nullable=False)
+    colony_name = db.Column(db.String(40), nullable=False)
+    plate_name = db.Column(db.String(40), nullable=True)
+    plate_id = db.Column(db.String(40), nullable=True)
+    well_id = db.Column(db.String(40), nullable=True)
+
+    # relationships
+    parent_sample = db.relationship(
+        "Sample", uselist=False, backref=db.backref("sample_clones"),
+        foreign_keys=parent_sample_id)
+
+    def __init__(self, sample_id, parent_sample_id, source_id, colony_name,
+                 plate_id, well_id, description, operator_id):
+        """Init"""
+
+        if not colony_name:
+            raise ValueError("Colony name required for cloned sample")
+        if self.sample_id == parent_sample_id:
+            raise ValueError(
+                "Sample ID == Parent Sample ID: %s" % sample_id)
+        # set default name
+        name = self._make_name(parent_sample_id, source_id, colony_name)
+        # create description if not provided
+        if not description:
+            description = "Cloned sample: %s, Source: %s, Colony: %s" % (
+                parent_sample_id, source_id, colony_name)
+
+        # super
+        date_created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # operator_id = operator_id
+        parent_process_id = None
+        external_barcode = None
+        reagent_type_set_lot_id = None
+        status = self.STATUS_ACTIVE
+        parent_transfer_process_id = None
+        fwd_primer_ps_id = None
+        rev_primer_ps_id = None
+        Sample.__init__(
+            self, sample_id, date_created, operator_id, name,
+            description, fwd_primer_ps_id, rev_primer_ps_id,
+            parent_process_id, external_barcode,
+            reagent_type_set_lot_id, status, parent_transfer_process_id)
+
+        if plate_id and well_id:
+            self.plate_id = plate_id
+            self.well_id = well_id
+
+        # redundant but using for unique constraint within orm
+        self.colony_name = colony_name
+        self.parent_sample_id = parent_sample_id
+        self.source_id = source_id
+
+    def _make_name(self, parent_sample_id, source_id, colony_name):
+        """Helper to make short name"""
+        pid = parent_sample_id
+        if len(parent_sample_id) > 10:
+            pid = "%s_%s.%s" % (
+                parent_sample_id.split("_")[0],
+                parent_sample_id[-6:-3].upper(),
+                parent_sample_id[-3:].upper())
+        return "%s-%s.%s" % (pid, source_id, colony_name)
+
+    def parent(self):
+        """Return parent"""
+        return self.parent_sample
+
 
 
