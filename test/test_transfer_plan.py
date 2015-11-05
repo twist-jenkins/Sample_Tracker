@@ -6,7 +6,7 @@ import os
 import logging
 logging.basicConfig(level=logging.INFO)
 
-os.environ["WEBSITE_ENV"] = "Dev"
+# os.environ["WEBSITE_ENV"] = "Dev"
 
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
@@ -117,7 +117,7 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert len(result) > 0
-
+        assert new_plan in result.values()
         self.client.delete(new_url)
 
 if __name__ == '__main__':
