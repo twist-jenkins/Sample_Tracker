@@ -148,6 +148,36 @@ $twst-common-border: 1px solid #aaa;
     transform: scaleY(-1) translate(0, 0.2em);
 }
 
+@mixin bootstrapOverride {
+    /****************************************/
+    /* override bootstrap styles */
+    /****************************************/
+
+    .btn, .dropdown-menu {
+        font-size: 1.2em;
+    }
+
+    .btn-primary {
+        background-color: #fff;
+        color: #000;
+        border-color: #ddd;
+    }
+
+    .btn-primary.active.focus, .btn-primary.active:focus, .btn-primary.active:hover, .btn-primary:active.focus, .btn-primary:active:focus, .btn-primary:active:hover, .open>.dropdown-toggle.btn-primary.focus, .open>.dropdown-toggle.btn-primary:focus, .open>.dropdown-toggle.btn-primary:hover, .btn-primary.active, .btn-primary:active, .open>.dropdown-toggle.btn-primary {
+        color: #000;
+        background-color: $twst-minty-green;
+        border-color: #ddd;
+    }
+
+    .btn-primary:hover {
+        background-color: $twst-minty-green;
+    }
+
+    /****************************************/
+    /* end override bootstrap styles */
+    /****************************************/
+}
+
 
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -668,6 +698,8 @@ strong {
 
 .twst-sample-track-form {
 
+    @include bootstrapOverride;
+
     .twst-sample-track-plate-barcodes {
         display: none;
         width: 100%;
@@ -857,11 +889,11 @@ strong {
         }
     }
 
-    .twst-transfer-plan {
+    .twst-transform-spec {
         margin-top: 2em;
         position: relative;
 
-        .twst-transfer-plan-show-btn {
+        .twst-transform-spec-show-btn, .twst-transform-spec-sources-show-btn {
             display: inline-block;
             font-size: 1.2em;
             cursor: pointer;
@@ -871,7 +903,7 @@ strong {
             }
         }
 
-        .twst-transfer-plan-transfers-list {
+        .twst-transform-spec-transfers-list {
             .twst-sample-track-download-transfer-plan-excel {
                     position: absolute;
                     top: 0.5em;
@@ -880,14 +912,27 @@ strong {
                     cursor: pointer;
             }
 
-            .twst-transfer-plan-preview-table {
+            .twst-transform-spec-preview-table {
                 margin: 1em auto 0 auto;
             }
         }
 
-        .twst-transfer-plan-transfers-list-empty-msg {
+        .twst-transform-spec-transfers-list-empty-msg, .twst-transform-spec-sources-empty-msg {
             margin-top: 1em;
             color: $twst-dark-red;
+        }
+
+        .twst-transform-spec-sources-data-container {
+            width: 100%;
+            overflow: auto;
+            padding-bottom: 0.5em;
+            margin-top: 1em;
+            height: 600px;
+
+            .twst-transform-spec-sources-data-table {
+                
+
+            }
         }
 
     }
@@ -1133,33 +1178,7 @@ strong {
 
     }
 
-    /****************************************/
-    /* override bootstrap styles */
-    /****************************************/
-
-    .btn, .dropdown-menu {
-        font-size: 1.2em;
-    }
-
-    .btn-primary {
-        background-color: #fff;
-        color: #000;
-        border-color: #ddd;
-    }
-
-    .btn-primary.active.focus, .btn-primary.active:focus, .btn-primary.active:hover, .btn-primary:active.focus, .btn-primary:active:focus, .btn-primary:active:hover, .open>.dropdown-toggle.btn-primary.focus, .open>.dropdown-toggle.btn-primary:focus, .open>.dropdown-toggle.btn-primary:hover, .btn-primary.active, .btn-primary:active, .open>.dropdown-toggle.btn-primary {
-        color: #000;
-        background-color: $twst-minty-green;
-        border-color: #ddd;
-    }
-
-    .btn-primary:hover {
-        background-color: $twst-minty-green;
-    }
-
-    /****************************************/
-    /* end override bootstrap styles */
-    /****************************************/
+    @include bootstrapOverride;
 
     .twst-sample-track-step-options-select {
 
@@ -1177,8 +1196,8 @@ strong {
 
     }
 
-    .twst-transfer-plan-barcodes-mode .twst-sample-track-plate-barcodes,
-    .twst-transfer-plan-file-mode .twst-sample-track-main-excel-upload {
+    .twst-transform-spec-barcodes-mode .twst-sample-track-plate-barcodes,
+    .twst-transform-spec-file-mode .twst-sample-track-main-excel-upload {
         display: table;
     }
 
@@ -1437,8 +1456,7 @@ strong {
         }
     }
 
-    .twst-sample-track-plate-barcodes,
-    .twst-sample-track-main-excel-upload {
+    .twst-sample-track-plate-barcodes {
         display: table;
     }
     

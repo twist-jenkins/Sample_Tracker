@@ -5,6 +5,21 @@ server_url = twist_api_url;
 
 app = angular.module('twist.app')
 
+.factory('Constants',[
+    function () {
+        return {
+            PLATE_SOURCE: 'source'
+            ,PLATE_DESTINATION: 'destination'
+            ,STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
+            ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
+            ,STANDARD_TEMPLATE: 'standard_template'
+            ,FILE_UPLOAD: 'file_upload'
+            ,TRANSFORM_SPEC_TYPE_CUSTOM_PLATING: 'custom_plating'
+            ,TRANSFORM_SPEC_TYPE_PLATE_STEP: 'plate_step'
+            ,SOURCE_TYPE_PLATE: 'plate'
+        };
+    }]
+)
 
 .factory('ApiRequestObj', [
     function () {
@@ -253,7 +268,7 @@ app = angular.module('twist.app')
             }
 
             var returnEmptyPlate = function () {
-                return {text: '', title: ''};
+                return new TransformSpecSource(Constants.SOURCE_TYPE_PLATE);
             };
 
             var updateOperationsList = function () {
@@ -265,15 +280,15 @@ app = angular.module('twist.app')
                         if (base.typeDetails.transfer_template_id == 1 || base.typeDetails.transfer_template_id == 2) {
                             /* sopurce and destination plate are same size and layout */
                             var plate = base.sources[0];
-                            for (var j=0; j<plate.data.wells.length;j++) {
-                                var sourceWell = plate.data.wells[j];
+                            for (var j=0; j<plate.items.length;j++) {
+                                var sourceWell = plate.items[j];
                                 var operationRow = {
-                                    source_plate_barcode: plate.text
+                                    source_plate_barcode: plate.details.text
                                     ,source_well_name: sourceWell.column_and_row
                                     ,source_sample_id: sourceWell.sample_id
-                                    ,destination_plate_barcode: (base.typeDetails.transfer_template_id == 2 ? plate.text : base.destinations[0].text)
+                                    ,destination_plate_barcode: (base.typeDetails.transfer_template_id == 2 ? plate.details.text : base.destinations[0].details.text)
                                     ,destination_well_name: sourceWell.column_and_row
-                                    ,destination_plate_well_count: Maps.plateTypeInfo[plate.data.plateDetails.type].wellCount
+                                    ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
                                 };
                                 operations.push(operationRow);
                             }
@@ -285,23 +300,23 @@ app = angular.module('twist.app')
                                 for (var i=0;i< base.sources.length;i++) {
                                     var plate = base.sources[i];
 
-                                    for (var j=0; j<plate.data.wells.length;j++) {
-                                        var sourceWell = plate.data.wells[j];
+                                    for (var j=0; j<plate.items.length;j++) {
+                                        var sourceWell = plate.items[j];
 
                                         if (overlapCheckMap[sourceWell.column_and_row]) {
-                                            base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.text + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
+                                            base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.details.text + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
                                             return;
                                         } else {
-                                            overlapCheckMap[sourceWell.column_and_row] = plate.text;
+                                            overlapCheckMap[sourceWell.column_and_row] = plate.details.text;
                                         }
 
                                         var operationRow = {
-                                            source_plate_barcode: plate.text
+                                            source_plate_barcode: plate.details.text
                                             ,source_well_name: sourceWell.column_and_row
                                             ,source_sample_id: sourceWell.sample_id
-                                            ,destination_plate_barcode: base.destinations[0].text
+                                            ,destination_plate_barcode: base.destinations[0].details.text
                                             ,destination_well_name: sourceWell.column_and_row
-                                            ,destination_plate_well_count: Maps.plateTypeInfo[plate.data.plateDetails.type].wellCount
+                                            ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
                                         };
                                         operations.push(operationRow);
                                     }
@@ -312,15 +327,15 @@ app = angular.module('twist.app')
                                     var plate = base.sources[i];
                                     var wellsMap = base.map.plateWellToWellMaps[i];
 
-                                    for (var j=0; j<plate.data.wells.length;j++) {
-                                        var sourceWell = plate.data.wells[j];
+                                    for (var j=0; j<plate.items.length;j++) {
+                                        var sourceWell = plate.items[j];
                                         var destWell = wellsMap[sourceWell.well_id];
                                         var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
                                         var operationRow = {
-                                            source_plate_barcode: plate.text
+                                            source_plate_barcode: plate.details.text
                                             ,source_well_name: sourceWell.column_and_row
                                             ,source_sample_id: sourceWell.sample_id
-                                            ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].text
+                                            ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].details.text
                                             ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
                                             ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
                                         };
@@ -359,13 +374,13 @@ app = angular.module('twist.app')
             base.getSourcesHeader = function () {
                 var header = '';
 
-                if (base.type == 'plate_step') {
+                if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
                     header = 'Plate Barcode';
                     header+= base.sources.length > 1 ? 's' :'';
                     if (base.destinations.length) {
                         header = 'Source ' + header; 
                     }
-                } else if (base.type == 'custom') {
+                } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING) {
                     header = 'Source(s)'
                 }
 
@@ -375,10 +390,10 @@ app = angular.module('twist.app')
             base.getDestinationsHeader = function () {
                 var header = '';
 
-                if (base.type == 'plate_step') {
+                if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
                     header = 'Destination Plate Barcode';
                     header+= base.destinations.length > 1 ? 's' :'';
-                } else if (base.type == 'custom') {
+                } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING) {
                     header = 'Destination(s)'
                 }
 
@@ -421,10 +436,10 @@ app = angular.module('twist.app')
                 }
 
                 for (var i=0; i<base.sources.length; i++) {
-                    base.sources[i].title = base.map.source.plateTitles ? base.map.source.plateTitles[i] || '' : '';
+                    base.sources[i].details.title = base.map.source.plateTitles ? base.map.source.plateTitles[i] || '' : '';
                 }
                 for (var i=0; i<base.destinations.length; i++) {
-                    base.destinations[i].title = base.map.destination.plateTitles ? base.map.destination.plateTitles[i] || '' : '';
+                    base.destinations[i].details.title = base.map.destination.plateTitles ? base.map.destination.plateTitles[i] || '' : '';
                 }
 
                 if (!base.map.destination.plateCount) {
@@ -458,9 +473,9 @@ app = angular.module('twist.app')
 
             base.checkSourcesReady = function () {
                 for (var i=0; i<base.sources.length; i++) {
-                    if (base.sources[i].data == null) {
+                    if (!base.sources[i].loaded) {
                         if (!base.sources[i].updating) { /* don't call notReady if the plate is still fetching its data */
-                            base.sources[i].data = null;
+                            base.sources[i].loaded = false;
                             notReady('source');
                             return false;
                         }
@@ -469,15 +484,15 @@ app = angular.module('twist.app')
                 return true;    
             }
 
-            base.addSourcePlate = function (sourceIndex) {
+            base.addSource = function (sourceIndex) {
                 var sourceItem = base.sources[sourceIndex];
                 delete sourceItem.error;
-                delete sourceItem.data;
-                var barcode = sourceItem.text;
+                delete sourceItem.loaded;
+                var barcode = sourceItem.details.text;
 
                 var onError = function (sourceItem, msg) {
                     notReady('source');
-                    sourceItem.data = null;
+                    sourceItem.loaded = false;
                     sourceItem.transferList = null;
                     sourceItem.error = msg;
                     sourceItem.updating = false;
@@ -486,12 +501,23 @@ app = angular.module('twist.app')
 
                 updating();
                 sourceItem.updating = true;
-                Api.getBasicPlateDetails(barcode).success(function (data) {
+
+                var plateDetailsFetcher = Api.getBasicPlateDetails;
+
+                if (base.type == Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING) {
+                    plateDetailsFetcher = Api.getPlateDetails;
+                }
+
+                plateDetailsFetcher(barcode).success(function (data) {
                     if (data.success) {
                         if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
                             onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
                         } else {
-                            sourceItem.data = data;
+                            sourceItem.loaded = true;
+                            sourceItem.items = data.wells;
+                            var dataCopy = angular.copy(data);
+                            delete dataCopy.wells;
+                            jQuery.extend(sourceItem.details, dataCopy);
                             sourceItem.updating = false;
                             if (base.checkSourcesReady()) {
                                 base.sourcesReady = true;
@@ -512,8 +538,8 @@ app = angular.module('twist.app')
 
             base.checkDestinationsReady = function () {
                 for (var i=0; i<base.destinations.length; i++) {
-                    if (base.destinations[i].text.length < 6) {
-                        base.destinations[i].data = null;
+                    if (base.destinations[i].details.text.length < 6) {
+                        base.destinations[i].loaded = false;
                         notReady('destination');
                         return false;
                     }
@@ -521,11 +547,11 @@ app = angular.module('twist.app')
                 return true;    
             }
 
-            base.addDestinationPlate = function (destIndex) {
+            base.addDestination = function (destIndex) {
                 var destItem = base.destinations[destIndex];
                 delete destItem.error;
-                delete destItem.data;
-                var barcode = destItem.text;
+                delete destItem.loaded;
+                var barcode = destItem.details.text;
 
                 var onError = function (destItem, msg) {
                     notReady('destination');
@@ -549,11 +575,11 @@ app = angular.module('twist.app')
                             onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
                         } else {
                             /* destination plate is new - we're good to go */
-                            destItem.data = {dummyData: true}; /* shows the "valid" icon for this input */
+                            destItem.loaded = true; /* shows the "valid" icon for this input */
                             destItem.updating = false;
                             /* check if we have all the required destination barcodes */
                             for (var i=0; i<base.destinations.length; i++) {
-                                if (base.destinations[i].text.length < 6) {
+                                if (base.destinations[i].details.text.length < 6) {
                                     onError(destItem);
                                     return;
                                 }
@@ -584,9 +610,9 @@ app = angular.module('twist.app')
                         base.sources = [];
                         for (var i=0; i<resultData.stats.sources.length;i++) {
                             var source = returnEmptyPlate();
-                            source.text = resultData.stats.sources[i];
+                            source.details.text = resultData.stats.sources[i];
                             base.sources.push(source);
-                            base.addSourcePlate(base.sources.length - 1);
+                            base.addSource(base.sources.length - 1);
                         } 
                     }
 
@@ -594,9 +620,9 @@ app = angular.module('twist.app')
                         base.destinations = [];
                         for (var i=0; i<resultData.stats.destinations.length;i++) {
                             var dest = returnEmptyPlate();
-                            dest.text = resultData.stats.destinations[i];
+                            dest.details.text = resultData.stats.destinations[i];
                             base.destinations.push(dest);
-                            base.addDestinationPlate(base.destinations.length - 1);
+                            base.addDestination(base.destinations.length - 1);
                         }
                     }
                 } else {
@@ -699,15 +725,43 @@ app = angular.module('twist.app')
             };
 
             base.setPlateStepDefaults = function () {
-                base.setType('plate_step');
+                base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
             };
 
             base.setCreateEditDefaults = function () {
                 base.setTitle('New Transform Spec');
-                base.setType('custom');
+                base.setType(Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING);
                 base.setTransferTypeDetails({text: 'Generic Transform', transfer_template_id: 24})
                 base.autoUpdateSpec = false;
             };
+
+            var init = function () {
+                return base;
+            };
+
+            return init();
+        }
+
+        var TransformSpecSource = function (kind) {
+            var base = this;
+
+            base.type = kind;
+            base.details = {};
+            base.items = [];
+            base.loaded = false;
+
+            switch (kind) {
+                case Constants.SOURCE_TYPE_PLATE:
+                    base.details = {
+                        text: '',
+                        title: ''
+                    }
+                    break;
+                
+                default :
+                    console.log('Error: Unrecognized kind = [' + kind + ']');
+                    break;
+            }
 
             var init = function () {
                 return base;
@@ -721,24 +775,14 @@ app = angular.module('twist.app')
             newTransformSpec: function () {
                 return new TransformSpec();
             }
+            ,newTransformSpecSource: function (kind) {
+                return new TransformSpecSource(kind);
+            }
 
         }
 
     }
 ])
-
-.factory('Constants',[
-    function () {
-        return {
-            PLATE_SOURCE: 'source'
-            ,PLATE_DESTINATION: 'destination'
-            ,STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
-            ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
-            ,STANDARD_TEMPLATE: 'standard_template'
-            ,FILE_UPLOAD: 'file_upload'
-        };
-    }]
-)
 
 .factory('FileParser',['Maps', '$q', 'Api',  
     function (Maps, $q, Api) {

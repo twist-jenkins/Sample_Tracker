@@ -240,15 +240,17 @@ app = angular.module("twist.app")
                     $scope.excelFileStats = {};
                     $scope.fileErrors = [];
 
+                    $scope.Constants = Constants;
+
                     $scope.cachedFileData = null;
 
                     /* refresh the current transfer plan based on changes to plates inputs or upload file */
                     $scope.updateTransferPlan = function (val, which, itemIndex) {
                         if (val.length > 5) {
                             if (which == Constants.PLATE_SOURCE) {
-                                $scope.transformSpec.addSourcePlate(itemIndex);
+                                $scope.transformSpec.addSource(itemIndex);
                             } else if (which == Constants.PLATE_DESTINATION) {
-                                $scope.transformSpec.addDestinationPlate(itemIndex);
+                                $scope.transformSpec.addDestination(itemIndex);
                             }
                         } else {
                             if (which == Constants.PLATE_SOURCE) {

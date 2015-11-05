@@ -5,6 +5,6 @@ div(class="twst-sample-track-transfer-toggle-controls" ng-if="transformSpec.type
             div(class="twst-tab twst-sample-track-main-tab" ng-click="selectTransferTemplateType(Constants.FILE_UPLOAD)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.FILE_UPLOAD}")
                 div(class="twst-custom-radio twst-selected-{{templateTypeSelection == Constants.FILE_UPLOAD}} twst-upload-via-excel-radio" val="file")
                 span(class="twst-custom-radio-label") Upload Transfer File
-div(class="twst-tab-body" ng-class="{'twst-transfer-plan-barcodes-mode': templateTypeSelection == Constants.STANDARD_TEMPLATE, 'twst-transfer-plan-file-mode': templateTypeSelection == Constants.FILE_UPLOAD}")
+div(class="twst-tab-body" ng-class="{'twst-transform-spec-barcodes-mode': templateTypeSelection == Constants.STANDARD_TEMPLATE, 'twst-transform-spec-file-mode': templateTypeSelection == Constants.FILE_UPLOAD}")
     twst-transform-builder-form(transform-spec="transformSpec" template-type-selection="templateTypeSelection")
     div(ui-view ng-if="transformSpec.typeDetails")
