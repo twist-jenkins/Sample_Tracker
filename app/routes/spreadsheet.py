@@ -396,8 +396,8 @@ def sample_type_handler(db_session, sample_transfer_type_id,
     logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
                  cs_id, source_plate_well.sample_id, clo)
 
-    # Commit
     db_session.add(cloned_sample)
+    db_session.flush()
 
     return cs_id
 
