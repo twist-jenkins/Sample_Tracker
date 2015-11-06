@@ -19,6 +19,10 @@ from app import login_manager
 
 from test_flask_app import AutomatedTestingUser, RootPlate
 
+def rnd_bc():
+    """Random barcode"""
+    return 'test' + ''.join([random.choice(string.letters + string.digits)
+                             for _ in range(10)])
 
 class TestCase(unittest.TestCase):
 
@@ -39,11 +43,11 @@ class TestCase(unittest.TestCase):
         # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 
-    def test_aliquot_standard_template_golden(self):
+    def DISABLED_test_aliquot_standard_template_golden(self):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplateId": 2,  # ??
                 "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["test_aliquot_01a"]}
+                "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -55,7 +59,7 @@ class TestCase(unittest.TestCase):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplateId": 1,  # ??
                 "sourcePlates": [self.root_plate_barcode + '_WALDO'],
-                "destinationPlates": ["test_aliquot_01a"]}
+                "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -67,7 +71,7 @@ class TestCase(unittest.TestCase):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplate": {"foo": 3},  # ??
                 "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["test_aliquot_02a"]}
+                "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -79,7 +83,7 @@ class TestCase(unittest.TestCase):
         data = {"sampleTransferTypeId": 11,
                 "sampleTransferTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": ["tst14a", "tst14b", "tst14c", "tst14d"]}
+                "destinationPlates": [rnd_bc(), rnd_bc(), rnd_bc(), rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -88,7 +92,7 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def test_1_to_4_to_1_golden(self):
-        intermediate_plates = ["tst41a", "tst41b", "tst41c", "tst41d"]
+        intermediate_plates = [rnd_bc(), rnd_bc(), rnd_bc(), rnd_bc()]
         data = {"sampleTransferTypeId": 11,
                 "sampleTransferTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
@@ -101,7 +105,7 @@ class TestCase(unittest.TestCase):
         data = {"sampleTransferTypeId": 17,
                 "sampleTransferTemplateId": 18,
                 "sourcePlates": intermediate_plates,
-                "destinationPlates": ["tst41abcd"]}
+                "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -110,6 +114,8 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def DISABLED_test_small_adhoc_golden(self):
+        bc = rnd_bc()
+        bc2 = rnd_bc()
         transfer_map = [{
             "source_plate_barcode": "QPIX_ROOT",
             "source_well_name": src_well,
@@ -117,12 +123,12 @@ class TestCase(unittest.TestCase):
             "destination_well_name": dest_well,
             "destination_plate_well_count": dest_well_count
         } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A2', "ssdest000000141jul17_G", 'A1', 96),
-            ('A3', "ssdest000000141jul17_G", 'A2', 96),
-            ('A4', "ssdest000000141jul17_G", 'B6', 96),
-            ('A5', "ssdest000000141jul17_G", 'A4', 96),
-            ('A6', "ssdest000000141jul17_384_G", 'L1', 384),
-            ('A8', "ssdest000000141jul17_384_G", 'L12', 384),
+            ('A2', bc, 'A1', 96),
+            ('A3', bc, 'A2', 96),
+            ('A4', bc, 'B6', 96),
+            ('A5', bc, 'A4', 96),
+            ('A6', bc2, 'L1', 384),
+            ('A8', bc2, 'L12', 384),
         ]]
         data = {"sampleTransferTypeId": 13,
                 "sampleTransferTemplateId": 14,
@@ -136,9 +142,7 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def test_small_qpix_to_96_golden(self):
-        dest_plate_barcode = 'test' + ''.join([random.choice(string.letters
-                                                             + string.digits)
-                                               for _ in range(10)])
+        dest_plate_barcode = rnd_bc()
         transfer_map = [{
             "source_plate_barcode": "XFER_ROOT",
             "source_well_name": src_well,
