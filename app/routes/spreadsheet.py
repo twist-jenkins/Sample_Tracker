@@ -391,7 +391,7 @@ def sample_type_handler(db_session, sample_transfer_type_id,
     result = qry.first()
     if result:
         ga_view = result
-        clo = ga_view.clo_cloning_process_id
+        clo = ga_view.cloning_process_id_plan
     cloned_sample.parent_process_id = clo
     logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
                  cs_id, source_plate_well.sample_id, clo)
