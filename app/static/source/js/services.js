@@ -774,7 +774,6 @@ app = angular.module('twist.app')
 
                 for (var i=0; i< obj.destinations.length; i++) {
                     var plate = obj.destinations[i];
-                    console.log(plate);
                     if (base.map.destination.plateTypeId) {
                         plate.details.plateDetails = {type: base.map.destination.plateTypeId};
                     }

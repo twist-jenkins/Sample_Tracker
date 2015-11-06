@@ -112,12 +112,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 
                 Api.saveNewTransformSpec($scope.transformSpec.serialize()).success(function (data) {
 
-                    console.log(data);
-
                     var saveSpecData = getSampleTrackSubmitData();
                     saveSpecData.transformSpecId = Object.keys(data)[0];
-
-                    console.log(saveSpecData)
 
                     Api.submitSampleStep(saveSpecData).success(function (data) {
 
