@@ -12,6 +12,7 @@ from dbmodels import SampleTransferPlan
 
 api = flask_restful.Api(app)
 
+#  TODO: Transform Spec
 
 class PlanResource(flask_restful.Resource):
     """shows a single plan item, and lets you create / delete a plan item"""
@@ -25,11 +26,11 @@ class PlanResource(flask_restful.Resource):
     def get(self, plan_id):
         """fetches a single plan"""
         with scoped_session(db.engine) as db_session:
-            plan = db_session.query(SampleTransferPlan).filter(
+            row = db_session.query(SampleTransferPlan).filter(
                 SampleTransferPlan.plan_id == plan_id).first()
-            if plan:
-                db_session.expunge(plan)
-                return plan.plan
+            if row:
+                db_session.expunge(row)
+                return row.plan
         abort(404, message="Plan {} doesn't exist".format(plan_id))
 
 
@@ -60,8 +61,9 @@ class PlanResource(flask_restful.Resource):
 
         response_headers = {'location': api.url_for(PlanResource,
                                                     plan_id=plan_id),
-                            'etag': "plan_id_%s" % plan_id}
-        return plan_contents, 201, response_headers
+                            'etag': str(plan_id)}
+        response = {plan_id: plan_contents}
+        return response, 201, response_headers
 
 
 class PlanListResource(flask_restful.Resource):
