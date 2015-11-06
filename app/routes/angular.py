@@ -532,8 +532,11 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
     qry = dbQ.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
     rows = qry.all()
 
-    gene_assembly_sample_attrs = (
+    sample_view_attrs = (
+        'sample_type',
         'sample_date_created',
+        'cloning_process_id_plan',
+        'cloning_process_id_actual',
         'sample_name',
         'sample_operator_id',
         'sample_operator_first_and_last_name',
@@ -590,7 +593,7 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
                 "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
                 "sample_id": well.sample_id
             }
-            for attr_name in gene_assembly_sample_attrs:
+            for attr_name in sample_view_attrs:
                 val = getattr(ga, attr_name, None)
                 if val is not None:
                     val = str(val)
@@ -667,7 +670,7 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
         col_header_names = ["","WELL ID", "COL/ROW", "SAMPLE ID"]
-        for attr_name in gene_assembly_sample_attrs:
+        for attr_name in sample_view_attrs:
             col_header_names.append(attr_name)
         cw.writerow(col_header_names)
 
@@ -678,7 +681,7 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
                     well_to_col_and_row_mapping_fn(well["well_id"]),
                     well["sample_id"]
                     ]
-            for attr_name in gene_assembly_sample_attrs:
+            for attr_name in sample_view_attrs:
                 cols.append(well[attr_name])
             cw.writerow(cols)
 

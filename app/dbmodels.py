@@ -209,7 +209,7 @@ class Sample(db.Model):
 
 class GeneAssemblySampleView(db.Model):
     try:
-        __table__ = db.Table("gene_assembly_sample_view", db_metadata,
+        __table__ = db.Table("sample_view", db_metadata,
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
