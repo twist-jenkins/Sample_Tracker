@@ -1634,17 +1634,29 @@ app = angular.module('twist.app')
 
             }
             ,plateTypeInfo: {
-                "SPTT_0004": {
+                SPTT_0004: {
                     description: 'Generic 48 well plastic plate'
                     ,wellCount: 48
                 }
-                ,"SPTT_0005": {
+                ,SPTT_0005: {
                     description: 'Generic 96 well plastic plate'
                     ,wellCount: 96
                 }
-                ,"SPTT_0006": {
+                ,SPTT_0006: {
                     description: 'Generic 384 well plastic plate'
                     ,wellCount: 384
+                }
+            }
+            ,transformSpecCriteria: {
+                SPLIT_SEQUENCE_LENGTH_1000: {
+                    description: 'Split sources into destinations plates based on gs_seq length 1) seq length < 1000, 2) seq length 1000+'
+                    ,criteria: [
+                        'gs_seq.length < 1000'
+                        ,'gs_seq.length >= 1000'
+                    ]
+                    ,output: [
+                        {type: 'plate'}
+                    ]
                 }
             }
         };

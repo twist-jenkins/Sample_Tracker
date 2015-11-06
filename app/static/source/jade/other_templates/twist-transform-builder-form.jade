@@ -54,7 +54,7 @@ div(class="twst-sample-track-form")
             div(class="twst-transform-spec-sources-show-btn" ng-click="showSources = !showSources")
                 div(class="twst-custom-radio twst-selected-{{showSources}} twst-custom-radio-as-checkbox" val="show")
                 span(class="twst-custom-radio-label") Show Source(s) Data
-            div(class="twst-transform-spec-sources-data-container" ng-show="showSources")
+            div(class="twst-transform-spec-sources-data-container" ng-show="showSources" ng-class="{'twst-transform-spec-sources-data-container-data-loaded': transformSpec.sources[0].items.length}")
                 table(class="twst-data-readout-table twst-transform-spec-sources-data-table" ng-if="transformSpec.sources[0].items.length")
                     tbody
                         tr

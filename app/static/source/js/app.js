@@ -61,6 +61,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
                     $scope.transformSpec.setTransferTypeDetails(option);
+                    $scope.transformSpec.setDescription(option.text)
                     $scope.stepTypeDropdownValue = $scope.transformSpec.typeDetails.text;
                     break;
                 }
@@ -108,27 +109,39 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
-                Api.submitSampleStep(getSampleTrackSubmitData()).success(function (data) {
+                
+                Api.saveNewTransformSpec($scope.transformSpec.serialize()).success(function (data) {
 
-                    if (data.success) {
-                        $scope.submittingStep = false;
-                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.typeDetails.text + '</span> step was successfully recorded.';
-                        $scope.submissionResultVisible = 1;
-                        $scope.clearForm();
-                    } else {
-                        showError(data);
-                    }
+                    console.log(data);
 
-                    $timeout(function () {
-                        $scope.submissionResultVisible = 0;
+                    var saveSpecData = getSampleTrackSubmitData();
+                    saveSpecData.transformSpecId = Object.keys(data)[0];
+
+                    console.log(saveSpecData)
+
+                    Api.submitSampleStep(saveSpecData).success(function (data) {
+
+                        if (data.success) {
+                            $scope.submittingStep = false;
+                            $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.typeDetails.text + '</span> step was successfully recorded.';
+                            $scope.submissionResultVisible = 1;
+                            $scope.clearForm();
+                        } else {
+                            showError(data);
+                        }
+
                         $timeout(function () {
-                            $scope.submissionResultMessage = null;
-                        }, 400);
-                    }, 5000);
+                            $scope.submissionResultVisible = 0;
+                            $timeout(function () {
+                                $scope.submissionResultMessage = null;
+                            }, 400);
+                        }, 5000);
 
-                }).error(function (data) {
-                    $scope.submittingStep = false;
-                    showError(data);
+                    }).error(function (data) {
+                        $scope.submittingStep = false;
+                        showError(data);
+                    });
+
                 });
             }
         };
@@ -377,21 +390,94 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('viewManageTransformSpecsController', ['$scope', '$state', '$stateParams', 'Api', 
-    function ($scope, $state, $stateParams, Api) {
+.controller('viewManageTransformSpecsController', ['$scope', '$state', '$stateParams', 'Api', '$modal', '$timeout', 
+    function ($scope, $state, $stateParams, Api, $modal, $timeout) {
 
         $scope.transformSpecs = [];
+
+        var deleteSuccess = function (plan) {
+            $scope.specActionResultMessage = 'Spec <strong>' + plan.id + '</strong> was successfully deleted.' ;
+            $scope.specActionResultVisible = 1;
+
+            $timeout(function () {
+                $scope.specActionResultVisible = 0;
+                $timeout(function () {
+                    $scope.specActionResultMessage = null;
+                }, 400);
+            }, 5000);
+        };
+
+        var deleteError = function (plan) {
+            $scope.specActionResultMessage = 'An error occured while trying to delete spec <strong>' + plan.id + '</strong>.' ;
+            $scope.specActionResultVisible = -1;
+
+            $timeout(function () {
+                $scope.specActionResultVisible = 0;
+                $timeout(function () {
+                    $scope.specActionResultMessage = null;
+                }, 400);
+            }, 5000);
+        };
+
+        $scope.deleteSpec = function (plan) {
+
+            var deleteConfirmModal = $modal.open({
+                templateUrl: 'twist-confirm-spec-delete-modal.html'
+                ,size: 'md'
+                ,controller: ['$scope', '$modalInstance', 'plan',  
+                    function($scope, $modalInstance, plan) {
+
+                        $scope.plan = plan;
+
+                        $scope.clickCancel = function() {
+                            $modalInstance.dismiss();
+                        }
+                        $scope.clickDelete = function() {
+
+                            plan.deleting = true;
+                            Api.deleteTransformSpec(plan.id).success(function (data) {
+                                loadSpecs();
+                                $modalInstance.close();
+                                deleteSuccess(plan);
+                            }).error(function () {
+                                $modalInstance.close();
+                                deleteError(plan); 
+                            });
+                        }
+                    }
+                ]
+                ,resolve: {
+                    plan: function() {
+                        return plan;
+                    }
+                }
+            });
+
+        };
+
+        var loadSpecs = function () {
+            Api.getTransformSpecs().success(function (data) {
+                $scope.fetchingSpecs = false;
+                
+                var specs = [];
+
+                //TODO: the return data is an object rather than array - fix this when the data is properly an array
+                for (spec in data) {
+                    var parsedSpec = JSON.parse(data[spec].plan);
+                    parsedSpec.id = spec;
+                    specs.push(parsedSpec);
+                }
+
+                $scope.transformSpecs = specs;
+
+            });
+        };
+
 
         var init = function () {
             $scope.setSelectedPlanTab($scope.view_manage);
             $scope.fetchingSpecs = true;
-
-            Api.getTransformSpecs().success(function (data) {
-                $scope.fetchingSpecs = false;
-                if (data[0] != '[') {
-                    $scope.transformSpecs = data;
-                } 
-            });
+            loadSpecs();
         }
 
         init();

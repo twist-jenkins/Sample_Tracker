@@ -153,6 +153,10 @@ app = angular.module('twist.app')
                 }
                 return $http(transReq);
             }
+            ,deleteTransformSpec: function (specId) {
+                var deleteReq = transReq = ApiRequestObj.getDelete('rest/transfer-plans/' + specId);
+                return $http(transReq);
+            }
         };
     }]
 )
@@ -369,7 +373,11 @@ app = angular.module('twist.app')
 
             base.setTitle = function (thisTitle) {
                 base.title = thisTitle;
-            }
+            };
+
+            base.setDescription = function (description) {
+                base.description = description;
+            };
 
             base.getSourcesHeader = function () {
                 var header = '';
@@ -515,6 +523,7 @@ app = angular.module('twist.app')
                         } else {
                             sourceItem.loaded = true;
                             sourceItem.items = data.wells;
+                            sourceItem.details.barcode = sourceItem.details.text + '';
                             var dataCopy = angular.copy(data);
                             delete dataCopy.wells;
                             jQuery.extend(sourceItem.details, dataCopy);
@@ -577,6 +586,7 @@ app = angular.module('twist.app')
                             /* destination plate is new - we're good to go */
                             destItem.loaded = true; /* shows the "valid" icon for this input */
                             destItem.updating = false;
+                            destItem.details.barcode = destItem.details.text + '';
                             /* check if we have all the required destination barcodes */
                             for (var i=0; i<base.destinations.length; i++) {
                                 if (base.destinations[i].details.text.length < 6) {
@@ -734,6 +744,53 @@ app = angular.module('twist.app')
                 base.setTransferTypeDetails({text: 'Generic Transform', transfer_template_id: 24})
                 base.autoUpdateSpec = false;
             };
+
+            base.serialize = function () {
+                var sharedProps = ['type', 'title', 'description', 'notes'];
+                var obj = {};
+
+                for (var i = 0; i<sharedProps.length; i++) {
+                    obj[sharedProps[i]] = base[sharedProps[i]];
+                }
+
+                obj.sources = angular.copy(base.sources);
+
+                for (var i=0; i< obj.sources.length; i++) {
+                    var plate = obj.sources[i];
+                    delete plate.details.text;
+                    delete plate.details.childPlates;
+                    delete plate.details.parentPlates;
+                    delete plate.details.parentToThisTaskName;
+                    delete plate.details.thisToChildTaskName
+                    delete plate.details.plateDetails.dateCreatedFormatted;;
+                    delete plate.details.success;
+                    delete plate.items;
+                    delete plate.updating;
+                    delete plate.loaded;
+                    delete plate.details.title;
+                }
+
+                obj.destinations = angular.copy(base.destinations);
+
+                for (var i=0; i< obj.destinations.length; i++) {
+                    var plate = obj.destinations[i];
+                    console.log(plate);
+                    if (base.map.destination.plateTypeId) {
+                        plate.details.plateDetails = {type: base.map.destination.plateTypeId};
+                    }
+                    delete plate.details.text;
+                    delete plate.details.success;
+                    delete plate.items;
+                    delete plate.updating;
+                    delete plate.loaded;
+                    delete plate.details.title;
+                }
+
+                obj.operations = angular.copy(base.operations);
+                obj.date_created = new Date();
+
+                return JSON.stringify(obj);
+            }
 
             var init = function () {
                 return base;

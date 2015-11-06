@@ -267,6 +267,19 @@ strong {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#d3e4ed', endColorstr='#157ad8',GradientType=0 ); /* IE6-9 */
 }
 
+.twst-red-button {
+    @include twst-button-basic;
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffdbdb+0,ffdbdb+40,c17b76+100 */
+    background: #ffdbdb; /* Old browsers */
+    background: -moz-linear-gradient(top,  #ffdbdb 0%, #ffdbdb 40%, #c17b76 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffdbdb), color-stop(40%,#ffdbdb), color-stop(100%,#c17b76)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  #ffdbdb 0%,#ffdbdb 40%,#c17b76 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  #ffdbdb 0%,#ffdbdb 40%,#c17b76 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  #ffdbdb 0%,#ffdbdb 40%,#c17b76 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  #ffdbdb 0%,#ffdbdb 40%,#c17b76 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffdbdb', endColorstr='#c17b76',GradientType=0 ); /* IE6-9 */
+}
+
 .twst-disabled-button {
     /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#e5e5e5+0,7f7f7f+33,7f7f7f+100 */
     background: #e5e5e5; /* Old browsers */
@@ -469,6 +482,12 @@ strong {
     }
 }
 
+.twst-greyed-row {
+    td {
+        background-color: #eee;
+    }
+}
+
 
 /******************************/
 /*** END SPINNER ***/
@@ -547,6 +566,10 @@ strong {
 
 .twst-data-label {
     color: #777;
+}
+
+.twst-1em-top-margin {
+    margin-top: 1em;
 }
 
 /**********************************************************************************************************/
@@ -927,7 +950,10 @@ strong {
             overflow: auto;
             padding-bottom: 0.5em;
             margin-top: 1em;
-            height: 600px;
+
+            &.twst-transform-spec-sources-data-container-data-loaded {
+                height: 400px;
+            }
 
             .twst-transform-spec-sources-data-table {
                 
@@ -943,6 +969,64 @@ strong {
 /*** END TRANSFER PLANNER FORM ***/
 /**********************************/
 
+/**********************************/
+/*** MODAL ***/
+/**********************************/
+
+.modal-content {
+    border-radius: 0.5em;
+}
+
+.twst-modal {
+
+    .twst-modal-header {
+        display: block;
+        width: 100%;
+        padding: 0.5em 1em;
+        background-color: $twst-minty-green-bg;
+        border-radius: 0.5em 0.5em 0 0;
+
+        h2 {
+            font-size: 1.5em;
+        }
+    }
+
+    .twst-modal-body {
+        padding: 1em 0 0 1em;
+
+        .twst-modal-message {
+            font-size: 1.2em;
+        }
+    }
+
+    .twst-modal-footer {
+        padding: 1em;
+
+        .twst-modal-buttons {
+            &:after {
+                @include after-clear;
+            }
+
+            button {
+                float: right;
+            }
+
+            .twst-cancel-button {
+                position: relative;
+                top: 0.6em;
+                margin-right: 1em;
+            }
+
+            .twst-delete-button {
+                font-size: 1.3em;
+            }
+        }
+    }
+}
+
+/**********************************/
+/*** END MODAL ***/
+/**********************************/
 
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -1440,11 +1524,25 @@ strong {
 
     .twst-transform-specs-body {
         .twst-view-manage-transform-specs-main {
+
+            &:after {
+                @include after-clear;
+            }
+
             h3 {
                 font-size: 1.2em;
             }
 
+            .twst-message {
+                margin-top: 0.5em;
+                position: relative;
+                float: right;
+                max-width: 75%;
+                display: inline-block;
+            }
+
             .twst-transform-specs-list {
+                position: relative;
                 margin-top: 0.5em;
 
                 .twst-empty-transform-specs-message {
@@ -1453,6 +1551,19 @@ strong {
                     }
                 }
             }
+        }
+    }
+
+    .twst-view-manage-transform-specs-main {
+        .twst-view-manage-transform-specs-new-button {
+            margin-top: 1em;
+        }
+
+        .twst-spinner {
+            position: absolute;
+            left: 45%;
+            font-size: 0.8em;
+            margin-top: -1em;
         }
     }
 
