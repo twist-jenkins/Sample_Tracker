@@ -390,6 +390,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     function ($scope, $state, $stateParams, Api, $modal, $timeout) {
 
         $scope.transformSpecs = [];
+        $scope.selectedSpec = null;
 
         var deleteSuccess = function (plan) {
             $scope.specActionResultMessage = 'Spec <strong>' + plan.id + '</strong> was successfully deleted.' ;
@@ -451,6 +452,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         };
 
+        $scope.viewSpec = function (spec) {
+            $scope.selectedSpec = spec;
+            $state.go('root.transform_specs.view_manage.view_spec', {
+                spec_id: spec.id
+            });
+        }
+
         var loadSpecs = function () {
             Api.getTransformSpecs().success(function (data) {
                 $scope.fetchingSpecs = false;
@@ -477,6 +485,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }
 
         init();
+    }]
+)
+
+.controller('transformSpecViewSpecController', ['$scope', '$state', '$stateParams', 'TransformBuilder', 'Api', 
+    function ($scope, $state, $stateParams, TransformBuilder, Api) {
+
+        $scope.backToSpecList = function () {
+            $state.go('root.transform_specs.view_manage');
+        }
+
+
+        var specId = $stateParams.spec_id;
+        if (!$scope.selectedSpec) {
+            $scope.specLoading = true;
+            Api.getTransformSpec(specId).success(function (data) {
+                $scope.specLoading = false;
+                $scope.selectedSpec = JSON.parse(data.plan);
+                $scope.selectedSpec.id = specId;
+            });
+        }
     }]
 )
 
@@ -596,6 +624,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/view-manage'
             ,templateUrl: 'twist-view-manage-transform-specs.html'
             ,controller: 'viewManageTransformSpecsController'
+        }).state('root.transform_specs.view_manage.view_spec', {
+            url: '/spec/:spec_id'
+            ,templateUrl: 'twist-transform-specs-view-spec.html'
+            ,controller: 'transformSpecViewSpecController'
         }).state('root.transform_specs.edit', {
             url: '/edit'
             ,templateUrl: 'twist-edit-transform-specs.html'

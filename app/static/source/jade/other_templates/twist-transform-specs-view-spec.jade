@@ -1,0 +1,6 @@
+div(class="twst-view-transform-spec-main")
+    div(class="twst-spinner" ng-if="specLoading")
+    div(ng-if="!specLoading")
+        button(class="twst-button twst-blue-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec lists
+        h2 Viewing Spec:&nbsp;
+            span {{selectedSpec.id}}

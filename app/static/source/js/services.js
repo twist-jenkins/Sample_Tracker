@@ -147,15 +147,19 @@ app = angular.module('twist.app')
                 return $http(transReq);
             }
             ,saveNewTransformSpec: function (planData) {
-                var transReq = transReq = ApiRequestObj.getPost('rest/transfer-plans');
-                transReq.data = {
+                var saveReq = ApiRequestObj.getPost('rest/transfer-plans');
+                saveReq.data = {
                     plan: planData
                 }
-                return $http(transReq);
+                return $http(saveReq);
             }
             ,deleteTransformSpec: function (specId) {
-                var deleteReq = transReq = ApiRequestObj.getDelete('rest/transfer-plans/' + specId);
-                return $http(transReq);
+                var deleteReq = ApiRequestObj.getDelete('rest/transfer-plans/' + specId);
+                return $http(deleteReq);
+            }
+            ,getTransformSpec: function (specId) {
+                var specReq = ApiRequestObj.getGet('rest/transfer-plans/' + specId);
+                return $http(specReq);
             }
         };
     }]

@@ -1551,6 +1551,35 @@ strong {
                     }
                 }
             }
+
+            .twst-view-transform-spec-main {
+                position: relative;
+
+                .twst-spinner {
+                    position: absolute;
+                    left: 45%;
+                    font-size: 0.9em;
+                    top: 1em;
+                }
+
+                .twst-return-spec-list-btn {
+                    float: right;
+                    top: -0.3em;
+                }
+
+                h2 {
+                    font-size: 1.4em;
+                    color: #666;
+                    margin-top: 0.1em;
+                    border-bottom: 1px solid #ddd;
+                    padding-bottom: 0.5em;
+
+                    span {
+                        font-weight: bold;
+                        color: #000;
+                    }
+                }
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-div(class="twst-view-manage-transform-specs-main")
+div(class="twst-view-manage-transform-specs-main" ui-view)
     h3 Saved Transform Specs
     div(class="twst-view-manage-transform-specs-list")
         table(class="twst-data-readout-table twst-transform-specs-list")
@@ -23,7 +23,7 @@ div(class="twst-view-manage-transform-specs-main")
                 td {{::plan.date_created}}
                 td {{::plan.status}}
                 td
-                    button(class="twst-button") view
+                    button(class="twst-button" ng-click="viewSpec(plan)") view
                     button(class="twst-button") edit
                     button(class="twst-button twst-red-button" ng-click="deleteSpec(plan)") delete
             tr(ng-if="!transformSpecs.length")
