@@ -38,7 +38,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.transformSpec.setPlateStepDefaults();
 
         $scope.selectStepType = function (option) {
-            $scope.transformSpec.setTransferTypeDetails(option);
+            $scope.transformSpec.setTransformSpecDetails(option);
+            console.log(option);
             $scope.transformSpec.setTitle(option.text);
 
             var route = 'root.record_step.step_type_selected';
@@ -60,9 +61,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 if (option.id == optionId) {
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
-                    $scope.transformSpec.setTransferTypeDetails(option);
-                    $scope.transformSpec.setDescription(option.text)
-                    $scope.stepTypeDropdownValue = $scope.transformSpec.typeDetails.text;
+                    $scope.transformSpec.setTransformSpecDetails(option);
+                    $scope.transformSpec.setTitle(option.text)
+                    $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
                     break;
                 }
             }
@@ -76,7 +77,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.sampleTrackFormReady = function () {
 
-            if (!$scope.transformSpec.typeDetails) {
+            if (!$scope.transformSpec.details) {
                 return false;
             }
 
@@ -89,8 +90,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         var getSampleTrackSubmitData = function () {
             var data = {
-                sampleTransferTypeId: $scope.transformSpec.typeDetails.id
-                ,sampleTransferTemplateId: $scope.transformSpec.typeDetails.transfer_template_id
+                sampleTransferTypeId: $scope.transformSpec.details.id
+                ,sampleTransferTemplateId: $scope.transformSpec.details.transfer_template_id
             };
 
             data.transferMap = $scope.transformSpec.operations;
@@ -119,7 +120,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                         if (data.success) {
                             $scope.submittingStep = false;
-                            $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.typeDetails.text + '</span> step was successfully recorded.';
+                            $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.details.text + '</span> step was successfully recorded.';
                             $scope.submissionResultVisible = 1;
                             $scope.clearForm();
                         } else {
@@ -368,9 +369,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $state.go('root.transform_specs.edit.new');
         }
 
-        $scope.editTransformSpec = function (planId) {
-            $state.go('root.transform_specs.edit.plan', {
-                planId: planId
+        $scope.editTransformSpec = function (spec) {
+            $state.go('root.transform_specs.edit.spec', {
+                spec_id: spec.id
             });
         }
 
@@ -515,13 +516,28 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('transformSpecEditorController', ['$scope', '$state', '$stateParams', 'TransformBuilder',
-    function ($scope, $state, $stateParams, TransformBuilder) {
-        var plan = TransformBuilder.newTransformSpec();
-        plan.setCreateEditDefaults();
-        $scope.transformSpec = plan;
-        $scope.editing();
-        console.log($scope.transformSpec);
+.controller('transformSpecEditorController', ['$scope', '$state', '$stateParams', 'TransformBuilder', 'Api', 
+    function ($scope, $state, $stateParams, TransformBuilder, Api) {
+        
+        var specId = $stateParams.spec_id;
+
+        $scope.specLoading = true;
+
+        if (specId) {
+            Api.getTransformSpec(specId).success(function (data) {
+                $scope.transformSpec = JSON.parse(data.plan);
+                $scope.transformSpec.id = specId;
+                $scope.specLoading = false;
+                console.log($scope.transformSpec);
+            });
+        } else {
+            var plan = TransformBuilder.newTransformSpec();
+            plan.setCreateEditDefaults();
+            $scope.transformSpec = plan;
+            $scope.specLoading = false;
+            $scope.editing();
+            console.log($scope.transformSpec);
+        }
     }]
 )
 
@@ -636,9 +652,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/new'
             ,templateUrl: 'twist-transform-specs-editor.html'
             ,controller: 'transformSpecEditorController'
+        }).state('root.transform_specs.edit.spec', {
+            url: '/spec/:spec_id'
+            ,templateUrl: 'twist-transform-specs-editor.html'
+            ,controller: 'transformSpecEditorController'
         })
-
-
         ;
     }
 ])

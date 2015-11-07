@@ -1,6 +1,36 @@
 div(class="twst-view-transform-spec-main")
     div(class="twst-spinner" ng-if="specLoading")
     div(ng-if="!specLoading")
-        button(class="twst-button twst-blue-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec lists
+        button(class="twst-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec list
         h2 Viewing Spec:&nbsp;
-            span {{selectedSpec.id}}
+        div(class="twst-view-transform-spec-details")
+            p Spec Id:&nbsp;
+                strong {{selectedSpec.id}}
+            p Title:&nbsp;
+                strong {{selectedSpec.title}}
+            div(class="twst-view-transform-spec-sources-destinations")
+                div
+                    p Source(s):
+                    ul
+                        li(ng-repeat="source in selectedSpec.sources") {{source.details.id}}
+                div
+                    p Destination(s):
+                    ul
+                        li(ng-repeat="destination in selectedSpec.destinations") {{destination.details.id}}
+            button(class="twst-button twst-blue-button" ng-if="selectedSpec.status != 'executed'" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
+            h3 Operations:
+            table(class="twst-data-readout-table twst-transform-spec-preview-table")
+                tr
+                    td(class="twst-data-readout-table-header") Sample Id
+                    td(class="twst-data-readout-table-header") Source Plate
+                    td(class="twst-data-readout-table-header") Source Well
+                    td(class="twst-data-readout-table-header") Destination Plate
+                    td(class="twst-data-readout-table-header") Destination Well
+                    td(class="twst-data-readout-table-header") Destination Well Count  
+                tr(ng-repeat="row in selectedSpec.operations")
+                    td {{::row.source_sample_id}}
+                    td {{::row.source_plate_barcode}}
+                    td {{::row.source_well_name}}
+                    td {{::row.destination_plate_barcode}}
+                    td {{::row.destination_well_name}}
+                    td {{::row.destination_plate_well_count}}

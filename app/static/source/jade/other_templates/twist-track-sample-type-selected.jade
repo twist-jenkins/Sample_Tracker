@@ -1,4 +1,4 @@
-div(class="twst-sample-track-transfer-toggle-controls" ng-if="transformSpec.typeDetails")
+div(class="twst-sample-track-transfer-toggle-controls" ng-if="transformSpec.details")
             div(class="twst-tab twst-sample-track-main-tab" ng-click="selectTransferTemplateType(Constants.STANDARD_TEMPLATE)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.STANDARD_TEMPLATE}")
                 div(class="twst-custom-radio twst-selected-{{templateTypeSelection == Constants.STANDARD_TEMPLATE}}" val="standard")
                 span(class="twst-custom-radio-label") Use standard template
@@ -7,4 +7,4 @@ div(class="twst-sample-track-transfer-toggle-controls" ng-if="transformSpec.type
                 span(class="twst-custom-radio-label") Upload Transfer File
 div(class="twst-tab-body" ng-class="{'twst-transform-spec-barcodes-mode': templateTypeSelection == Constants.STANDARD_TEMPLATE, 'twst-transform-spec-file-mode': templateTypeSelection == Constants.FILE_UPLOAD}")
     twst-transform-builder-form(transform-spec="transformSpec" template-type-selection="templateTypeSelection")
-    div(ui-view ng-if="transformSpec.typeDetails")
+    div(ui-view ng-if="transformSpec.details")

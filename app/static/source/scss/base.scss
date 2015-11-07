@@ -1579,6 +1579,50 @@ strong {
                         color: #000;
                     }
                 }
+
+                .twst-view-transform-spec-details {
+                    font-size: 1.1em;
+                    margin: 0 1em;
+
+                    p {
+                        margin: 0.75em 0;
+                    }
+
+                    .twst-view-transform-spec-sources-destinations {
+                        display: table;
+                        width: 70%;
+
+                        p {
+                            margin-top: 0;
+                        }
+
+                        > div {
+                            display: table-cell;
+                            vertical-align: top;
+                            width: 50%;
+
+                            ul {
+                                li {
+                                    margin-left: 1.5em;
+                                    font-weight: bold;
+                                }
+                            }
+                        }
+                    }
+
+                    h3 {
+                        font-size: 1.1em;
+                        margin-top: 1em;
+                    }
+
+                    .twst-blue-button {
+                        float: right;
+                    }
+
+                    .twst-transform-spec-preview-table {
+                        margin-top: 1em;
+                    }
+                }
             }
         }
     }
