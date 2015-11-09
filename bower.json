@@ -26,5 +26,6 @@
     ,"angular-sanitize": "latest"
     ,"js-xlsx": "~0.8"
     ,"file-saver": "latest"
+    ,"angular-local-storage": "~0.2.3"
   }
 }

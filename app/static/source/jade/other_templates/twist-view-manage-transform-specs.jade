@@ -1,0 +1,32 @@
+div(class="twst-view-manage-transform-specs-main" ui-view)
+    h3 Saved Transform Specs
+    div(class="twst-view-manage-transform-specs-list")
+        table(class="twst-data-readout-table twst-transform-specs-list")
+            tr
+                td(class="twst-data-readout-table-header") Plan Id
+                td(class="twst-data-readout-table-header") Source Plate(s)
+                td(class="twst-data-readout-table-header") Desination Plate(s)
+                td(class="twst-data-readout-table-header") Date Created
+                td(class="twst-data-readout-table-header") Status
+                td(class="twst-data-readout-table-header") Action(s)
+            tr(ng-repeat="spec in transformSpecs track by spec.id" ng-class="{'twst-greyed-row': spec.deleting}")
+                td {{::spec.id}}
+                    div(class="twst-spinner" ng-if="spec.deleting")
+                td 
+                    span(ng-repeat="source in spec.sources track by source.details.id")
+                        a(href="#/plate-details/{{::source.details.id}}") {{::source.details.id}}
+                        span {{::$index < spec.sources.length-1 ? ', ': ''}}
+                td
+                    span(ng-repeat="destination in spec.destinations track by destination.details.id")
+                        a(href="#/plate-details/{{::destination.details.id}}") {{::destination.details.id}}
+                        span {{::$index < spec.destinations.length-1 ? ', ': ''}}
+                td {{::spec.date_created}}
+                td {{::spec.status}}
+                td
+                    button(class="twst-button" ng-click="viewSpec(spec)") view
+                    button(class="twst-button" ng-click="editTransformSpec(spec)") edit
+                    button(class="twst-button twst-red-button" ng-click="deleteSpec(spec)") delete
+            tr(ng-if="!transformSpecs.length")
+                td(colspan="20" class="twst-empty-transform-specs-message") You currently have no saved transform specs.
+        twst-message(message="specActionResultMessage" visible-and-valid="specActionResultVisible")
+        button(class="twst-blue-button twst-view-manage-transform-specs-new-button" ng-click="newTransformSpec()") Create New Spec

@@ -241,6 +241,7 @@ module.exports = function(grunt) {
                     ,'js-xlsx/dist/xlsx.full.min.js'
                     ,'js-xlsx/dist/xlsx.full.min.map'
                     ,'file-saver/FileSaver.min.js'
+                    ,'angular-local-storage/dist/angular-local-storage.min.js'
                 ]
                 ,dest: 'app/static/js'
                 ,flatten: true

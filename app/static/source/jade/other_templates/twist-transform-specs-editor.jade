@@ -1,0 +1,6 @@
+div(class="twst-transfer-pln-editor-main")
+    form
+        p(ng-if="transformSpec.id") Id: {{transformSpec.id}}
+        p Title:
+            input(type="text" ng-model="transformSpec.title" class="form-control")
+        twst-transform-builder-form(transform-spec="transformSpec")

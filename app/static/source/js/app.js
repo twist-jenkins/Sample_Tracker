@@ -1,10 +1,10 @@
 var app;
 
-app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main'])
+app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main', 'LocalStorageModule'])
 
 
-.controller('rootController', ['$scope', '$state', 'User',
-    function ($scope, $state, User) {
+.controller('rootController', ['$scope', '$state', 'User', '$rootScope', 'localStorageService', '$location', '$timeout',  
+    function ($scope, $state, User, $rootScope, localStorageService, $location, $timeout) {
         $scope.user = User;
         $scope.current_year = (new Date).getFullYear();
 
@@ -12,15 +12,31 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $state.go(where);
         }
 
-        $scope.$on('$stateChangeSuccess', function(event, toState) {
+        var loginStateName = 'root.login';
+
+        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
+            if (!User.data && toState.name != loginStateName) {
+                event.preventDefault();
+                $state.go(loginStateName);
+            }
+        });
+
+        $rootScope.$on('$stateChangeSuccess', function(event, toState) {
             $scope.currentNav = toState.name;
+        });
+
+        $rootScope.$on('$locationChangeSuccess', function(event) {
+            var url = document.location.href;
+            var hashUrl = url.substring(url.indexOf('#') + 1);
+            if (url != hashUrl && hashUrl != '/login') {
+                localStorageService.set('loginTarget', hashUrl);
+            }
         });
     }]
 )
 
-.controller('loginController', ['$scope', '$state',  '$http',
-    function ($scope, $state, $http) {
-
+.controller('loginController', ['$scope', '$state',  '$http', 'localStorageService', 
+    function ($scope, $state, $http, localStorageService) {
         $http({url: '/google-login'}).success(function (data) {
             $scope.googleLoginUrl = data.login_url;
         }).error(function () {
@@ -29,39 +45,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransferPlanner', 'FileParser', 
-    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransferPlanner, FileParser) {
-
-        /* interface backing vars */
-        var returnEmptyPlate = function () {
-            return {text: '', title: ''};
-        };
+.controller('trackStepController', ['$scope', '$state', 'Api', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, Api, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
 
         $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
 
-        $scope.transferPlan = TransferPlanner.newTransferPlan();
-        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
-
-        $scope.excel_template = 'excel_upload';
-        $scope.standard_template = 'standard_template';
-
-        $scope.excelFileStats = {};
-        $scope.fileErrors = [];
-
-        $scope.cachedFileData = null;
+        $scope.transformSpec = TransformBuilder.newTransformSpec();
+        $scope.transformSpec.setPlateStepDefaults();
 
         $scope.selectStepType = function (option) {
-            $scope.transferPlan.setTransferTypeDetails(option);
+            $scope.transformSpec.setTransformSpecDetails(option);
+            console.log(option);
+            $scope.transformSpec.setTitle(option.text);
 
             var route = 'root.record_step.step_type_selected';
 
-            if ($scope.transferPlan.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
-                $scope.templateTypeSelection = $scope.excel_template;
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+                route += '.' + Constants.FILE_UPLOAD;
             } else {
-                $scope.templateTypeSelection = $scope.standard_template;
+                route += '.' + Constants.STANDARD_TEMPLATE;
             }
-
-            route += '.' + $scope.templateTypeSelection;
 
             $state.go(route, {
                 selected_step_type_id: option.id + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.stripNonAlphaNumeric(option.text, true, true).trim())
@@ -72,77 +75,42 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             for (var i=0; i< $scope.stepTypeOptions.length;i++) {
                 var option = $scope.stepTypeOptions[i];
                 if (option.id == optionId) {
-                    $scope.clearExcelUploadData();
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
-                    $scope.transferPlan.setTransferTypeDetails(option);
-                    $scope.stepTypeDropdownValue = $scope.transferPlan.typeDetails.text;
-                    if ($scope.cachedFileData) {
-                        $scope.catchFile()
-                    }
+                    $scope.transformSpec.setTransformSpecDetails(option);
+                    $scope.transformSpec.setTitle(option.text)
+                    $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
                     break;
                 }
             }
-        }
 
-        /* refresh the current transfer plan based on changes to plates inputs or upload file */
-        $scope.updateTransferPlan = function (val, which, itemIndex) {
-            if (val.length > 5) {
-                if (which == Constants.PLATE_SOURCE) {
-                    $scope.transferPlan.addSourcePlate(itemIndex);
-                } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transferPlan.addDestinationPlate(itemIndex);
-                }
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+                $scope.templateTypeSelection = Constants.FILE_UPLOAD;
+            } else {
+                $scope.templateTypeSelection = Constants.STANDARD_TEMPLATE;
             }
-        };
+        }
 
         $scope.sampleTrackFormReady = function () {
 
-            if (!$scope.transferPlan.typeDetails) {
+            if (!$scope.transformSpec.details) {
                 return false;
             }
 
-            if (!$scope.transferPlan.plateTransfers.length) {
+            if (!$scope.transformSpec.operations || !$scope.transformSpec.operations.length) {
                 return false
             }
 
             return true;
         }
 
-        $scope.clearForm = function () {
-            $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
-            $scope.transferPlan = TransferPlanner.newTransferPlan();
-            $scope.clearExcelUploadData();
-            $scope.templateTypeSelection = null;
-            $scope.cachedFileData = null;
-            $state.go('root.record_step');
-        };
-
-        $scope.selectTransferTemplateType = function (which) {
-            var route = '';
-            if (which == $scope.excel_template) {
-                route = 'excel_upload';
-                if ($scope.cachedFileData) {
-                    $scope.catchFile();
-                }
-            } else if (which == $scope.standard_template) {
-                route = 'standard_template';
-                $scope.transferPlan.transferFromFile(false);
-            } 
-            $state.go('root.record_step.step_type_selected.' + route);
-        };
-
-        $scope.setTransferTemplate = function (which) {
-            $scope.templateTypeSelection = which;
-        };
-
         var getSampleTrackSubmitData = function () {
             var data = {
-                sampleTransferTypeId: $scope.transferPlan.typeDetails.id
-                ,sampleTransferTemplateId: $scope.transferPlan.typeDetails.transfer_template_id
+                sampleTransferTypeId: $scope.transformSpec.details.id
+                ,sampleTransferTemplateId: $scope.transformSpec.details.transfer_template_id
             };
 
-            data.transferMap = $scope.transferPlan.plateTransfers;
+            data.transferMap = $scope.transformSpec.operations;
 
             return data;
         };
@@ -155,82 +123,53 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.submittingStep = false;
             }
 
-            if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transferPlan.updating) {
+            if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
-                Api.submitSampleStep(getSampleTrackSubmitData()).success(function (data) {
+                
+                Api.saveNewTransformSpec($scope.transformSpec.serialize()).success(function (data) {
 
-                    if (data.success) {
-                        $scope.submittingStep = false;
-                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transferPlan.typeDetails.text + '</span> step was successfully recorded.';
-                        $scope.submissionResultVisible = 1;
-                        $scope.clearForm();
-                    } else {
-                        showError(data);
-                    }
+                    var saveSpecData = getSampleTrackSubmitData();
+                    saveSpecData.transformSpecId = Object.keys(data)[0];
 
-                    $timeout(function () {
-                        $scope.submissionResultVisible = 0;
+                    Api.submitSampleStep(saveSpecData).success(function (data) {
+
+                        if (data.success) {
+                            $scope.submittingStep = false;
+                            $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.details.text + '</span> step was successfully recorded.';
+                            $scope.submissionResultVisible = 1;
+                            $scope.clearForm();
+                        } else {
+                            showError(data);
+                        }
+
                         $timeout(function () {
-                            $scope.submissionResultMessage = null;
-                        }, 400);
-                    }, 5000);
+                            $scope.submissionResultVisible = 0;
+                            $timeout(function () {
+                                $scope.submissionResultMessage = null;
+                            }, 400);
+                        }, 5000);
 
-                }).error(function (data) {
-                    $scope.submittingStep = false;
-                    showError(data);
+                    }).error(function (data) {
+                        $scope.submittingStep = false;
+                        showError(data);
+                    });
+
                 });
             }
         };
 
-        $scope.clearExcelUploadData = function () {
-            $scope.excelFileStats = {};
-            $scope.fileErrors = [];
-        };
-
-        $scope.catchFile = function (fileData, error) {
-            $scope.parsingFile = true;
-
-            if (error) {
-                $scope.clearExcelUploadData();
-                $scope.fileErrors.push(error);
-                $scope.excelFileStats = {};
-                $scope.transferPlan.clearPlateTransfers();
-                $scope.parsingFile = false;
-            } else {
-                // called in timeout to give the spinner time to render
-                $timeout(function () {
-                    $scope.clearExcelUploadData();
-
-                    if (!fileData) {
-                        fileData = $scope.cachedFileData;
-                    } else {
-                        $scope.cachedFileData = fileData;
-                    };
-
-                    FileParser.getTransferRowsFromFile(fileData, $scope.transferPlan).then(function (resultData) {
-                        $scope.excelFileStats = resultData.stats;
-                        $scope.fileErrors = resultData.errors;
-
-                        if (!resultData.errors.length) {
-                            $scope.transferPlan.transferFromFile(true, resultData.transferJSON);
-                        } else {
-                            $scope.transferPlan.clearPlateTransfers();
-                        } 
-
-                        $scope.parsingFile = false;
-
-                    }, function (errorData) {
-                        $scope.fileErrors = 'Error: Unknown error while parsing this file.';
-                        $scope.parsingFile = false;
-                    });
-     
-                }, 150);
-            }
+        $scope.clearForm = function () {
+            $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
+            $scope.transformSpec = TransformBuilder.newTransformSpec();
+            $scope.transformSpec.setPlateStepDefaults();
+            $scope.templateTypeSelection = null;
+            $state.go('root.record_step');
         };
 
         /* populate the sample types pulldown */
-        Api.getSampleTransferTypes().success(function (data) {
+        $scope.initTransferTypes = Api.getSampleTransferTypes();
+        $scope.initTransferTypes.success(function (data) {
             if (data.success) {
                 $scope.stepTypeOptions = data.results;
             }
@@ -238,25 +177,37 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams',
-    function ($scope, $state, $stateParams) {
-        //inherits scope from trackStepController
-        var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
-        $scope.setSelectedOption(selectedTranferTypeId);
+.controller('stepTypeSelectedController', ['$scope', '$state',  '$stateParams', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, $stateParams, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
+
+        $scope.Constants = Constants;
+
+        $scope.selectTransferTemplateType = function (which) {
+            $state.go('root.record_step.step_type_selected.' + which);
+        };
+
+        $scope.setTransferTemplate = function (which) {
+            $scope.templateTypeSelection = which;
+        };
+
+        $scope.initTransferTypes.success(function (data) {
+            var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
+            $scope.setSelectedOption(selectedTranferTypeId);
+        });
     }]
 )
 
-.controller('customExcelUploadController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
+.controller('customExcelUploadController', ['$scope', '$state', '$stateParams', 'Constants', 
+    function ($scope, $state, $stateParams, Constants) {
         //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate($scope.excel_template);
+        $scope.setTransferTemplate(Constants.FILE_UPLOAD);
     }]
 )
 
-.controller('standardTemplateController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
+.controller('standardTemplateController', ['$scope', '$state', '$stateParams', 'Constants', 
+    function ($scope, $state, $stateParams, Constants) {
         //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate($scope.standard_template);
+        $scope.setTransferTemplate(Constants.STANDARD_TEMPLATE);
     }]
 )
 
@@ -411,7 +362,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('transferPlansController', ['$scope', '$state', '$stateParams', 
+.controller('transformSpecsController', ['$scope', '$state', '$stateParams', 
     function ($scope, $state, $stateParams) {
 
         $scope.view_manage = 'view_manage';
@@ -422,7 +373,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 alert('Editing!');
             } else {
                 $scope.selectedPlanTab = which;
-                $state.go('root.transfer_plans.' + which);
+                $state.go('root.transform_specs.' + which);
             }
         };
 
@@ -430,13 +381,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.selectedPlanTab = which;
         }
 
-        $scope.newTransferPlan = function () {
-            $state.go('root.transfer_plans.edit.new');
+        $scope.newTransformSpec = function () {
+            $state.go('root.transform_specs.edit.new');
         }
 
-        $scope.editTransferPlan = function (planId) {
-            $state.go('root.transfer_plans.edit.plan', {
-                planId: planId
+        $scope.editTransformSpec = function (spec) {
+            $state.go('root.transform_specs.edit.spec', {
+                spec_id: spec.id
             });
         }
 
@@ -447,60 +398,201 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.cancelEdit = function () {
             $scope.isEditing = false;
         }
+
+        $state.go('root.transform_specs.view_manage');
     }]
 )
 
-.controller('viewManageTransferPlansController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
+.controller('viewManageTransformSpecsController', ['$scope', '$state', '$stateParams', 'Api', '$modal', '$timeout', 
+    function ($scope, $state, $stateParams, Api, $modal, $timeout) {
+
+        $scope.transformSpecs = [];
+        $scope.selectedSpec = null;
+
+        var deleteSuccess = function (plan) {
+            $scope.specActionResultMessage = 'Spec <strong>' + plan.id + '</strong> was successfully deleted.' ;
+            $scope.specActionResultVisible = 1;
+
+            $timeout(function () {
+                $scope.specActionResultVisible = 0;
+                $timeout(function () {
+                    $scope.specActionResultMessage = null;
+                }, 400);
+            }, 5000);
+        };
+
+        var deleteError = function (plan) {
+            $scope.specActionResultMessage = 'An error occured while trying to delete spec <strong>' + plan.id + '</strong>.' ;
+            $scope.specActionResultVisible = -1;
+
+            $timeout(function () {
+                $scope.specActionResultVisible = 0;
+                $timeout(function () {
+                    $scope.specActionResultMessage = null;
+                }, 400);
+            }, 5000);
+        };
+
+        $scope.deleteSpec = function (plan) {
+
+            var deleteConfirmModal = $modal.open({
+                templateUrl: 'twist-confirm-spec-delete-modal.html'
+                ,size: 'md'
+                ,controller: ['$scope', '$modalInstance', 'plan',  
+                    function($scope, $modalInstance, plan) {
+
+                        $scope.plan = plan;
+
+                        $scope.clickCancel = function() {
+                            $modalInstance.dismiss();
+                        }
+                        $scope.clickDelete = function() {
+
+                            plan.deleting = true;
+                            Api.deleteTransformSpec(plan.id).success(function (data) {
+                                loadSpecs();
+                                $modalInstance.close();
+                                deleteSuccess(plan);
+                            }).error(function () {
+                                $modalInstance.close();
+                                deleteError(plan); 
+                            });
+                        }
+                    }
+                ]
+                ,resolve: {
+                    plan: function() {
+                        return plan;
+                    }
+                }
+            });
+
+        };
+
+        $scope.viewSpec = function (spec) {
+            $scope.selectedSpec = spec;
+            $state.go('root.transform_specs.view_manage.view_spec', {
+                spec_id: spec.id
+            });
+        }
+
+        var loadSpecs = function () {
+            Api.getTransformSpecs().success(function (data) {
+                $scope.fetchingSpecs = false;
+                
+                var specs = [];
+
+                //TODO: the return data is an object rather than array - fix this when the data is properly an array
+                for (spec in data) {
+                    var parsedSpec = JSON.parse(data[spec].plan);
+                    parsedSpec.id = spec;
+                    specs.push(parsedSpec);
+                }
+
+                $scope.transformSpecs = specs;
+
+            });
+        };
 
 
-        $scope.setSelectedPlanTab($scope.view_manage);
+        var init = function () {
+            $scope.setSelectedPlanTab($scope.view_manage);
+            $scope.fetchingSpecs = true;
+            loadSpecs();
+        }
+
+        init();
     }]
 )
 
-.controller('editTransferPlansController', ['$scope', '$state', '$stateParams', 
+.controller('transformSpecViewSpecController', ['$scope', '$state', '$stateParams', 'TransformBuilder', 'Api', 
+    function ($scope, $state, $stateParams, TransformBuilder, Api) {
+
+        $scope.backToSpecList = function () {
+            $state.go('root.transform_specs.view_manage');
+        }
+
+
+        var specId = $stateParams.spec_id;
+        if (!$scope.selectedSpec) {
+            $scope.specLoading = true;
+            Api.getTransformSpec(specId).success(function (data) {
+                $scope.specLoading = false;
+                $scope.selectedSpec = JSON.parse(data.plan);
+                $scope.selectedSpec.id = specId;
+            });
+        }
+    }]
+)
+
+.controller('editTransformSpecsController', ['$scope', '$state', '$stateParams', 
     function ($scope, $state, $stateParams) {
-        $scope.transferPlan = null;
+        $scope.transformSpec = null;
         $scope.setSelectedPlanTab($scope.edit);
     }]
 )
 
-.controller('transferPlanEditorController', ['$scope', '$state', '$stateParams', 'TransferPlanner',
-    function ($scope, $state, $stateParams, TransferPlanner) {
-        var plan = TransferPlanner.newTransferPlan(true);
-        plan.setCreateEditDefaults();
-        $scope.transferPlan = plan;
-        $scope.editing();
-        console.log($scope.transferPlan);
+.controller('transformSpecEditorController', ['$scope', '$state', '$stateParams', 'TransformBuilder', 'Api', 
+    function ($scope, $state, $stateParams, TransformBuilder, Api) {
+        
+        var specId = $stateParams.spec_id;
+
+        $scope.specLoading = true;
+
+        if (specId) {
+            Api.getTransformSpec(specId).success(function (data) {
+                $scope.transformSpec = JSON.parse(data.plan);
+                $scope.transformSpec.id = specId;
+                $scope.specLoading = false;
+                console.log($scope.transformSpec);
+            });
+        } else {
+            var plan = TransformBuilder.newTransformSpec();
+            plan.setCreateEditDefaults();
+            $scope.transformSpec = plan;
+            $scope.specLoading = false;
+            $scope.editing();
+            console.log($scope.transformSpec);
+        }
     }]
 )
 
-.run(['$state', 'User', '$location', '$timeout',
-    function($state, User, $location, $timeout) {
-        var routeUrl = window.location.hash.substr(1);
-
+.run(['$state', 'User', '$location', '$timeout', 'localStorageService', 
+    function($state, User, $location, $timeout, localStorageService) {
         var authChecked = false;
+
+        var setHashUrl = function () {
+            var url = document.location.href;
+            var hashUrl = url.substring(url.indexOf('#') + 1);
+            if (url != hashUrl) {
+                localStorageService.set('loginTarget', hashUrl);
+            }
+        }
 
         User.init().success(function (data) {
             if (data.user) {
                 authChecked = true;
                 /* authorized! */
-                $location.path((routeUrl == '' || routeUrl == '/' || routeUrl == '/login') ? '/track-step' : routeUrl);
-            }
-        });
-
-        //redirect un-auth'd users to login but give the login check above a moment to engage
-        $timeout(function () {
-            if (!authChecked) {
+                var loginTarget = localStorageService.get('loginTarget');
+                if (loginTarget == null || loginTarget == '/login') {
+                    setHashUrl();
+                }
+                var loginTarget = localStorageService.get('loginTarget');
+                if (!loginTarget || loginTarget == '/login') {
+                    loginTarget = '/track-step';
+                }
+                $location.path(loginTarget);
+            } else {
+                setHashUrl();
                 $state.go('root.login');
             }
-        }, 200);
+        });
 
     }]
 )
 
-.config(['$httpProvider',
-    function($httpProvider) {
+.config(['$httpProvider', 'localStorageServiceProvider', 
+    function($httpProvider, localStorageServiceProvider) {
         if (!$httpProvider.defaults.headers.get) {
             $httpProvider.defaults.headers.get = {};
         }
@@ -509,6 +601,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         // extra
         $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
         $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+
+        localStorageServiceProvider.setPrefix('twistBio').setStorageType('sessionStorage');
     }]
 )
 
@@ -530,8 +624,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:selected_step_type_id'
             ,templateUrl: 'twist-track-sample-type-selected.html'
             ,controller: 'stepTypeSelectedController'
-        }).state('root.record_step.step_type_selected.excel_upload', {
-            url: '/custom-excel-upload'
+        }).state('root.record_step.step_type_selected.file_upload', {
+            url: '/custom-file-upload'
             ,template: ''
             ,controller: 'customExcelUploadController'
         }).state('root.record_step.step_type_selected.standard_template', {
@@ -566,25 +660,31 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:entered_sample_id'
             ,template: ''
             ,controller: 'sampleDetailsSampleIdEnteredController'
-        }).state('root.transfer_plans', {
-            url: 'transfer-plans'
-            ,templateUrl: 'twist-transfer-plans.html'
-            ,controller: 'transferPlansController'
-        }).state('root.transfer_plans.view_manage', {
+        }).state('root.transform_specs', {
+            url: 'transform-specs'
+            ,templateUrl: 'twist-transform-specs.html'
+            ,controller: 'transformSpecsController'
+        }).state('root.transform_specs.view_manage', {
             url: '/view-manage'
-            ,templateUrl: 'twist-view-manage-transfer-plans.html'
-            ,controller: 'viewManageTransferPlansController'
-        }).state('root.transfer_plans.edit', {
+            ,templateUrl: 'twist-view-manage-transform-specs.html'
+            ,controller: 'viewManageTransformSpecsController'
+        }).state('root.transform_specs.view_manage.view_spec', {
+            url: '/spec/:spec_id'
+            ,templateUrl: 'twist-transform-specs-view-spec.html'
+            ,controller: 'transformSpecViewSpecController'
+        }).state('root.transform_specs.edit', {
             url: '/edit'
-            ,templateUrl: 'twist-edit-transfer-plans.html'
-            ,controller: 'editTransferPlansController'
-        }).state('root.transfer_plans.edit.new', {
+            ,templateUrl: 'twist-edit-transform-specs.html'
+            ,controller: 'editTransformSpecsController'
+        }).state('root.transform_specs.edit.new', {
             url: '/new'
-            ,templateUrl: 'twist-transfer-plan-editor.html'
-            ,controller: 'transferPlanEditorController'
+            ,templateUrl: 'twist-transform-specs-editor.html'
+            ,controller: 'transformSpecEditorController'
+        }).state('root.transform_specs.edit.spec', {
+            url: '/spec/:spec_id'
+            ,templateUrl: 'twist-transform-specs-editor.html'
+            ,controller: 'transformSpecEditorController'
         })
-
-
         ;
     }
 ])

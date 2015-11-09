@@ -5,9 +5,12 @@ app = angular.module("twist.app")
         return {
             restrict: 'E'
             ,templateUrl: 'twist-header.html'
-            , controller: ['$scope', 
-                function ($scope) {
-                    //...
+            , controller: ['$scope', 'localStorageService', 
+                function ($scope, localStorageService) {
+                    $scope.logout = function () {
+                        localStorageService.remove('loginTarget');
+                        document.location.href = '/logout';
+                    }
                 }
             ]
         };
@@ -22,12 +25,12 @@ app = angular.module("twist.app")
             ,controller: ['$scope', 
                 function ($scope) {
                     $scope.navItems = [
-                        {text: 'Record Step', 'link': 'root.record_step'}
-                        ,{text: 'Plate Details', 'link': 'root.plate_details'}
-                        ,{text: 'Edit Plate Barcode', 'link': 'root.edit_barcode'}
-                        ,{text: 'Transfer Plans', 'link': 'root.transfer_plans.view_manage'}
-                        ,{text: 'View Steps', 'link': 'root.view_steps'} 
-                        ,{text: 'Sample Details', 'link': 'root.sample_details'}
+                        {text: 'Record Step', link: 'root.record_step'}
+                        ,{text: 'Plate Details', link: 'root.plate_details'}
+                        ,{text: 'Edit Plate Barcode', link: 'root.edit_barcode'}
+                        ,{text: 'Transform Specs', link: 'root.transform_specs.view_manage', match: 'root.transform_specs'}
+                        ,{text: 'View Steps', link: 'root.view_steps'} 
+                        ,{text: 'Sample Details', link: 'root.sample_details'}
                     ];
                 }
             ]
@@ -217,6 +220,104 @@ app = angular.module("twist.app")
                         }
                         
                     });
+                }
+            ]
+        };
+    }
+])
+
+.directive('twstTransformBuilderForm', [ 
+    function() {
+        return {
+            restrict: 'E'
+            ,scope: {
+                transformSpec: '='
+                ,templateTypeSelection: '=?'
+            }
+            ,templateUrl: 'twist-transform-builder-form.html'
+            ,controller: ['$scope', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+                function ($scope, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
+
+                    $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
+
+                    $scope.excelFileStats = {};
+                    $scope.fileErrors = [];
+
+                    $scope.Constants = Constants;
+
+                    $scope.cachedFileData = null;
+
+                    /* refresh the current transfer plan based on changes to plates inputs or upload file */
+                    $scope.updateTransferPlan = function (val, which, itemIndex) {
+                        if (val.length > 5) {
+                            if (which == Constants.PLATE_SOURCE) {
+                                $scope.transformSpec.addSource(itemIndex);
+                            } else if (which == Constants.PLATE_DESTINATION) {
+                                $scope.transformSpec.addDestination(itemIndex);
+                            }
+                        } else {
+                            if (which == Constants.PLATE_SOURCE) {
+                                $scope.transformSpec.checkSourcesReady();
+                            } else if (which == Constants.PLATE_DESTINATION) {
+                                $scope.transformSpec.checkDestinationsReady();
+                            }
+                        }
+                    };
+
+                    $scope.$watch('templateTypeSelection', function (newVal, oldVal) {
+                        if (newVal == Constants.FILE_UPLOAD && $scope.cachedFileData) {
+                            $scope.catchFile();
+                        } else if (newVal == Constants.STANDARD_TEMPLATE) {
+                            $scope.transformSpec.transferFromFile(false);
+                        }
+                    });
+
+                    $scope.clearExcelUploadData = function () {
+                        $scope.excelFileStats = {};
+                        $scope.fileErrors = [];
+                    };
+
+                    $scope.catchFile = function (fileData, error) {
+                        $scope.parsingFile = true;
+
+                        if (error) {
+                            $scope.clearExcelUploadData();
+                            $scope.fileErrors.push(error);
+                            $scope.excelFileStats = {};
+                            $scope.transformSpec.clearOperationsList();
+                            $scope.parsingFile = false;
+                        } else {
+                            // called in timeout to give the spinner time to render
+                            $timeout(function () {
+                                $scope.clearExcelUploadData();
+
+                                if (!fileData) {
+                                    fileData = $scope.cachedFileData;
+                                } else {
+                                    $scope.cachedFileData = fileData;
+                                };
+
+                                FileParser.getTransferRowsFromFile(fileData, $scope.transformSpec).then(function (resultData) {
+                                    $scope.excelFileStats = resultData.stats;
+                                    $scope.fileErrors = resultData.errors;
+
+                                    if (!resultData.errors.length) {
+                                        $scope.transformSpec.transferFromFile(true, resultData);
+                                    } else {
+                                        $scope.transformSpec.clearOperationsList();
+                                    } 
+
+                                    $scope.parsingFile = false;
+
+                                }, function (errorData) {
+                                    $scope.fileErrors = 'Error: Unknown error while parsing this file.';
+                                    $scope.parsingFile = false;
+                                });
+                 
+                            }, 150);
+                        }
+                    };
+
                 }
             ]
         };

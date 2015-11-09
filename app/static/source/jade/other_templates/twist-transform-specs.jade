@@ -1,0 +1,10 @@
+div(class="twst-transform-specs-main twst-child-page")
+    h1 Transform Specs
+    div(class="twst-transform-specs-tabs")
+        div(class="twst-tab twst-transform-specs-main-tab" ng-click="selectPlanTab(view_manage)" ng-class="{'twst-active-tab': selectedPlanTab == view_manage}")
+            div(class="twst-custom-radio twst-selected-{{selectedPlanTab == view_manage}}" val="view")
+            span(class="twst-custom-radio-label") View/Manage Specs
+        div(class="twst-tab twst-transform-specs-main-tab" ng-click="selectPlanTab(edit)" ng-class="{'twst-active-tab': selectedPlanTab == edit}")
+            div(class="twst-custom-radio twst-selected-{{selectedPlanTab == edit}} twst-upload-via-excel-radio" val="edit")
+            span(class="twst-custom-radio-label") Create/Edit Spec
+    div(class="twst-transform-specs-body twst-tab-body" ui-view ng-show="selectedPlanTab")

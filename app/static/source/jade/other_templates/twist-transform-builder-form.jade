@@ -1,0 +1,91 @@
+div(class="twst-sample-track-form")
+    div(class="twst-sample-track-plate-barcodes")
+        div(class="twst-sample-track-plate-barcodes-left")
+            p(class="twst-block-header") {{transformSpec.getSourcesHeader()}}:
+            div(class="twst-sample-track-plate-row" ng-repeat="plate in transformSpec.sources")
+                div(class="twst-sample-track-plate-title" ng-if="plate.details.title" ng-bind-html="plate.details.title")
+                div(class="twst-sample-track-plate-input")
+                    input(type="text" class="form-control" ng-model="plate.details.id" typeahead="barcode for barcode in getTypeAheadBarcodes($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" ng-blur="updateTransferPlan(plate.details.id, 'source', $index)")
+                    div(class="twst-remove-plate-button" ng-click="transformSpec.removePlateInput('source', $index)" ng-if="transformSpec.map.source.variablePlateCount && ($index || transformSpec.sources.length > 1)")
+                        div(ng-include="'static/images/trash-can.svg'")
+                    div(class="twst-spinner twst-plate-data-loading-spinner" ng-if="plate.updating")
+                    twst-thumb-validation-icon(validation="plate.loaded" error="plate.error")
+                    i(ng-show="loadingLocations" class="glyphicon glyphicon-refresh twst-offscreen")
+                    div(ng-show="noResults" class="twst-offscreen")
+                      i(class="glyphicon glyphicon-remove") No Results Found
+            div(class="twst-add-plate-button" ng-click="transformSpec.addPlateInput('source')" ng-if="transformSpec.map.source.variablePlateCount")
+                button(class="twst-button twst-blue-button") +
+                span Add Source
+        div(class="twst-sample-track-plate-barcodes-left")
+            p(class="twst-block-header" ng-class="{'twst-invisible': !transformSpec.destinations.length}") {{transformSpec.getDestinationsHeader()}}:
+            div(class="twst-sample-track-plate-row" ng-repeat="plate in transformSpec.destinations")
+                div(class="twst-sample-track-plate-title" ng-if="plate.details.title" ng-bind-html="plate.details.title")
+                div(class="twst-sample-track-plate-input")
+                    input(type="text" class="form-control" ng-model="plate.details.id" ng-blur="updateTransferPlan(plate.details.id, 'destination', $index)")
+                    div(class="twst-remove-plate-button" ng-click="transformSpec.removePlateInput('destination', $index)" ng-if="transformSpec.map.destination.variablePlateCount && ($index || transformSpec.destinations.length > 1)")
+                        ng-include(src="'static/images/trash-can.svg'")
+                    div(class="twst-spinner twst-plate-data-loading-spinner" ng-if="plate.updating")
+                    twst-thumb-validation-icon(validation="plate.loaded" error="plate.error")
+            div(class="twst-add-plate-button" ng-click="transformSpec.addPlateInput('destination')" ng-if="transformSpec.map.destination.variablePlateCount")
+                button(class="twst-button twst-blue-button") +
+                span Add Destination
+    div(class="twst-sample-track-main-excel-upload")
+        div(class="twst-sample-track-excel-upload-summary" ng-if="transformSpec.planFromFile || fileErrors.length")
+            h3 Excel File Pre-upload Summary:
+            p Source plate count:
+                strong &nbsp;{{excelFileStats.source_plate_count}}
+                span &nbsp; &nbsp; Destination plate count:
+                strong &nbsp;{{excelFileStats.destination_plate_count}}
+            p {{excelFileStats.wellCountHeader}}
+            ul(class="twst-sample-track-excel-upload-summary-row-count-item")
+                li(ng-repeat="(key, val) in excelFileStats.sourcePlateRows")
+                    a(href="#/plate-details/{{key}}") {{key}}
+                    strong : {{val}}
+            div(class="twst-sample-track-excel-upload-summary-errors" ng-if="fileErrors.length")
+                h3 Errors!
+                ul
+                    li(ng-repeat="error in fileErrors") {{error}}
+            h3(class="twst-sample-track-excel-upload-summary-ok" ng-if="fileErrors.length == 0") File is valid and ready for upload!
+        div(class="twst-sample-track-excel-upload-area" twst-drop-target="catchFile") Drop the transfer file here
+            twst-thumb-validation-icon(validation="transformSpec.operations.length" error="fileErrors.length" errors-invisible="true")
+            div(class="twst-spinner twst-parsing-file-spinner" ng-if="parsingFile")
+    div(class="twst-transform-spec")
+        div(ng-if="transformSpec.type != Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP")
+            div(class="twst-transform-spec-sources-show-btn" ng-click="showSources = !showSources")
+                div(class="twst-custom-radio twst-selected-{{showSources}} twst-custom-radio-as-checkbox" val="show")
+                span(class="twst-custom-radio-label") Show Source(s) Data
+            div(class="twst-transform-spec-sources-data-container" ng-show="showSources" ng-class="{'twst-transform-spec-sources-data-container-data-loaded': transformSpec.sources[0].items.length}")
+                table(class="twst-data-readout-table twst-transform-spec-sources-data-table" ng-if="transformSpec.sources[0].items.length")
+                    tbody
+                        tr
+                           td(class="twst-data-readout-table-header" ng-repeat="(key, value) in transformSpec.sources[0].items[0]") {{key}}
+                    tbody(ng-repeat="source in transformSpec.sources")
+                        tr(ng-repeat="item in source.items")
+                            td(ng-repeat="prop in item" class="twst-data-readout-cell-{{::prop}}") {{::prop}}
+                div(class="twst-transform-spec-sources-empty-msg" ng-if="!transformSpec.sources[0].items.length") No Source data has been loaded        
+
+
+        div(ng-if="transformSpec.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP") 
+            div(class="twst-transform-spec-show-btn" ng-click="showTransferPlan = !showTransferPlan")
+                div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")
+                span(class="twst-custom-radio-label") Preview Transform Spec
+            div(class="twst-transform-spec-transfers-list" ng-show="showTransferPlan")
+                div(class="twst-spinner twst-step-submitting-spinner" ng-if="transformSpec.updating")
+                div(ng-show="!transformSpec.updating && transformSpec.operations.length")
+                    a(class="twst-sample-track-download-transfer-plan-excel" ng-click="transformSpec.getAsExcel()") Download plan in excel format
+                    table(class="twst-data-readout-table twst-transform-spec-preview-table")
+                        tr
+                            td(class="twst-data-readout-table-header") Sample Id
+                            td(class="twst-data-readout-table-header") Source Plate
+                            td(class="twst-data-readout-table-header") Source Well
+                            td(class="twst-data-readout-table-header") Destination Plate
+                            td(class="twst-data-readout-table-header") Destination Well
+                            td(class="twst-data-readout-table-header") Destination Well Count  
+                        tr(ng-repeat="row in transformSpec.operations")
+                            td {{::row.source_sample_id}}
+                            td {{::row.source_plate_barcode}}
+                            td {{::row.source_well_name}}
+                            td {{::row.destination_plate_barcode}}
+                            td {{::row.destination_well_name}}
+                            td {{::row.destination_plate_well_count}}
+                div(class="twst-transform-spec-transfers-list-empty-msg" ng-if="!transformSpec.updating && !transformSpec.operations.length") The supplied data is insufficient to build a transform spec preview.
