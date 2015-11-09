@@ -3,8 +3,8 @@ var app;
 app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main', 'LocalStorageModule'])
 
 
-.controller('rootController', ['$scope', '$state', 'User', '$rootScope', 'localStorageService', '$location', 
-    function ($scope, $state, User, $rootScope, localStorageService, $location) {
+.controller('rootController', ['$scope', '$state', 'User', '$rootScope', 'localStorageService', '$location', '$timeout',  
+    function ($scope, $state, User, $rootScope, localStorageService, $location, $timeout) {
         $scope.user = User;
         $scope.current_year = (new Date).getFullYear();
 
@@ -23,9 +23,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $rootScope.$on('$stateChangeSuccess', function(event, toState) {
             $scope.currentNav = toState.name;
+        });
+
+        $rootScope.$on('$locationChangeSuccess', function(event) {
             var url = document.location.href;
             var hashUrl = url.substring(url.indexOf('#') + 1);
-            localStorageService.set('loginTarget', hashUrl);
+            if (url != hashUrl && hashUrl != '/login') {
+                localStorageService.set('loginTarget', hashUrl);
+            }
         });
     }]
 )
