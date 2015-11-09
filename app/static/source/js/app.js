@@ -1,10 +1,10 @@
 var app;
 
-app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main'])
+app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 'templates-main', 'LocalStorageModule'])
 
 
-.controller('rootController', ['$scope', '$state', 'User',
-    function ($scope, $state, User) {
+.controller('rootController', ['$scope', '$state', 'User', '$rootScope', 'localStorageService', '$location', 
+    function ($scope, $state, User, $rootScope, localStorageService, $location) {
         $scope.user = User;
         $scope.current_year = (new Date).getFullYear();
 
@@ -12,14 +12,26 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $state.go(where);
         }
 
-        $scope.$on('$stateChangeSuccess', function(event, toState) {
+        var loginStateName = 'root.login';
+
+        $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
+            if (!User.data && toState.name != loginStateName) {
+                event.preventDefault();
+                console.log('ddddddd');
+                $state.go(loginStateName);
+            }
+        });
+
+        $rootScope.$on('$stateChangeSuccess', function(event, toState) {
             $scope.currentNav = toState.name;
         });
     }]
 )
 
-.controller('loginController', ['$scope', '$state',  '$http',
-    function ($scope, $state, $http) {
+.controller('loginController', ['$scope', '$state',  '$http', 'localStorageService', 
+    function ($scope, $state, $http, localStorageService) {
+
+        console.log(localStorageService.get('loginTarget'));
 
         $http({url: '/google-login'}).success(function (data) {
             $scope.googleLoginUrl = data.login_url;
@@ -541,32 +553,41 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.run(['$state', 'User', '$location', '$timeout',
-    function($state, User, $location, $timeout) {
-        var routeUrl = window.location.hash.substr(1);
-
+.run(['$state', 'User', '$location', '$timeout', 'localStorageService', 
+    function($state, User, $location, $timeout, localStorageService) {
         var authChecked = false;
+
+        var setHashUrl = function () {
+            var url = document.location.href;
+            var hashUrl = url.substring(url.indexOf('#') + 1);
+            if (url != hashUrl) {
+                localStorageService.set('loginTarget', hashUrl);
+            }
+        }
 
         User.init().success(function (data) {
             if (data.user) {
                 authChecked = true;
                 /* authorized! */
-                $location.path((routeUrl == '' || routeUrl == '/' || routeUrl == '/login') ? '/track-step' : routeUrl);
-            }
-        });
-
-        //redirect un-auth'd users to login but give the login check above a moment to engage
-        $timeout(function () {
-            if (!authChecked) {
+                if (localStorageService.get('loginTarget') == null || loginTarget == '/login') {
+                    setHashUrl();
+                }
+                var loginTarget = localStorageService.get('loginTarget');
+                if (!loginTarget || loginTarget == '/login') {
+                    loginTarget = '/track-step';
+                }
+                $location.path(loginTarget);
+            } else {
+                setHashUrl();
                 $state.go('root.login');
             }
-        }, 200);
+        });
 
     }]
 )
 
-.config(['$httpProvider',
-    function($httpProvider) {
+.config(['$httpProvider', 'localStorageServiceProvider', 
+    function($httpProvider, localStorageServiceProvider) {
         if (!$httpProvider.defaults.headers.get) {
             $httpProvider.defaults.headers.get = {};
         }
@@ -575,6 +596,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         // extra
         $httpProvider.defaults.headers.get['Cache-Control'] = 'no-cache';
         $httpProvider.defaults.headers.get['Pragma'] = 'no-cache';
+
+        localStorageServiceProvider.setPrefix('twistBio').setStorageType('sessionStorage');
     }]
 )
 

@@ -4,4 +4,4 @@ div(class="twst-header")
         h1(class="twst-header-title") Sample Tracker
         div(class="twst-header-user-info" ng-if="user.data")
             p Logged in as {{user.data.name}}
-            a(class="twst-logout-button twst-button" href="/logout") Logout
+            a(class="twst-logout-button twst-button" ng-click="logout()") Logout

@@ -5,9 +5,12 @@ app = angular.module("twist.app")
         return {
             restrict: 'E'
             ,templateUrl: 'twist-header.html'
-            , controller: ['$scope', 
-                function ($scope) {
-                    //...
+            , controller: ['$scope', 'localStorageService', 
+                function ($scope, localStorageService) {
+                    $scope.logout = function () {
+                        localStorageService.remove('loginTarget');
+                        document.location.href = '/logout';
+                    }
                 }
             ]
         };
