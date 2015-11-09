@@ -17,22 +17,21 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState) {
             if (!User.data && toState.name != loginStateName) {
                 event.preventDefault();
-                console.log('ddddddd');
                 $state.go(loginStateName);
             }
         });
 
         $rootScope.$on('$stateChangeSuccess', function(event, toState) {
             $scope.currentNav = toState.name;
+            var url = document.location.href;
+            var hashUrl = url.substring(url.indexOf('#') + 1);
+            localStorageService.set('loginTarget', hashUrl);
         });
     }]
 )
 
 .controller('loginController', ['$scope', '$state',  '$http', 'localStorageService', 
     function ($scope, $state, $http, localStorageService) {
-
-        console.log(localStorageService.get('loginTarget'));
-
         $http({url: '/google-login'}).success(function (data) {
             $scope.googleLoginUrl = data.login_url;
         }).error(function () {
@@ -569,7 +568,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             if (data.user) {
                 authChecked = true;
                 /* authorized! */
-                if (localStorageService.get('loginTarget') == null || loginTarget == '/login') {
+                var loginTarget = localStorageService.get('loginTarget');
+                if (loginTarget == null || loginTarget == '/login') {
                     setHashUrl();
                 }
                 var loginTarget = localStorageService.get('loginTarget');
