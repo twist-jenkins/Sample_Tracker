@@ -18,8 +18,8 @@ def upgrade():
 
     op.create_table(
         'sample_status',
-        sa.Column('sample_id', sa.String(40), nullable=False, sa.ForeignKey('sample.sample_id')),
-        sa.Column('status_type', sa.String(40), nullable=False, sa.ForeignKey('sample_status_code.status_type')),
+        sa.Column('sample_id', sa.String(40), sa.ForeignKey('sample.sample_id'), nullable=False),
+        sa.Column('status_type', sa.String(40), sa.ForeignKey('sample_status_code.status_type'), nullable=False),
         sa.Column('status_date', sa.TIMESTAMP, nullable=False),
         sa.Column('operator_id', sa.String(100), nullable=False),
         sa.PrimaryKeyConstraint('sample_id')
