@@ -20,7 +20,7 @@ def upgrade():
         'well_status_code',
         sa.Column('status_type', sa.String(40), nullable=False),
         sa.Column('description', sa.String(512), nullable=True),
-        sa.Column('date_added', sa.TIMESTAMP, nullable=False),
+        sa.Column('date_created', sa.TIMESTAMP, nullable=False),
         sa.PrimaryKeyConstraint('status_type')
     )
 
