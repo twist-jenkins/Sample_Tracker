@@ -719,16 +719,16 @@ strong {
 /*** TRANSFER PLANNER FORM ***/
 /**********************************/
 
-.twst-sample-track-form {
+.twst-record-step-form {
 
     @include bootstrapOverride;
 
-    .twst-sample-track-plate-barcodes {
+    .twst-record-step-plate-barcodes {
         display: none;
         width: 100%;
         margin-top: 1.5em;
 
-        .twst-sample-track-plate-barcodes-left, .twst-sample-track-plate-barcodes-right {
+        .twst-record-step-plate-barcodes-left, .twst-record-step-plate-barcodes-right {
             display: table-cell;
             width: 50%;
             padding-right: 2em;
@@ -763,7 +763,7 @@ strong {
                 }
             }
 
-            .twst-sample-track-plate-row {
+            .twst-record-step-plate-row {
                 display: table;
                 width: 100%;
                 position: relative;
@@ -773,12 +773,12 @@ strong {
                     margin-top: 0;
                 }
 
-                .twst-sample-track-plate-title, .twst-sample-track-plate-input {
+                .twst-record-step-plate-title, .twst-record-step-plate-input {
                     display: table-cell;
                     vertical-align: middle;
                 }
 
-                .twst-sample-track-plate-input {
+                .twst-record-step-plate-input {
                     width: 100%;
 
                     .twst-plate-data-loading-spinner {
@@ -827,18 +827,18 @@ strong {
         }
     }
 
-    .twst-sample-track-main-excel-upload {
+    .twst-record-step-main-excel-upload {
         display: none;
         width: 100%;
         margin: 1.5em auto;
 
-        .twst-sample-track-excel-upload-area, .twst-sample-track-excel-upload-summary {
+        .twst-record-step-excel-upload-area, .twst-record-step-excel-upload-summary {
             display: table-cell;
             width: 50%;
             vertical-align: top;
         }
 
-        .twst-sample-track-excel-upload-area {
+        .twst-record-step-excel-upload-area {
             padding: 3em;
             text-align: center;
             border: 5px dotted $twst-medium-green;
@@ -854,7 +854,7 @@ strong {
             }
         }
 
-        .twst-sample-track-excel-upload-summary {
+        .twst-record-step-excel-upload-summary {
             padding-right: 1em;
 
             h3 {
@@ -868,7 +868,7 @@ strong {
                 margin: 0.75em 0;
             }
 
-            .twst-sample-track-excel-upload-summary-row-count-item {
+            .twst-record-step-excel-upload-summary-row-count-item {
                  margin-left: 0.5em;
 
                 li {
@@ -879,7 +879,7 @@ strong {
 
             }
 
-            .twst-sample-track-excel-upload-summary-errors {
+            .twst-record-step-excel-upload-summary-errors {
                 background-color: #efd5d5;
                 padding: 0.5em;
                 border-radius: 0.3em;
@@ -902,7 +902,7 @@ strong {
                 
             }
 
-            .twst-sample-track-excel-upload-summary-ok {
+            .twst-record-step-excel-upload-summary-ok {
                 padding: 0.5em;
                 border-radius: 0.3em;
                 margin-top: 1em;
@@ -927,7 +927,7 @@ strong {
         }
 
         .twst-transform-spec-transfers-list {
-            .twst-sample-track-download-transfer-plan-excel {
+            .twst-record-step-download-transfer-plan-excel {
                     position: absolute;
                     top: 0.5em;
                     left: 20em;
@@ -1203,9 +1203,9 @@ strong {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 
-.twst-sample-track-main {
+.twst-record-step-main {
 
-    .twst-sample-track-main-download-link {
+    .twst-record-step-main-download-link {
         position: relative;
         float: right;
         position: relative;
@@ -1216,13 +1216,13 @@ strong {
         margin-bottom: 1em;
     }
 
-    .twst-sample-track-result-message {
+    .twst-record-step-result-message {
         position: relative;
         float: right;
         max-width: 50%;
     }
 
-    .twst-sample-track-transfer-toggle-controls {
+    .twst-record-step-transfer-toggle-controls {
         display: block;
         clear: both;
         font-size: 1.2em;
@@ -1233,12 +1233,12 @@ strong {
         }
     }
 
-    .twst-sample-track-main-inputs {
+    .twst-record-step-main-inputs {
         padding: 0 2em;
         position: relative;
     }
 
-    .twst-sample-track-main-buttons {
+    .twst-record-step-main-buttons {
         margin-top: 2em;
         position: relative;
 
@@ -1255,7 +1255,7 @@ strong {
             font-size: 1.2em;
         }
 
-        .twst-sample-track-clear-btn {
+        .twst-record-step-clear-btn {
             margin-left: 2em;
             cursor: pointer;
         }
@@ -1264,7 +1264,7 @@ strong {
 
     @include bootstrapOverride;
 
-    .twst-sample-track-step-options-select {
+    .twst-record-step-step-options-select {
 
         .twst-thumbs-validation-icon {
             margin-left: 0.3em;
@@ -1280,8 +1280,8 @@ strong {
 
     }
 
-    .twst-transform-spec-barcodes-mode .twst-sample-track-plate-barcodes,
-    .twst-transform-spec-file-mode .twst-sample-track-main-excel-upload {
+    .twst-transform-spec-barcodes-mode .twst-record-step-plate-barcodes,
+    .twst-transform-spec-file-mode .twst-record-step-main-excel-upload {
         display: table;
     }
 
@@ -1640,7 +1640,11 @@ strong {
         }
     }
 
-    .twst-sample-track-plate-barcodes {
+    .twst-create-edit-transfer-plans-main {
+        @include bootstrapOverride;
+    }
+    
+    .twst-record-step-plate-barcodes {
         display: table;
     }
     

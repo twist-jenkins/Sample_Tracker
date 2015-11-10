@@ -1,6 +1,15 @@
-div(class="twst-transfer-pln-editor-main")
+div(class="twst-transfer-plan-editor-main")
     form
-        p(ng-if="transformSpec.id") Id: {{transformSpec.id}}
-        p Title:
-            input(type="text" ng-model="transformSpec.title" class="form-control")
-        twst-transform-builder-form(transform-spec="transformSpec")
+        p Transform Type:
+        div(class="btn-group twst-transfer-plan-editor-options-select" dropdown)
+            twst-thumb-validation-icon(validation="transformSpec.details" errors-invisible="true")
+            button(id="single-button" type="button" class="btn btn-primary" dropdown-toggle) {{selectedSpecText}}&nbsp;
+                span(class="caret")
+            ul(class="dropdown-menu" role="menu" aria-labelledby="single-button")
+                li(role="menuitem" ng-repeat="option in specTypes")
+                    a(ng-click="selectSpecType(option)") {{option.text}}
+        div(ng-show="transformSpec.details")
+            p(ng-if="transformSpec.id") Id: {{transformSpec.id}}
+            p Title:
+                input(type="text" ng-model="transformSpec.title" class="form-control")
+            twst-transform-builder-form(transform-spec="transformSpec")
