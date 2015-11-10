@@ -32,6 +32,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 localStorageService.set('loginTarget', hashUrl);
             }
         });
+
+        $scope.currentNav = $state.current.name;
     }]
 )
 
