@@ -14,7 +14,6 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
 
 
-
     SQLALCHEMY_ECHO = False
 
     GOOGLE_LOGIN_CLIENT_ID = "751130267692-eed3irkpojv6euceh41bkopk3v9q9e97.apps.googleusercontent.com"
@@ -23,7 +22,6 @@ class Config(object):
 
     GOOGLE_OAUTH2_TOKEN_URL = 'https://accounts.google.com/o/oauth2/token'
     GOOGLE_OAUTH2_USERINFO_URL = 'https://www.googleapis.com/oauth2/v1/userinfo'
-
 
 
 class ProdConfig(Config):
@@ -58,7 +56,7 @@ class UnittestConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + DATABASE
 
 
-class LocalunittestConfig(Config):
+class LocalConfig(Config):
     TESTING = True
     DEBUG = True
     # WTF_CSRF_ENABLED = True

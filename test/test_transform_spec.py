@@ -6,7 +6,7 @@ import os
 import logging
 logging.basicConfig(level=logging.INFO)
 
-os.environ["WEBSITE_ENV"] = "Localunittest"
+# os.environ["WEBSITE_ENV"] = "Localunittest"
 
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
@@ -43,47 +43,53 @@ class TestCase(unittest.TestCase):
 
 
     def DISABLED_test_get_one_golden(self):
-        rv = self.client.get('/api/v1/rest/transfer-plans/plan_1')
+        rv = self.client.get('/api/v1/rest/transform-specs/100001')
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert len(result) == 1
 
     def test_get_one_404(self):
-        rv = self.client.get('/api/v1/rest/transfer-plans/waldo')
+        rv = self.client.get('/api/v1/rest/transform-specs/0')
         assert rv.status_code == 404
 
     def test_post_get_golden(self):
-        new_plan = {"task": "new_task_1"}
-        rv = self.client.post('/api/v1/rest/transfer-plans',
-                              data=json.dumps(new_plan),
+        new_spec = {"task": "new_task_1"}
+        rv = self.client.post('/api/v1/rest/transform-specs',
+                              data=json.dumps(new_spec),
                               content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert new_url is not None
         result = json.loads(rv.data)
-        assert result == new_plan  # this might be too heavy
+        assert new_spec in result.values()
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
 
-    def test_put_get_golden(self):
-        modified_plan = {"task": "modified_task_1"}
-        uri = '/api/v1/rest/transfer-plans/plan_9'
-        rv = self.client.put(uri,
-                             data=json.dumps(modified_plan),
+    def test_post_put_get_golden(self):
+        new_spec = {"task": "delete_me"}
+        uri = '/api/v1/rest/transform-specs'
+        rv = self.client.post(uri,
+                              data=json.dumps(new_spec),
+                              content_type="application/json")
+        assert rv.status_code == 201
+        new_url = rv.headers['location']
+        modified_spec = {"task": "modified_task_1"}
+        rv = self.client.put(new_url,
+                             data=json.dumps(modified_spec),
                              content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert uri in new_url
         result = json.loads(rv.data)
-        assert result == modified_plan  # this might be too heavy
+        assert modified_spec in result
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
 
     def test_post_delete_golden(self):
-        new_plan = {"task": "delete_me"}
-        uri = '/api/v1/rest/transfer-plans'
+        new_spec = {"task": "delete_me"}
+        uri = '/api/v1/rest/transform-specs'
         rv = self.client.post(uri,
-                              data=json.dumps(new_plan),
+                              data=json.dumps(new_spec),
                               content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
@@ -93,31 +99,31 @@ class TestCase(unittest.TestCase):
         assert self.client.get(new_url).status_code == 404
 
     def test_post_get_2_golden(self):
-        new_plan = {"foo": "bar"}
-        rv = self.client.post('/api/v1/rest/transfer-plans',
-                              data=json.dumps(new_plan),
+        new_spec = {"foo": "bar"}
+        rv = self.client.post('/api/v1/rest/transform-specs',
+                              data=json.dumps(new_spec),
                               content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert new_url is not None
         result = json.loads(rv.data)
-        assert result == new_plan  # this might be too heavy
+        assert new_spec in result
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
 
     def test_get_list_golden(self):
-        new_plan = {"foo": "bar"}
-        rv = self.client.post('/api/v1/rest/transfer-plans',
-                              data=json.dumps(new_plan),
+        new_spec = {"foo": "bar"}
+        rv = self.client.post('/api/v1/rest/transform-specs',
+                              data=json.dumps(new_spec),
                               content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
 
-        rv = self.client.get('/api/v1/rest/transfer-plans')
+        rv = self.client.get('/api/v1/rest/transform-specs')
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert len(result) > 0
-        assert new_plan in result.values()
+        assert new_spec in result.values()
         self.client.delete(new_url)
 
 if __name__ == '__main__':

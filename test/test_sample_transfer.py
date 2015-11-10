@@ -151,18 +151,10 @@ class TestCase(unittest.TestCase):
             "destination_plate_well_count": dest_well_count
         } for (src_well, dest_plate, dest_well, dest_well_count) in [
             ('A1', '_1', 'A1', 96),
-            #('A1', '_1', 'A2', 96),
-            #('A1', '_1', 'A3', 96),
-            #('A1', '_1', 'A4', 96),
-            #('A1', '_1', 'A5', 96),
-            #('A1', '_1', 'A6', 96),
-            #('A2', '_1', 'A7', 96),
-            #('A2', '_1', 'A8', 96),
-            #('A2', '_1', 'B1', 96),
-            #('B1', '_2', 'A1', 96),
-            #('B1', '_2', 'A2', 96),
-            #('B1', '_2', 'A3', 96),
-            #('B1', '_2', 'A4', 96)
+            ('A1', '_1', 'A2', 96),
+            ('A2', '_1', 'B1', 96),
+            ('B1', '_2', 'A1', 96),
+            ('B1', '_2', 'A2', 96),
         ]]
         data = {"sampleTransferTypeId": 15,  # QPix To 96 plates
                 "sampleTransferTemplateId": 21,

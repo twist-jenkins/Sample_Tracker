@@ -499,18 +499,31 @@ class StorageLocation(db.Model):
         self.name = name
 
 
+class SampleTransformSpec(db.Model):
 
-class SampleTransferPlan(db.Model):
+    #SPEC_ID_SEQ = db.Sequence('sample_transform_spec_seq',
+    #                          start=100001)
 
-    plan_id = db.Column(db.String(40), primary_key=True)
-    plan = db.Column(postgresql.JSON(), nullable=False)
-
-    def __init__(self, plan_id, plan):
-        self.plan_id = plan_id
-        self.plan = plan
+    spec_id = db.Column(db.Integer(),
+                        primary_key=True)
+    type_id = db.Column(db.Integer(),
+                        db.ForeignKey('sample_transfer_type.id'),
+                        nullable=True)
+    status = db.Column(db.String(40),
+                       nullable=True)
+    date_created = db.Column(db.DateTime,
+                             default=datetime.datetime.utcnow,
+                             nullable=False)
+    operator_id = db.Column(db.String(10),
+                            db.ForeignKey('operator.operator_id'),
+                            nullable=False)
+    date_executed = db.Column(db.DateTime,
+                              nullable=True)
+    data_json = db.Column(postgresql.JSON(),
+                          nullable=False)
 
     def __repr__(self):
-        return '<SampleTransfer Plan id: [%s]>' % (self.plan_id, )
+        return '<SampleTransfer Spec id: [%s]>' % (self.spec_id, )
 
 
 class ClonedSample(Sample):
@@ -595,5 +608,64 @@ class ClonedSample(Sample):
         """Return parent"""
         return self.parent_sample
 
+'''
+class NGSPreppedSample(Sample):
+    """NGS prepped sample -- Simpler version based on twist_core"""
+    __tablename__ = "ngs_prepped_sample"
+    # type info
+    sample_id = sa.Column(
+        sa.String(40), sa.ForeignKey("sample.sample_id"),
+        primary_key=True, index=True)
+    __mapper_args__ = {
+        "polymorphic_identity": "ngs_prepped_sample",
+        "inherit_condition": (sample_id == Sample.sample_id)}
+    parent_sample_id = sa.Column(
+        sa.String(40), sa.ForeignKey("sample.sample_id"),
+        nullable=False)
+    i5_sequence_id = sa.Column(
+        sa.String(40),
+        sa.ForeignKey("barcode_sequence.sequence_id"),
+        nullable=True)
+    i7_sequence_id = sa.Column(
+        sa.String(40),
+        sa.ForeignKey("barcode_sequence.sequence_id"),
+        nullable=True)
+    insert_size_expected = sa.Column(sa.Integer, nullable=False)
+    notes = sa.Column(sa.String(1024))
+    # relations
+    parent_sample = sa.orm.relationship(
+        "Sample", uselist=False,
+        backref=sa.orm.backref("ngs_prepped_samples"),
+        foreign_keys=parent_sample_id)
+    i5_barcode = sa.orm.relationship(
+        "BarcodeSequence", uselist=False,
+        backref=sa.orm.backref("i5_ngs_run_sample_joins"),
+        foreign_keys=i5_sequence_id)
+    i7_barcode = sa.orm.relationship(
+        "BarcodeSequence", uselist=False,
+        backref=sa.orm.backref("i7_ngs_run_sample_joins"),
+        foreign_keys=i7_sequence_id)
 
-
+    def __init__(self, sample_id, parent_sample_id, description,
+                 i5_sequence_id, i7_sequence_id, notes, insert_size_expected,
+                 date_created, operator_id, parent_process_id,
+                 external_barcode, reagent_type_set_lot_id, status,
+                 parent_transfer_process_id):
+        """Init"""
+        name = "%s.%s" % (sample_id, parent_sample_id)
+        Sample.__init__(
+            self, sample_id, date_created, operator_id, name,
+            description, None, None, parent_process_id, external_barcode,
+            reagent_type_set_lot_id, status, parent_transfer_process_id)
+        if self.sample_id == parent_sample_id:
+            raise ValueError(
+                "Sample ID == Parent Sample ID: %s" % sample_id)
+        self.parent_sample_id = parent_sample_id
+        if i5_sequence_id:
+            self.i5_sequence_id = i5_sequence_id
+        if i7_sequence_id:
+            self.i7_sequence_id = i7_sequence_id
+        self.insert_size_expected = insert_size_expected
+        if notes:
+            self.notes = notes
+'''
