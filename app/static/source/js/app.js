@@ -58,7 +58,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             console.log(option);
             $scope.transformSpec.setTitle(option.text);
 
-            var route = 'root.record_step.step_type_selected';
+            var route = 'root.record_transform.step_type_selected';
 
             if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
                 route += '.' + Constants.FILE_UPLOAD;
@@ -164,7 +164,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transformSpec = TransformBuilder.newTransformSpec();
             $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
-            $state.go('root.record_step');
+            $state.go('root.record_transform');
         };
 
         /* populate the sample types pulldown */
@@ -183,7 +183,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.Constants = Constants;
 
         $scope.selectTransferTemplateType = function (which) {
-            $state.go('root.record_step.step_type_selected.' + which);
+            $state.go('root.record_transform.step_type_selected.' + which);
         };
 
         $scope.setTransferTemplate = function (which) {
@@ -399,7 +399,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.isEditing = false;
         }
 
-        $state.go('root.transform_specs.view_manage');
+        if ($state.current.name.indexOf('root.transform_specs') == -1) {
+            $state.go('root.transform_specs.view_manage');   
+        }
     }]
 )
 
@@ -539,6 +541,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.specLoading = true;
 
+        $scope.selectedSpecText = "Select a Transform Type";
+
+        $scope.specTypes = [
+            { text: 'Rebatching for Transformation', id: 'SPEC_01'}
+        ];
+
+        $scope.selectSpecType = function (option) {
+            $scope.selectedSpecText = option.text;
+
+        }
+
         if (specId) {
             Api.getTransformSpec(specId).success(function (data) {
                 $scope.transformSpec = JSON.parse(data.plan);
@@ -616,19 +629,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: 'login'
             ,templateUrl: 'twist-login.html'
             ,controller: 'loginController'
-        }).state('root.record_step', {
-            url: 'track-step'
-            ,templateUrl: 'twist-track-sample.html'
+        }).state('root.record_transform', {
+            url: 'record-transform'
+            ,templateUrl: 'twist-record-transform.html'
             ,controller: 'trackStepController'
-        }).state('root.record_step.step_type_selected', {
+        }).state('root.record_transform.step_type_selected', {
             url: '/:selected_step_type_id'
-            ,templateUrl: 'twist-track-sample-type-selected.html'
+            ,templateUrl: 'twist-record-transform-type-selected.html'
             ,controller: 'stepTypeSelectedController'
-        }).state('root.record_step.step_type_selected.file_upload', {
+        }).state('root.record_transform.step_type_selected.file_upload', {
             url: '/custom-file-upload'
             ,template: ''
             ,controller: 'customExcelUploadController'
-        }).state('root.record_step.step_type_selected.standard_template', {
+        }).state('root.record_transform.step_type_selected.standard_template', {
             url: '/standard-template'
             ,template: ''
             ,controller: 'standardTemplateController'

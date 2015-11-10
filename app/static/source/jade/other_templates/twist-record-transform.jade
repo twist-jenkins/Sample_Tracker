@@ -1,12 +1,12 @@
-div(class="twst-sample-track-main twst-child-page")
-    a(class="twst-sample-track-main-download-link" ng-href="static/sampleTransferSpreadsheet.xlsx") Download blank transfer template
-    h1 Record Step
+div(class="twst-record-step-main twst-child-page")
+    a(class="twst-record-step-main-download-link" ng-href="static/sampleTransferSpreadsheet.xlsx") Download blank transfer template
+    h1 Record Transform
     div(class="twst-spinner" ng-if="!stepTypeOptions")
-    form(class="twst-sample-track-main-inputs" ng-show="stepTypeOptions")
-        div(class="twst-sample-track-result-message")
+    form(class="twst-record-step-main-inputs" ng-show="stepTypeOptions")
+        div(class="twst-record-step-result-message")
             twst-message(message="submissionResultMessage" visible-and-valid="submissionResultVisible")
         p(class="twst-input-label-block") Step Type:
-        div(class="btn-group twst-sample-track-step-options-select" dropdown)
+        div(class="btn-group twst-record-step-step-options-select" dropdown)
             twst-thumb-validation-icon(validation="transformSpec.details" errors-invisible="true")
             button(id="single-button" type="button" class="btn btn-primary" dropdown-toggle) {{stepTypeDropdownValue}}&nbsp;
                 span(class="caret")
@@ -14,9 +14,9 @@ div(class="twst-sample-track-main twst-child-page")
                 li(role="menuitem" ng-repeat="option in stepTypeOptions")
                     a(ng-click="selectStepType(option)") {{option.text}}
         div(ui-view ng-show="stepTypeOptions && templateTypeSelection")
-        div(class="twst-sample-track-main-buttons" ng-show="templateTypeSelection")
+        div(class="twst-record-step-main-buttons" ng-show="templateTypeSelection")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
             button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
-            a(class="twst-sample-track-clear-btn" ng-click="clearForm()") clear form
+            a(class="twst-record-step-clear-btn" ng-click="clearForm()") clear form
             
 

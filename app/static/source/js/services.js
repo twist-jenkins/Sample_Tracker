@@ -743,7 +743,6 @@ app = angular.module('twist.app')
             base.setCreateEditDefaults = function () {
                 base.setTitle('New Transform Spec');
                 base.setType(Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING);
-                base.setTransformSpecDetails({text: 'Generic Transform', transfer_template_id: 24})
                 base.autoUpdateSpec = false;
             };
 

@@ -1647,18 +1647,6 @@ app = angular.module('twist.app')
                     ,wellCount: 384
                 }
             }
-            ,transformSpecCriteria: {
-                SPLIT_SEQUENCE_LENGTH_1000: {
-                    description: 'Split sources into destinations plates based on gs_seq length 1) seq length < 1000, 2) seq length 1000+'
-                    ,criteria: [
-                        'gs_seq.length < 1000'
-                        ,'gs_seq.length >= 1000'
-                    ]
-                    ,output: [
-                        {type: 'plate'}
-                    ]
-                }
-            }
         };
     }
 ]);

@@ -25,7 +25,7 @@ app = angular.module("twist.app")
             ,controller: ['$scope', 
                 function ($scope) {
                     $scope.navItems = [
-                        {text: 'Record Step', link: 'root.record_step'}
+                        {text: 'Record Transform', link: 'root.record_transform'}
                         ,{text: 'Plate Details', link: 'root.plate_details'}
                         ,{text: 'Edit Plate Barcode', link: 'root.edit_barcode'}
                         ,{text: 'Transform Specs', link: 'root.transform_specs.view_manage', match: 'root.transform_specs'}
