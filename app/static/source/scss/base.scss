@@ -569,7 +569,11 @@ strong {
 }
 
 .twst-1em-top-margin {
-    margin-top: 1em;
+    margin-top: 1em !important;
+}
+
+.twst-2em-top-margin {
+    margin-top: 2em !important;
 }
 
 /**********************************************************************************************************/
@@ -961,6 +965,28 @@ strong {
             }
         }
 
+    }
+
+    &.twst-transform-template-25 {
+        .twst-record-step-plate-barcodes {
+            .twst-record-step-plate-barcodes-right {
+                .twst-record-step-plate-row {
+                    .twst-record-step-plate-title, .twst-record-step-plate-input {
+                        display: block;
+                    }
+
+                    .twst-record-step-plate-input {
+                        .twst-remove-plate-button {
+                                top: 1.75em;
+                        }
+                    }
+
+                    .twst-thumbs-validation-icon {
+                        top: 0.75em;
+                    }
+                }
+            }
+        }
     }
 
 }
@@ -1643,7 +1669,7 @@ strong {
     .twst-create-edit-transfer-plans-main {
         @include bootstrapOverride;
     }
-    
+
     .twst-record-step-plate-barcodes {
         display: table;
     }

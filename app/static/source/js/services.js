@@ -14,7 +14,7 @@ app = angular.module('twist.app')
             ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
             ,STANDARD_TEMPLATE: 'standard_template'
             ,FILE_UPLOAD: 'file_upload'
-            ,TRANSFORM_SPEC_TYPE_CUSTOM_PLATING: 'custom_plating'
+            ,TRANSFORM_SPEC_TYPE_PLATE_PLANNING: 'PLATE_PLANNING'
             ,TRANSFORM_SPEC_TYPE_PLATE_STEP: 'plate_step'
             ,SOURCE_TYPE_PLATE: 'plate'
         };
@@ -282,80 +282,233 @@ app = angular.module('twist.app')
             var updateOperationsList = function () {
 
                 if (base.autoUpdateSpec) {
-                    if (base.sourcesReady && base.destinationsReady) {
-                        var operations = [];
-                        
-                        if (base.details.transfer_template_id == 1 || base.details.transfer_template_id == 2) {
-                            /* sopurce and destination plate are same size and layout */
-                            var plate = base.sources[0];
-                            for (var j=0; j<plate.items.length;j++) {
-                                var sourceWell = plate.items[j];
-                                var operationRow = {
-                                    source_plate_barcode: plate.details.id
-                                    ,source_well_name: sourceWell.column_and_row
-                                    ,source_sample_id: sourceWell.sample_id
-                                    ,destination_plate_barcode: (base.details.transfer_template_id == 2 ? plate.details.id : base.destinations[0].details.id)
-                                    ,destination_well_name: sourceWell.column_and_row
-                                    ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                };
-                                operations.push(operationRow);
-                            }
-                        } else {
-                            /* source and destination are different size and/or layout*/
-                            if (base.details.transfer_template_id == 23) {
-                                /* merge source plate(s) into single destination plate */
-                                var overlapCheckMap = {};
-                                for (var i=0;i< base.sources.length;i++) {
-                                    var plate = base.sources[i];
 
-                                    for (var j=0; j<plate.items.length;j++) {
-                                        var sourceWell = plate.items[j];
+                    if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
 
-                                        if (overlapCheckMap[sourceWell.column_and_row]) {
-                                            base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.details.id + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
-                                            return;
-                                        } else {
-                                            overlapCheckMap[sourceWell.column_and_row] = plate.details.id;
-                                        }
-
-                                        var operationRow = {
-                                            source_plate_barcode: plate.details.id
-                                            ,source_well_name: sourceWell.column_and_row
-                                            ,source_sample_id: sourceWell.sample_id
-                                            ,destination_plate_barcode: base.destinations[0].details.id
-                                            ,destination_well_name: sourceWell.column_and_row
-                                            ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                        };
-                                        operations.push(operationRow);
-                                    }
+                        if (base.sourcesReady && base.destinationsReady) {
+                            var operations = [];
+                            
+                            if (base.details.transfer_template_id == 1 || base.details.transfer_template_id == 2) {
+                                /* sopurce and destination plate are same size and layout */
+                                var plate = base.sources[0];
+                                for (var j=0; j<plate.items.length;j++) {
+                                    var sourceWell = plate.items[j];
+                                    var operationRow = {
+                                        source_plate_barcode: plate.details.id
+                                        ,source_well_name: sourceWell.column_and_row
+                                        ,source_sample_id: sourceWell.sample_id
+                                        ,destination_plate_barcode: (base.details.transfer_template_id == 2 ? plate.details.id : base.destinations[0].details.id)
+                                        ,destination_well_name: sourceWell.column_and_row
+                                        ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
+                                    };
+                                    operations.push(operationRow);
                                 }
                             } else {
-                                /* all others */
-                                for (var i=0;i< base.sources.length;i++) {
-                                    var plate = base.sources[i];
-                                    var wellsMap = base.map.plateWellToWellMaps[i];
+                                /* source and destination are different size and/or layout*/
+                                if (base.details.transfer_template_id == 23) {
+                                    /* merge source plate(s) into single destination plate */
+                                    var overlapCheckMap = {};
+                                    for (var i=0;i< base.sources.length;i++) {
+                                        var plate = base.sources[i];
 
-                                    for (var j=0; j<plate.items.length;j++) {
-                                        var sourceWell = plate.items[j];
-                                        var destWell = wellsMap[sourceWell.well_id];
-                                        var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
-                                        var operationRow = {
-                                            source_plate_barcode: plate.details.id
-                                            ,source_well_name: sourceWell.column_and_row
-                                            ,source_sample_id: sourceWell.sample_id
-                                            ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].details.id
-                                            ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
-                                            ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
-                                        };
-                                        operations.push(operationRow);
+                                        for (var j=0; j<plate.items.length;j++) {
+                                            var sourceWell = plate.items[j];
+
+                                            if (overlapCheckMap[sourceWell.column_and_row]) {
+                                                base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.details.id + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
+                                                return;
+                                            } else {
+                                                overlapCheckMap[sourceWell.column_and_row] = plate.details.id;
+                                            }
+
+                                            var operationRow = {
+                                                source_plate_barcode: plate.details.id
+                                                ,source_well_name: sourceWell.column_and_row
+                                                ,source_sample_id: sourceWell.sample_id
+                                                ,destination_plate_barcode: base.destinations[0].details.id
+                                                ,destination_well_name: sourceWell.column_and_row
+                                                ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
+                                            };
+                                            operations.push(operationRow);
+                                        }
+                                    }
+                                } else {
+                                    /* all others */
+                                    for (var i=0;i< base.sources.length;i++) {
+                                        var plate = base.sources[i];
+                                        var wellsMap = base.map.plateWellToWellMaps[i];
+
+                                        for (var j=0; j<plate.items.length;j++) {
+                                            var sourceWell = plate.items[j];
+                                            var destWell = wellsMap[sourceWell.well_id];
+                                            var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
+                                            var operationRow = {
+                                                source_plate_barcode: plate.details.id
+                                                ,source_well_name: sourceWell.column_and_row
+                                                ,source_sample_id: sourceWell.sample_id
+                                                ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].details.id
+                                                ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
+                                                ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
+                                            };
+                                            operations.push(operationRow);
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        base.operations = operations;
-                    } else {
-                        base.clearOperationsList();
+                            base.operations = operations;
+                        } else {
+                            base.clearOperationsList();
+                        }
+                    } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
+                        if (base.sourcesReady) {
+                            
+                            var templateId = base.details.transfer_template_id;
+
+                            switch (templateId) {
+                                case 25:
+                                    //Rebatching for trannsformation
+                                    //first, we'll group source wells based on resistance_marker values
+                                    var resistanceGroups = {};
+                                    var destinationQuadrants = {};
+                                    var destinationPlates = {};
+
+                                    for (var i=0; i<base.sources.length;i++) {
+                                        var source = base.sources[i];
+                                        for (var j=0; j < source.items.length; j++) {
+                                            var well = angular.copy(source.items[j]);
+                                            well.source_plate_barcode = source.details.id
+                                            if (!resistanceGroups[well.requested_resistance]) {
+                                                resistanceGroups[well.requested_resistance] = [];
+                                            }
+                                            resistanceGroups[well.requested_resistance].push(well);
+                                        }
+                                    }
+                                    console.log(resistanceGroups);
+
+                                    // resistance groups get written as 96-well quadrants to 384 well trays
+                                    // build the quadrants
+                                    for (group in resistanceGroups) {
+                                        destinationQuadrants[group] = new Array(Math.ceil(resistanceGroups[group].length/96));
+                                        var quadIndex = 0;
+                                        for (var i=0; i < resistanceGroups[group].length; i++) {
+                                            if (i && i%96 == 0) {
+                                                quadIndex++;
+                                            }
+                                            if (!destinationQuadrants[group][quadIndex]) {
+                                                destinationQuadrants[group][quadIndex] = [];
+                                            }
+                                            destinationQuadrants[group][quadIndex].push(resistanceGroups[group][i])
+                                        }
+                                    }
+                                    console.log(destinationQuadrants);
+
+                                    // use the 4-to-1 combine map to write the quadrants to 384 well plates
+                                    var theMap = Maps.transferTemplates[18];
+
+                                    // configure the ultimate destination plates - 384 wells
+                                    for (group in destinationQuadrants) {
+                                        destinationPlates[group] = new Array(Math.ceil(destinationQuadrants[group].length/4));
+
+                                        var plateIndex = 0;
+                                        for (var i=0; i < destinationQuadrants[group].length; i++) {
+                                            if (i && i%4 == 0) {
+                                                plateIndex++;
+                                            }
+
+                                            var quadrant = destinationQuadrants[group][i];
+                                            var quardrantMap = theMap.plateWellToWellMaps[i%4];
+
+                                            for (var j=0; j< quadrant.length; j++) {
+                                                var well = quadrant[j];
+                                                well.destination_plate_number = quardrantMap[j+1].destination_plate_number;
+                                                console.log(well.destination_plate_number)
+                                                well.destination_well_id = quardrantMap[j+1].destination_well_id;
+                                                if (!destinationPlates[group][plateIndex]) {
+                                                    destinationPlates[group][plateIndex] = [];
+                                                }
+                                                destinationPlates[group][plateIndex].push(well);
+                                            }
+                                        }
+
+                                    }
+
+                                    console.log(destinationPlates);
+
+                                    var plateIndex = -1;
+
+                                    //and add ore fill the destination inputs for the necessary plates
+                                    for (group in destinationPlates) {
+                                        var plates = destinationPlates[group];
+                                        for (var i=0; i<plates.length; i++) {
+                                            plateIndex++;
+                                            var dest = returnEmptyPlate();
+                                            dest.details.title = 'Resistance <strong>' + group + '</strong> - Plate ' + (i + 1) + ':';
+                                            if (!i) {
+                                                dest['first_in_group'] = true;
+                                            }
+                                            if (base.destinations[plateIndex]) {
+                                                if (base.destinations[plateIndex].loaded || base.destinations[plateIndex].updating) {
+                                                    //do nothing - this destination was already entered
+                                                } else {
+                                                    dest.details.id = base.destinations[plateIndex].details.id; 
+                                                    base.destinations[plateIndex] = dest;
+                                                    base.addDestination(plateIndex);
+                                                }
+                                            } else {
+                                                base.destinations[plateIndex] = dest;
+                                                base.addDestination(plateIndex);
+                                            }
+                                            
+                                        }
+                                    } 
+
+                                    if (base.destinationsReady) {
+                                        
+                                        var operations = [];
+
+                                        var destPlateIndex = 0;
+
+                                        for (group in destinationPlates) {
+                                            var plates = destinationPlates[group];
+                                            for (var i=0; i<plates.length; i++) {
+                                                var plate = plates[i];
+                                                destPlateIndex += i;
+
+                                                for (var j=0; j<plate.length;j++) {
+                                                    var sourceWell = plate[j];
+                                                    var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId];
+                                                    var operationRow = {
+                                                        source_plate_barcode: sourceWell.source_plate_barcode
+                                                        ,source_well_name: sourceWell.column_and_row
+                                                        ,source_sample_id: sourceWell.sample_id
+                                                        ,destination_plate_barcode: base.destinations[destPlateIndex].details.id
+                                                        ,destination_well_name: destWellRowColumnMap[sourceWell.destination_well_id].row + destWellRowColumnMap[sourceWell.destination_well_id].column
+                                                        ,destination_plate_well_count: Maps.plateTypeInfo[theMap.destination.plateTypeId].wellCount
+                                                    };
+                                                    operations.push(operationRow);
+                                                }
+                                            }
+                                            destPlateIndex++;
+
+                                        }
+
+                                        base.operations = operations;
+
+                                    } else {
+                                        base.clearOperationsList();
+                                    }
+
+                                    break;
+                                
+                                default :
+                                    console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
+                                    break;
+                            }
+
+                        } else {
+                            base.clearOperationsList();
+                        }
                     }
                 }
             };
@@ -392,7 +545,7 @@ app = angular.module('twist.app')
                     if (base.destinations.length) {
                         header = 'Source ' + header; 
                     }
-                } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING) {
+                } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                     header = 'Source(s)'
                 }
 
@@ -405,7 +558,7 @@ app = angular.module('twist.app')
                 if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
                     header = 'Destination Plate Barcode';
                     header+= base.destinations.length > 1 ? 's' :'';
-                } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING) {
+                } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                     header = 'Destination(s)'
                 }
 
@@ -419,6 +572,11 @@ app = angular.module('twist.app')
             base.setTransformSpecDetails = function (typeObj) {
                 base.details = typeObj;
                 base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
+                if (base.details.transfer_template_id == 25) {
+                    base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
+                } else {
+                    base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
+                }
                 base.transferFromFile(false);
             }
 
@@ -452,6 +610,7 @@ app = angular.module('twist.app')
                 }
                 for (var i=0; i<base.destinations.length; i++) {
                     base.destinations[i].details.title = base.map.destination.plateTitles ? base.map.destination.plateTitles[i] || '' : '';
+                    delete base.destinations[i]['first_in_group'];
                 }
 
                 if (!base.map.destination.plateCount) {
@@ -516,7 +675,7 @@ app = angular.module('twist.app')
 
                 var plateDetailsFetcher = Api.getBasicPlateDetails;
 
-                if (base.type == Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING) {
+                if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                     plateDetailsFetcher = Api.getPlateDetails;
                 }
 
@@ -527,6 +686,18 @@ app = angular.module('twist.app')
                         } else {
                             sourceItem.loaded = true;
                             sourceItem.items = data.wells;
+
+                            /***** DEV ONLY *****/
+                            console.log('REMOVE this code after dev!!!!');
+                            var d8t = new Date();
+                            for (var i=0; i< sourceItem.items.length ;i++) {
+                                var str = Math.random() + '';
+                                console.log(str);
+                                sourceItem.items[i]["requested_resistance"] = (str.substring(str.length - 1)-0)%4;
+                            }
+                            console.log(sourceItem.items);
+                            /**** DEV ONLY *********/
+
                             var dataCopy = angular.copy(data);
                             delete dataCopy.wells;
                             jQuery.extend(sourceItem.details, dataCopy);
@@ -550,7 +721,7 @@ app = angular.module('twist.app')
 
             base.checkDestinationsReady = function () {
                 for (var i=0; i<base.destinations.length; i++) {
-                    if (base.destinations[i].details.id.length < 6) {
+                    if (!base.destinations[i].details.id || (base.destinations[i].details.id && base.destinations[i].details.id.length < 6)) {
                         base.destinations[i].loaded = false;
                         notReady('destination');
                         return false;
@@ -561,8 +732,6 @@ app = angular.module('twist.app')
 
             base.addDestination = function (destIndex) {
                 var destItem = base.destinations[destIndex];
-                delete destItem.error;
-                delete destItem.loaded;
                 var barcode = destItem.details.id;
 
                 var onError = function (destItem, msg) {
@@ -574,7 +743,10 @@ app = angular.module('twist.app')
                     ready();
                 };
 
-                if (barcode.length > 5) {
+                if (barcode && barcode.length > 5) {
+
+                    delete destItem.error;
+                    delete destItem.loaded;
 
                     updating();
                     destItem.updating = true;
@@ -591,7 +763,7 @@ app = angular.module('twist.app')
                             destItem.updating = false;
                             /* check if we have all the required destination barcodes */
                             for (var i=0; i<base.destinations.length; i++) {
-                                if (base.destinations[i].details.id.length < 6) {
+                                if (base.destinations[i].details.id && base.destinations[i].details.id.length < 6) {
                                     onError(destItem);
                                     return;
                                 }
@@ -605,7 +777,8 @@ app = angular.module('twist.app')
                     });
 
                 } else {
-                    onError();
+                    console.log();
+                    onError(destItem, destItem.loaded ? 'Error: A barcode is required for this destination.' : false);
                 }
             };
 
