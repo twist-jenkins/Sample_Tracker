@@ -56,37 +56,56 @@ class TransformSpecResource(flask_restful.Resource):
 
     def put(self, spec_id, action=None):
         """creates or replaces a single specified spec"""
-        with scoped_session(db.engine) as sess:
-            row = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
-            if row:
-                spec = row
-                # sess.expunge(row)
-                #result = spec_schema.dump(row).data
-                #return result, 200 # ?? updated
-            else:
-                spec = SampleTransformSpec()
-                spec.spec_id = spec_id
-
-            if action is None:
-                # normal put, edits everything
-                spec.data_json = request.json
-                spec.operator_id = current_user.operator_id
-                sess.add(spec)
-                result = spec_schema.dump(spec).data
-                return result, 201, self.response_headers(spec)
-            elif action == 'execute':
-                # hacky put to <spec_id>/action/execute
-                spec.date_executed = datetime.utcnow()
-                sess.add(spec)
-                result = spec_schema.dump(spec).data
-                return result, 200, self.response_headers(spec)
+        return self.create_or_replace('PUT', spec_id, action)
 
     @classmethod
     def response_headers(cls, spec):
         """dry"""
         return {'location': api.url_for(cls, spec_id=spec.spec_id),
                 'etag': str(spec.spec_id)}
+
+    @classmethod
+    def create_or_replace(cls, method, spec_id=None, action=None):
+        with scoped_session(db.engine) as sess:
+            immediate = request.headers.get('Immediate-Execution')
+            if method == 'POST':
+                assert spec_id is None
+                spec = SampleTransformSpec()         # create new, unknown id
+                spec.data_json = request.json
+                spec.operator_id = current_user.operator_id
+                if immediate:
+                    spec.date_executed = datetime.utcnow()
+                sess.add(spec)
+                sess.flush()  # required to get the id from the database sequence
+                result = spec_schema.dump(spec).data
+                return result, 201, cls.response_headers(spec)
+            elif method == 'PUT':
+                assert spec_id is not None
+                # create or replace known spec_id
+                row = sess.query(SampleTransformSpec).filter(
+                    SampleTransformSpec.spec_id == spec_id).first()
+                if row:
+                    spec = row                    # replace existing, known id
+                else:
+                    spec = SampleTransformSpec()        # create new, known id
+                    spec.spec_id = spec_id
+                if request.json:
+                    spec.data_json = request.json
+                if immediate:
+                    spec.date_executed = datetime.utcnow()
+                spec.operator_id = current_user.operator_id
+                # TODO: set execution operator != creation operator
+                sess.add(spec)
+                result = spec_schema.dump(spec).data
+                return result, 201, cls.response_headers(spec)
+            else:
+                raise ValueError(method, spec_id)
+        # TODO:
+        # sess.expunge(row)
+        # result = spec_schema.dump(row).data
+        # return result, 200 # ?? updated
+
+
 
 
 class TransformSpecListResource(flask_restful.Resource):
@@ -109,15 +128,7 @@ class TransformSpecListResource(flask_restful.Resource):
 
     def post(self):
         """creates new spec returning a nice geeky Location header"""
-        with scoped_session(db.engine) as sess:
-            spec = SampleTransformSpec()
-            spec.data_json = request.json
-            spec.operator_id = current_user.operator_id
-            sess.add(spec)
-            sess.flush()  # required to get the id from the database sequence
-            result = spec_schema.dump(spec).data
-            return result, 201, TransformSpecResource.response_headers(spec)
-
+        return TransformSpecResource.create_or_replace('POST')
 
 class TransformSpecExecutionResource(flask_restful.Resource):
     """ a single spec"""
