@@ -569,7 +569,11 @@ strong {
 }
 
 .twst-1em-top-margin {
-    margin-top: 1em;
+    margin-top: 1em !important;
+}
+
+.twst-2em-top-margin {
+    margin-top: 2em !important;
 }
 
 /**********************************************************************************************************/
@@ -961,6 +965,10 @@ strong {
             }
         }
 
+    }
+
+    &.twst-transform-template-25 {
+        
     }
 
 }
@@ -1643,7 +1651,7 @@ strong {
     .twst-create-edit-transfer-plans-main {
         @include bootstrapOverride;
     }
-    
+
     .twst-record-step-plate-barcodes {
         display: table;
     }

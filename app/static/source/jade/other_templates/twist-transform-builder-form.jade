@@ -1,4 +1,4 @@
-div(class="twst-record-step-form")
+div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec.details.transfer_template_id}}")
     div(class="twst-record-step-plate-barcodes")
         div(class="twst-record-step-plate-barcodes-left")
             p(class="twst-block-header") {{transformSpec.getSourcesHeader()}}:
@@ -18,7 +18,7 @@ div(class="twst-record-step-form")
                 span Add Source
         div(class="twst-record-step-plate-barcodes-left")
             p(class="twst-block-header" ng-class="{'twst-invisible': !transformSpec.destinations.length}") {{transformSpec.getDestinationsHeader()}}:
-            div(class="twst-record-step-plate-row" ng-repeat="plate in transformSpec.destinations")
+            div(class="twst-record-step-plate-row" ng-repeat="plate in transformSpec.destinations" ng-class="{'twst-2em-top-margin': $index && plate.first_in_group}")
                 div(class="twst-record-step-plate-title" ng-if="plate.details.title" ng-bind-html="plate.details.title")
                 div(class="twst-record-step-plate-input")
                     input(type="text" class="form-control" ng-model="plate.details.id" ng-blur="updateTransferPlan(plate.details.id, 'destination', $index)")
@@ -50,27 +50,26 @@ div(class="twst-record-step-form")
             twst-thumb-validation-icon(validation="transformSpec.operations.length" error="fileErrors.length" errors-invisible="true")
             div(class="twst-spinner twst-parsing-file-spinner" ng-if="parsingFile")
     div(class="twst-transform-spec")
-        div(ng-if="transformSpec.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP") 
-            div(class="twst-transform-spec-show-btn" ng-click="showTransferPlan = !showTransferPlan")
-                div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")
-                span(class="twst-custom-radio-label") Preview Transform Spec
-            div(class="twst-transform-spec-transfers-list" ng-show="showTransferPlan")
-                div(class="twst-spinner twst-step-submitting-spinner" ng-if="transformSpec.updating")
-                div(ng-show="!transformSpec.updating && transformSpec.operations.length")
-                    a(class="twst-record-step-download-transfer-plan-excel" ng-click="transformSpec.getAsExcel()") Download plan in excel format
-                    table(class="twst-data-readout-table twst-transform-spec-preview-table")
-                        tr
-                            td(class="twst-data-readout-table-header") Sample Id
-                            td(class="twst-data-readout-table-header") Source Plate
-                            td(class="twst-data-readout-table-header") Source Well
-                            td(class="twst-data-readout-table-header") Destination Plate
-                            td(class="twst-data-readout-table-header") Destination Well
-                            td(class="twst-data-readout-table-header") Destination Well Count  
-                        tr(ng-repeat="row in transformSpec.operations")
-                            td {{::row.source_sample_id}}
-                            td {{::row.source_plate_barcode}}
-                            td {{::row.source_well_name}}
-                            td {{::row.destination_plate_barcode}}
-                            td {{::row.destination_well_name}}
-                            td {{::row.destination_plate_well_count}}
-                div(class="twst-transform-spec-transfers-list-empty-msg" ng-if="!transformSpec.updating && !transformSpec.operations.length") The supplied data is insufficient to build a transform spec preview.
+        div(class="twst-transform-spec-show-btn" ng-click="showTransferPlan = !showTransferPlan")
+            div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")
+            span(class="twst-custom-radio-label") Preview Transform Spec
+        div(class="twst-transform-spec-transfers-list" ng-show="showTransferPlan")
+            div(class="twst-spinner twst-step-submitting-spinner" ng-if="transformSpec.updating")
+            div(ng-show="!transformSpec.updating && transformSpec.operations.length")
+                a(class="twst-record-step-download-transfer-plan-excel" ng-click="transformSpec.getAsExcel()") Download plan in excel format
+                table(class="twst-data-readout-table twst-transform-spec-preview-table")
+                    tr
+                        td(class="twst-data-readout-table-header") Sample Id
+                        td(class="twst-data-readout-table-header") Source Plate
+                        td(class="twst-data-readout-table-header") Source Well
+                        td(class="twst-data-readout-table-header") Destination Plate
+                        td(class="twst-data-readout-table-header") Destination Well
+                        td(class="twst-data-readout-table-header") Destination Well Count  
+                    tr(ng-repeat="row in transformSpec.operations")
+                        td {{::row.source_sample_id}}
+                        td {{::row.source_plate_barcode}}
+                        td {{::row.source_well_name}}
+                        td {{::row.destination_plate_barcode}}
+                        td {{::row.destination_well_name}}
+                        td {{::row.destination_plate_well_count}}
+            div(class="twst-transform-spec-transfers-list-empty-msg" ng-if="!transformSpec.updating && !transformSpec.operations.length") The supplied data is insufficient to build a transform spec preview.
