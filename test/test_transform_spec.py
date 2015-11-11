@@ -87,9 +87,7 @@ class TestCase(unittest.TestCase):
         new_url = rv.headers['location']
         assert uri in new_url
         result = json.loads(rv.data)
-        spec_id = new_url.split('/')[-1]
-        assert int(spec_id) > 0
-        spec_id = int(spec_id)
+        spec_id = result["spec_id"]
 
         rv = self.client.get('/api/v1/rest/transform-specs')
         assert rv.status_code == 200
@@ -128,12 +126,9 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert new_url is not None
-        new_spec_id = new_url.split('/')[-1]
-        assert int(new_spec_id) > 0
-        new_spec_id = int(new_spec_id)
-
         result = json.loads(rv.data)
-        assert result["spec_id"] == new_spec_id
+        new_spec_id = result["spec_id"]
+
         assert result["data_json"] == new_spec
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
@@ -146,9 +141,7 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         result = json.loads(rv.data)
-        spec_id = new_url.split('/')[-1]
-        assert int(spec_id) > 0
-        spec_id = int(spec_id)
+        spec_id = result['spec_id']
 
         rv = self.client.get('/api/v1/rest/transform-specs')
         assert rv.status_code == 200
