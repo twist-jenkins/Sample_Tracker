@@ -249,7 +249,7 @@ app = angular.module("twist.app")
 
                     /* refresh the current transfer plan based on changes to plates inputs or upload file */
                     $scope.updateTransferPlan = function (val, which, itemIndex) {
-                        if (val.length > 5) {
+                        if (val && val.length > 5) {
                             if (which == Constants.PLATE_SOURCE) {
                                 $scope.transformSpec.addSource(itemIndex);
                             } else if (which == Constants.PLATE_DESTINATION) {
