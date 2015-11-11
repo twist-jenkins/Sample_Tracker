@@ -1040,6 +1040,20 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
+                ,25: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Rebatching for Transformation'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                        ,plateTypeId: 'SPTT_0006'
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                        ,plateTypeId: 'SPTT_0006'
+                    }
+                }
             }
             ,rowColumnMaps: {
                 SPTT_0006: {

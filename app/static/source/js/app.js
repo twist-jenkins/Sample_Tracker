@@ -32,6 +32,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 localStorageService.set('loginTarget', hashUrl);
             }
         });
+
+        $scope.currentNav = $state.current.name;
     }]
 )
 
@@ -585,7 +587,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
                 var loginTarget = localStorageService.get('loginTarget');
                 if (!loginTarget || loginTarget == '/login') {
-                    loginTarget = '/track-step';
+                    loginTarget = '/record-transform';
                 }
                 $location.path(loginTarget);
             } else {
