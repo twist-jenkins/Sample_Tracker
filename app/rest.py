@@ -1,92 +1,180 @@
+from datetime import datetime
+
 import flask_restful
 from flask import request
 from flask.ext.restful import abort
-from flask.ext.restful import fields
+from flask_login import current_user
 
 from sqlalchemy.sql import func
 
 from app import app
 from app import db
 from app.utils import scoped_session
-from dbmodels import SampleTransferPlan
+from dbmodels import SampleTransformSpec
 
 api = flask_restful.Api(app)
 
-#  TODO: Transform Spec
+from marshmallow import Schema, fields
 
-class PlanResource(flask_restful.Resource):
-    """shows a single plan item, and lets you create / delete a plan item"""
 
-    # def check_404(self, plan_id):
-    #    if plan_id not in plans:
-    #        flask_restful.abort(
-    #            404,
-    #            message="transfer plan {} doesn't exist".format(plan_id))
+class SpecSchema(Schema):
+    spec_id = fields.Int()
+    type_id = fields.Int()
+    status = fields.Str()
+    operator_id = fields.Str()
+    date_created = fields.Date()
+    date_executed = fields.Date()
+    data_json = fields.Dict()
 
-    def get(self, plan_id):
-        """fetches a single plan"""
-        with scoped_session(db.engine) as db_session:
-            row = db_session.query(SampleTransferPlan).filter(
-                SampleTransferPlan.plan_id == plan_id).first()
+
+spec_schema = SpecSchema()
+
+
+class TransformSpecResource(flask_restful.Resource):
+    """get / delete / put a single spec"""
+
+    def get(self, spec_id):
+        """fetches a single spec"""
+        with scoped_session(db.engine) as sess:
+            row = sess.query(SampleTransformSpec).filter(
+                SampleTransformSpec.spec_id == spec_id).first()
             if row:
-                db_session.expunge(row)
-                return row.plan
-        abort(404, message="Plan {} doesn't exist".format(plan_id))
+                # sess.expunge(row)
+                result = spec_schema.dump(row).data
+                return result, 200
+            abort(404, message="Spec {} doesn't exist".format(spec_id))
 
-
-    def delete(self, plan_id):
-        """deletes a single plan"""
-        with scoped_session(db.engine) as db_session:
-            plan = db_session.query(SampleTransferPlan).filter(
-                SampleTransferPlan.plan_id == plan_id).first()
-            if plan:
-                db_session.delete(plan)
-                db_session.commit()
+    def delete(self, spec_id):
+        """deletes a single spec"""
+        with scoped_session(db.engine) as sess:
+            spec = sess.query(SampleTransformSpec).filter(
+                SampleTransformSpec.spec_id == spec_id).first()
+            if spec:
+                sess.delete(spec)
                 return '', 204
+            abort(404, message="Spec {} doesn't exist".format(spec_id))
+
+    def put(self, spec_id, action=None):
+        """creates or replaces a single specified spec"""
+        return self.create_or_replace('PUT', spec_id, action)
+
+    @classmethod
+    def response_headers(cls, spec):
+        """dry"""
+        return {'location': api.url_for(cls, spec_id=spec.spec_id),
+                'etag': str(spec.spec_id)}
+
+    @classmethod
+    def create_or_replace(cls, method, spec_id=None, action=None):
+        with scoped_session(db.engine) as sess:
+            immediate = request.headers.get('Immediate-Execution')
+            if method == 'POST':
+                assert spec_id is None
+                spec = SampleTransformSpec()         # create new, unknown id
+                spec.data_json = request.json
+                spec.operator_id = current_user.operator_id
+                if immediate:
+                    spec.date_executed = datetime.utcnow()
+                sess.add(spec)
+                sess.flush()  # required to get the id from the database sequence
+                result = spec_schema.dump(spec).data
+                return result, 201, cls.response_headers(spec)
+            elif method == 'PUT':
+                assert spec_id is not None
+                # create or replace known spec_id
+                row = sess.query(SampleTransformSpec).filter(
+                    SampleTransformSpec.spec_id == spec_id).first()
+                if row:
+                    spec = row                    # replace existing, known id
+                else:
+                    spec = SampleTransformSpec()        # create new, known id
+                    spec.spec_id = spec_id
+                if request.json:
+                    spec.data_json = request.json
+                if immediate:
+                    spec.date_executed = datetime.utcnow()
+                spec.operator_id = current_user.operator_id
+                # TODO: set execution operator != creation operator
+                sess.add(spec)
+                result = spec_schema.dump(spec).data
+                return result, 201, cls.response_headers(spec)
             else:
-                return '', 404
-
-    def put(self, plan_id, db_session=None):
-        """creates or replaces a single specific plan"""
-        plan_contents = request.json
-        if db_session is None:
-            with scoped_session(db.engine) as db_session:
-                plan = SampleTransferPlan(plan_id, plan_contents)
-                db_session.add(plan)
-                db_session.commit()
-        else:
-            plan = SampleTransferPlan(plan_id, request.json)
-            db_session.add(plan)
-            db_session.commit()
-
-        response_headers = {'location': api.url_for(PlanResource,
-                                                    plan_id=plan_id),
-                            'etag': str(plan_id)}
-        response = {plan_id: plan_contents}
-        return response, 201, response_headers
+                raise ValueError(method, spec_id)
+        # TODO:
+        # sess.expunge(row)
+        # result = spec_schema.dump(row).data
+        # return result, 200 # ?? updated
 
 
-class PlanListResource(flask_restful.Resource):
-    """shows a list of all plans, and lets you POST to add new plans"""
+
+
+class TransformSpecListResource(flask_restful.Resource):
+    """get a list of all specs, and post a new spec"""
 
     def get(self):
-        """returns a list of all plans"""
-        with scoped_session(db.engine) as db_session:
-            rows = db_session.query(SampleTransferPlan).all()
-            result = {row.plan_id: row.plan for row in rows}
-            #for row in rows:
-            #    db_session.expunge(rows)
-            return result
-        return []
+        """returns a list of all specs"""
+        result = []
+        with scoped_session(db.engine) as sess:
+            rows = (sess.query(SampleTransformSpec)
+                    .order_by(SampleTransformSpec.spec_id)
+                    .all()
+                    )
+            result = spec_schema.dump(rows, many=True).data
+            print "^" * 1000
+            print result
+            print "^" * 1000
+            #    sess.expunge(rows)
+        return result, 200
 
     def post(self):
-        """creates new plan returning a nice geeky Location header"""
-        with scoped_session(db.engine) as db_session:
-            row = db_session.query(func.max(SampleTransferPlan.plan_id)
-                                       ).one()
-            if row is None or row[0] is None:
-                max_id = 0
+        """creates new spec returning a nice geeky Location header"""
+        return TransformSpecResource.create_or_replace('POST')
+
+class TransformSpecExecutionResource(flask_restful.Resource):
+    """ a single spec"""
+
+    def get(self, spec_id):
+        """fetches a single spec"""
+        with scoped_session(db.engine) as sess:
+            row = sess.query(SampleTransformSpec).filter(
+                SampleTransformSpec.spec_id == spec_id).first()
+            if row:
+                # sess.expunge(row)
+                result = spec_schema.dump(row).data
+                return result, 200
+            abort(404, message="Spec {} doesn't exist".format(spec_id))
+
+    def delete(self, spec_id):
+        """deletes a single spec"""
+        with scoped_session(db.engine) as sess:
+            spec = sess.query(SampleTransformSpec).filter(
+                SampleTransformSpec.spec_id == spec_id).first()
+            if spec:
+                sess.delete(spec)
+                return '', 204
+            abort(404, message="Spec {} doesn't exist".format(spec_id))
+
+    def put(self, spec_id):
+        """creates or replaces a single specified spec"""
+        with scoped_session(db.engine) as sess:
+            row = sess.query(SampleTransformSpec).filter(
+                SampleTransformSpec.spec_id == spec_id).first()
+            if row:
+                spec = row
+                # sess.expunge(row)
+                #result = spec_schema.dump(row).data
+                #return result, 200 # ?? updated
             else:
-                max_id = int(row[0].split("_")[1])
-            plan_id = 'plan_%i' % (max_id + 1)
-        return PlanResource().put(plan_id, db_session=db_session)
+                spec = SampleTransformSpec()
+                spec.spec_id = spec_id
+            spec.data_json = request.json
+            spec.operator_id = current_user.operator_id
+            sess.add(spec)
+            result = spec_schema.dump(spec).data
+            return result, 201, self.response_headers(spec)
+
+    @classmethod
+    def response_headers(cls, spec):
+        """dry"""
+        return {'location': api.url_for(cls, spec_id=spec.spec_id),
+                'etag': str(spec.spec_id)}
