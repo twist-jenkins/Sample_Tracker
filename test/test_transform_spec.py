@@ -147,13 +147,34 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert len(result) > 0
-        print "$" * 1000
-        print result
-        print "$" * 1000
         specs = {el["spec_id"]: el for el in result if "spec_id" in el}
         assert spec_id in specs.keys()
         assert specs[spec_id]["data_json"] == new_spec
         self.client.delete(new_url)
+
+    def test_post_update_delete_golden(self):
+        """ targeting the execution method """
+        new_spec = {"task": "execute_me"}
+        uri = '/api/v1/rest/transform-specs'
+        rv = self.client.post(uri,
+                              data=json.dumps(new_spec),
+                              content_type="application/json")
+        assert rv.status_code == 201
+        new_url = rv.headers['location']
+
+        execute_url = new_url + '/actions/execute'
+        execution_details = {}
+
+        rv = self.client.put(execute_url,
+                             data=json.dumps(execution_details),
+                             content_type="application/json")
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+
+        date_executed = result["date_executed"]
+
+        self.client.delete(new_url)
+        assert self.client.get(new_url).status_code == 404
 
 if __name__ == '__main__':
     unittest.main()
