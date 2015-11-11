@@ -1,7 +1,6 @@
 import flask_restful
 from flask import request
 from flask.ext.restful import abort
-from flask.ext.restful import fields
 from flask_login import current_user
 
 from sqlalchemy.sql import func
@@ -13,14 +12,23 @@ from dbmodels import SampleTransformSpec
 
 api = flask_restful.Api(app)
 
+from marshmallow import Schema, fields
 
-def row_to_dict(row):
-    attrs = ('type_id', 'status', 'operator_id', 'date_created', 'data_json')
-    return {a: getattr(row, a) for a in attrs}
+
+class SpecSchema(Schema):
+    spec_id = fields.Int()
+    type_id = fields.Int()
+    status = fields.Str()
+    operator_id = fields.Str()
+    date_created = fields.Date()
+    data_json = fields.Dict()
+
+
+spec_schema = SpecSchema()
 
 
 class TransformSpecResource(flask_restful.Resource):
-    """get / delete / patch / put a single spec"""
+    """get / delete / put a single spec"""
 
     def get(self, spec_id):
         """fetches a single spec"""
@@ -29,8 +37,9 @@ class TransformSpecResource(flask_restful.Resource):
                 SampleTransformSpec.spec_id == spec_id).first()
             if row:
                 # sess.expunge(row)
-                return {row.spec_id: row_to_dict(row)}
-        abort(404, message="Spec {} doesn't exist".format(spec_id))
+                result = spec_schema.dump(row).data
+                return result, 200
+            abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def delete(self, spec_id):
         """deletes a single spec"""
@@ -44,20 +53,21 @@ class TransformSpecResource(flask_restful.Resource):
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def put(self, spec_id):
-        """creates or replaces a single specific spec"""
-        data_json = request.json
+        """creates or replaces a single specified spec"""
         with scoped_session(db.engine) as sess:
             spec = SampleTransformSpec()
             spec.spec_id = spec_id
-            spec.data_json = data_json
+            spec.data_json = request.json
             spec.operator_id = current_user.operator_id
             sess.add(spec)
+            result = spec_schema.dump(spec).data
+            return result, 201, self.response_headers(spec)
 
-            response_headers = {'location': api.url_for(TransformSpecResource,
-                                                        spec_id=spec_id),
-                                'etag': str(spec_id)}
-            response = {spec_id: data_json}
-            return response, 201, response_headers
+    @classmethod
+    def response_headers(cls, spec):
+        """dry"""
+        return {'location': api.url_for(cls, spec_id=spec.spec_id),
+                'etag': str(spec.spec_id)}
 
 
 class TransformSpecListResource(flask_restful.Resource):
@@ -65,16 +75,18 @@ class TransformSpecListResource(flask_restful.Resource):
 
     def get(self):
         """returns a list of all specs"""
+        result = []
         with scoped_session(db.engine) as sess:
             rows = (sess.query(SampleTransformSpec)
                     .order_by(SampleTransformSpec.spec_id)
                     .all()
                     )
-            result = [{row.spec_id: row_to_dict(row)} for row in rows]
-            #for row in rows:
+            result = spec_schema.dump(rows, many=True).data
+            print "^" * 1000
+            print result
+            print "^" * 1000
             #    sess.expunge(rows)
-            return result
-        return []
+        return result, 200
 
     def post(self):
         """creates new spec returning a nice geeky Location header"""
@@ -83,11 +95,7 @@ class TransformSpecListResource(flask_restful.Resource):
             spec.data_json = request.json
             spec.operator_id = current_user.operator_id
             sess.add(spec)
-            sess.flush()  # required to get the id from the implicit sequence
-
-            response_headers = {'location': api.url_for(TransformSpecResource,
-                                                        spec_id=spec.spec_id),
-                                'etag': str(spec.spec_id)}
-            response = {spec.spec_id: spec.data_json}
-            return response, 201, response_headers
+            sess.flush()  # required to get the id from the database sequence
+            result = spec_schema.dump(spec).data
+            return result, 201, TransformSpecResource.response_headers(spec)
 

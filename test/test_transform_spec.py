@@ -60,8 +60,13 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert new_url is not None
+        new_spec_id = new_url.split('/')[-1]
+        assert int(new_spec_id) > 0
+        new_spec_id = int(new_spec_id)
+
         result = json.loads(rv.data)
-        assert new_spec in result.values()
+        assert result["spec_id"] == new_spec_id
+        assert result["data_json"] == new_spec
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
 
@@ -103,11 +108,17 @@ class TestCase(unittest.TestCase):
         rv = self.client.post('/api/v1/rest/transform-specs',
                               data=json.dumps(new_spec),
                               content_type="application/json")
+
         assert rv.status_code == 201
         new_url = rv.headers['location']
         assert new_url is not None
+        new_spec_id = new_url.split('/')[-1]
+        assert int(new_spec_id) > 0
+        new_spec_id = int(new_spec_id)
+
         result = json.loads(rv.data)
-        assert new_spec in result
+        assert result["spec_id"] == new_spec_id
+        assert result["data_json"] == new_spec
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
 
@@ -118,12 +129,21 @@ class TestCase(unittest.TestCase):
                               content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
+        result = json.loads(rv.data)
+        spec_id = new_url.split('/')[-1]
+        assert int(spec_id) > 0
+        spec_id = int(spec_id)
 
         rv = self.client.get('/api/v1/rest/transform-specs')
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert len(result) > 0
-        assert new_spec in result.values()
+        print "$" * 1000
+        print result
+        print "$" * 1000
+        specs = {el["spec_id"]: el for el in result if "spec_id" in el}
+        assert spec_id in specs.keys()
+        assert specs[spec_id]["data_json"] == new_spec
         self.client.delete(new_url)
 
 if __name__ == '__main__':
