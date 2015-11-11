@@ -16,7 +16,7 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
             div(class="twst-add-plate-button" ng-click="transformSpec.addPlateInput('source')" ng-if="transformSpec.map.source.variablePlateCount")
                 button(class="twst-button twst-blue-button") +
                 span Add Source
-        div(class="twst-record-step-plate-barcodes-left")
+        div(class="twst-record-step-plate-barcodes-right")
             p(class="twst-block-header" ng-class="{'twst-invisible': !transformSpec.destinations.length}") {{transformSpec.getDestinationsHeader()}}:
             div(class="twst-record-step-plate-row" ng-repeat="plate in transformSpec.destinations" ng-class="{'twst-2em-top-margin': $index && plate.first_in_group}")
                 div(class="twst-record-step-plate-title" ng-if="plate.details.title" ng-bind-html="plate.details.title")

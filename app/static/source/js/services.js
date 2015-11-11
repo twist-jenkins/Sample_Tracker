@@ -443,9 +443,9 @@ app = angular.module('twist.app')
                                         for (var i=0; i<plates.length; i++) {
                                             plateIndex++;
                                             var dest = returnEmptyPlate();
-                                            dest.details.title = 'Resistance Group <strong>' + group + '</strong> - Plate ' + (i + 1) + ':';
+                                            dest.details.title = 'Resistance <strong>' + group + '</strong> - Plate ' + (i + 1) + ':';
                                             if (!i) {
-                                                dest["first_in_group"] = true;
+                                                dest['first_in_group'] = true;
                                             }
                                             if (base.destinations[plateIndex]) {
                                                 if (base.destinations[plateIndex].loaded || base.destinations[plateIndex].updating) {
@@ -610,6 +610,7 @@ app = angular.module('twist.app')
                 }
                 for (var i=0; i<base.destinations.length; i++) {
                     base.destinations[i].details.title = base.map.destination.plateTitles ? base.map.destination.plateTitles[i] || '' : '';
+                    delete base.destinations[i]['first_in_group'];
                 }
 
                 if (!base.map.destination.plateCount) {
