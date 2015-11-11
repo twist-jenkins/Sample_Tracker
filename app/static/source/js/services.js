@@ -143,23 +143,33 @@ app = angular.module('twist.app')
                 return $http(checkReq);
             }
             ,getTransformSpecs: function () {
-                var transReq = ApiRequestObj.getGet('rest/transfer-plans');
+                var transReq = ApiRequestObj.getGet('rest/transform-specs');
                 return $http(transReq);
             }
             ,saveNewTransformSpec: function (planData) {
-                var saveReq = ApiRequestObj.getPost('rest/transfer-plans');
+                var saveReq = ApiRequestObj.getPost('rest/transform-specs');
                 saveReq.data = {
                     plan: planData
                 }
                 return $http(saveReq);
             }
             ,deleteTransformSpec: function (specId) {
-                var deleteReq = ApiRequestObj.getDelete('rest/transfer-plans/' + specId);
+                var deleteReq = ApiRequestObj.getDelete('rest/transform-specs/' + specId);
                 return $http(deleteReq);
             }
             ,getTransformSpec: function (specId) {
-                var specReq = ApiRequestObj.getGet('rest/transfer-plans/' + specId);
+                var specReq = ApiRequestObj.getGet('rest/transform-specs/' + specId);
                 return $http(specReq);
+            }
+            ,saveAndExecuteTransformSpec: function (planData) {
+                var saveAndExReq = ApiRequestObj.getPut('rest/transform-specs/actions/execute');
+                saveAndExReq.data = {
+                    plan: planData
+                }
+                saveAndExReq.headers = {
+                    'Transform-Execution': 'Immediate'
+                }
+                return $http(saveAndExReq);
             }
         };
     }]
