@@ -479,10 +479,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 
                 var specs = [];
 
-                //TODO: the return data is an object rather than array - fix this when the data is properly an array
-                for (spec in data) {
-                    var parsedSpec = JSON.parse(data[spec].plan);
-                    parsedSpec.id = spec;
+                for (var i=0; i<data.length;i++) {
+                    var parsedSpec = JSON.parse(data[i].data_json.plan);
+                    parsedSpec.id = data[i].spec_id;
                     specs.push(parsedSpec);
                 }
 

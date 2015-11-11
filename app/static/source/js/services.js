@@ -162,7 +162,7 @@ app = angular.module('twist.app')
                 return $http(specReq);
             }
             ,saveAndExecuteTransformSpec: function (planData) {
-                var saveAndExReq = ApiRequestObj.getPut('rest/transform-specs/actions/execute');
+                var saveAndExReq = ApiRequestObj.getPost('rest/transform-specs');
                 saveAndExReq.data = {
                     plan: planData
                 }
