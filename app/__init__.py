@@ -238,6 +238,21 @@ def plate_report_page(plate_barcode):
 #
 # ==========================
 
+# newer REST API routes:
+rest.api.add_resource(rest.TransformSpecListResource,
+                      '/api/v1/rest/transform-specs')
+
+# 1. POST: Save new spec (returns ID)
+# 2. POST: Save new spec and execute (returns ID):
+#          uses HTTP header Transform-Execution: Immediate
+# 3. PUT: Execute existing spec
+rest.api.add_resource(rest.TransformSpecResource,
+                      '/api/v1/rest/transform-specs/<spec_id>',
+                      '/api/v1/rest/transform-specs/<spec_id>/actions/<action>'
+                      )
+
+
+# older REST API routes:
 #
 # The route to which the web page posts the spreadsheet detailing the well-to-well movements of
 # samples.
@@ -390,8 +405,3 @@ def source_plate_well_data():
 def check_plates_are_new():
     return routes.check_plates_are_new()
 
-rest.api.add_resource(rest.PlanListResource,
-                      '/api/v1/rest/transfer-plans')
-
-rest.api.add_resource(rest.PlanResource,
-                      '/api/v1/rest/transfer-plans/<plan_id>')
