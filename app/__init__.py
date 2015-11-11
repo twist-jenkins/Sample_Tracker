@@ -247,9 +247,7 @@ rest.api.add_resource(rest.TransformSpecListResource,
 #          uses HTTP header Transform-Execution: Immediate
 # 3. PUT: Execute existing spec
 rest.api.add_resource(rest.TransformSpecResource,
-                      '/api/v1/rest/transform-specs/<spec_id>',
-                      '/api/v1/rest/transform-specs/<spec_id>/actions/<action>'
-                      )
+                      '/api/v1/rest/transform-specs/<spec_id>')
 
 
 # older REST API routes:

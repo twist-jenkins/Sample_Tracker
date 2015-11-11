@@ -67,7 +67,8 @@ class TransformSpecResource(flask_restful.Resource):
     @classmethod
     def create_or_replace(cls, method, spec_id=None, action=None):
         with scoped_session(db.engine) as sess:
-            immediate = request.headers.get('Immediate-Execution')
+            execution = request.headers.get('Transform-Execution')
+            immediate = (execution == "Immediate")
             if method == 'POST':
                 assert spec_id is None
                 spec = SampleTransformSpec()         # create new, unknown id
@@ -120,9 +121,6 @@ class TransformSpecListResource(flask_restful.Resource):
                     .all()
                     )
             result = spec_schema.dump(rows, many=True).data
-            print "^" * 1000
-            print result
-            print "^" * 1000
             #    sess.expunge(rows)
         return result, 200
 
