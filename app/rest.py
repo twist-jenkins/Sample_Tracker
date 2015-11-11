@@ -48,15 +48,22 @@ class TransformSpecResource(flask_restful.Resource):
                 SampleTransformSpec.spec_id == spec_id).first()
             if spec:
                 sess.delete(spec)
-                # sess.commit()
                 return '', 204
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def put(self, spec_id):
         """creates or replaces a single specified spec"""
         with scoped_session(db.engine) as sess:
-            spec = SampleTransformSpec()
-            spec.spec_id = spec_id
+            row = sess.query(SampleTransformSpec).filter(
+                SampleTransformSpec.spec_id == spec_id).first()
+            if row:
+                spec = row
+                # sess.expunge(row)
+                #result = spec_schema.dump(row).data
+                #return result, 200 # ?? updated
+            else:
+                spec = SampleTransformSpec()
+                spec.spec_id = spec_id
             spec.data_json = request.json
             spec.operator_id = current_user.operator_id
             sess.add(spec)

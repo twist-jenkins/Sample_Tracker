@@ -71,6 +71,7 @@ class TestCase(unittest.TestCase):
         self.client.delete(new_url)
 
     def test_post_put_get_golden(self):
+        """ needs refactor """
         new_spec = {"task": "delete_me"}
         uri = '/api/v1/rest/transform-specs'
         rv = self.client.post(uri,
@@ -86,8 +87,23 @@ class TestCase(unittest.TestCase):
         new_url = rv.headers['location']
         assert uri in new_url
         result = json.loads(rv.data)
-        assert modified_spec in result
-        assert self.client.get(new_url).status_code == 200
+        spec_id = new_url.split('/')[-1]
+        assert int(spec_id) > 0
+        spec_id = int(spec_id)
+
+        rv = self.client.get('/api/v1/rest/transform-specs')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert len(result) > 0
+        print "$" * 1000
+        print result
+        print "$" * 1000
+        specs = {el["spec_id"]: el for el in result if "spec_id" in el}
+        assert spec_id in specs.keys()
+        assert specs[spec_id]["data_json"] == modified_spec
+        self.client.delete(new_url)
+
+        assert self.client.get(new_url).status_code == 404
         self.client.delete(new_url)
 
     def test_post_delete_golden(self):
