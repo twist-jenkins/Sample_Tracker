@@ -93,16 +93,12 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200
         result = json.loads(rv.data)
         assert len(result) > 0
-        print "$" * 1000
-        print result
-        print "$" * 1000
         specs = {el["spec_id"]: el for el in result if "spec_id" in el}
         assert spec_id in specs.keys()
         assert specs[spec_id]["data_json"] == modified_spec
-        self.client.delete(new_url)
 
-        assert self.client.get(new_url).status_code == 404
         self.client.delete(new_url)
+        assert self.client.get(new_url).status_code == 404
 
     def test_post_delete_golden(self):
         new_spec = {"task": "delete_me"}
@@ -114,6 +110,7 @@ class TestCase(unittest.TestCase):
         new_url = rv.headers['location']
         assert new_url is not None
         assert self.client.get(new_url).status_code == 200
+
         assert self.client.delete(new_url).status_code == 204
         assert self.client.get(new_url).status_code == 404
 
@@ -131,7 +128,9 @@ class TestCase(unittest.TestCase):
 
         assert result["data_json"] == new_spec
         assert self.client.get(new_url).status_code == 200
+
         self.client.delete(new_url)
+        assert self.client.get(new_url).status_code == 404
 
     def test_get_list_golden(self):
         new_spec = {"foo": "bar"}
@@ -154,24 +153,34 @@ class TestCase(unittest.TestCase):
         self.client.delete(new_url)
         assert self.client.get(new_url).status_code == 404
 
-    def test_post_deferred_execute_golden(self):
+    def test_post_default_execution_golden(self):
         """ targeting the execution method """
-        new_spec = {"task": "execute_me_immediately"}
+        new_spec = {"task": "execute_me_normally"}
         uri = '/api/v1/rest/transform-specs'
         rv = self.client.post(uri,
                               data=json.dumps(new_spec),
                               content_type="application/json")
         assert rv.status_code == 201
         new_url = rv.headers['location']
+        result = json.loads(rv.data)
 
-        execute_url = new_url + '/actions/execute'
-        execution_details = {}
+        date_executed = result["date_executed"]
+        assert date_executed is None
 
-        rv = self.client.put(execute_url,
-                             data=json.dumps(execution_details),
-                             content_type="application/json",
-                             headers=[("Transform-Execution", "Immediate")])
+        self.client.delete(new_url)
+        assert self.client.get(new_url).status_code == 404
+
+    def test_post_immediate_execution_golden(self):
+        """ targeting the execution method """
+        new_spec = {"task": "execute_me_immediately"}
+        uri = '/api/v1/rest/transform-specs'
+        headers = [("Transform-Execution", "Immediate")]
+        rv = self.client.post(uri,
+                              data=json.dumps(new_spec),
+                              content_type="application/json",
+                              headers=headers)
         assert rv.status_code == 201
+        new_url = rv.headers['location']
         result = json.loads(rv.data)
 
         date_executed = result["date_executed"]
@@ -180,23 +189,23 @@ class TestCase(unittest.TestCase):
         self.client.delete(new_url)
         assert self.client.get(new_url).status_code == 404
 
-
-    def test_post_immediate_execute_golden(self):
+    def test_post_deferred_execution_golden(self):
         """ targeting the execution method """
         new_spec = {"task": "execute_me_later"}
         uri = '/api/v1/rest/transform-specs'
+        headers = [("Transform-Execution", "Deferred")]
         rv = self.client.post(uri,
                               data=json.dumps(new_spec),
-                              content_type="application/json")
+                              content_type="application/json",
+                              headers=headers)
         assert rv.status_code == 201
         new_url = rv.headers['location']
 
-        execute_url = new_url + ''
-        execution_details = {}
-
-        rv = self.client.put(execute_url,
-                             data=json.dumps(execution_details),
-                             content_type="application/json")
+        headers = [("Transform-Execution", "Immediate")]
+        rv = self.client.put(new_url,
+                             data=json.dumps(new_spec),
+                             content_type="application/json",
+                             headers=headers)
         assert rv.status_code == 201
         result = json.loads(rv.data)
 
