@@ -30,6 +30,30 @@ class SpecSchema(Schema):
 spec_schema = SpecSchema()
 
 
+def json_api_success(data, status_code, headers=None):
+    json_api_response = {"data": data,
+                         "errors": [],
+                         "meta": {}
+                         }
+    if headers is None:
+        return json_api_response, status_code
+    else:
+        return json_api_response, status_code, headers
+
+"""
+TODO:
+def json_api_error(err_list, status_code, headers=None):
+    json_api_response = {"data": {},
+                         "errors": err_list,
+                         "meta": {}
+                         }
+    if headers is None:
+        return json_api_response, status_code
+    else:
+        return json_api_response, status_code, headers
+"""
+
+
 class TransformSpecResource(flask_restful.Resource):
     """get / delete / put a single spec"""
 
