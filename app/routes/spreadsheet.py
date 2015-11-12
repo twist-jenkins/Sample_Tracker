@@ -51,6 +51,7 @@ def create_adhoc_sample_movement(db_session, operator,
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
     #
     sample_transfer = SampleTransfer(sample_transfer_type_id,
+                                     None,
                                      operator.operator_id)
     db_session.add(sample_transfer)
     db_session.flush()

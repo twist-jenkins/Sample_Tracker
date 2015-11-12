@@ -170,17 +170,6 @@ def upgrade():
 
 
 def downgrade():
-    try:
-        op.execute("drop view sample_view")
-    except:
-        pass
-
-    try:
-        op.execute("drop view gene_assembly_sample_view")
-    except:
-        pass
-
-    try:
-        op.execute("drop view cloned_sample_view")
-    except:
-        pass
+    op.execute("drop view if exists sample_view")
+    op.execute("drop view if exists gene_assembly_sample_view")
+    op.execute("drop view if exists cloned_sample_view")

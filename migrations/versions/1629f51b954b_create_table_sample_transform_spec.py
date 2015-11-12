@@ -53,8 +53,9 @@ EXECUTE format('ALTER SEQUENCE %s START 100001'
 , pg_get_serial_sequence('sample_transform_spec', 'spec_id'));
 END$$;
                ''')
-    ## also add FK from sample_transfer
+
+    op.execute('drop table if exists sample_transfer_plan')
+
 
 def downgrade():
-    # op.drop_table('sample_transfer_plan')
-    op.drop_table('sample_transform_spec')
+    op.execute('drop table if exists sample_transform_spec')

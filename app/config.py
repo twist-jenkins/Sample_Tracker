@@ -60,4 +60,29 @@ class LocalConfig(Config):
     TESTING = True
     DEBUG = True
     # WTF_CSRF_ENABLED = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://cledogar:postgres@localhost/dev"
+    SQLALCHEMY_DATABASE_URI = \
+        "postgresql://sampletrack_user:Of2dAd8cir5Y@localhost/synapp_test"
+    """
+    psql -d synapp_test   # as superuser
+    synapp_test=#
+create user sampletrack_user with password 'Of2dAd8cir5Y';
+grant all on schema sampletrack to sampletrack_user ;
+GRANT ALL ON ALL TABLES IN SCHEMA sampletrack TO sampletrack_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA sampletrack GRANT ALL ON TABLES TO sampletrack_user;
+ALTER ROLE sampletrack_user SET search_path TO sampletrack,public;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO sampletrack_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO sampletrack_user;
+GRANT USAGE ON schema public TO sampletrack_user;
+
+# can't seem to get the right permissions...
+GRANT ALL ON ALL TABLES IN SCHEMA public TO sampletrack_user;
+ERROR:  relation "sampletrack.*" does not exist
+alter table sampletrack.alembic_version owner to sampletrack_user;
+alter table sampletrack.sample_transfer owner to sampletrack_user;
+alter table sampletrack.sample_transfer_detail owner to sampletrack_user;
+alter table sampletrack.sample_transfer_plan owner to sampletrack_user;
+alter table sampletrack.sample_transfer_template owner to sampletrack_user;
+alter table sampletrack.sample_transfer_template_details owner to sampletrack_user;
+alter table sampletrack.sample_transfer_type owner to sampletrack_user;
+alter table sampletrack.shipment_order_item_join set schema public;
+    """

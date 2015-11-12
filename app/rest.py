@@ -107,8 +107,6 @@ class TransformSpecResource(flask_restful.Resource):
         # return result, 200 # ?? updated
 
 
-
-
 class TransformSpecListResource(flask_restful.Resource):
     """get a list of all specs, and post a new spec"""
 
@@ -128,51 +126,3 @@ class TransformSpecListResource(flask_restful.Resource):
         """creates new spec returning a nice geeky Location header"""
         return TransformSpecResource.create_or_replace('POST')
 
-class TransformSpecExecutionResource(flask_restful.Resource):
-    """ a single spec"""
-
-    def get(self, spec_id):
-        """fetches a single spec"""
-        with scoped_session(db.engine) as sess:
-            row = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
-            if row:
-                # sess.expunge(row)
-                result = spec_schema.dump(row).data
-                return result, 200
-            abort(404, message="Spec {} doesn't exist".format(spec_id))
-
-    def delete(self, spec_id):
-        """deletes a single spec"""
-        with scoped_session(db.engine) as sess:
-            spec = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
-            if spec:
-                sess.delete(spec)
-                return '', 204
-            abort(404, message="Spec {} doesn't exist".format(spec_id))
-
-    def put(self, spec_id):
-        """creates or replaces a single specified spec"""
-        with scoped_session(db.engine) as sess:
-            row = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
-            if row:
-                spec = row
-                # sess.expunge(row)
-                #result = spec_schema.dump(row).data
-                #return result, 200 # ?? updated
-            else:
-                spec = SampleTransformSpec()
-                spec.spec_id = spec_id
-            spec.data_json = request.json
-            spec.operator_id = current_user.operator_id
-            sess.add(spec)
-            result = spec_schema.dump(spec).data
-            return result, 201, self.response_headers(spec)
-
-    @classmethod
-    def response_headers(cls, spec):
-        """dry"""
-        return {'location': api.url_for(cls, spec_id=spec.spec_id),
-                'etag': str(spec.spec_id)}

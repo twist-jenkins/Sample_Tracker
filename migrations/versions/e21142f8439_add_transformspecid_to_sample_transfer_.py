@@ -15,8 +15,18 @@ import sqlalchemy as db
 
 
 def upgrade():
-    pass
+    op.add_column('sample_transfer',
+                  db.Column('sample_transform_spec_id',
+                            db.Integer(),
+                            db.ForeignKey('sample_transform_spec.spec_id')))
+
+    op.create_foreign_key(
+        "fk_sample_transfer_transform_spec",
+        "sample_transfer", "sample_transform_spec",
+        ["sample_transform_spec_id"], ["spec_id"])
 
 
 def downgrade():
-    pass
+    op.drop_column('sample_transfer', 'sample_transform_spec_id')
+    #op.drop_constraint('session_app_fkey', 'session', 'foreignkey')
+
