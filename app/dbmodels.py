@@ -347,8 +347,12 @@ class SampleTransfer(db.Model):
     #
 
     id = db.Column(db.Integer, primary_key=True)
-    sample_transfer_type_id = db.Column(db.Integer, db.ForeignKey('sample_transfer_type.id'))
-    operator_id = db.Column(db.String(10), db.ForeignKey('operator.operator_id'))
+    sample_transfer_type_id = db.Column(
+        db.Integer, db.ForeignKey('sample_transfer_type.id'))
+    sample_transform_spec_id = db.Column(
+        db.Integer, db.ForeignKey('sample_transform_spec.spec_id'))
+    operator_id = db.Column(
+        db.String(10), db.ForeignKey('operator.operator_id'))
     date_transfer = db.Column(db.DateTime) #,default=datetime.datetime.utcnow)
 
     #
@@ -356,11 +360,14 @@ class SampleTransfer(db.Model):
     #
 
     sample_transfer_type = db.relationship("SampleTransferType")
+    sample_transform_spec = db.relationship("SampleTransformSpec")
     operator = db.relationship("Operator")
 
 
-    def __init__(self, sample_transfer_type_id, operator_id):
+    def __init__(self, sample_transfer_type_id,
+                 sample_transform_spec_id, operator_id):
         self.sample_transfer_type_id = sample_transfer_type_id
+        self.sample_transform_spec_id = sample_transform_spec_id
         self.operator_id = operator_id
         self.date_transfer = datetime.datetime.now()
 
