@@ -167,7 +167,7 @@ app = angular.module('twist.app')
                     plan: planData
                 }
                 if (executeNow) {
-                    aveAndExReq.headers = {
+                    saveAndExReq.headers = {
                         'Transform-Execution': 'Immediate'
                     }
                 }
@@ -218,6 +218,10 @@ app = angular.module('twist.app')
             }
             ,stripNonAlphaNumeric: function (str, dashOk, replaceWithSpace) {
                 return stripNonAlphaNumeric(str, dashOk, replaceWithSpace);
+            },
+            getPrettyDateString: function (dateString) {
+                var d = new Date(dateString);
+                return d.toLocaleString();
             }
         }
     }]
@@ -960,7 +964,6 @@ app = angular.module('twist.app')
 
                 obj.operations = angular.copy(base.operations);
                 obj.details = angular.copy(base.details);
-                obj.date_created = new Date();
 
                 return JSON.stringify(obj);
             }
