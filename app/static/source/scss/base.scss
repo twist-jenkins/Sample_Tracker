@@ -248,6 +248,14 @@ strong {
     background: -ms-linear-gradient(top,  #dbffec 0%,#dbffec 52%,#75a089 100%); /* IE10+ */
     background: linear-gradient(to bottom,  #dbffec 0%,#dbffec 52%,#75a089 100%); /* W3C */
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbffec', endColorstr='#75a089',GradientType=0 ); /* IE6-9 */
+
+    &[disabled="disabled"] {
+        background: #ccc;
+
+        &:hover {
+            opacity: 0.7;
+        }
+    }
 }
 
 .twst-blue-button {

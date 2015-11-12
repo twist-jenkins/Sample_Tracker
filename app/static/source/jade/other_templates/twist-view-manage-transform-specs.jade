@@ -9,23 +9,28 @@ div(class="twst-view-manage-transform-specs-main" ui-view)
                 td(class="twst-data-readout-table-header") Date Created
                 td(class="twst-data-readout-table-header") Status
                 td(class="twst-data-readout-table-header") Action(s)
-            tr(ng-repeat="spec in transformSpecs track by spec.id" ng-class="{'twst-greyed-row': spec.deleting}")
-                td {{::spec.id}}
+            tr(ng-repeat="spec in transformSpecs track by spec.spec_id" ng-class="{'twst-greyed-row': spec.deleting}")
+                td {{::spec.spec_id}}
                     div(class="twst-spinner" ng-if="spec.deleting")
                 td 
-                    span(ng-repeat="source in spec.sources track by source.details.id")
+                    span(ng-repeat="source in spec.plan.sources track by source.details.id")
                         a(href="#/plate-details/{{::source.details.id}}") {{::source.details.id}}
                         span {{::$index < spec.sources.length-1 ? ', ': ''}}
                 td
-                    span(ng-repeat="destination in spec.destinations track by destination.details.id")
+                    span(ng-repeat="destination in spec.plan.destinations track by destination.details.id")
                         a(href="#/plate-details/{{::destination.details.id}}") {{::destination.details.id}}
                         span {{::$index < spec.destinations.length-1 ? ', ': ''}}
-                td {{::spec.date_created}}
-                td {{::spec.status}}
+                td {{::getPrettyDateString(spec.date_created)}}
+                td 
+                    strong
+                        {{::spec.date_executed ? 'executed' : 'saved'}}
+                    span(ng-if="::spec.date_executed")
+                        br
+                        span on {{::getPrettyDateString(spec.date_executed)}}
                 td
                     button(class="twst-button" ng-click="viewSpec(spec)") view
                     button(class="twst-button" ng-click="editTransformSpec(spec)") edit
-                    button(class="twst-button twst-red-button" ng-click="deleteSpec(spec)") delete
+                    button(class="twst-button twst-red-button" ng-click="deleteSpec(spec)" ng-disabled="::spec.date_executed") delete
             tr(ng-if="!transformSpecs.length")
                 td(colspan="20" class="twst-empty-transform-specs-message") You currently have no saved transform specs.
         twst-message(message="specActionResultMessage" visible-and-valid="specActionResultVisible")

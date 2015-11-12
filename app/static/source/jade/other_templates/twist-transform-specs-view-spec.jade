@@ -7,17 +7,17 @@ div(class="twst-view-transform-spec-main")
             p Spec Id:&nbsp;
                 strong {{selectedSpec.id}}
             p Title:&nbsp;
-                strong {{selectedSpec.title}}
+                strong {{selectedSpec.plan.title}}
             div(class="twst-view-transform-spec-sources-destinations")
                 div
                     p Source(s):
                     ul
-                        li(ng-repeat="source in selectedSpec.sources") {{source.details.id}}
+                        li(ng-repeat="source in selectedSpec.plan.sources") {{source.details.id}}
                 div
                     p Destination(s):
                     ul
-                        li(ng-repeat="destination in selectedSpec.destinations") {{destination.details.id}}
-            button(class="twst-button twst-blue-button" ng-if="selectedSpec.status != 'executed'" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
+                        li(ng-repeat="destination in selectedSpec.plan.destinations") {{destination.details.id}}
+            button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
             h3 Operations:
             table(class="twst-data-readout-table twst-transform-spec-preview-table")
                 tr
@@ -27,7 +27,7 @@ div(class="twst-view-transform-spec-main")
                     td(class="twst-data-readout-table-header") Destination Plate
                     td(class="twst-data-readout-table-header") Destination Well
                     td(class="twst-data-readout-table-header") Destination Well Count  
-                tr(ng-repeat="row in selectedSpec.operations")
+                tr(ng-repeat="row in selectedSpec.plan.operations")
                     td {{::row.source_sample_id}}
                     td {{::row.source_plate_barcode}}
                     td {{::row.source_well_name}}
