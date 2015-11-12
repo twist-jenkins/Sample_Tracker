@@ -46,7 +46,8 @@ class TestCase(unittest.TestCase):
         rv = self.client.get('/api/v1/rest/transform-specs/100001')
         assert rv.status_code == 200
         result = json.loads(rv.data)
-        assert len(result) == 1
+        data = result["data"]
+        assert len(data) == 1
 
     def test_get_one_404(self):
         rv = self.client.get('/api/v1/rest/transform-specs/0')
@@ -65,8 +66,9 @@ class TestCase(unittest.TestCase):
         new_spec_id = int(new_spec_id)
 
         result = json.loads(rv.data)
-        assert result["spec_id"] == new_spec_id
-        assert result["data_json"] == new_spec
+        data = result["data"]
+        assert data["spec_id"] == new_spec_id
+        assert data["data_json"] == new_spec
         assert self.client.get(new_url).status_code == 200
         self.client.delete(new_url)
 
@@ -87,13 +89,15 @@ class TestCase(unittest.TestCase):
         new_url = rv.headers['location']
         assert uri in new_url
         result = json.loads(rv.data)
-        spec_id = result["spec_id"]
+        data = result["data"]
+        spec_id = data["spec_id"]
 
         rv = self.client.get('/api/v1/rest/transform-specs')
         assert rv.status_code == 200
         result = json.loads(rv.data)
-        assert len(result) > 0
-        specs = {el["spec_id"]: el for el in result if "spec_id" in el}
+        data = result["data"]
+        assert len(data) > 0
+        specs = {el["spec_id"]: el for el in data if "spec_id" in el}
         assert spec_id in specs.keys()
         assert specs[spec_id]["data_json"] == modified_spec
 
@@ -124,9 +128,10 @@ class TestCase(unittest.TestCase):
         new_url = rv.headers['location']
         assert new_url is not None
         result = json.loads(rv.data)
-        new_spec_id = result["spec_id"]
+        data = result["data"]
+        new_spec_id = data["spec_id"]
 
-        assert result["data_json"] == new_spec
+        assert data["data_json"] == new_spec
         assert self.client.get(new_url).status_code == 200
 
         self.client.delete(new_url)
@@ -140,13 +145,15 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         result = json.loads(rv.data)
-        spec_id = result['spec_id']
+        data = result["data"]
+        spec_id = data['spec_id']
 
         rv = self.client.get('/api/v1/rest/transform-specs')
         assert rv.status_code == 200
         result = json.loads(rv.data)
-        assert len(result) > 0
-        specs = {el["spec_id"]: el for el in result if "spec_id" in el}
+        data = result["data"]
+        assert len(data) > 0
+        specs = {el["spec_id"]: el for el in data if "spec_id" in el}
         assert spec_id in specs.keys()
         assert specs[spec_id]["data_json"] == new_spec
 
@@ -163,8 +170,9 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         result = json.loads(rv.data)
+        data = result["data"]
 
-        date_executed = result["date_executed"]
+        date_executed = data["date_executed"]
         assert date_executed is None
 
         self.client.delete(new_url)
@@ -182,8 +190,9 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201
         new_url = rv.headers['location']
         result = json.loads(rv.data)
+        data = result["data"]
 
-        date_executed = result["date_executed"]
+        date_executed = data["date_executed"]
         assert date_executed is not None
 
         self.client.delete(new_url)
@@ -208,8 +217,9 @@ class TestCase(unittest.TestCase):
                              headers=headers)
         assert rv.status_code == 201
         result = json.loads(rv.data)
+        data = result["data"]
 
-        date_executed = result["date_executed"]
+        date_executed = data["date_executed"]
         assert date_executed is not None
 
         self.client.delete(new_url)

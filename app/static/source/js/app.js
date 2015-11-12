@@ -120,18 +120,25 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.submitStep = function () {
 
             var showError = function (data) {
-                $scope.submissionResultMessage = 'Error: ' + data.errorMessage;
+                $scope.submissionResultMessage = 'Error: ' + data.errors;
                 $scope.submissionResultVisible = -1;
                 $scope.submittingStep = false;
+            }
+
+            var executeNow = true;
+
+            //the newer specs are the ones that save the transform but do not execute it immediately
+            if ($scope.transformSpec.details.transfer_template_id == 25) {
+                executeNow = false;
             }
 
             if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
                 
-                Api.saveAndExecuteTransformSpec($scope.transformSpec.serialize()).success(function (data) {
+                Api.saveAndConditionallyExecuteTransformSpec($scope.transformSpec.serialize(), executeNow).success(function (data) {
 
-                    if (data.success) {
+                    if (!data.errors || !data.errors.length) {
                         $scope.submittingStep = false;
                         $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.details.text + '</span> step was successfully recorded.';
                         $scope.submissionResultVisible = 1;
@@ -400,8 +407,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('viewManageTransformSpecsController', ['$scope', '$state', '$stateParams', 'Api', '$modal', '$timeout', 
-    function ($scope, $state, $stateParams, Api, $modal, $timeout) {
+.controller('viewManageTransformSpecsController', ['$scope', '$state', '$stateParams', 'Api', '$modal', '$timeout', 'Formatter', 
+    function ($scope, $state, $stateParams, Api, $modal, $timeout, Formatter) {
 
         $scope.transformSpecs = [];
         $scope.selectedSpec = null;
@@ -469,9 +476,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.viewSpec = function (spec) {
             $scope.selectedSpec = spec;
             $state.go('root.transform_specs.view_manage.view_spec', {
-                spec_id: spec.id
+                spec_id: spec.spec_id
             });
         }
+
+        $scope.getPrettyDateString = Formatter.getPrettyDateString;
 
         var loadSpecs = function () {
             Api.getTransformSpecs().success(function (data) {
@@ -480,9 +489,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var specs = [];
 
                 for (var i=0; i<data.length;i++) {
-                    var parsedSpec = JSON.parse(data[i].data_json.plan);
-                    parsedSpec.id = data[i].spec_id;
-                    specs.push(parsedSpec);
+                    var thisSpec = data[i];
+                    thisSpec.plan = JSON.parse(thisSpec.data_json.plan);
+                    specs.push(thisSpec);
                 }
 
                 $scope.transformSpecs = specs;
@@ -514,8 +523,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.specLoading = true;
             Api.getTransformSpec(specId).success(function (data) {
                 $scope.specLoading = false;
-                $scope.selectedSpec = JSON.parse(data.plan);
-                $scope.selectedSpec.id = specId;
+                var thisSpec = data;
+                thisSpec.plan = JSON.parse(thisSpec.data_json.plan);
+                $scope.selectedSpec = thisSpec
             });
         }
     }]

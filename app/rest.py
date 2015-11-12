@@ -65,7 +65,7 @@ class TransformSpecResource(flask_restful.Resource):
             if row:
                 # sess.expunge(row)
                 result = spec_schema.dump(row).data
-                return result, 200
+                return json_api_success(result, 200)
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def delete(self, spec_id):
@@ -75,7 +75,7 @@ class TransformSpecResource(flask_restful.Resource):
                 SampleTransformSpec.spec_id == spec_id).first()
             if spec:
                 sess.delete(spec)
-                return '', 204
+                return json_api_success('', 204)
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def put(self, spec_id, action=None):
@@ -103,7 +103,8 @@ class TransformSpecResource(flask_restful.Resource):
                 sess.add(spec)
                 sess.flush()  # required to get the id from the database sequence
                 result = spec_schema.dump(spec).data
-                return result, 201, cls.response_headers(spec)
+                return json_api_success(result, 201,
+                                        cls.response_headers(spec))
             elif method == 'PUT':
                 assert spec_id is not None
                 # create or replace known spec_id
@@ -122,7 +123,8 @@ class TransformSpecResource(flask_restful.Resource):
                 # TODO: set execution operator != creation operator
                 sess.add(spec)
                 result = spec_schema.dump(spec).data
-                return result, 201, cls.response_headers(spec)
+                return json_api_success(result, 201,
+                                        cls.response_headers(spec))
             else:
                 raise ValueError(method, spec_id)
         # TODO:
@@ -144,7 +146,7 @@ class TransformSpecListResource(flask_restful.Resource):
                     )
             result = spec_schema.dump(rows, many=True).data
             #    sess.expunge(rows)
-        return result, 200
+        return json_api_success(result, 200)
 
     def post(self):
         """creates new spec returning a nice geeky Location header"""
