@@ -125,11 +125,18 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.submittingStep = false;
             }
 
+            var executeNow = true;
+
+            //the newer specs are the ones that save the transform but do not execute it immediately
+            if ($scope.transformSpec.details.transfer_template_id == 25) {
+                executeNow = false;
+            }
+
             if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
                 
-                Api.saveAndExecuteTransformSpec($scope.transformSpec.serialize()).success(function (data) {
+                Api.saveAndConditionallyExecuteTransformSpec($scope.transformSpec.serialize(), executeNow).success(function (data) {
 
                     if (data.success) {
                         $scope.submittingStep = false;
