@@ -30,7 +30,8 @@ class ProdConfig(Config):
 
 
 class StagingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
+    SQLALCHEMY_DATABASE_URI = \
+        "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
     """
     synapp_test=#
         create user sampletrack with password 'Of2dAd8cir5Y';
@@ -42,7 +43,8 @@ class StagingConfig(Config):
 
 
 class DevConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
+    SQLALCHEMY_DATABASE_URI = \
+        "postgresql://sampletrack_user:Of2dAd8cir5Y@10.10.53.47/synapp_test"
     #SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
 
     DEBUG = True
@@ -85,4 +87,10 @@ alter table sampletrack.sample_transfer_template owner to sampletrack_user;
 alter table sampletrack.sample_transfer_template_details owner to sampletrack_user;
 alter table sampletrack.sample_transfer_type owner to sampletrack_user;
 alter table sampletrack.shipment_order_item_join set schema public;
+
+alter table sampletrack.cloned_sample_view owner to sampletrack_user;
+alter table sampletrack.gene_assembly_sample_view owner to sampletrack_user;
+alter table sampletrack.sample_transfer_view owner to sampletrack_user;
+alter table sampletrack.sample_view owner to sampletrack_user;
+
     """
