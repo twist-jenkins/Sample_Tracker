@@ -286,6 +286,7 @@ def create_step_record():
 
             # Create a "sample_transfer" row representing this entire transfer.
             sample_transfer = SampleTransfer(sample_transfer_type_id,
+                                             None,
                                              operator.operator_id)
             db_session.add(sample_transfer)
 
