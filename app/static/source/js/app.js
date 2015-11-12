@@ -129,35 +129,28 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                 $scope.submittingStep = true;
                 
-                Api.saveNewTransformSpec($scope.transformSpec.serialize()).success(function (data) {
+                Api.saveAndExecuteTransformSpec($scope.transformSpec.serialize()).success(function (data) {
 
-                    var saveSpecData = getSampleTrackSubmitData();
-                    saveSpecData.transformSpecId = Object.keys(data)[0];
-
-                    Api.submitSampleStep(saveSpecData).success(function (data) {
-
-                        if (data.success) {
-                            $scope.submittingStep = false;
-                            $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.details.text + '</span> step was successfully recorded.';
-                            $scope.submissionResultVisible = 1;
-                            $scope.clearForm();
-                        } else {
-                            showError(data);
-                        }
-
-                        $timeout(function () {
-                            $scope.submissionResultVisible = 0;
-                            $timeout(function () {
-                                $scope.submissionResultMessage = null;
-                            }, 400);
-                        }, 5000);
-
-                    }).error(function (data) {
+                    if (data.success) {
                         $scope.submittingStep = false;
+                        $scope.submissionResultMessage = 'This <span class="twst-step-text">' + $scope.transformSpec.details.text + '</span> step was successfully recorded.';
+                        $scope.submissionResultVisible = 1;
+                        $scope.clearForm();
+                    } else {
                         showError(data);
-                    });
+                    }
 
-                });
+                    $timeout(function () {
+                        $scope.submissionResultVisible = 0;
+                        $timeout(function () {
+                            $scope.submissionResultMessage = null;
+                        }, 400);
+                    }, 5000);
+
+                }).error(function (data) {
+                    $scope.submittingStep = false;
+                    showError(data);
+                });;
             }
         };
 
@@ -486,10 +479,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 
                 var specs = [];
 
-                //TODO: the return data is an object rather than array - fix this when the data is properly an array
-                for (spec in data) {
-                    var parsedSpec = JSON.parse(data[spec].plan);
-                    parsedSpec.id = spec;
+                for (var i=0; i<data.length;i++) {
+                    var parsedSpec = JSON.parse(data[i].data_json.plan);
+                    parsedSpec.id = data[i].spec_id;
                     specs.push(parsedSpec);
                 }
 
