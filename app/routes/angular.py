@@ -535,6 +535,7 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
     sample_view_attrs = (
         'sample_type',
         'sample_date_created',
+        'resistance_marker_plan',
         'cloning_process_id_plan',
         'cloning_process_id_actual',
         'sample_name',
