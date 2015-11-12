@@ -161,13 +161,15 @@ app = angular.module('twist.app')
                 var specReq = ApiRequestObj.getGet('rest/transform-specs/' + specId);
                 return $http(specReq);
             }
-            ,saveAndExecuteTransformSpec: function (planData) {
+            ,saveAndConditionallyExecuteTransformSpec: function (planData, executeNow) {
                 var saveAndExReq = ApiRequestObj.getPost('rest/transform-specs');
                 saveAndExReq.data = {
                     plan: planData
                 }
-                saveAndExReq.headers = {
-                    'Transform-Execution': 'Immediate'
+                if (executeNow) {
+                    aveAndExReq.headers = {
+                        'Transform-Execution': 'Immediate'
+                    }
                 }
                 return $http(saveAndExReq);
             }
@@ -388,10 +390,10 @@ app = angular.module('twist.app')
                                         for (var j=0; j < source.items.length; j++) {
                                             var well = angular.copy(source.items[j]);
                                             well.source_plate_barcode = source.details.id
-                                            if (!resistanceGroups[well.requested_resistance]) {
-                                                resistanceGroups[well.requested_resistance] = [];
+                                            if (!resistanceGroups[well.resistance_marker_plan]) {
+                                                resistanceGroups[well.resistance_marker_plan] = [];
                                             }
-                                            resistanceGroups[well.requested_resistance].push(well);
+                                            resistanceGroups[well.resistance_marker_plan].push(well);
                                         }
                                     }
                                     console.log(resistanceGroups);
@@ -696,17 +698,6 @@ app = angular.module('twist.app')
                         } else {
                             sourceItem.loaded = true;
                             sourceItem.items = data.wells;
-
-                            /***** DEV ONLY *****/
-                            console.log('REMOVE this code after dev!!!!');
-                            var d8t = new Date();
-                            for (var i=0; i< sourceItem.items.length ;i++) {
-                                var str = Math.random() + '';
-                                console.log(str);
-                                sourceItem.items[i]["requested_resistance"] = (str.substring(str.length - 1)-0)%4;
-                            }
-                            console.log(sourceItem.items);
-                            /**** DEV ONLY *********/
 
                             var dataCopy = angular.copy(data);
                             delete dataCopy.wells;
