@@ -53,6 +53,7 @@ def json_api_error(err_list, status_code, headers=None):
         return json_api_response, status_code, headers
 """
 
+
 class TransformSpecResource(flask_restful.Resource):
     """get / delete / put a single spec"""
 
