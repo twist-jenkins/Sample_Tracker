@@ -29,7 +29,14 @@ from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_384)
 from well_count_to_plate_type_name import well_count_to_plate_type_name
 
-IGNORE_MISSING_SOURCE_PLATE_WELLS = True
+IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
+
+
+def error_response(status_code, message):
+    # TODO: remove duplicate code -- use JSON-API?
+    response = jsonify({'success': False, 'message': message})
+    response.status_code = status_code
+    return response
 
 #
 # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
@@ -40,6 +47,7 @@ IGNORE_MISSING_SOURCE_PLATE_WELLS = True
 def create_step_record_adhoc(sample_transfer_type_id,
                              sample_transfer_template_id,
                              wells):
+    print "1" * 1000
 
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session,
@@ -75,6 +83,7 @@ def create_adhoc_sample_movement(db_session,
     # NEXT: Now, do the transfer for each source-plate-well to each destination-plate-well...
     #
     order_number = 1
+    print "2" * 1000
 
     well_from_col_and_row_methods = {
         "48": get_well_id_for_col_and_row_48,
@@ -140,7 +149,7 @@ def create_adhoc_sample_movement(db_session,
         else:
             plate_size = None
 
-        print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (source_plate.external_barcode,sample_plate_type.name)
+        # print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (#source_plate.external_barcode,sample_plate_type.name)
         logging.info("SOURCE PLATE, barcode: %s  plate type: [%s]",
                      source_plate.external_barcode, sample_plate_type.name)
 
@@ -231,14 +240,15 @@ def create_adhoc_sample_movement(db_session,
         #
         # 4. Get the "source plate well"
         #
+
         source_plate_well = db_session.query(SamplePlateLayout).filter(and_(
             SamplePlateLayout.sample_plate_id==source_plate.sample_plate_id,
             SamplePlateLayout.well_id==source_well_id
         )).first()
 
-        print "SOURCE PLATE WELL: %s " % str(source_plate_well)
-        logging.info("SOURCE PLATE WELL: %s ", str(source_plate_well))
-
+        # print "SOURCE PLATE WELL: %s " % str(source_plate_well)
+        logging.info("SOURCE PLATE WELL: %s (%s, %s) ", source_plate_well,
+                     source_plate.sample_plate_id, source_well_id)
 
         if sample_plate_type.name == "48 well, plastic":
             plate_size = "48"
@@ -428,20 +438,22 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     operator = g.user
 
     # Create NPS
+    print "#" * 1000
     nps_id = create_unique_object_id("NPS_")
-    i5_sequence_id, i7_sequence_id = "i5a", "i7b"
+    i5_sequence_id, i7_sequence_id = "BC_00215", "BC_00217"
     insert_size_expected = 1000
     parent_process_id = None
     external_barcode = None
     reagent_type_set_lot_id = None
     status = None
     parent_transfer_process_id = None
+    date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     nps_sample = NGSPreppedSample(nps_id, source_plate_well.sample_id,
                                   "temp nps description",
                                   i5_sequence_id, i7_sequence_id,
                                   "temp nps notes",
                                   insert_size_expected,
-                                  datetime.utcnow(),
+                                  date_created,
                                   operator.operator_id,
                                   parent_process_id,
                                   external_barcode,
@@ -449,7 +461,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
                                   status,
                                   parent_transfer_process_id)
 
-    logging.info('NPS_ID %s for %s assigned [%s, %s]',
+    logging.warn('NPS_ID %s for %s assigned [%s, %s]',
                  nps_id, source_plate_well.sample_id,
                  i5_sequence_id, i7_sequence_id)
 

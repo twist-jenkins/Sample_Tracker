@@ -33,7 +33,7 @@ import assets
 ##  syslog.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO)
-SHOW_SQLALCHEMY_ECHO_TRACE = True
+SHOW_SQLALCHEMY_ECHO_TRACE = False
 if SHOW_SQLALCHEMY_ECHO_TRACE:
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
