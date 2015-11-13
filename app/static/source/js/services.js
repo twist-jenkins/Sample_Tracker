@@ -518,6 +518,14 @@ app = angular.module('twist.app')
 
                                     break;
                                 
+                                case 26:
+                                case 27:
+                                case 28:
+                                case 29:
+                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
+                                    base.operations = [{just_in_time_generation: true}];
+                                    break;
+
                                 default :
                                     console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
                                     break;
@@ -590,7 +598,7 @@ app = angular.module('twist.app')
                 base.details = typeObj;
                 base.details['transfer_type_id'] = typeObj.id;
                 base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
-                if (base.details.transfer_template_id == 25) {
+                if (base.details.transfer_template_id == 25 || base.details.transfer_template_id == 26 || base.details.transfer_template_id == 27 || base.details.transfer_template_id == 28 || base.details.transfer_template_id == 29) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
