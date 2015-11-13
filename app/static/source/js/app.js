@@ -57,7 +57,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.selectStepType = function (option) {
             $scope.transformSpec.setTransformSpecDetails(option);
-            console.log(option);
             $scope.transformSpec.setTitle(option.text);
 
             var route = 'root.record_transform.step_type_selected';
@@ -135,8 +134,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
-                
-                console.log($scope.transformSpec);
 
                 Api.saveAndConditionallyExecuteTransformSpec($scope.transformSpec.serialize(), executeNow).success(function (data) {
 
@@ -490,9 +487,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 
                 var specs = [];
 
-                for (var i=0; i<data.length;i++) {
-                    var thisSpec = data[i];
-                    thisSpec.plan = JSON.parse(thisSpec.data_json.plan);
+                var theData = data.data;
+
+                for (var i=0; i<theData.length;i++) {
+                    var thisSpec = theData[i];
+                    console.log(thisSpec.data_json);
+                    thisSpec.plan = thisSpec.data_json.plan;
                     specs.push(thisSpec);
                 }
 
