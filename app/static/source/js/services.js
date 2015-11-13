@@ -394,10 +394,11 @@ app = angular.module('twist.app')
                                         for (var j=0; j < source.items.length; j++) {
                                             var well = angular.copy(source.items[j]);
                                             well.source_plate_barcode = source.details.id
-                                            if (!resistanceGroups[well.resistance_marker_plan]) {
-                                                resistanceGroups[well.resistance_marker_plan] = [];
+                                            var rMarkerVal = well.resistance_marker_plan ? well.resistance_marker_plan.toUpperCase() : 'NULL';
+                                            if (!resistanceGroups[rMarkerVal]) {
+                                                resistanceGroups[rMarkerVal] = [];
                                             }
-                                            resistanceGroups[well.resistance_marker_plan].push(well);
+                                            resistanceGroups[rMarkerVal].push(well);
                                         }
                                     }
                                     console.log(resistanceGroups);
@@ -453,13 +454,13 @@ app = angular.module('twist.app')
 
                                     var plateIndex = -1;
 
-                                    //and add ore fill the destination inputs for the necessary plates
+                                    //and add or fill the destination inputs for the necessary plates
                                     for (group in destinationPlates) {
                                         var plates = destinationPlates[group];
                                         for (var i=0; i<plates.length; i++) {
                                             plateIndex++;
                                             var dest = returnEmptyPlate();
-                                            dest.details.title = 'Resistance <strong>' + group + '</strong> - Plate ' + (i + 1) + ':';
+                                            dest.details.title = '<strong>' + group + '</strong> Resistance  - <strong>Plate ' + (i + 1) + '</strong> of  ' + plates.length + ' &nbsp;(' + plates[i].length + ' wells filled):';
                                             if (!i) {
                                                 dest['first_in_group'] = true;
                                             }
@@ -587,6 +588,7 @@ app = angular.module('twist.app')
 
             base.setTransformSpecDetails = function (typeObj) {
                 base.details = typeObj;
+                base.details['transfer_type_id'] = typeObj.id;
                 base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
                 if (base.details.transfer_template_id == 25) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
