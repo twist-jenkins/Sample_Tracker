@@ -10,7 +10,8 @@ from sqlalchemy.sql import func
 from app import app
 from app import db
 from app.utils import scoped_session
-from dbmodels import SampleTransformSpec
+from dbmodels import SampleTransformSpec, SampleTransfer
+from app.routes.spreadsheet import create_adhoc_sample_movement
 
 api = flask_restful.Api(app)
 
@@ -74,7 +75,13 @@ class TransformSpecResource(flask_restful.Resource):
             spec = sess.query(SampleTransformSpec).filter(
                 SampleTransformSpec.spec_id == spec_id).first()
             if spec:
+                transfer = sess.query(SampleTransfer).filter(
+                    SampleTransfer.sample_transform_spec_id == spec_id).first()
+                if transfer:
+                    transfer.sample_transform_spec_id = None
+                    sess.flush()
                 sess.delete(spec)
+                sess.flush()
                 return json_api_success('', 204)
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
@@ -99,7 +106,7 @@ class TransformSpecResource(flask_restful.Resource):
                 spec.data_json = request.json
                 spec.operator_id = current_user.operator_id
                 if immediate:
-                    spec.date_executed = datetime.utcnow()
+                    cls.execute(sess, spec)
                 sess.add(spec)
                 sess.flush()  # required to get the id from the database sequence
                 result = spec_schema.dump(spec).data
@@ -118,7 +125,7 @@ class TransformSpecResource(flask_restful.Resource):
                 if request.json:
                     spec.data_json = request.json
                 if immediate:
-                    spec.date_executed = datetime.utcnow()
+                    cls.execute(sess, spec)
                 spec.operator_id = current_user.operator_id
                 # TODO: set execution operator != creation operator
                 sess.add(spec)
@@ -131,6 +138,24 @@ class TransformSpecResource(flask_restful.Resource):
         # sess.expunge(row)
         # result = spec_schema.dump(row).data
         # return result, 200 # ?? updated
+
+    @classmethod
+    def execute(cls, sess, spec):
+        if not spec.data_json:
+            raise KeyError("spec.data_json is null or empty")
+        details = spec.data_json["details"]
+        transfer_type_id = details["transfer_type_id"]
+        transfer_template_id = details["transfer_template_id"]
+        operations = spec.data_json["operations"]
+        wells = operations  # (??)
+        result = create_adhoc_sample_movement(sess, current_user,
+                                              transfer_type_id,
+                                              transfer_template_id,
+                                              wells,
+                                              transform_spec_id=spec.spec_id)
+        if not result:
+            raise ValueError("create_adhoc_sample_movement returned nothing")
+        spec.date_executed = datetime.utcnow()
 
 
 class TransformSpecListResource(flask_restful.Resource):

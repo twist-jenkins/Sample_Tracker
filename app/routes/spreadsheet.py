@@ -40,18 +40,19 @@ def create_sample_movement_from_spreadsheet_data(operator,
                                                  wells):
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session, operator,
-                                            sample_transfer_type_id,
-                                            sample_transfer_template_id, wells)
+                                              sample_transfer_type_id,
+                                              sample_transfer_template_id, wells)
         return result
 
 def create_adhoc_sample_movement(db_session, operator,
                                  sample_transfer_type_id,
-                                 sample_transfer_template_id, wells):
+                                 sample_transfer_template_id, wells,
+                                 transform_spec_id=None):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
     #
     sample_transfer = SampleTransfer(sample_transfer_type_id,
-                                     None,
+                                     transform_spec_id,
                                      operator.operator_id)
     db_session.add(sample_transfer)
     db_session.flush()
