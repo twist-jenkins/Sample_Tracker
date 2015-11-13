@@ -60,7 +60,8 @@ def user_data():
 
     if hasattr(g, 'user') and hasattr(g.user, 'first_and_last_name'):
         user = {
-            "name": g.user.first_and_last_name
+            "name": g.user.first_and_last_name,
+            "env": app.config['ENV']
         }
 
     returnData = {
