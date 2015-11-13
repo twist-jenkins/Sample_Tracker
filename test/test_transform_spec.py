@@ -23,8 +23,9 @@ EXAMPLE_SPEC = {
         "type":"plate_step",
         "title":"Aliquoting for Quantification (384 plate)",
         "sources":[{"id":None,"type":"plate","details":{"text":"","id":"H3904Y1W","plateDetails":{"type":"SPTT_0006","createdBy":"Jackie Fidanza","dateCreated":"2015-08-17 10:19:06"}}}],
-        "destinations":[{"id":None,"type":"plate","details":{"text":"","id":"test34343452352"}}],
-        "operations":[{"source_plate_barcode":"H3904Y1W","source_well_name":"A5","source_sample_id":"GA_55d2178b799305dbef8bf2c7","destination_plate_barcode":"test34343452352","destination_well_name":"A5","destination_plate_well_count":384},
+        "destinations":[{"id":None,"type":"plate","details":{"text":"","id":rnd_bc()}}],
+        "operations":[
+        {"source_plate_barcode":"H3904Y1W","source_well_name":"A5","source_sample_id":"GA_55d2178b799305dbef8bf2c7","destination_plate_barcode":"test34343452352","destination_well_name":"A5","destination_plate_well_count":384},
         {
         "source_plate_barcode":"H3904Y1W","source_well_name":"A6","source_sample_id":"GA_55d2178b799305dbef8bf2c6","destination_plate_barcode":"test34343452352","destination_well_name":"A6","destination_plate_well_count":384},
         {

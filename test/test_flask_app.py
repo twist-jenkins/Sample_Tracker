@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO)
 
 from flask_login import AnonymousUserMixin
 
-os.environ["WEBSITE_ENV"] = "Local"
+# os.environ["WEBSITE_ENV"] = "Local"
 
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
