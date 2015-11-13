@@ -491,7 +491,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                 for (var i=0; i<theData.length;i++) {
                     var thisSpec = theData[i];
-                    console.log(thisSpec.data_json);
                     thisSpec.plan = thisSpec.data_json.plan;
                     specs.push(thisSpec);
                 }
