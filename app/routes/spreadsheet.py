@@ -53,17 +53,6 @@ def create_step_record_adhoc(sample_transfer_type_id,
             return error_response(400, result["errorMessage"])
 
 
-def create_sample_movement_from_spreadsheet_data(sample_transfer_type_id,
-                                                 sample_transfer_template_id,
-                                                 wells):
-    with scoped_session(db.engine) as db_session:
-        result = create_adhoc_sample_movement(db_session,
-                                              sample_transfer_type_id,
-                                              sample_transfer_template_id,
-                                              wells)
-        return result
-
-
 def create_adhoc_sample_movement(db_session,
                                  sample_transfer_type_id,
                                  sample_transfer_template_id, wells,
