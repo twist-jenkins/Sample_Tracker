@@ -1,12 +1,8 @@
-######################################################################################
+###############################################################################
 #
 # Copyright (c) 2015 Twist Bioscience
 #
-# File: app/routes/api.py
-#
-# These are the handlers for all JSON/REST API routes used by this application.
-#
-######################################################################################
+###############################################################################
 
 import csv
 import json
@@ -18,7 +14,7 @@ from flask import g, make_response, request, Response, jsonify, abort
 from sqlalchemy import and_
 from sqlalchemy.orm import joinedload, subqueryload
 from app.utils import scoped_session
-from app.routes.spreadsheet import create_adhoc_sample_movement
+from app.routes.spreadsheet import create_step_record_adhoc
 
 from app import app, db, googlelogin
 
@@ -222,23 +218,6 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
         mimetype="application/json")
     return(resp)
 
-
-def create_step_record_adhoc(sample_transfer_type_id,
-                             sample_transfer_template_id,
-                             wells):
-
-    operator = g.user
-    with scoped_session(db.engine) as db_session:
-        result = create_adhoc_sample_movement(db_session, operator,
-                                              sample_transfer_type_id,
-                                              sample_transfer_template_id,
-                                              wells)
-        if result["success"]:
-            return jsonify({
-                "success": True
-            })
-        else:
-            return error_response(400, result["errorMessage"])
 
 def create_step_record():
     data = request.json

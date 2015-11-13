@@ -10,7 +10,7 @@
 ##############################################################################
 import logging
 
-from flask import g
+from flask import g, jsonify
 from sqlalchemy import and_
 
 from app import app, db
@@ -34,23 +34,44 @@ IGNORE_MISSING_SOURCE_PLATE_WELLS = True
 # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
 # process that spreadsheet data.
 #
-def create_sample_movement_from_spreadsheet_data(operator,
-                                                 sample_transfer_type_id,
+
+
+def create_step_record_adhoc(sample_transfer_type_id,
+                             sample_transfer_template_id,
+                             wells):
+
+    with scoped_session(db.engine) as db_session:
+        result = create_adhoc_sample_movement(db_session,
+                                              sample_transfer_type_id,
+                                              sample_transfer_template_id,
+                                              wells)
+        if result["success"]:
+            return jsonify({
+                "success": True
+            })
+        else:
+            return error_response(400, result["errorMessage"])
+
+
+def create_sample_movement_from_spreadsheet_data(sample_transfer_type_id,
                                                  sample_transfer_template_id,
                                                  wells):
     with scoped_session(db.engine) as db_session:
-        result = create_adhoc_sample_movement(db_session, operator,
+        result = create_adhoc_sample_movement(db_session,
                                               sample_transfer_type_id,
-                                              sample_transfer_template_id, wells)
+                                              sample_transfer_template_id,
+                                              wells)
         return result
 
-def create_adhoc_sample_movement(db_session, operator,
+
+def create_adhoc_sample_movement(db_session,
                                  sample_transfer_type_id,
                                  sample_transfer_template_id, wells,
                                  transform_spec_id=None):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
     #
+    operator = g.user
     sample_transfer = SampleTransfer(sample_transfer_type_id,
                                      transform_spec_id,
                                      operator.operator_id)
