@@ -136,6 +136,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                 $scope.submittingStep = true;
                 
+                console.log($scope.transformSpec);
+
                 Api.saveAndConditionallyExecuteTransformSpec($scope.transformSpec.serialize(), executeNow).success(function (data) {
 
                     if (!data.errors || !data.errors.length) {
