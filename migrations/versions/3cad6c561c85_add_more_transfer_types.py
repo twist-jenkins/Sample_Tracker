@@ -32,6 +32,10 @@ def upgradeTransferTemplates():
 
     desired_values = [
         [25, "Rebatching for Transformation", "F", None, None]
+        ,[26, "Fragment Analyzer", "F", None, None]
+        ,[27, "NGS QC Pass", "F", None, None]
+        ,[28, "Shipping", "F", None, None]
+        ,[29, "Reformatting for Purification", "F", None, None]
     ]
 
     for row_values in desired_values:
@@ -61,6 +65,10 @@ def upgradeTransferTypes():
 
     desired_values = [
         [45, "Rebatching for Transformation", 25, 1, 1]
+        ,[46, "Fragment Analyzer", 26, 1, 1]
+        ,[47, "NGS QC Pass", 27, 1, 1]
+        ,[48, "Shipping", 28, 1, 1]
+        ,[49, "Reformatting for Purification", 29, 1, 1]
     ]
 
     for row_values in desired_values:
