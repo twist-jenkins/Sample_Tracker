@@ -27,7 +27,6 @@ def upgrade():
 
 
 def downgrade():
-    #    op.drop_column('sample_transfer', 'sample_transform_spec_id')
-    #op.drop_constraint('session_app_fkey', 'session', 'foreignkey')
-
-    pass 
+    op.execute("alter table sample_transfer"
+               " drop column if exists "
+               " sample_transform_spec_id")
