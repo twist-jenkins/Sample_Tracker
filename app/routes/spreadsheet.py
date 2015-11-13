@@ -9,6 +9,7 @@
 #
 ##############################################################################
 import logging
+from datetime import datetime
 
 from flask import g, jsonify
 from sqlalchemy import and_
@@ -19,7 +20,7 @@ from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
                           SamplePlate, SamplePlateLayout, ClonedSample,
                           SamplePlateType, SampleTransferDetail,
-                          GeneAssemblySampleView)
+                          GeneAssemblySampleView, NGSPreppedSample)
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -327,7 +328,7 @@ def create_adhoc_sample_movement(db_session,
         new_sample_id = sample_type_handler(db_session,
                                             sample_transfer_type_id,
                                             source_plate_well,
-                                            destination_well_id, operator)
+                                            destination_well_id)
         if new_sample_id is None:
             destination_sample_id = source_plate_well.sample_id
         else:
@@ -381,10 +382,18 @@ def create_adhoc_sample_movement(db_session,
 
 def sample_type_handler(db_session, sample_transfer_type_id,
                         source_plate_well,
-                        destination_well_id, operator):
-    if sample_transfer_type_id not in (15, 16):  # QPix To 96/384 plates
-        return None
+                        destination_well_id):
+    if sample_transfer_type_id in (15, 16):  # QPix To 96/384 plates
+        return make_cloned_sample(db_session, source_plate_well,
+                                  destination_well_id)
+    elif sample_transfer_type_id in (26,):  # NGS prep: barcode hitpicking
+        return make_ngs_prepped_sample(db_session, source_plate_well,
+                                       destination_well_id)
+    else:
+        return None  # no new sample
 
+def make_cloned_sample(db_session, source_plate_well, destination_well_id):
+    operator = g.user
     source_id = create_unique_object_id("tmp_src_")
     colony_name = "%d-%s" % (12, destination_well_id)
 
@@ -413,3 +422,38 @@ def sample_type_handler(db_session, sample_transfer_type_id,
 
     return cs_id
 
+
+def make_ngs_prepped_sample(db_session, source_plate_well,
+                            destination_well_id):
+    operator = g.user
+
+    # Create NPS
+    nps_id = create_unique_object_id("NPS_")
+    i5_sequence_id, i7_sequence_id = "i5a", "i7b"
+    insert_size_expected = 1000
+    parent_process_id = None
+    external_barcode = None
+    reagent_type_set_lot_id = None
+    status = None
+    parent_transfer_process_id = None
+    nps_sample = NGSPreppedSample(nps_id, source_plate_well.sample_id,
+                                  "temp nps description",
+                                  i5_sequence_id, i7_sequence_id,
+                                  "temp nps notes",
+                                  insert_size_expected,
+                                  datetime.utcnow(),
+                                  operator.operator_id,
+                                  parent_process_id,
+                                  external_barcode,
+                                  reagent_type_set_lot_id,
+                                  status,
+                                  parent_transfer_process_id)
+
+    logging.info('NPS_ID %s for %s assigned [%s, %s]',
+                 nps_id, source_plate_well.sample_id,
+                 i5_sequence_id, i7_sequence_id)
+
+    db_session.add(nps_sample)
+    db_session.flush()
+
+    return nps_id
