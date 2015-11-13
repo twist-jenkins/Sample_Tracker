@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 import flask_restful
 from flask import request
@@ -144,8 +145,13 @@ class TransformSpecResource(flask_restful.Resource):
     def execute(cls, sess, spec):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
+        if type(spec.data_json) in (str, unicode):
+            spec.data_json = json.loads(spec.data_json)
         details = spec.data_json["details"]
-        transfer_type_id = details["transfer_type_id"]
+        try:
+            transfer_type_id = details["transfer_type_id"]
+        except:
+            transfer_type_id = details["id"]  # REMOVE
         transfer_template_id = details["transfer_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
@@ -172,7 +178,10 @@ class TransformSpecListResource(flask_restful.Resource):
                     )
             result = spec_schema.dump(rows, many=True).data
             #    sess.expunge(rows)
-        return json_api_success(result, 200)
+            #print "^" * 10000
+            #print str(result)
+        return json_api_success(result, 200)  # FIXME
+        # return result, 200
 
     def post(self):
         """creates new spec returning a nice geeky Location header"""
