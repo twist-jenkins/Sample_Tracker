@@ -15,7 +15,7 @@ from app import app
 from app import db
 from app import login_manager
 
-from test_flask_app import AutomatedTestingUser, RootPlate
+from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 # from sqlalchemy.exc import IntegrityError
 
 EXAMPLE_SPEC = {
@@ -183,7 +183,7 @@ class TestCase(unittest.TestCase):
     def test_post_default_execution_golden(self):
         """ targeting the execution method """
         new_spec = EXAMPLE_SPEC.copy()
-        new_spec["plan"]["destinations"][0]["details"]["id"] = "test343434523524"
+        new_spec["plan"]["destinations"][0]["details"]["id"] = rnd_bc()
         uri = '/api/v1/rest/transform-specs'
         rv = self.client.post(uri,
                               data=json.dumps(new_spec),
@@ -202,7 +202,7 @@ class TestCase(unittest.TestCase):
     def test_post_immediate_execution_golden(self):
         """ targeting the execution method """
         new_spec = EXAMPLE_SPEC.copy()
-        new_spec["plan"]["destinations"][0]["details"]["id"] = "test343434523524"
+        new_spec["plan"]["destinations"][0]["details"]["id"] = rnd_bc()
         uri = '/api/v1/rest/transform-specs'
         headers = [("Transform-Execution", "Immediate")]
         rv = self.client.post(uri,
@@ -223,7 +223,7 @@ class TestCase(unittest.TestCase):
     def test_post_deferred_execution_golden(self):
         """ targeting the execution method """
         new_spec = EXAMPLE_SPEC.copy()
-        new_spec["plan"]["destinations"][0]["details"]["id"] = "test343434523524"
+        new_spec["plan"]["destinations"][0]["details"]["id"] = rnd_bc()
         uri = '/api/v1/rest/transform-specs'
         headers = [("Transform-Execution", "Deferred")]
         rv = self.client.post(uri,

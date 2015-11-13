@@ -4,8 +4,6 @@ import unittest
 import json
 import os
 import logging
-import string
-import random
 logging.basicConfig(level=logging.INFO)
 
 os.environ["WEBSITE_ENV"] = "Local"
@@ -17,12 +15,7 @@ from app import app
 from app import db
 from app import login_manager
 
-from test_flask_app import AutomatedTestingUser, RootPlate
-
-def rnd_bc():
-    """Random barcode"""
-    return 'test' + ''.join([random.choice(string.letters + string.digits)
-                             for _ in range(10)])
+from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 
 class TestCase(unittest.TestCase):
 
@@ -142,19 +135,21 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def test_small_qpix_to_96_golden(self):
-        dest_plate_barcode = rnd_bc()
+        rnd = rnd_bc()
+        dest_plate_1_barcode = rnd + '_1'
+        dest_plate_2_barcode = rnd + '_1'
         transfer_map = [{
             "source_plate_barcode": "XFER_ROOT",
             "source_well_name": src_well,
-            "destination_plate_barcode": dest_plate_barcode + dest_plate,
+            "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
             "destination_plate_well_count": dest_well_count
         } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', '_1', 'A1', 96),
-            ('A1', '_1', 'A2', 96),
-            ('A2', '_1', 'B1', 96),
-            ('B1', '_2', 'A1', 96),
-            ('B1', '_2', 'A2', 96),
+            ('A1', dest_plate_1_barcode, 'A1', 96),
+            ('A1', dest_plate_1_barcode, 'A2', 96),
+            ('A2', dest_plate_1_barcode, 'B1', 96),
+            ('B1', dest_plate_2_barcode, 'A1', 96),
+            ('B1', dest_plate_2_barcode, 'A2', 96),
         ]]
         data = {"sampleTransferTypeId": 15,  # QPix To 96 plates
                 "sampleTransferTemplateId": 21,
@@ -167,9 +162,45 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-        to_verify = dest_plate_barcode + '_1'
         rv = self.client.get('/api/v1/plate-barcodes/%s'
-                             % to_verify,
+                             % dest_plate_1_barcode,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        print result
+        assert result["success"] is True
+
+    def test_small_ngs_prep_golden(self):
+        rnd = rnd_bc()
+        dest_plate_1_barcode = rnd + '_1'
+        dest_plate_2_barcode = rnd + '_1'
+        transfer_map = [{
+            "source_plate_barcode": "XFER_ROOT",
+            "source_well_name": src_well,
+            "destination_plate_barcode": dest_plate,
+            "destination_well_name": dest_well,
+            "destination_plate_well_count": dest_well_count
+        } for (src_well, dest_plate, dest_well, dest_well_count) in [
+            ('A1', dest_plate_1_barcode, 'A1', 96),
+            ('A1', dest_plate_1_barcode, 'A2', 96),
+            ('A2', dest_plate_1_barcode, 'B1', 96),
+            ('B1', dest_plate_2_barcode, 'A1', 96),
+            ('B1', dest_plate_2_barcode, 'A2', 96),
+        ]]
+
+        data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
+                "sampleTransferTemplateId": 21,
+                "transferMap": transfer_map
+                }
+        rv = self.client.post('/api/v1/track-sample-step',
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        assert result["success"] is True
+
+        rv = self.client.get('/api/v1/plate-barcodes/%s'
+                             % dest_plate_1_barcode,
                              content_type='application/json')
         assert rv.status_code == 200, rv.data
         result = json.loads(rv.data)

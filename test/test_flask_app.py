@@ -4,6 +4,8 @@ import unittest
 import json
 import os
 import logging
+import random
+import string
 logging.basicConfig(level=logging.INFO)
 
 from flask_login import AnonymousUserMixin
@@ -17,6 +19,11 @@ from app import app
 from app import db
 from app import login_manager
 
+
+def rnd_bc():
+    """Random barcode"""
+    return 'test' + ''.join([random.choice(string.letters + string.digits)
+                             for _ in range(10)])
 
 class AutomatedTestingUser(AnonymousUserMixin):
     '''
