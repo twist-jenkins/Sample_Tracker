@@ -18,6 +18,7 @@ from app import login_manager
 from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 # from sqlalchemy.exc import IntegrityError
 
+EXAMPLE_DEST_PLATE = rnd_bc()
 EXAMPLE_SPEC = {
     "plan": {
         "type":"plate_step",
@@ -27,9 +28,9 @@ EXAMPLE_SPEC = {
         "operations":[
         {"source_plate_barcode":"H3904Y1W","source_well_name":"A5","source_sample_id":"GA_55d2178b799305dbef8bf2c7","destination_plate_barcode":"test34343452352","destination_well_name":"A5","destination_plate_well_count":384},
         {
-        "source_plate_barcode":"H3904Y1W","source_well_name":"A6","source_sample_id":"GA_55d2178b799305dbef8bf2c6","destination_plate_barcode":"test34343452352","destination_well_name":"A6","destination_plate_well_count":384},
+        "source_plate_barcode":"H3904Y1W","source_well_name":"A6","source_sample_id":"GA_55d2178b799305dbef8bf2c6","destination_plate_barcode":EXAMPLE_DEST_PLATE,"destination_well_name":"A6","destination_plate_well_count":384},
         {
-        "source_plate_barcode":"H3904Y1W","source_well_name":"A7","source_sample_id":"GA_55d2178b799305dbef8bf2c5","destination_plate_barcode":"test34343452352","destination_well_name":"A7","destination_plate_well_count":384}
+        "source_plate_barcode":"H3904Y1W","source_well_name":"A7","source_sample_id":"GA_55d2178b799305dbef8bf2c5","destination_plate_barcode":EXAMPLE_DEST_PLATE,"destination_well_name":"A7","destination_plate_well_count":384}
         ],
         "details":{"transfer_template_id":1,
                    "transfer_type_id":1,
