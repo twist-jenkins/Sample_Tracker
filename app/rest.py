@@ -103,7 +103,8 @@ class TransformSpecResource(flask_restful.Resource):
             if method == 'POST':
                 assert spec_id is None
                 spec = SampleTransformSpec()         # create new, unknown id
-                spec.data_json = request.json
+                assert "plan" in request.json
+                spec.data_json = request.json["plan"]
                 spec.operator_id = current_user.operator_id
                 if immediate:
                     cls.execute(sess, spec)
@@ -122,8 +123,8 @@ class TransformSpecResource(flask_restful.Resource):
                 else:
                     spec = SampleTransformSpec()        # create new, known id
                     spec.spec_id = spec_id
-                if request.json:
-                    spec.data_json = request.json
+                if request.json and request.json["plan"]:
+                    spec.data_json = request.json["plan"]
                 if immediate:
                     cls.execute(sess, spec)
                 spec.operator_id = current_user.operator_id
