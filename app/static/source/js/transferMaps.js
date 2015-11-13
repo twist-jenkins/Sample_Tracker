@@ -1054,6 +1054,54 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                     }
                 }
+                ,26: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Fragment Analyzer'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                }
+                ,27: {  // keyed to sample_transfer_template_id in the database
+                    description: 'NGS QC Pass'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                }
+                ,28: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Shipping'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                }
+                ,29: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Reformatting for Purification'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                }
             }
             ,rowColumnMaps: {
                 SPTT_0006: {
