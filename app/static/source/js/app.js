@@ -491,7 +491,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                 for (var i=0; i<theData.length;i++) {
                     var thisSpec = theData[i];
-                    thisSpec.plan = thisSpec.data_json.plan;
+                    thisSpec.plan = JSON.parse(thisSpec.data_json);
                     specs.push(thisSpec);
                 }
 
@@ -526,7 +526,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.specLoading = false;
                 var thisSpec = data;
                 thisSpec.plan = JSON.parse(thisSpec.data_json.plan);
-                $scope.selectedSpec = thisSpec
+                $scope.selectedSpec = thisSpec;
             });
         }
     }]
