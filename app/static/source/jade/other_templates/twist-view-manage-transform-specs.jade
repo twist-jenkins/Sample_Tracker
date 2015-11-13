@@ -12,11 +12,11 @@ div(class="twst-view-manage-transform-specs-main" ui-view)
             tr(ng-repeat="spec in transformSpecs track by spec.spec_id" ng-class="{'twst-greyed-row': spec.deleting}")
                 td {{::spec.spec_id}}
                     div(class="twst-spinner" ng-if="spec.deleting")
-                td 
+                td(class="twst-source_destination_cell")
                     span(ng-repeat="source in spec.plan.sources track by source.details.id")
                         a(href="#/plate-details/{{::source.details.id}}") {{::source.details.id}}
                         span {{::$index < spec.sources.length-1 ? ', ': ''}}
-                td
+                td(class="twst-source_destination_cell")
                     span(ng-repeat="destination in spec.plan.destinations track by destination.details.id")
                         a(href="#/plate-details/{{::destination.details.id}}") {{::destination.details.id}}
                         span {{::$index < spec.destinations.length-1 ? ', ': ''}}
