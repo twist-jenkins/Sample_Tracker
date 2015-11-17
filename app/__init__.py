@@ -393,7 +393,7 @@ def plate_details(sample_plate_barcode, fmt):
 
 @app.route('/api/v1/basic-plate-info/<plate_barcode>', methods=['GET'])
 def basic_plate_info(plate_barcode):
-    return routes.plate_details(plate_barcode,"json", True)
+    return routes.plate_details(plate_barcode, "json", True)
 
 @app.route('/api/v1/source-plate-well-data', methods=['POST'])
 def source_plate_well_data():

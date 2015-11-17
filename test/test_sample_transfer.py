@@ -164,7 +164,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-        rv = self.client.get('/api/v1/plate-barcodes/%s'
+        rv = self.client.get('/api/v1/basic-plate-info/%s'
                              % dest_plate_1_barcode,
                              content_type='application/json')
         assert rv.status_code == 200, rv.data
@@ -201,7 +201,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-        rv = self.client.get('/api/v1/plate-barcodes/%s'
+        rv = self.client.get('/api/v1/basic-plate-info/%s'
                              % dest_plate_1_barcode,
                              content_type='application/json')
         assert rv.status_code == 200, rv.data
