@@ -155,7 +155,7 @@ class TransformSpecResource(flask_restful.Resource):
         transfer_template_id = details["transfer_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
-        result = create_adhoc_sample_movement(sess, current_user,
+        result = create_adhoc_sample_movement(sess,
                                               transfer_type_id,
                                               transfer_template_id,
                                               wells,

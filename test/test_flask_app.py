@@ -4,11 +4,13 @@ import unittest
 import json
 import os
 import logging
+import random
+import string
 logging.basicConfig(level=logging.INFO)
 
 from flask_login import AnonymousUserMixin
 
-os.environ["WEBSITE_ENV"] = "Local"
+# os.environ["WEBSITE_ENV"] = "Local"
 
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
@@ -17,6 +19,11 @@ from app import app
 from app import db
 from app import login_manager
 
+
+def rnd_bc():
+    """Random barcode"""
+    return 'test' + ''.join([random.choice(string.letters + string.digits)
+                             for _ in range(10)])
 
 class AutomatedTestingUser(AnonymousUserMixin):
     '''
@@ -59,7 +66,7 @@ class RootPlate(object):
                                              storage_location_id,
                                              1)
             except:
-                pass
+                raise
         return destination_barcode
 
 
@@ -72,8 +79,9 @@ class TestCase(unittest.TestCase):
         # assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
-        db.create_all()
-        cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)
+        # db.create_all()
+        cls.root_plate_barcode = 'SRN 000577 SM-30'  # qtray
+        # cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)
 
     @classmethod
     def tearDownClass(cls):

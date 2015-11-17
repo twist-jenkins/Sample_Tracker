@@ -615,43 +615,43 @@ class ClonedSample(Sample):
         """Return parent"""
         return self.parent_sample
 
-'''
+
 class NGSPreppedSample(Sample):
     """NGS prepped sample -- Simpler version based on twist_core"""
     __tablename__ = "ngs_prepped_sample"
     # type info
-    sample_id = sa.Column(
-        sa.String(40), sa.ForeignKey("sample.sample_id"),
+    sample_id = db.Column(
+        db.String(40), db.ForeignKey("sample.sample_id"),
         primary_key=True, index=True)
     __mapper_args__ = {
         "polymorphic_identity": "ngs_prepped_sample",
         "inherit_condition": (sample_id == Sample.sample_id)}
-    parent_sample_id = sa.Column(
-        sa.String(40), sa.ForeignKey("sample.sample_id"),
+    parent_sample_id = db.Column(
+        db.String(40), db.ForeignKey("sample.sample_id"),
         nullable=False)
-    i5_sequence_id = sa.Column(
-        sa.String(40),
-        sa.ForeignKey("barcode_sequence.sequence_id"),
+    i5_sequence_id = db.Column(
+        db.String(40),
+        db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
-    i7_sequence_id = sa.Column(
-        sa.String(40),
-        sa.ForeignKey("barcode_sequence.sequence_id"),
+    i7_sequence_id = db.Column(
+        db.String(40),
+        db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
-    insert_size_expected = sa.Column(sa.Integer, nullable=False)
-    notes = sa.Column(sa.String(1024))
+    insert_size_expected = db.Column(db.Integer, nullable=False)
+    notes = db.Column(db.String(1024))
     # relations
-    parent_sample = sa.orm.relationship(
+    parent_sample = db.relationship(
         "Sample", uselist=False,
-        backref=sa.orm.backref("ngs_prepped_samples"),
+        backref=db.backref("ngs_prepped_samples"),
         foreign_keys=parent_sample_id)
-    i5_barcode = sa.orm.relationship(
-        "BarcodeSequence", uselist=False,
-        backref=sa.orm.backref("i5_ngs_run_sample_joins"),
-        foreign_keys=i5_sequence_id)
-    i7_barcode = sa.orm.relationship(
-        "BarcodeSequence", uselist=False,
-        backref=sa.orm.backref("i7_ngs_run_sample_joins"),
-        foreign_keys=i7_sequence_id)
+    # i5_barcode = db.relationship(
+    #     "BarcodeSequence", uselist=False,
+    #     backref=db.backref("i5_ngs_run_sample_joins"),
+    #     foreign_keys=i5_sequence_id)
+    # i7_barcode = db.relationship(
+    #     "BarcodeSequence", uselist=False,
+    #     backref=db.backref("i7_ngs_run_sample_joins"),
+    #     foreign_keys=i7_sequence_id)
 
     def __init__(self, sample_id, parent_sample_id, description,
                  i5_sequence_id, i7_sequence_id, notes, insert_size_expected,
@@ -675,4 +675,4 @@ class NGSPreppedSample(Sample):
         self.insert_size_expected = insert_size_expected
         if notes:
             self.notes = notes
-'''
+
