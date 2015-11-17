@@ -27,8 +27,9 @@ class TestCase(unittest.TestCase):
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         db.create_all()
-        cls.root_plate_barcode = RootPlate().create_in_db("XFER_ROOT",
-                                                          db.engine)
+        cls.root_plate_barcode = 'SRN 000577 SM-30'  # qtray
+        #cls.root_plate_barcode = RootPlate().create_in_db("XFER_ROOT",
+        #                                                  db.engine)
 
     @classmethod
     def tearDownClass(cls):
@@ -110,7 +111,7 @@ class TestCase(unittest.TestCase):
         bc = rnd_bc()
         bc2 = rnd_bc()
         transfer_map = [{
-            "source_plate_barcode": "QPIX_ROOT",
+            "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
@@ -137,9 +138,9 @@ class TestCase(unittest.TestCase):
     def test_small_qpix_to_96_golden(self):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
-        dest_plate_2_barcode = rnd + '_1'
+        dest_plate_2_barcode = rnd + '_2'
         transfer_map = [{
-            "source_plate_barcode": "XFER_ROOT",
+            "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
@@ -173,9 +174,9 @@ class TestCase(unittest.TestCase):
     def test_small_ngs_prep_golden(self):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
-        dest_plate_2_barcode = rnd + '_1'
+        dest_plate_2_barcode = rnd + '_2'
         transfer_map = [{
-            "source_plate_barcode": "XFER_ROOT",
+            "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,

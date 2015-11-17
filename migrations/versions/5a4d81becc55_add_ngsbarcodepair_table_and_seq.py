@@ -20,7 +20,7 @@ import sqlalchemy as db
 def upgrade():
     ngs_barcode_pair_table = op.create_table(
         'ngs_barcode_pair',
-        db.Column('id',
+        db.Column('pk',
                   db.Integer,
                   primary_key=True),
         db.Column('i7_sequence_id',
@@ -49,7 +49,7 @@ def upgrade():
     csvfile = open(csvfilename, 'rU')
     if not csvfile:
         raise "Cannot open %s" % csvfilename
-    fieldnames = ("modulo_index",  # id
+    fieldnames = ("pk",
                   "i7_sequence_id",
                   "i5_sequence_id",
                   "reverse_primer_i7_well_row",
@@ -61,7 +61,7 @@ def upgrade():
     ngs_barcode_pairs = [row for row in csvreader]
     csvfile.close()
     for ix, pair in enumerate(ngs_barcode_pairs):
-        assert int(pair["modulo_index"]) == ix
+        assert int(pair["pk"]) == ix
     max_value = ix
     op.bulk_insert(ngs_barcode_pair_table, ngs_barcode_pairs)
     print ("Created table 'ngs_barcode_pair': "

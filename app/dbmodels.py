@@ -619,7 +619,9 @@ class ClonedSample(Sample):
 class NGSPreppedSample(Sample):
     """NGS prepped sample -- Simpler version based on twist_core"""
     __tablename__ = "ngs_prepped_sample"
-    # FIXME: re-enable barcode foreign keys
+    # FIXME: re-enable barcode foreign keys,
+    # without needing to pull in barcode object --
+
     # type info
     sample_id = db.Column(
         db.String(40), db.ForeignKey("sample.sample_id"),
@@ -632,14 +634,15 @@ class NGSPreppedSample(Sample):
         nullable=False)
     i5_sequence_id = db.Column(
         db.String(40),
-        db.ForeignKey("barcode_sequence.sequence_id"),
+        # db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
     i7_sequence_id = db.Column(
         db.String(40),
-        db.ForeignKey("barcode_sequence.sequence_id"),
+        # db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
     insert_size_expected = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.String(1024))
+
     # relations
     parent_sample = db.relationship(
         "Sample", uselist=False,
@@ -682,7 +685,7 @@ class NGSBarcodePair(db.Model):
     """from Austin"""
     __tablename__ = "ngs_barcode_pair"
 
-    modulo_index = db.Column(db.Integer, primary_key=True)
+    pk = db.Column(db.Integer, primary_key=True)
     i7_sequence_id = db.Column(db.String(40),
                                db.ForeignKey("barcode_sequence.sequence_id"),
                                nullable=False)

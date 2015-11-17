@@ -49,7 +49,6 @@ def error_response(status_code, message):
 def create_step_record_adhoc(sample_transfer_type_id,
                              sample_transfer_template_id,
                              wells):
-    print "1" * 1000
 
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session,
@@ -85,7 +84,6 @@ def create_adhoc_sample_movement(db_session,
     # NEXT: Now, do the transfer for each source-plate-well to each destination-plate-well...
     #
     order_number = 1
-    print "2" * 1000
 
     well_from_col_and_row_methods = {
         "48": get_well_id_for_col_and_row_48,
@@ -124,7 +122,7 @@ def create_adhoc_sample_movement(db_session,
             }
 
         #
-        # 1. Obtain access to the source plate for this line item.
+        logging.warn("1. Obtain access to the source plate for this line item.")
         #
         source_plate = db_session.query(SamplePlate).filter_by(external_barcode=source_plate_barcode).first()
 
@@ -240,7 +238,7 @@ def create_adhoc_sample_movement(db_session,
             destination_plates_by_barcode[destination_plate_barcode] = destination_plate
 
         #
-        # 4. Get the "source plate well"
+        logging.warn('4. Get the "source plate well"')
         #
 
         source_plate_well = db_session.query(SamplePlateLayout).filter(and_(
@@ -335,7 +333,7 @@ def create_adhoc_sample_movement(db_session,
             }
 
         #
-        # 4.  Set destination_sample_id.  Accession cloned_sample if necessary.
+        logging.warn("4.  Set destination_sample_id.  Accession cloned_sample if necessary.")
         #
         new_sample_id = sample_type_handler(db_session,
                                             sample_transfer_type_id,
@@ -368,7 +366,7 @@ def create_adhoc_sample_movement(db_session,
         logging.warn("DESTINATION PLATE WELL: %s ", destination_plate_well)
 
         #
-        # 6. Create a row representing a transfer from a well in the "source" plate to a well
+        logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
         # in the "desination" plate.
         #
         source_to_destination_well_transfer = SampleTransferDetail(
@@ -440,7 +438,6 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     operator = g.user
 
     # Create NPS
-    print "NPS" * 1000
     nps_id = create_unique_object_id("NPS_")
 
     # max_index = db_session.query(func.max(NGSBarcodePair.modulo_index)).one()
@@ -451,7 +448,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
         raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
     ngs_barcode_pair_index = db_session.execute(next_index_sql)
     ngs_pair = (db.session.query(NGSBarcodePair)
-                .filter(id=ngs_barcode_pair_index)
+                .filter_by(pk=ngs_barcode_pair_index)
                 .first())
     if not ngs_pair:
         raise KeyError("ngs_barcode_pair_index %s not found"
