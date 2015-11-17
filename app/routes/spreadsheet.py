@@ -13,6 +13,7 @@ from datetime import datetime
 
 from flask import g, jsonify
 from sqlalchemy import and_
+from sqlalchemy.sql import func
 
 from app import app, db
 from app.utils import scoped_session
@@ -20,7 +21,8 @@ from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
                           SamplePlate, SamplePlateLayout, ClonedSample,
                           SamplePlateType, SampleTransferDetail,
-                          GeneAssemblySampleView, NGSPreppedSample)
+                          GeneAssemblySampleView, NGSPreppedSample,
+                          NGSBarcodePair)
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -438,9 +440,25 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     operator = g.user
 
     # Create NPS
-    print "#" * 1000
+    print "NPS" * 1000
     nps_id = create_unique_object_id("NPS_")
-    i5_sequence_id, i7_sequence_id = "BC_00215", "BC_00217"
+
+    # max_index = db_session.query(func.max(NGSBarcodePair.modulo_index)).one()
+    # modulo_index = nextseq % (max_index + 1)
+
+    next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
+    if not next_index_sql:
+        raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
+    ngs_barcode_pair_index = db_session.execute(next_index_sql)
+    ngs_pair = (db.session.query(NGSBarcodePair)
+                .filter(id=ngs_barcode_pair_index)
+                .first())
+    if not ngs_pair:
+        raise KeyError("ngs_barcode_pair_index %s not found"
+                       % ngs_barcode_pair_index)
+
+    # i5_sequence_id, i7_sequence_id = "BC_00215", "BC_00217"
+
     insert_size_expected = 1000
     parent_process_id = None
     external_barcode = None
@@ -450,7 +468,8 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     nps_sample = NGSPreppedSample(nps_id, source_plate_well.sample_id,
                                   "temp nps description",
-                                  i5_sequence_id, i7_sequence_id,
+                                  ngs_pair.i5_sequence_id,
+                                  ngs_pair.i7_sequence_id,
                                   "temp nps notes",
                                   insert_size_expected,
                                   date_created,
@@ -463,7 +482,8 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
 
     logging.warn('NPS_ID %s for %s assigned [%s, %s]',
                  nps_id, source_plate_well.sample_id,
-                 i5_sequence_id, i7_sequence_id)
+                 ngs_pair.i5_sequence_id,
+                 ngs_pair.i7_sequence_id)
 
     db_session.add(nps_sample)
     db_session.flush()

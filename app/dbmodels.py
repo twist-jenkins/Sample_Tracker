@@ -632,11 +632,11 @@ class NGSPreppedSample(Sample):
         nullable=False)
     i5_sequence_id = db.Column(
         db.String(40),
-        #db.ForeignKey("barcode_sequence.sequence_id"),
+        db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
     i7_sequence_id = db.Column(
         db.String(40),
-        #db.ForeignKey("barcode_sequence.sequence_id"),
+        db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
     insert_size_expected = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.String(1024))
@@ -676,4 +676,21 @@ class NGSPreppedSample(Sample):
         self.insert_size_expected = insert_size_expected
         if notes:
             self.notes = notes
+
+
+class NGSBarcodePair(db.Model):
+    """from Austin"""
+    __tablename__ = "ngs_barcode_pair"
+
+    modulo_index = db.Column(db.Integer, primary_key=True)
+    i7_sequence_id = db.Column(db.String(40),
+                               db.ForeignKey("barcode_sequence.sequence_id"),
+                               nullable=False)
+    i5_sequence_id = db.Column(db.String(40),
+                               db.ForeignKey("barcode_sequence.sequence_id"),
+                               nullable=False)
+    reverse_primer_i7_well_row = db.Column(db.String(10), nullable=False)
+    reverse_primer_i7_well_column = db.Column(db.Integer, nullable=False)
+    forward_primer_i5_well_row = db.Column(db.String(10), nullable=False)
+    forward_primer_i5_well_column = db.Column(db.Integer, nullable=False)
 
