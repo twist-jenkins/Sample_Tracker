@@ -15,7 +15,8 @@ from app import app
 from app import db
 from app import login_manager
 
-from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
+from test_flask_app import AutomatedTestingUser, rnd_bc
+# from test_flask_app import RootPlate
 
 class TestCase(unittest.TestCase):
 

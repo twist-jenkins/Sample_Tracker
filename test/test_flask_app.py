@@ -66,7 +66,7 @@ class RootPlate(object):
                                              storage_location_id,
                                              1)
             except:
-                pass
+                raise
         return destination_barcode
 
 
@@ -79,8 +79,9 @@ class TestCase(unittest.TestCase):
         # assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
-        db.create_all()
-        cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)
+        # db.create_all()
+        cls.root_plate_barcode = 'SRN 000577 SM-30'  # qtray
+        # cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)
 
     @classmethod
     def tearDownClass(cls):
