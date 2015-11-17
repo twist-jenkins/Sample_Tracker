@@ -437,12 +437,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
                             destination_well_id):
     operator = g.user
 
-    # Create NPS
-    nps_id = create_unique_object_id("NPS_")
-
-    # max_index = db_session.query(func.max(NGSBarcodePair.modulo_index)).one()
-    # modulo_index = nextseq % (max_index + 1)
-
+    # Grab next pair of barcodes
     next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
     if not next_index_sql:
         raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
@@ -454,20 +449,22 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
         raise KeyError("ngs_barcode_pair_index %s not found"
                        % ngs_barcode_pair_index)
 
-    # i5_sequence_id, i7_sequence_id = "BC_00215", "BC_00217"
-
-    insert_size_expected = 1000
-    parent_process_id = None
+    # Create NPS
+    nps_id = create_unique_object_id("NPS_")
+    description = 'SMT stub descr.'  # e.g. "RCA 16 hours  Gene 12 Clone 2"
+    notes = 'SMT - well %s' % destination_well_id  # e.g. "" for alpha NPSs
+    insert_size_expected = -1
+    parent_process_id = None  # e.g. 'SPP_0008' for alpha NPSs
     external_barcode = None
-    reagent_type_set_lot_id = None
+    reagent_type_set_lot_id = None  # e.g. 'RTSL_5453e163e208466dd26d3aa4'
     status = None
     parent_transfer_process_id = None
     date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     nps_sample = NGSPreppedSample(nps_id, source_plate_well.sample_id,
-                                  "temp nps description",
+                                  description,
                                   ngs_pair.i5_sequence_id,
                                   ngs_pair.i7_sequence_id,
-                                  "temp nps notes",
+                                  notes,
                                   insert_size_expected,
                                   date_created,
                                   operator.operator_id,
@@ -477,10 +474,10 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
                                   status,
                                   parent_transfer_process_id)
 
-    logging.warn('NPS_ID %s for %s assigned [%s, %s]',
-                 nps_id, source_plate_well.sample_id,
-                 ngs_pair.i5_sequence_id,
-                 ngs_pair.i7_sequence_id)
+    logging.debug('NPS_ID %s for %s assigned [%s, %s]',
+                  nps_id, source_plate_well.sample_id,
+                  ngs_pair.i5_sequence_id,
+                  ngs_pair.i7_sequence_id)
 
     db_session.add(nps_sample)
     db_session.flush()
