@@ -518,6 +518,32 @@ app = angular.module('twist.app')
 
                                     break;
                                 
+                                case 26:
+                                case 27:
+                                case 28:
+                                case 29:
+                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
+                                    var operations = [];
+
+                                    for (var i=0; i<base.sources.length;i++) {
+                                        var source = base.sources[i];
+                                        var operationRow = {
+                                            source_plate_barcode: source.details.id
+                                            ,source_well_name: 'Z0'
+                                            ,source_sample_id: '0000000'
+                                            ,destination_plate_barcode: '0000000-1'
+                                            ,destination_well_name: 'Z0'
+                                            ,destination_plate_well_count: 0
+                                        };
+                                        operations.push(operationRow);
+
+                                    }
+
+
+
+                                    base.operations = operations;
+                                    break;
+
                                 default :
                                     console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
                                     break;
@@ -590,7 +616,7 @@ app = angular.module('twist.app')
                 base.details = typeObj;
                 base.details['transfer_type_id'] = typeObj.id;
                 base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
-                if (base.details.transfer_template_id == 25) {
+                if (base.details.transfer_template_id == 25 || base.details.transfer_template_id == 26 || base.details.transfer_template_id == 27 || base.details.transfer_template_id == 28 || base.details.transfer_template_id == 29) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
