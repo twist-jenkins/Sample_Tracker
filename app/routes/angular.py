@@ -18,7 +18,7 @@ from app.routes.spreadsheet import create_step_record_adhoc
 
 from app import app, db, googlelogin
 
-from app.dbmodels import (SampleTransfer, GeneAssemblySampleView,
+from app.dbmodels import (SampleTransfer, SampleView,
                           SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
 from app.models import create_destination_plate
 
@@ -424,7 +424,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     db_session.add(source_to_dest_well_transfer)
 
 
-def plate_details(sample_plate_barcode, format, basic_data_only=False):
+def plate_details(sample_plate_barcode, fmt, basic_data_only=False):
 
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
@@ -506,8 +506,8 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
         dbQ = (
             db.session.query(
                 SamplePlateLayout,
-                GeneAssemblySampleView
-            ).filter(SamplePlateLayout.sample_id == GeneAssemblySampleView.sample_id)
+                SampleView
+            ).filter(SamplePlateLayout.sample_id == SampleView.sample_id)
         )
 
     qry = dbQ.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
@@ -596,13 +596,13 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
         }
     }
 
-    if format == "json":
+    if fmt == "json":
         resp = Response(response=json.dumps(report),
             status=200, \
             mimetype="application/json")
         return(resp)
 
-    elif format=="csv":
+    elif fmt=="csv":
 
 
         si = StringIO.StringIO()

@@ -21,7 +21,7 @@ from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
                           SamplePlate, SamplePlateLayout, ClonedSample,
                           SamplePlateType, SampleTransferDetail,
-                          GeneAssemblySampleView, NGSPreppedSample,
+                          SampleView, NGSPreppedSample,
                           NGSBarcodePair)
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
@@ -416,7 +416,7 @@ def make_cloned_sample(db_session, source_plate_well, destination_well_id):
     # Add CLO
     clo = None
     qry = (
-        db.session.query(GeneAssemblySampleView)
+        db.session.query(SampleView)
         .filter_by(sample_id=source_plate_well.sample_id)
     )
     result = qry.first()

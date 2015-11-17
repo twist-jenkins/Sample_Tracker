@@ -388,8 +388,8 @@ def sample_transfers():
 
 @app.route('/api/v1/plate-barcodes/<sample_plate_barcode>/<format>', methods=['GET'])
 @app.route('/api/v1/plate-barcodes/<sample_plate_barcode>', defaults={'format':"json"}, methods=['GET'])
-def plate_details(sample_plate_barcode, format):
-    return routes.plate_details(sample_plate_barcode,format)
+def plate_details(sample_plate_barcode, fmt):
+    return routes.plate_details(sample_plate_barcode, fmt)
 
 @app.route('/api/v1/basic-plate-info/<plate_barcode>', methods=['GET'])
 def basic_plate_info(plate_barcode):

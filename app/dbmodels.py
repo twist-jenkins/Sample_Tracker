@@ -207,7 +207,7 @@ class Sample(db.Model):
             self.type_id, self.operator_id, self.name)
 
 
-class GeneAssemblySampleView(db.Model):
+class SampleView(db.Model):
     try:
         __table__ = db.Table("sample_view", db_metadata,
                              db.Column("sample_id", db.String(40),
