@@ -424,7 +424,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     db_session.add(source_to_dest_well_transfer)
 
 
-def plate_details(sample_plate_barcode, fmt, basic_data_only=False):
+def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 

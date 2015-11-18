@@ -214,28 +214,34 @@ def create_adhoc_sample_movement(db_session,
         # 3. Obtain (or create if we haven't yet added a row for it in the database) the row for this well-to-well
         # transfer's destination plate.
         #
-        destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
-        if not destination_plate:
+        
+        # BUGFIX 11/17/2015: for in-place transforms, don't create a new plate!
+        in_place_transform_flag = (destination_plate_barcode == source_plate_barcode)
+        if in_place_transform_flag:
+            destination_plate = source_plate
+        else:
+            destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
+            if not destination_plate:
 
-            try:
-                destination_plate = create_destination_plate(
-                    db_session,
-                    operator,
-                    destination_plate_barcode,
-                    sample_plate_type.type_id,
-                    storage_location_id,
-                    sample_transfer_template_id)
-            except IndexError:
-                err_msg = ("Encountered error creating sample "
-                           "transfer. Could not create destination plate: [%s]"
-                           )
-                logging.info(err_msg, destination_plate_barcode)
-                return {
-                    "success": False,
-                    "errorMessage": err_msg % destination_plate_barcode
-                }
-
-            destination_plates_by_barcode[destination_plate_barcode] = destination_plate
+                try:
+                    destination_plate = create_destination_plate(
+                        db_session,
+                        operator,
+                        destination_plate_barcode,
+                        sample_plate_type.type_id,
+                        storage_location_id,
+                        sample_transfer_template_id)
+                except IndexError:
+                    err_msg = ("Encountered error creating sample "
+                               "transfer. Could not create destination plate: [%s]"
+                               )
+                    logging.info(err_msg, destination_plate_barcode)
+                    return {
+                        "success": False,
+                        "errorMessage": err_msg % destination_plate_barcode
+                    }
+    
+                destination_plates_by_barcode[destination_plate_barcode] = destination_plate
 
         #
         logging.warn('4. Get the "source plate well"')
@@ -325,7 +331,7 @@ def create_adhoc_sample_movement(db_session,
 
         #existing_sample_plate_layout = True
 
-        if existing_sample_plate_layout:
+        if existing_sample_plate_layout and not in_place_transform_flag:
             return {
                 "success":False,
                 "errorMessage":"This destination plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
@@ -356,25 +362,30 @@ def create_adhoc_sample_movement(db_session,
         #    source_plate_well.row,source_plate_well.column)
         #db_session.add(destination_plate_well)
 
-        destination_plate_well = SamplePlateLayout(
-            destination_plate.sample_plate_id, destination_sample_id,
-            destination_well_id, operator.operator_id,
-            source_plate_well.row, source_plate_well.column)
-        db_session.add(destination_plate_well)
-
-        # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
-        logging.warn("DESTINATION PLATE WELL: %s ", destination_plate_well)
-
-        #
-        logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
-        # in the "desination" plate.
-        #
-        source_to_destination_well_transfer = SampleTransferDetail(
-            sample_transfer.id, order_number, source_plate.sample_plate_id,
-            source_plate_well.well_id, source_plate_well.sample_id,
-            destination_plate.sample_plate_id, destination_plate_well.well_id,
-            destination_plate_well.sample_id)
-        db_session.add(source_to_destination_well_transfer)
+        if in_place_transform_flag:
+            if destination_sample_id != source_plate_well.sample_id:
+                source_plate_well.sample_id = destination_sample_id
+                db_session.flush()
+        else:
+            destination_plate_well = SamplePlateLayout(
+                destination_plate.sample_plate_id, destination_sample_id,
+                destination_well_id, operator.operator_id,
+                source_plate_well.row, source_plate_well.column)
+            db_session.add(destination_plate_well)
+    
+            # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
+            logging.warn("DESTINATION PLATE WELL: %s ", destination_plate_well)
+    
+            #
+            logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
+            # in the "desination" plate.
+            #
+            source_to_destination_well_transfer = SampleTransferDetail(
+                sample_transfer.id, order_number, source_plate.sample_plate_id,
+                source_plate_well.well_id, source_plate_well.sample_id,
+                destination_plate.sample_plate_id, destination_plate_well.well_id,
+                destination_plate_well.sample_id)
+            db_session.add(source_to_destination_well_transfer)
 
         order_number += 1
 

@@ -173,7 +173,7 @@ class TransformSpecListResource(flask_restful.Resource):
         result = []
         with scoped_session(db.engine) as sess:
             rows = (sess.query(SampleTransformSpec)
-                    .order_by(SampleTransformSpec.spec_id)
+                    .order_by(SampleTransformSpec.spec_id.desc)
                     .all()
                     )
             result = spec_schema.dump(rows, many=True).data
