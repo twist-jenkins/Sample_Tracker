@@ -610,8 +610,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
         si = StringIO.StringIO()
         cw = csv.writer(si)
-        #w.writerow(["foo","bar"])
-        #return
 
         cw.writerow(["PLATE REPORT"])
         cw.writerow("")
