@@ -1,5 +1,6 @@
-from datetime import datetime
 import json
+import logging
+from datetime import datetime
 
 import flask_restful
 from flask import request
@@ -13,6 +14,7 @@ from app import db
 from app.utils import scoped_session
 from dbmodels import SampleTransformSpec, SampleTransfer
 from app.routes.spreadsheet import create_adhoc_sample_movement
+from app import miseq
 
 api = flask_restful.Api(app)
 
@@ -56,18 +58,38 @@ def json_api_error(err_list, status_code, headers=None):
 """
 
 
+def formatted(db_session, data, fmt):
+    if fmt == 'miseq.csv':
+        nps_ids = [el["source_sample_id"]
+                   for el in data["data_json"]["operations"]]
+        csv = miseq.miseq_csv_for_nps(db_session, nps_ids)
+        if csv:
+            return csv
+        else:
+            abort(404, message="Could not create miseq csv")
+    elif fmt == 'json':
+        return json_api_success(data, 200)
+    else:
+        abort(404, message="Invalid format {}".format(fmt))
+
+
 class TransformSpecResource(flask_restful.Resource):
     """get / delete / put a single spec"""
 
     def get(self, spec_id):
         """fetches a single spec"""
+        fmt = 'json'
+        if '.' in spec_id:
+            tokens = spec_id.split('.')
+            spec_id = tokens[0]
+            fmt = '.'.join(tokens[1:])
         with scoped_session(db.engine) as sess:
             row = sess.query(SampleTransformSpec).filter(
                 SampleTransformSpec.spec_id == spec_id).first()
             if row:
+                data = spec_schema.dump(row).data
                 # sess.expunge(row)
-                result = spec_schema.dump(row).data
-                return json_api_success(result, 200)
+                return formatted(sess, data, fmt)
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def delete(self, spec_id):
