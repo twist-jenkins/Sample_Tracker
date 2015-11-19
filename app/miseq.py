@@ -13,7 +13,9 @@ from dbmodels import MiSeqSampleView
 That code will continue to be used by R&D.
 Pasting the relevant bits here instead of importing twist_core."""
 
-FORBIDDEN_CHARS = list("""?()[]/\=+<>:;"',*^|&""")
+FORBIDDEN_CHARS_MISEQ = list("""?()[]/\=+<>:;"',*^|&""")
+FORBIDDEN_CHARS_NEXTSEQ = list("""?()[]/\=+<>:;"',*^|&.@""")
+FORBIDDEN_CHARS = FORBIDDEN_CHARS_NEXTSEQ
 
 # note that this is for resequencing workflow only now
 SAMPLE_SHEET_TEMPLATE = """[Header]
@@ -67,6 +69,7 @@ def miseq_csv_template(rows, run_id):
     #run_date_created = run.date_created.strftime("%d/%m/%Y")
     run_date_created = datetime.now().strftime("%d/%m/%Y")
     run_description = "Run description TBD"  # run.description
+    genome_str = ""  # blank out genome for generate fastq workfow
 
     cw.writerow(["[Header]"])
     cw.writerow(["IEMFileVersion", "4"])
@@ -93,24 +96,26 @@ def miseq_csv_template(rows, run_id):
     cw.writerow([""])
     cw.writerow(["[Data]"])
 
+    cw.writerow(['Sample_ID', 'Sample_Name', 'Sample_Plate', 'Sample_Well',
+                 'I7_Index_ID index', 'I5_Index_ID', 'index2', 'GenomeFolder',
+                 'Sample_Project', 'Description'])
 
-    # for attr_name in SAMPLE_VIEW_ATTRS:
-    #     col_header_names.append(attr_name)
-    # cw.writerow(col_header_names)
-
-    '''
-    Sample_ID   Sample_Name Sample_Plate    Sample_Well I7_Index_ID index   I5_Index_ID index2  GenomeFolder    Sample_Project  Description
-    '''
-
-    # for well in wells:
-    #     cols = ["",
-    #             well["well_id"],
-    #             well_to_col_and_row_mapping_fn(well["well_id"]),
-    #             well["sample_id"]
-    #             ]
-    #     for attr_name in SAMPLE_VIEW_ATTRS:
-    #         cols.append(well[attr_name])
-    #     cw.writerow(cols)
+    for row in rows:
+        # make data row
+        data = [
+            row.sample_id,  # Sample_ID
+            row.parent_sample_id,  # Sample_Name
+            "",  # Sample_Plate
+            row.notes,  # Sample_Well
+            row.i7_seq_name,  # I7_Index_ID
+            row.i7_seq,  # index
+            row.i5_seq_name,  # I5_Index_ID
+            row.i5_seq,  # index2
+            genome_str,  # GenomeFolder
+            "",  # Sample_Project
+            strip_forbidden_chars(row.parent_description)  # Description
+        ]
+        cw.writerow(data)
 
     csvout = si.getvalue().strip('\r\n')
 
