@@ -124,7 +124,7 @@ body {
 body nav.navbar {
   line-height: 80px;
   background-color: #404041;
-  border-bottom: 0px solid #51bd93;
+  border-bottom: 0px solid #51BD93;
   height: 80px;
   max-height: 80px;
   min-height: 80px;
@@ -218,7 +218,7 @@ body nav.navbar .navbar-nav li > a {
   padding: 0px 2px;
   line-height: 80px;
   line-height: 40px;
-  color: #bebfbe;
+  color: #BEBFBE;
   font-family: "proxima-nova", sans-serif;
   font-weight: 100;
   font-style: normal;
@@ -241,7 +241,7 @@ body nav.navbar .navbar-nav li > a span {
   border-radius: 2px 2px 0px 0px;
 }
 body nav.navbar .navbar-nav li > a:focus {
-  color: #bebfbe;
+  color: #BEBFBE;
   outline: none;
 }
 body nav.navbar .navbar-nav li > a:hover span,

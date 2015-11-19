@@ -12,7 +12,7 @@ class Config(object):
     SECRET_KEY = 'secret key, hi scott'
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
-
+    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
     SQLALCHEMY_ECHO = False
 
@@ -25,13 +25,15 @@ class Config(object):
 
 
 class ProdConfig(Config):
+    print '@@ in ProdConfig'
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" #"postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb_prod"
     SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
+    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
 
 class StagingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = \
-        "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
+    print '@@ in StagingConfig'
+    SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
     """
     synapp_test=#
         create user sampletrack with password 'Of2dAd8cir5Y';
@@ -43,9 +45,9 @@ class StagingConfig(Config):
 
 
 class DevConfig(Config):
-    SQLALCHEMY_DATABASE_URI = \
-        "postgresql://sampletrack_user:Of2dAd8cir5Y@10.10.53.47/synapp_test"
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
     #SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
+    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
     DEBUG = True
 
@@ -62,35 +64,5 @@ class LocalConfig(Config):
     TESTING = True
     DEBUG = True
     # WTF_CSRF_ENABLED = True
-    SQLALCHEMY_DATABASE_URI = \
-        "postgresql://sampletrack_user:Of2dAd8cir5Y@localhost/synapp_test"
-    """
-    psql -d synapp_test   # as superuser
-    synapp_test=#
-create user sampletrack_user with password 'Of2dAd8cir5Y';
-grant all on schema sampletrack to sampletrack_user ;
-GRANT ALL ON ALL TABLES IN SCHEMA sampletrack TO sampletrack_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA sampletrack GRANT ALL ON TABLES TO sampletrack_user;
-ALTER ROLE sampletrack_user SET search_path TO sampletrack,public;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO sampletrack_user;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO sampletrack_user;
-GRANT USAGE ON schema public TO sampletrack_user;
-
-# can't seem to get the right permissions...
-GRANT ALL ON ALL TABLES IN SCHEMA public TO sampletrack_user;
-ERROR:  relation "sampletrack.*" does not exist
-alter table sampletrack.alembic_version owner to sampletrack_user;
-alter table sampletrack.sample_transfer owner to sampletrack_user;
-alter table sampletrack.sample_transfer_detail owner to sampletrack_user;
-alter table sampletrack.sample_transfer_plan owner to sampletrack_user;
-alter table sampletrack.sample_transfer_template owner to sampletrack_user;
-alter table sampletrack.sample_transfer_template_details owner to sampletrack_user;
-alter table sampletrack.sample_transfer_type owner to sampletrack_user;
-alter table sampletrack.shipment_order_item_join set schema public;
-
-alter table sampletrack.cloned_sample_view owner to sampletrack_user;
-alter table sampletrack.gene_assembly_sample_view owner to sampletrack_user;
-alter table sampletrack.sample_transfer_view owner to sampletrack_user;
-alter table sampletrack.sample_view owner to sampletrack_user;
-
-    """
+    SQLALCHEMY_DATABASE_URI = "postgresql://test:test@dev01.twistbioscience.com/test"
+    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'

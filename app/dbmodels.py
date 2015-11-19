@@ -341,6 +341,7 @@ class SamplePlateType(db.Model):
 
 
 class SampleTransfer(db.Model):
+    __tablename__ = 'sample_transfer'
 
     #
     # Table columns.

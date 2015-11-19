@@ -48,3 +48,4 @@ WTForms==2.0.2
 xlrd==0.9.3
 flask-marshmallow==0.6.2
 marshmallow==2.2.0
+Flask-GoogleLogin
