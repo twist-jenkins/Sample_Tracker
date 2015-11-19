@@ -218,6 +218,17 @@ class SampleView(db.Model):
                                        primary_key=True), autoload=False)
 
 
+class MiSeqSampleView(db.Model):
+    try:
+        __table__ = db.Table("miseq_sample_view", db_metadata,
+                             db.Column("sample_id", db.String(40),
+                                       primary_key=True), autoload=True)
+    except:
+        __table__ = db.Table("ngs_prepped_sample", db_metadata,
+                             db.Column("sample_id", db.String(40),
+                                       primary_key=True), autoload=False)
+
+
 class SamplePlate(db.Model):
 
     sample_plate_id = db.Column(db.String(40), primary_key=True)
