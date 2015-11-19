@@ -38,6 +38,52 @@ logger = get_logger(__name__)
 
 MAX_SAMPLE_TRANSFER_QUERY_ROWS = 100000
 
+SAMPLE_VIEW_ATTRS = (
+    'sample_type',
+    'sample_date_created',
+    'resistance_marker_plan',
+    'cloning_process_id_plan',
+    'cloning_process_id_actual',
+    'sample_name',
+    'sample_operator_id',
+    'sample_operator_first_and_last_name',
+    'sample_description',
+    'sample_parent_process_id',
+    'sample_status',
+    'cor_order_id',
+    'cor_order_date',
+    'cor_customer_id',
+    'cid_institution_id',
+    'coi_order_item_id',
+    'coi_line_item_number',
+    'coi_order_configuration_id',
+    'coi_received_datetime',
+    'coi_due_datetime',
+    'coi_priority',
+    'coi_order_item_status_id',
+    'coi_order_item_type_id',
+    'coi_order_item_delivery_format_id',
+    'coi_customer_sequence_num',
+    'coi_customer_line_item_id',
+    'coi_customer_line_item_description',
+    'coi_description',
+    'coi_notes',
+    'ga_sagi_id',
+    'sagi_sag_id',
+    'sagi_date_created',
+    'sagg_date_created',
+    'sagg_fivep_ps_id',
+    'sagg_threep_ps_id',
+    'sagg_fivep_as_id',
+    'sagg_fivep_as_dir',
+    'sagg_threep_as_id',
+    'sagg_threep_as_dir',
+    'gs_sequence_id',
+    'gs_seq',
+    'gs_name',
+    'gs_description'
+)
+
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
 #
@@ -434,6 +480,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     sample_plate_id = sample_plate.sample_plate_id
 
+    if fmt == 'csv':
+        # FIXME: frontend should call different methods for Download Excel
+        # (csv) vs. check existence (name check)
+        basic_data_only = False
+
     if not sample_plate.sample_plate_type:
         response = {
             "success": False,
@@ -498,68 +549,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     wells = []
 
-
     if basic_data_only:
-        dbQ = db.session.query(SamplePlateLayout)
+        dbq = db.session.query(SamplePlateLayout)
+        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
+        rows = qry.all()
 
-    else:
-        dbQ = (
-            db.session.query(
-                SamplePlateLayout,
-                SampleView
-            ).filter(SamplePlateLayout.sample_id == SampleView.sample_id)
-        )
-
-    qry = dbQ.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
-    rows = qry.all()
-
-    sample_view_attrs = (
-        'sample_type',
-        'sample_date_created',
-        'resistance_marker_plan',
-        'cloning_process_id_plan',
-        'cloning_process_id_actual',
-        'sample_name',
-        'sample_operator_id',
-        'sample_operator_first_and_last_name',
-        'sample_description',
-        'sample_parent_process_id',
-        'sample_status',
-        'cor_order_id',
-        'cor_order_date',
-        'cor_customer_id',
-        'cid_institution_id',
-        'coi_order_item_id',
-        'coi_line_item_number',
-        'coi_order_configuration_id',
-        'coi_received_datetime',
-        'coi_due_datetime',
-        'coi_priority',
-        'coi_order_item_status_id',
-        'coi_order_item_type_id',
-        'coi_order_item_delivery_format_id',
-        'coi_customer_sequence_num',
-        'coi_customer_line_item_id',
-        'coi_customer_line_item_description',
-        'coi_description',
-        'coi_notes',
-        'ga_sagi_id',
-        'sagi_sag_id',
-        'sagi_date_created',
-        'sagg_date_created',
-        'sagg_fivep_ps_id',
-        'sagg_threep_ps_id',
-        'sagg_fivep_as_id',
-        'sagg_fivep_as_dir',
-        'sagg_threep_as_id',
-        'sagg_threep_as_dir',
-        'gs_sequence_id',
-        'gs_seq',
-        'gs_name',
-        'gs_description'
-    )
-
-    if basic_data_only:
         for well in rows:
             wells.append({
                 "well_id": well.well_id,
@@ -568,13 +562,22 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             })
 
     else:
+        dbq = (
+            db.session.query(
+                SamplePlateLayout,
+                SampleView
+            ).filter(SamplePlateLayout.sample_id == SampleView.sample_id)
+        )
+        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
+        rows = qry.all()
+
         for well, ga in rows:
             well_dict = {
                 "well_id": well.well_id,
                 "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
                 "sample_id": well.sample_id
             }
-            for attr_name in sample_view_attrs:
+            for attr_name in SAMPLE_VIEW_ATTRS:
                 val = getattr(ga, attr_name, None)
                 if val is not None:
                     val = str(val)
@@ -651,7 +654,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
         col_header_names = ["","WELL ID", "COL/ROW", "SAMPLE ID"]
-        for attr_name in sample_view_attrs:
+        for attr_name in SAMPLE_VIEW_ATTRS:
             col_header_names.append(attr_name)
         cw.writerow(col_header_names)
 
@@ -662,7 +665,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                     well_to_col_and_row_mapping_fn(well["well_id"]),
                     well["sample_id"]
                     ]
-            for attr_name in sample_view_attrs:
+            for attr_name in SAMPLE_VIEW_ATTRS:
                 cols.append(well[attr_name])
             cw.writerow(cols)
 
