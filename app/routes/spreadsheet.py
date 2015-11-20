@@ -452,13 +452,17 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
     operator = g.user
 
     # Grab next pair of barcodes
-    next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
-    if not next_index_sql:
-        raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
-    ngs_barcode_pair_index = db_session.execute(next_index_sql)
-    ngs_pair = (db.session.query(NGSBarcodePair)
-                .filter_by(pk=ngs_barcode_pair_index)
-                .first())
+    ngs_pair = None
+    tries_remaining = 1000
+    while not ngs_pair and tries_remaining > 0:
+        tries_remaining -= 1
+        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
+        if not next_index_sql:
+            raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
+        ngs_barcode_pair_index = db_session.execute(next_index_sql)
+        ngs_pair = (db.session.query(NGSBarcodePair)
+                    .filter_by(pk=ngs_barcode_pair_index)
+                    .first())
     if not ngs_pair:
         raise KeyError("ngs_barcode_pair_index %s not found"
                        % ngs_barcode_pair_index)
