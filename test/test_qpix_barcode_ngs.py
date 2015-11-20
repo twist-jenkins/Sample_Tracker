@@ -18,6 +18,50 @@ from app import login_manager
 from test_flask_app import AutomatedTestingUser, rnd_bc
 # from test_flask_app import RootPlate
 
+EXAMPLE_SPEC = {
+    "type":"plate_step",
+    "title":"NGS prep: barcode hitpicking",
+    "sources":[{
+        "id": None,
+        "type":"plate",
+        "details":{
+            "text":"",
+            "id":"SRN 000000 SM-37",
+            "plateDetails":{
+                "type":"SPTT_0006",
+                "createdBy":"Charlie Ledogar",
+                "dateCreated":"2015-11-08 14:47:55.714115"
+                }
+            }
+        }
+    ],
+    "destinations":[],
+    "operations":[
+        {
+            "source_plate_barcode":"SRN 000577 SM-37",
+            "source_well_name":"K13",
+            "source_sample_id":"CS_563fd11f785b1a7dd06dc817",
+            "destination_plate_barcode":"SRN 000577 SM-37",
+            "destination_well_name":"K13",
+            "destination_plate_well_count":384
+        },{
+            "source_plate_barcode":"SRN 000577 SM-37",
+            "source_well_name":"K15",
+            "source_sample_id":"CS_563fd11f785b1a7dd06dc819",
+            "destination_plate_barcode":"SRN 000577 SM-37",
+            "destination_well_name":"K15",
+            "destination_plate_well_count":384
+        }
+    ],
+    "details":{
+        "transfer_template_id":2,
+        "text":"NGS prep: barcode hitpicking",
+        "source_plate_count":1,"id":26,
+        "destination_plate_count":0,
+        "transfer_type_id":26
+    }
+}
+
 class TestCase(unittest.TestCase):
 
     @classmethod
@@ -111,7 +155,7 @@ class TestCase(unittest.TestCase):
         print result
         assert result["success"] is True
 
-    def test_v2_ngs_prep_golden(self):
+    def disabled_test_v2_ngs_prep_golden(self):
         """ This test should:
         1. create a new pair of CS plates using Qpix as above
         2. using special barcode plate as source, and
@@ -195,6 +239,63 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         print result
         assert result["success"] is True
+
+    def test_small_ngs_prep_spec_golden(self):
+        spec = EXAMPLE_SPEC.copy()
+        rnd = rnd_bc()
+        dest_plate_1_barcode = rnd + '_1'
+        dest_plate_2_barcode = rnd + '_2'
+        transfer_map = [{
+            "source_plate_barcode": self.root_plate_barcode,
+            "source_well_name": src_well,
+            "destination_plate_barcode": dest_plate,
+            "destination_well_name": dest_well,
+            "destination_plate_well_count": dest_well_count,
+            "source_sample_id": "CS_563fd11f785b1a7dd06dc817"
+        } for (src_well, dest_plate, dest_well, dest_well_count) in [
+            ('A1', dest_plate_1_barcode, 'A1', 96),
+            ('A1', dest_plate_1_barcode, 'A2', 96),
+            ('A2', dest_plate_1_barcode, 'B1', 96),
+            ('B1', dest_plate_2_barcode, 'A1', 96),
+            ('B1', dest_plate_2_barcode, 'A2', 96),
+        ]]
+        spec["operations"] = transfer_map
+        spec["details"] = {
+            "transfer_template_id": 2,  # 21?
+            "text": "NGS prep: barcode hitpicking",
+            "source_plate_count": 1,
+            "id": 26,
+            "destination_plate_count": 0,
+            "transfer_type_id": 26
+        }
+
+        # post the spec -- this replaces post('/api/v1/track-sample-step')
+
+        rv = self.client.post('/api/v1/rest/transform-specs',
+                              data=json.dumps({"plan": spec}),
+                              content_type='application/json')
+        assert rv.status_code == 201, rv.data
+
+        # the spec should now exist but not be executed yet
+
+        result = json.loads(rv.data)
+        assert "data" in result
+        assert "data_json" in result["data"]
+        assert result["data"]["date_executed"] is None
+
+        # the spec should have some foo
+        assert result["data"]["data_json"]["foo"] == "bar"
+
+        # there should be no plate yet
+
+        rv = self.client.get('/api/v1/basic-plate-info/%s'
+                             % dest_plate_1_barcode,
+                             content_type='application/json')
+        assert rv.status_code == 404, rv.data
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -123,12 +123,22 @@ class TransformSpecResource(flask_restful.Resource):
         with scoped_session(db.engine) as sess:
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
+
             if method == 'POST':
                 assert spec_id is None
                 spec = SampleTransformSpec()         # create new, unknown id
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
                 spec.operator_id = current_user.operator_id
+
+                # workaround for poor input marshaling
+                if type(spec.data_json) in (str, unicode):
+                    spec.data_json = json.loads(spec.data_json)
+
+                if modify_before_insert(spec):
+                    # HACK FOR NGS BARCODING
+                    immediate = False
+
                 if immediate:
                     cls.execute(sess, spec)
                 sess.add(spec)
@@ -138,6 +148,7 @@ class TransformSpecResource(flask_restful.Resource):
                                         cls.response_headers(spec))
             elif method == 'PUT':
                 assert spec_id is not None
+
                 # create or replace known spec_id
                 row = sess.query(SampleTransformSpec).filter(
                     SampleTransformSpec.spec_id == spec_id).first()
@@ -146,12 +157,18 @@ class TransformSpecResource(flask_restful.Resource):
                 else:
                     spec = SampleTransformSpec()        # create new, known id
                     spec.spec_id = spec_id
+
                 if request.json and request.json["plan"]:
                     spec.data_json = request.json["plan"]
+
+                # workaround for poor input marshaling
+                if type(spec.data_json) in (str, unicode):
+                    spec.data_json = json.loads(spec.data_json)
+
                 if immediate:
                     cls.execute(sess, spec)
                 spec.operator_id = current_user.operator_id
-                # TODO: set execution operator != creation operator
+                # TODO: allow execution operator_id != creation operator_id
                 sess.add(spec)
                 result = spec_schema.dump(spec).data
                 return json_api_success(result, 201,
@@ -167,13 +184,11 @@ class TransformSpecResource(flask_restful.Resource):
     def execute(cls, sess, spec):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
-        if type(spec.data_json) in (str, unicode):
-            spec.data_json = json.loads(spec.data_json)
         details = spec.data_json["details"]
         try:
             transfer_type_id = details["transfer_type_id"]
         except:
-            transfer_type_id = details["id"]  # REMOVE
+            transfer_type_id = details["id"]  # FIXME: REMOVE
         transfer_template_id = details["transfer_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
@@ -209,3 +224,18 @@ class TransformSpecListResource(flask_restful.Resource):
         """creates new spec returning a nice geeky Location header"""
         return TransformSpecResource.create_or_replace('POST')
 
+
+def modify_before_insert(spec):
+    # hack for ngs barcoding
+    # might be useful for primer hitpicking etc
+
+    if "details" not in spec.data_json:
+        return False
+
+    details = spec.data_json["details"]
+    if "transfer_type_id" in details:
+        if details["transfer_type_id"] != 26:
+            return False
+
+    spec.data_json["foo"] = "bar"
+    return True
