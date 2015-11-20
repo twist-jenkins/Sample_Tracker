@@ -631,11 +631,11 @@ class NGSPreppedSample(Sample):
         nullable=False)
     i5_sequence_id = db.Column(
         db.String(40),
-        db.ForeignKey("barcode_sequence.sequence_id"),
+        # db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
     i7_sequence_id = db.Column(
         db.String(40),
-        db.ForeignKey("barcode_sequence.sequence_id"),
+        # db.ForeignKey("barcode_sequence.sequence_id"),
         nullable=True)
     insert_size_expected = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.String(1024))
