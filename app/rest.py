@@ -68,6 +68,13 @@ def formatted(db_session, data, fmt):
             return csv
         else:
             abort(404, message="Could not create miseq csv")
+    if fmt == 'echo.csv':
+        operations = data["data_json"]["operations"]
+        csv = miseq.echo_csv_for_nps(operations, "smt-echo.csv")
+        if csv:
+            return csv
+        else:
+            abort(404, message="Could not create echo csv")
     elif fmt == 'json':
         return json_api_success(data, 200)
     else:
@@ -239,8 +246,6 @@ def modify_before_insert(db_session, spec):
     if "transfer_type_id" in details:
         if details["transfer_type_id"] != 26:
             return False
-
-    spec.data_json["foo"] = "bar"
 
     operations = spec.data_json["operations"]
     new_operations = []

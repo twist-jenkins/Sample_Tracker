@@ -163,3 +163,44 @@ def miseq_csv_for_nps(db_session, nps_ids):
     response.headers["Content-Disposition"] = "attachment; filename=MiSeq_" + run_id + "_Report.csv"
     return response
 
+
+def echo_csv_for_nps(operations, fname, transfer_volume=100):
+    """ assumes each oper looks like {
+            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
+            "source_well_name": "A1",
+            "source_sample_id":"BC_00234",
+            "source_plate_well_count": 384,
+            "destination_plate_barcode":"SRN 000577 SM-37",
+            "destination_well_name":"K13",
+            "destination_plate_well_count":384
+            "destination_sample_id": "NPS_89111c1a0327a61016dc4d017"
+        }
+    """
+    si = StringIO.StringIO()
+    cw = csv.writer(si)
+
+    cw.writerow(['Source Plate Barcode', 'Source Well',
+                 'Destination Plate Barcode', 'Destination Well',
+                 'Transfer Volume'])
+
+    for oper in operations:
+        # make data row
+        data = [
+            oper["source_plate_barcode"],
+            oper["source_well_name"],
+            oper["destination_plate_barcode"],
+            oper["destination_well_name"],
+            transfer_volume
+        ]
+        cw.writerow(data)
+
+    csvout = si.getvalue().strip('\r\n')
+    logging.info(" %s downloaded an ECHO WORKLIST",
+                 current_user.first_and_last_name)
+
+    response = make_response(csvout)
+    assert fname[-4:] == '.csv'
+    response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
+    return response
+
+

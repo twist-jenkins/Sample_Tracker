@@ -372,7 +372,6 @@ class TestCase(unittest.TestCase):
 
         # 3. the spec should have some foo
 
-        assert result["data"]["data_json"]["foo"] == "bar"
         operations = result["data"]["data_json"]["operations"]
         for well in operations:
             assert well["source_sample_id"][0:3] == "BC_"
