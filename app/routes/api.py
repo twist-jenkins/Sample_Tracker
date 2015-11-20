@@ -23,8 +23,9 @@ from werkzeug import secure_filename
 from app import app, db
 
 from app.models import create_unique_object_id
-from app.dbmodels import (Sample, SampleTransfer,
-                          SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail)
+from app.dbmodels import Sample, SamplePlate, SamplePlateLayout, \
+    SamplePlateType, SampleTransferDetail
+from twistdb.sampletrack import SampleTransfer
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,

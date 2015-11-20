@@ -17,10 +17,11 @@ from sqlalchemy import and_
 from app import app, db
 from app.utils import scoped_session
 from app.models import create_destination_plate
-from app.dbmodels import (create_unique_object_id, SampleTransfer,
-                          SamplePlate, SamplePlateLayout, ClonedSample,
-                          SamplePlateType, SampleTransferDetail,
-                          GeneAssemblySampleView, NGSPreppedSample)
+from twistdb.public import *
+from twistdb.sampletrack import *
+
+from app.dbmodels import create_unique_object_id, ClonedSample, \
+    NGSPreppedSample # GeneAssemblySampleView
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,

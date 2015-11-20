@@ -18,8 +18,12 @@ from app.routes.spreadsheet import create_step_record_adhoc
 
 from app import app, db, googlelogin
 
-from app.dbmodels import (SampleTransfer, GeneAssemblySampleView,
-                          SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
+#from app.dbmodels import GeneAssemblySampleView, SamplePlate, \
+#    SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType
+
+from twistdb.sampletrack import *
+from twistdb.public import *
+
 from app.models import create_destination_plate
 
 from well_mappings import (get_col_and_row_for_well_id_48,

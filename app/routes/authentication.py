@@ -12,7 +12,8 @@ from flask import g, Flask, render_template, make_response, request, Response, r
 
 from app import app, db
 
-from app.dbmodels import Operator
+from twistdb.public import Operator
+print ('@@ imported Operator: %s\n' % Operator) * 10
 
 from app import login_manager
 
@@ -83,6 +84,7 @@ def create_or_update_user(token, userinfo, **params):
 
     logger.info(" Login attempt for user with email [%s]" % (user_email))
 
+    print ('@@ querying Operator with %s\n' % db) * 5
     operator = db.session.query(Operator).filter_by(email=user_email).first()
 
     if operator:

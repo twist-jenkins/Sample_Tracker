@@ -14,7 +14,8 @@ import logging
 from flask import Flask, request, send_from_directory
 from flask_assets import Environment
 from webassets.loaders import PythonLoader as PythonAssetsLoader
-from flask.ext.sqlalchemy import SQLAlchemy
+from twistdb.db import SQLAlchemyX
+#from flask.ext.sqlalchemy import SQLAlchemy
 
 import assets
 
@@ -88,7 +89,20 @@ for name, bundle in assets_loader.load_bundles().iteritems():
 #
 ######################################################################################
 
-db = SQLAlchemy(app)
+print ('@@@@ calling shim SQLAlchemy!! (%s)\n' % SQLAlchemyX) * 10
+
+db = SQLAlchemyX(app)
+
+'''
+@app.before_first_request
+def setup():
+    """
+    from http://stackoverflow.com/questions/19119725/how-to-use-flask-sqlalchemy-with-existing-sqlalchemy-model
+    """
+    # Recreate database each time for demo
+    Base.metadata.drop_all(bind=db.engine)
+    Base.metadata.create_all(bind=db.engine)
+'''
 
 # from dbmodels import *  ## this import does not seem compatible with autoload
 
