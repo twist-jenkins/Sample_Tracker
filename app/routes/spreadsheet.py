@@ -214,7 +214,7 @@ def create_adhoc_sample_movement(db_session,
         # 3. Obtain (or create if we haven't yet added a row for it in the database) the row for this well-to-well
         # transfer's destination plate.
         #
-        
+
         # BUGFIX 11/17/2015: for in-place transforms, don't create a new plate!
         in_place_transform_flag = (destination_plate_barcode == source_plate_barcode)
         if in_place_transform_flag:
@@ -240,7 +240,7 @@ def create_adhoc_sample_movement(db_session,
                         "success": False,
                         "errorMessage": err_msg % destination_plate_barcode
                     }
-    
+
                 destination_plates_by_barcode[destination_plate_barcode] = destination_plate
 
         #
@@ -372,10 +372,10 @@ def create_adhoc_sample_movement(db_session,
                 destination_well_id, operator.operator_id,
                 source_plate_well.row, source_plate_well.column)
             db_session.add(destination_plate_well)
-    
+
             # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
             logging.warn("DESTINATION PLATE WELL: %s ", destination_plate_well)
-    
+
             #
             logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
             # in the "desination" plate.
@@ -402,25 +402,28 @@ def create_adhoc_sample_movement(db_session,
     }
 
 def sample_type_handler(db_session, sample_transfer_type_id,
-                        source_plate_well,
-                        destination_well_id):
+                        source_plate_well, destination_well_id):
     if sample_transfer_type_id in (15, 16):  # QPix To 96/384 plates
-        return make_cloned_sample(db_session, source_plate_well,
+        return make_cloned_sample(db_session,
+                                  source_plate_well.sample_id,
                                   destination_well_id)
     elif sample_transfer_type_id in (26,):  # NGS prep: barcode hitpicking
-        return make_ngs_prepped_sample(db_session, source_plate_well,
-                                       destination_well_id)
+        # TODO: disable, we're moving this to pre-execution of transform spec
+        nps_id, ngs_pair = make_ngs_prepped_sample(db_session,
+                                                   source_plate_well.sample_id,
+                                                   destination_well_id)
+        return nps_id
     else:
         return None  # no new sample
 
-def make_cloned_sample(db_session, source_plate_well, destination_well_id):
+def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     operator = g.user
     source_id = create_unique_object_id("tmp_src_")
     colony_name = "%d-%s" % (12, destination_well_id)
 
     # Create CS
     cs_id = create_unique_object_id("CS_")
-    cloned_sample = ClonedSample(cs_id, source_plate_well.sample_id, source_id,
+    cloned_sample = ClonedSample(cs_id, source_sample_id, source_id,
                                  colony_name, None, None, None,
                                  operator.operator_id)
 
@@ -428,7 +431,7 @@ def make_cloned_sample(db_session, source_plate_well, destination_well_id):
     clo = None
     qry = (
         db.session.query(SampleView)
-        .filter_by(sample_id=source_plate_well.sample_id)
+        .filter_by(sample_id=source_sample_id)
     )
     result = qry.first()
     if result:
@@ -436,7 +439,7 @@ def make_cloned_sample(db_session, source_plate_well, destination_well_id):
         clo = ga_view.cloning_process_id_plan
     cloned_sample.parent_process_id = clo
     logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
-                 cs_id, source_plate_well.sample_id, clo)
+                 cs_id, source_sample_id, clo)
 
     db_session.add(cloned_sample)
     db_session.flush()
@@ -444,7 +447,7 @@ def make_cloned_sample(db_session, source_plate_well, destination_well_id):
     return cs_id
 
 
-def make_ngs_prepped_sample(db_session, source_plate_well,
+def make_ngs_prepped_sample(db_session, source_sample_id,
                             destination_well_id):
     operator = g.user
 
@@ -471,7 +474,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     status = None
     parent_transfer_process_id = None
     date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    nps_sample = NGSPreppedSample(nps_id, source_plate_well.sample_id,
+    nps_sample = NGSPreppedSample(nps_id, source_sample_id,
                                   description,
                                   ngs_pair.i5_sequence_id,
                                   ngs_pair.i7_sequence_id,
@@ -486,11 +489,11 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
                                   parent_transfer_process_id)
 
     logging.debug('NPS_ID %s for %s assigned [%s, %s]',
-                  nps_id, source_plate_well.sample_id,
+                  nps_id, source_sample_id,
                   ngs_pair.i5_sequence_id,
                   ngs_pair.i7_sequence_id)
 
     db_session.add(nps_sample)
     db_session.flush()
 
-    return nps_id
+    return nps_id, ngs_pair

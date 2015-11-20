@@ -14,6 +14,7 @@ from app import db
 from app.utils import scoped_session
 from dbmodels import SampleTransformSpec, SampleTransfer
 from app.routes.spreadsheet import create_adhoc_sample_movement
+from app.routes.spreadsheet import make_ngs_prepped_sample
 from app import miseq
 
 api = flask_restful.Api(app)
@@ -135,7 +136,7 @@ class TransformSpecResource(flask_restful.Resource):
                 if type(spec.data_json) in (str, unicode):
                     spec.data_json = json.loads(spec.data_json)
 
-                if modify_before_insert(spec):
+                if modify_before_insert(sess, spec):
                     # HACK FOR NGS BARCODING
                     immediate = False
 
@@ -225,9 +226,11 @@ class TransformSpecListResource(flask_restful.Resource):
         return TransformSpecResource.create_or_replace('POST')
 
 
-def modify_before_insert(spec):
+def modify_before_insert(db_session, spec):
     # hack for ngs barcoding
     # might be useful for primer hitpicking etc
+
+    NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
 
     if "details" not in spec.data_json:
         return False
@@ -238,4 +241,44 @@ def modify_before_insert(spec):
             return False
 
     spec.data_json["foo"] = "bar"
+
+    operations = spec.data_json["operations"]
+    new_operations = []
+    for oper in operations:
+        """ assumes oper looks like {
+                "source_plate_barcode":"SRN 000577 SM-37",
+                "source_well_name":"K13",
+                "source_sample_id":"CS_563fd11f785b1a7dd06dc817",
+                "destination_plate_barcode":"SRN 000577 SM-37",
+                "destination_well_name":"K13",
+                "destination_plate_well_count":384
+            }
+        """
+        source_sample_id = oper["source_sample_id"]
+        destination_well_id = oper["destination_well_name"]  # goes into notes
+        nps_id, ngs_pair = make_ngs_prepped_sample(db_session,
+                                                   source_sample_id,
+                                                   destination_well_id)
+
+        i7_rowcol = "%s%d" % (ngs_pair.reverse_primer_i7_well_row,
+                              ngs_pair.reverse_primer_i7_well_column)
+        i7_oper = oper.copy()
+        i7_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
+        i7_oper["source_well_name"] = i7_rowcol
+        i7_oper["source_sample_id"] = ngs_pair.i7_sequence_id
+        i7_oper["source_plate_well_count"] = 384
+        i7_oper["destination_sample_id"] = nps_id
+        new_operations.append(i7_oper)
+
+        i5_rowcol = "%s%d" % (ngs_pair.forward_primer_i5_well_row,
+                              ngs_pair.forward_primer_i5_well_column)
+        i5_oper = oper.copy()
+        i5_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
+        i5_oper["source_well_name"] = i5_rowcol
+        i5_oper["source_sample_id"] = ngs_pair.i5_sequence_id
+        i5_oper["source_plate_well_count"] = 384
+        i5_oper["destination_sample_id"] = nps_id
+        new_operations.append(i5_oper)
+
+    spec.data_json["operations"] = new_operations
     return True

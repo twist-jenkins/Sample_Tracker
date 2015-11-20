@@ -356,31 +356,36 @@ class TestCase(unittest.TestCase):
             "transfer_type_id": 26
         }
 
-        # post the spec -- this replaces post('/api/v1/track-sample-step')
+        # 1. post the spec -- this replaces post('/api/v1/track-sample-step')
 
         rv = self.client.post('/api/v1/rest/transform-specs',
                               data=json.dumps({"plan": spec}),
                               content_type='application/json')
         assert rv.status_code == 201, rv.data
 
-        # the spec should now exist but not be executed yet
+        # 2. the spec should now exist but not be executed yet
 
         result = json.loads(rv.data)
         assert "data" in result
         assert "data_json" in result["data"]
         assert result["data"]["date_executed"] is None
 
-        # the spec should have some foo
-        assert result["data"]["data_json"]["foo"] == "bar"
+        # 3. the spec should have some foo
 
-        # there should be no plate yet
+        assert result["data"]["data_json"]["foo"] == "bar"
+        operations = result["data"]["data_json"]["operations"]
+        for well in operations:
+            assert well["source_sample_id"][0:3] == "BC_"
+            assert well["destination_sample_id"][0:4] == "NPS_"
+
+        # 4. there should be no plate yet
 
         rv = self.client.get('/api/v1/basic-plate-info/%s'
                              % dest_plate_1_barcode,
                              content_type='application/json')
         assert rv.status_code == 404, rv.data
 
-
+        # 5.
 
 if __name__ == '__main__':
     unittest.main()
