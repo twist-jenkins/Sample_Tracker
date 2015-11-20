@@ -59,7 +59,7 @@ def json_api_error(err_list, status_code, headers=None):
 """
 
 
-def formatted(db_session, data, fmt):
+def formatted(db_session, data, fmt, spec):
     if fmt == 'miseq.csv':
         nps_ids = [el["source_sample_id"]
                    for el in data["data_json"]["operations"]]
@@ -75,6 +75,15 @@ def formatted(db_session, data, fmt):
             return csv
         else:
             abort(404, message="Could not create echo csv")
+    elif fmt == 'execute':
+        # egregious hack, the client is supposed to PUT the spec
+        # with header Execution:Immediate, instead here we allow
+        # the client to GET the spec with format = 'execute'...
+        cls = TransformSpecResource
+        cls.execute(db_session, spec)
+        db_session.add(spec)
+        result = spec_schema.dump(spec).data
+        return json_api_success(result, 200)
     elif fmt == 'json':
         return json_api_success(data, 200)
     else:
@@ -92,12 +101,12 @@ class TransformSpecResource(flask_restful.Resource):
             spec_id = tokens[0]
             fmt = '.'.join(tokens[1:])
         with scoped_session(db.engine) as sess:
-            row = sess.query(SampleTransformSpec).filter(
+            spec = sess.query(SampleTransformSpec).filter(
                 SampleTransformSpec.spec_id == spec_id).first()
-            if row:
-                data = spec_schema.dump(row).data
+            if spec:
+                data = spec_schema.dump(spec).data
                 # sess.expunge(row)
-                return formatted(sess, data, fmt)
+                return formatted(sess, data, fmt, spec)
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
     def delete(self, spec_id):
@@ -116,9 +125,9 @@ class TransformSpecResource(flask_restful.Resource):
                 return json_api_success('', 204)
             abort(404, message="Spec {} doesn't exist".format(spec_id))
 
-    def put(self, spec_id, action=None):
+    def put(self, spec_id):
         """creates or replaces a single specified spec"""
-        return self.create_or_replace('PUT', spec_id, action)
+        return self.create_or_replace('PUT', spec_id)
 
     @classmethod
     def response_headers(cls, spec):
@@ -127,7 +136,7 @@ class TransformSpecResource(flask_restful.Resource):
                 'etag': str(spec.spec_id)}
 
     @classmethod
-    def create_or_replace(cls, method, spec_id=None, action=None):
+    def create_or_replace(cls, method, spec_id=None):
         with scoped_session(db.engine) as sess:
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
@@ -145,6 +154,8 @@ class TransformSpecResource(flask_restful.Resource):
 
                 if modify_before_insert(sess, spec):
                     # HACK FOR NGS BARCODING
+                    # FIXME: the client should not set execution: immediate
+                    # for this case
                     immediate = False
 
                 if immediate:
@@ -173,10 +184,11 @@ class TransformSpecResource(flask_restful.Resource):
                 if type(spec.data_json) in (str, unicode):
                     spec.data_json = json.loads(spec.data_json)
 
-                if immediate:
-                    cls.execute(sess, spec)
                 spec.operator_id = current_user.operator_id
                 # TODO: allow execution operator_id != creation operator_id
+                if immediate:
+                    cls.execute(sess, spec)
+
                 sess.add(spec)
                 result = spec_schema.dump(spec).data
                 return json_api_success(result, 201,
@@ -196,7 +208,7 @@ class TransformSpecResource(flask_restful.Resource):
         try:
             transfer_type_id = details["transfer_type_id"]
         except:
-            transfer_type_id = details["id"]  # FIXME: REMOVE
+            transfer_type_id = details["id"]  # FIXME: REMOVE SHIM
         transfer_template_id = details["transfer_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
@@ -207,7 +219,11 @@ class TransformSpecResource(flask_restful.Resource):
                                               transform_spec_id=spec.spec_id)
         if not result:
             raise ValueError("create_adhoc_sample_movement returned nothing")
+        if not result["success"]:
+            abort(400, message="Failed to execute step (sample_movement)")
         spec.date_executed = datetime.utcnow()
+        spec.operator_id = current_user.operator_id
+        # TODO: allow execution operator_id != creation operator_id
 
 
 class TransformSpecListResource(flask_restful.Resource):

@@ -362,6 +362,7 @@ class TestCase(unittest.TestCase):
                               data=json.dumps({"plan": spec}),
                               content_type='application/json')
         assert rv.status_code == 201, rv.data
+        new_spec_url = rv.headers['location']
 
         # 2. the spec should now exist but not be executed yet
 
@@ -384,7 +385,35 @@ class TestCase(unittest.TestCase):
                              content_type='application/json')
         assert rv.status_code == 404, rv.data
 
-        # 5.
+        # 5. We should be able to get an echo worklist
+
+        # 6. Now execute
+
+        # properly:
+        # headers = [("Transform-Execution", "Immediate")]
+        # rv = self.client.put(new_spec_url,
+        #                      content_type="application/json",
+        #                      headers=headers)
+        # assert rv.status_code == 200
+
+        # hackily:
+        execute_url = new_spec_url + ".execute"
+        rv = self.client.get(execute_url,
+                             content_type="application/json")
+
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        data = result["data"]
+
+        date_executed = data["date_executed"]
+        assert date_executed is not None
+
+        # 7. there should now be a plate
+
+        rv = self.client.get('/api/v1/basic-plate-info/%s'
+                             % dest_plate_1_barcode,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
 
 if __name__ == '__main__':
     unittest.main()

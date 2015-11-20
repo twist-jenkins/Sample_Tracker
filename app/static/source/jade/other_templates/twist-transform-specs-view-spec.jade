@@ -20,11 +20,16 @@ div(class="twst-view-transform-spec-main")
             button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
             h3 Download:
                 &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv") Ec
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv") [Echo]
                 &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv") Ha
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv") [Hamilton]
                 &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv") Mi
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv") [MiSeq]
+                &nbsp;
+                &nbsp;
+                &nbsp;
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.execute") [Execute]
+
             h3 Operations:
             table(class="twst-data-readout-table twst-transform-spec-preview-table")
                 tr

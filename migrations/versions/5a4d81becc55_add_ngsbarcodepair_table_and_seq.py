@@ -16,8 +16,14 @@ import json
 from alembic import op
 import sqlalchemy as db
 
+# To remove a single barcode, e.g. a combination seen as a bad
+# pair, just delete that row from the database.  Might need to
+# beef up the code which cycles through.
 
 def upgrade():
+    #
+    # First the barcode database, which becomes a regular table.
+    #
     ngs_barcode_pair_table = op.create_table(
         'ngs_barcode_pair',
         db.Column('pk',
@@ -45,6 +51,10 @@ def upgrade():
                   nullable=False)
     )
 
+    #
+    # Populate its values from the file Austin provided.
+    # If the barcode
+    #
     csvfilename = 'database/ngs_barcode_database.csv'
     csvfile = open(csvfilename, 'rU')
     if not csvfile:
@@ -67,6 +77,9 @@ def upgrade():
     print ("Created table 'ngs_barcode_pair': "
            "%d ngs_barcode_pairs added to DB" % len(ngs_barcode_pairs))
 
+    #
+    # Now insert all the remaining transfer types.
+    #
     sql = '''
         CREATE SEQUENCE "ngs_barcode_pair_index_seq"
         MINVALUE 0
@@ -76,6 +89,24 @@ def upgrade():
         CYCLE''' % max_value
     print "Created sequence 'ngs_barcode_pair_index_seq': %s" % sql
     op.execute(sql)
+
+    #
+    # Now insert all the remaining transfer types.
+    #
+    lookup_table = table('sample_transfer_type',
+        column('id', Integer),
+        column('name', String),
+        column('sample_transfer_template_id', Integer)
+    )
+    data = [
+        "Transformation","Plating on Q-pix","Plating on Hamilton","Picking colonies on Q-pix",
+        "Glycerol stock","RCA","Pick for miniprep", "Pick for primer removal","Pick for shipment"
+    ]
+    ins = lookup_table.insert()
+    for value in data:
+        new_row = ins.values(name=value,sample_transfer_template_id=1)
+        op.execute(new_row)
+
 
 def downgrade():
     op.execute('drop table if exists ngs_barcode_pair')
