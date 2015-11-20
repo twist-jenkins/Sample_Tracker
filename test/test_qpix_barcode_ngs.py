@@ -18,7 +18,7 @@ from app import login_manager
 from test_flask_app import AutomatedTestingUser, rnd_bc
 # from test_flask_app import RootPlate
 
-EXAMPLE_SPEC = {
+EXAMPLE_BARCODING_SPEC = {
     "type":"plate_step",
     "title":"NGS prep: barcode hitpicking",
     "sources":[{
@@ -61,6 +61,47 @@ EXAMPLE_SPEC = {
         "transfer_type_id":26
     }
 }
+
+EXAMPLE_ALIQUOT_SPEC = {
+    "type":"plate_step",
+    "title":"Aliquoting for Quantification (384 plate)",
+    "sources":[{
+        "id":None,
+        "type":"plate",
+        "details":{
+            "text":"",
+            "id":"SRN 000577 SM-21",
+            "plateDetails":{
+                "type":"SPTT_0004",
+                "createdBy":"Leslie Stanton",
+                "dateCreated":"2015-11-08 14:38:42.182940"
+            }
+        }
+    }],
+    "destinations":[{
+        "id":None,
+        "type":"plate",
+        "details":{
+            "text":"","id":"f8m938fm3984y9834y"
+        }
+    }],
+    "operations":[
+        {
+            "source_plate_barcode":"SRN 000577 SM-21","source_well_name":"A1","source_sample_id":"GA_562a647b799305708a87982f","destination_plate_barcode":"f8m938fm3984y9834y","destination_well_name":"A1","destination_plate_well_count":48
+        }, {
+            "source_plate_barcode":"SRN 000577 SM-21","source_well_name":"A2","source_sample_id":"GA_562a647b799305708a87982d","destination_plate_barcode":"f8m938fm3984y9834y","destination_well_name":"A2","destination_plate_well_count":48
+        }
+    ],
+    "details":{
+        "transfer_template_id":1,
+        "text":"Aliquoting for Quantification (384 plate)",
+        "source_plate_count":1,
+        "id":1,
+        "destination_plate_count":1,
+        "transfer_type_id":1
+    }
+}
+
 
 class TestCase(unittest.TestCase):
 
@@ -240,8 +281,54 @@ class TestCase(unittest.TestCase):
         print result
         assert result["success"] is True
 
-    def test_small_ngs_prep_spec_golden(self):
-        spec = EXAMPLE_SPEC.copy()
+    def test_small_aliquot_spec_golden(self):
+        spec = EXAMPLE_ALIQUOT_SPEC.copy()
+        rnd = rnd_bc()
+        dest_plate_barcode = rnd + '_1'
+        transfer_map = [{
+            "source_plate_barcode": self.root_plate_barcode,
+            "source_well_name": src_well,
+            "destination_plate_barcode": dest_plate,
+            "destination_well_name": dest_well,
+            "destination_plate_well_count": dest_well_count,
+            "source_sample_id": "CS_563fd11f785b1a7dd06dc817"
+        } for (src_well, dest_plate, dest_well, dest_well_count) in [
+            ('A1', dest_plate_barcode, 'A1', 48),
+            ('A2', dest_plate_barcode, 'A2', 48),
+            ('B1', dest_plate_barcode, 'B1', 48),
+            ('B2', dest_plate_barcode, 'B2', 48),
+            ('C1', dest_plate_barcode, 'C1', 48),
+        ]]
+        spec["operations"] = transfer_map
+
+        # post the spec -- this replaces post('/api/v1/track-sample-step')
+
+        headers = [("Transform-Execution", "Immediate")]
+        rv = self.client.post('/api/v1/rest/transform-specs',
+                              data=json.dumps({"plan": spec}),
+                              content_type='application/json',
+                              headers=headers)
+        assert rv.status_code == 201, rv.data
+
+        # the spec should now exist but not be executed yet
+
+        result = json.loads(rv.data)
+        assert "data" in result
+        assert "data_json" in result["data"]
+        assert result["data"]["date_executed"] is not None
+
+        # there should be a plate already
+
+        rv = self.client.get('/api/v1/basic-plate-info/%s'
+                             % dest_plate_barcode,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        print result
+        assert result["success"] is True
+
+    def test_small_ngs_barcoding_spec_golden(self):
+        spec = EXAMPLE_BARCODING_SPEC.copy()
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
         dest_plate_2_barcode = rnd + '_2'
@@ -292,8 +379,6 @@ class TestCase(unittest.TestCase):
                              % dest_plate_1_barcode,
                              content_type='application/json')
         assert rv.status_code == 404, rv.data
-
-
 
 
 
