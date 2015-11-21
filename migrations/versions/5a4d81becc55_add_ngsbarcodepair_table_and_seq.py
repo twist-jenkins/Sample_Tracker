@@ -12,15 +12,25 @@ down_revision = '2508b1c64724'
 
 import csv
 import json
+from datetime import datetime
 
 from alembic import op
 import sqlalchemy as db
+from sqlalchemy.sql import table, column
+from sqlalchemy import String, Integer, DateTime, Enum
+from app.dbmodels import create_unique_object_id
+
+from app.plate_to_plate_maps import maps_json
+
+NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
+NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
 
 # To remove a single barcode, e.g. a combination seen as a bad
-# pair, just delete that row from the database.  Might need to
-# beef up the code which cycles through.
+# pair, just delete that row from the database.  App code currently
+# allows up to 1000 consecutive missing barcodes.
 
-def upgrade():
+
+def create_barcode_table():
     #
     # First the barcode database, which becomes a regular table.
     #
@@ -50,10 +60,12 @@ def upgrade():
                   db.Integer,
                   nullable=False)
     )
+    return ngs_barcode_pair_table
 
+
+def populate_values(ngs_barcode_pair_table):
     #
     # Populate its values from the file Austin provided.
-    # If the barcode
     #
     csvfilename = 'database/ngs_barcode_database.csv'
     csvfile = open(csvfilename, 'rU')
@@ -76,9 +88,14 @@ def upgrade():
     op.bulk_insert(ngs_barcode_pair_table, ngs_barcode_pairs)
     print ("Created table 'ngs_barcode_pair': "
            "%d ngs_barcode_pairs added to DB" % len(ngs_barcode_pairs))
+    return ngs_barcode_pairs, max_value
 
+
+def create_cycle_sequence(max_value):
     #
-    # Now insert all the remaining transfer types.
+    # Now create a (postgres-specific) sequence which cycles
+    # through the barcodes.  For non-postgres, a modulo operation
+    # could be used instead.
     #
     sql = '''
         CREATE SEQUENCE "ngs_barcode_pair_index_seq"
@@ -90,24 +107,148 @@ def upgrade():
     print "Created sequence 'ngs_barcode_pair_index_seq': %s" % sql
     op.execute(sql)
 
+
+def build_plate_wells(ngs_barcode_pairs):
+    # Build the barcode plate wells, making sure there is
+    # no inconsistent data.
+
+    json_maps = maps_json()
+    plate_map = json_maps["row_column_maps"][NGS_BARCODE_PLATE_TYPE]
+    """
+                "SPTT_0006": {
+                # 384 well plate
+                 1: {"row":"A", "column": 1}
+                ,2: {"row":"A", "column": 2}
+    """
+    reverse_map = {(dct["row"], int(dct["column"])): well_id
+                   for well_id, dct in plate_map.items()}
+    """
+                 ("A", 1): 1,
+                 ("A", 2): 2
+    """
+    """
+    modulo_index
+    i7_sequence_id,  i5_sequence_id
+    reverse_primer_i7_well_row, reverse_primer_i7_well_column
+    forward_primer_i5_well_row,  forward_primer_i5_well_column
+      0 BC_00029  BC_00125  A 1 A 2
+      1 BC_00030  BC_00126  C 1 C 2
+      2 BC_00031  BC_00127  E 1 E 2
+    """
+    wells = {}
+    for pair in ngs_barcode_pairs:
+        for (row_key, col_key, seq_key) in (
+            ("reverse_primer_i7_well_row",
+             "reverse_primer_i7_well_column",
+             "i7_sequence_id"),
+            ("forward_primer_i5_well_row",
+             "forward_primer_i5_well_column",
+             "i5_sequence_id"),
+        ):
+            rowcol = (pair[row_key], int(pair[col_key]))
+            well_id = reverse_map[rowcol]
+            barcode_seq = pair[seq_key]
+            if well_id in wells:
+                assert wells[well_id] == barcode_seq
+            else:
+                wells[well_id] = barcode_seq
+    return wells
+
+
+def insert_barcode_plate_record():
     #
-    # Now insert all the remaining transfer types.
+    # Now insert a parentless NGS_BARCODE_PLATE_TEST1.
     #
-    lookup_table = table('sample_transfer_type',
-        column('id', Integer),
+    bc_plate_id = create_unique_object_id('SPLT_')
+    sp_migration_table = table(
+        'sample_plate',
+        column('sample_plate_id', String),
+        column('type_id', Integer),
+        column('operator_id', String),
+        column('storage_location_id', String),
+        column('date_created', DateTime),
+        column('description', String),
+        column('external_barcode', String),
         column('name', String),
-        column('sample_transfer_template_id', Integer)
+        column('status', Enum('disposed', 'in_use', 'new'))
     )
-    data = [
-        "Transformation","Plating on Q-pix","Plating on Hamilton","Picking colonies on Q-pix",
-        "Glycerol stock","RCA","Pick for miniprep", "Pick for primer removal","Pick for shipment"
-    ]
-    ins = lookup_table.insert()
-    for value in data:
-        new_row = ins.values(name=value,sample_transfer_template_id=1)
-        op.execute(new_row)
+    barcode_plate = {
+        'sample_plate_id': bc_plate_id,
+        'type_id': NGS_BARCODE_PLATE_TYPE,
+        'operator_id': 'AH',
+        'storage_location_id': 'LOC_0064',  # FAKE STORAGE LOCATION
+        'date_created': datetime.now(),
+        'description': 'Barcoding Plate Test 1',
+        'external_barcode': NGS_BARCODE_PLATE,
+        'name': 'NGS Barcode Plate Test 1',
+        'status': 'in_use'
+    }
+    op.bulk_insert(sp_migration_table, [barcode_plate])
+    return bc_plate_id
+
+
+def insert_barcode_well_records(bc_plate_id, wells):
+    #
+    # Now populate that plate NGS_BARCODE_PLATE_TEST1 with samples.
+    #
+
+    json_maps = maps_json()
+    plate_map = json_maps["row_column_maps"][NGS_BARCODE_PLATE_TYPE]
+
+    splt_migration_table = table(
+        'sample_plate_layout',
+        column('sample_plate_id', String),
+        column('sample_id', String),
+        column('well_id', Integer),
+        column('row', Integer),
+        column('column', Integer),
+        column('date_created', DateTime),
+        column('operator_id', String),
+        column('status', Enum('active',))
+    )
+    rows = [{'sample_plate_id': bc_plate_id,
+             'sample_id': wells[well_id],
+             'well_id': well_id,
+             'row': row_col_dict["row"],
+             'column': row_col_dict["column"],
+             'date_created': datetime.now(),
+             'operator_id': 'AH',
+             'status': 'active'
+             }
+            for (well_id, row_col_dict) in plate_map.items()
+            if well_id in wells]
+    op.bulk_insert(splt_migration_table, rows)
+
+    '''
+    for well_id, row_col_dict in plate_map:
+        if well_id in wells:
+            # i7_wells[i7_seq_id] = reverse_map[i7_rowcol]
+            barcode_id = 'BC_233'
+            barcode_well = {
+                'sample_plate_id': bc_plate_id,
+                'sample_id': barcode_id,
+                'well_id': well_id,
+                'row': row_col_dict["row"],
+                'column': row_col_dict["column"],
+                'date_created': datetime.now(),
+                'operator_id': 'AH',
+                'status': 'active'
+            }
+    '''
+
+
+def upgrade():
+    ngs_barcode_pair_table = create_barcode_table()
+    ngs_barcode_pairs, max_value = populate_values(ngs_barcode_pair_table)
+    wells = build_plate_wells(ngs_barcode_pairs)
+    create_cycle_sequence(max_value)
+    bc_plate_id = insert_barcode_plate_record()
+    # insert_barcode_well_records(bc_plate_id, wells)
 
 
 def downgrade():
+    delete_sql = 'delete from sample_plate where external_barcode = :bc'
+    args = {"bc": NGS_BARCODE_PLATE}
+    op.execute(db.text(delete_sql).bindparams(**args))
     op.execute('drop table if exists ngs_barcode_pair')
     op.execute('drop sequence if exists ngs_barcode_pair_index_seq')
