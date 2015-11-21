@@ -21,6 +21,8 @@ api = flask_restful.Api(app)
 
 from marshmallow import Schema, fields
 
+NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
+
 
 class SpecSchema(Schema):
     spec_id = fields.Int()
@@ -252,8 +254,6 @@ class TransformSpecListResource(flask_restful.Resource):
 def modify_before_insert(db_session, spec):
     # hack for ngs barcoding
     # might be useful for primer hitpicking etc
-
-    NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
 
     if "details" not in spec.data_json:
         return False
