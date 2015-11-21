@@ -21,6 +21,9 @@ from sqlalchemy.dialects import postgresql
 
 db_metadata = MetaData(bind=db.engine)  # for autoload / schema reflection
 
+NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
+NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
+
 def create_unique_object_id(prefix=""):
     return prefix + str(bson.ObjectId())
 

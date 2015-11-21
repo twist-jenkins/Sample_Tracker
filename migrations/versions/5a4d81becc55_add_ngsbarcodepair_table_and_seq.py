@@ -19,11 +19,10 @@ import sqlalchemy as db
 from sqlalchemy.sql import table, column
 from sqlalchemy import String, Integer, DateTime, Enum
 from app.dbmodels import create_unique_object_id
+from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 
 from app.plate_to_plate_maps import maps_json
 
-NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
-NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
 
 # To remove a single barcode, e.g. a combination seen as a bad
 # pair, just delete that row from the database.  App code currently
