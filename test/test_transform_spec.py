@@ -18,28 +18,30 @@ from app import login_manager
 from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 # from sqlalchemy.exc import IntegrityError
 
-EXAMPLE_DEST_PLATE = rnd_bc()
-EXAMPLE_SPEC = {
-    "plan": {
-        "type":"plate_step",
-        "title":"Aliquoting for Quantification (384 plate)",
-        "sources":[{"id":None,"type":"plate","details":{"text":"","id":"H3904Y1W","plateDetails":{"type":"SPTT_0006","createdBy":"Jackie Fidanza","dateCreated":"2015-08-17 10:19:06"}}}],
-        "destinations":[{"id":None,"type":"plate","details":{"text":"","id":rnd_bc()}}],
-        "operations":[
-        {"source_plate_barcode":"H3904Y1W","source_well_name":"A5","source_sample_id":"GA_55d2178b799305dbef8bf2c7","destination_plate_barcode":"test34343452352","destination_well_name":"A5","destination_plate_well_count":384},
-        {
-        "source_plate_barcode":"H3904Y1W","source_well_name":"A6","source_sample_id":"GA_55d2178b799305dbef8bf2c6","destination_plate_barcode":EXAMPLE_DEST_PLATE,"destination_well_name":"A6","destination_plate_well_count":384},
-        {
-        "source_plate_barcode":"H3904Y1W","source_well_name":"A7","source_sample_id":"GA_55d2178b799305dbef8bf2c5","destination_plate_barcode":EXAMPLE_DEST_PLATE,"destination_well_name":"A7","destination_plate_well_count":384}
-        ],
-        "details":{"transfer_template_id":1,
-                   "transfer_type_id":1,
-                   "text":"Aliquoting for Quantification (384 plate)",
-                   "source_plate_count":1,
-                   "id":1,
-                   "destination_plate_count":1}
+def example_spec_random_dest_plate():
+    dest_plate = rnd_bc()
+    spec = {
+        "plan": {
+            "type": "plate_step",
+            "title": "Aliquoting for Quantification (384 plate)",
+            "sources": [{"id": None, "type": "plate", "details": {"text": "", "id": "H3904Y1W", "plateDetails": {"type": "SPTT_0006", "createdBy": "Jackie Fidanza", "dateCreated": "2015-08-17 10:19:06"}}}],
+            "destinations": [{"id": None, "type": "plate", "details": {"text": "", "id": dest_plate}}],
+            "operations": [
+            {"source_plate_barcode": "H3904Y1W", "source_well_name": "A5", "source_sample_id": "GA_55d2178b799305dbef8bf2c7", "destination_plate_barcode": dest_plate, "destination_well_name": "A5", "destination_plate_well_count": 384},
+            {
+            "source_plate_barcode": "H3904Y1W", "source_well_name": "A6", "source_sample_id": "GA_55d2178b799305dbef8bf2c6", "destination_plate_barcode": dest_plate, "destination_well_name": "A6", "destination_plate_well_count": 384},
+            {
+            "source_plate_barcode": "H3904Y1W", "source_well_name": "A7", "source_sample_id": "GA_55d2178b799305dbef8bf2c5", "destination_plate_barcode": dest_plate, "destination_well_name": "A7", "destination_plate_well_count": 384}
+            ],
+            "details": {"transfer_template_id": 1,
+                        "transfer_type_id": 1,
+                        "text": "Aliquoting for Quantification (384 plate)",
+                        "source_plate_count": 1,
+                        "id": 1,
+                        "destination_plate_count": 1}
+        }
     }
-}
+    return spec
 
 class TestCase(unittest.TestCase):
 
@@ -50,7 +52,7 @@ class TestCase(unittest.TestCase):
         # assert "Unittest" in os.environ["WEBSITE_ENV"]
         #assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
-        db.create_all()
+        # db.create_all()
         try:
             cls.root_plate_barcode = RootPlate().create_in_db("PLAN_ROOT2",
                                                               db.engine)
@@ -184,7 +186,7 @@ class TestCase(unittest.TestCase):
 
     def test_post_default_execution_golden(self):
         """ targeting the execution method """
-        new_spec = EXAMPLE_SPEC.copy()
+        new_spec = example_spec_random_dest_plate()
         new_spec["plan"]["destinations"][0]["details"]["id"] = rnd_bc()
         uri = '/api/v1/rest/transform-specs'
         rv = self.client.post(uri,
@@ -203,7 +205,7 @@ class TestCase(unittest.TestCase):
 
     def test_post_immediate_execution_golden(self):
         """ targeting the execution method """
-        new_spec = EXAMPLE_SPEC.copy()
+        new_spec = example_spec_random_dest_plate()
         new_spec["plan"]["destinations"][0]["details"]["id"] = rnd_bc()
         uri = '/api/v1/rest/transform-specs'
         headers = [("Transform-Execution", "Immediate")]
@@ -224,7 +226,7 @@ class TestCase(unittest.TestCase):
 
     def test_post_deferred_execution_golden(self):
         """ targeting the execution method """
-        new_spec = EXAMPLE_SPEC.copy()
+        new_spec = example_spec_random_dest_plate()
         new_spec["plan"]["destinations"][0]["details"]["id"] = rnd_bc()
         uri = '/api/v1/rest/transform-specs'
         headers = [("Transform-Execution", "Deferred")]
