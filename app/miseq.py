@@ -168,7 +168,7 @@ def echo_csv_for_nps(operations, fname, transfer_volume=100):
     """ assumes each oper looks like {
             "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
             "source_well_name": "A1",
-            "source_sample_id":"BC_00234",
+            "source_sample_id":"BCS_00234",
             "source_plate_well_count": 384,
             "destination_plate_barcode":"SRN 000577 SM-37",
             "destination_well_name":"K13",

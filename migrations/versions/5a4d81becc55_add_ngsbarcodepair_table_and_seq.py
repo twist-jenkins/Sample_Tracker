@@ -11,22 +11,16 @@ revision = '5a4d81becc55'
 down_revision = '2508b1c64724'
 
 import csv
-import json
 from datetime import datetime
 
 from alembic import op
 import sqlalchemy as db
 from sqlalchemy.sql import table, column
 from sqlalchemy import String, Integer, DateTime, Enum
+
 from app.dbmodels import create_unique_object_id
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
-
 from app.plate_to_plate_maps import maps_json
-
-
-# To remove a single barcode, e.g. a combination seen as a bad
-# pair, just delete that row from the database.  App code currently
-# allows up to 1000 consecutive missing barcodes.
 
 
 def create_barcode_table():
@@ -110,6 +104,7 @@ def create_cycle_sequence(max_value):
 def build_plate_wells(ngs_barcode_pairs):
     # Build the barcode plate wells, making sure there is
     # no inconsistent data.
+    # Return barcode sequences too.
 
     json_maps = maps_json()
     plate_map = json_maps["row_column_maps"][NGS_BARCODE_PLATE_TYPE]
@@ -135,6 +130,7 @@ def build_plate_wells(ngs_barcode_pairs):
       2 BC_00031  BC_00127  E 1 E 2
     """
     wells = {}
+    barcode_sequences = set()
     for pair in ngs_barcode_pairs:
         for (row_key, col_key, seq_key) in (
             ("reverse_primer_i7_well_row",
@@ -147,11 +143,42 @@ def build_plate_wells(ngs_barcode_pairs):
             rowcol = (pair[row_key], int(pair[col_key]))
             well_id = reverse_map[rowcol]
             barcode_seq = pair[seq_key]
+            barcode_sequences.add(barcode_seq)
             if well_id in wells:
                 assert wells[well_id] == barcode_seq
             else:
                 wells[well_id] = barcode_seq
-    return wells
+    return wells, barcode_sequences
+
+
+def insert_barcode_sample_records(barcode_sequences):
+    #
+    # Now populate samples (of some type TBD) for the barcode sequences
+    # so we can put them into a plate layout.
+    #
+
+    unq_srtd_barcode_seqs = sorted(list(set(barcode_sequences)))
+    sample_migration_table = table(
+        'sample',
+        column('sample_id', String),
+        column('date_created', DateTime),
+        column('operator_id', String),
+        column('type_id', Integer),
+        column('name', String),
+        column('description', String),
+        column('status', String)
+    )
+    rows = [{'sample_id': barcode_sequence_to_barcode_sample(seq_name),
+             'date_created': datetime.now(),
+             'operator_id': 'AH',
+             'type_id': 'blended_sample',
+             'name': seq_name,
+             'description': 'Barcode sample for %s' % seq_name,
+             'status': 'active'
+             }
+            for seq_name in unq_srtd_barcode_seqs
+            ]
+    op.bulk_insert(sample_migration_table, rows)
 
 
 def insert_barcode_plate_record():
@@ -206,7 +233,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
         column('status', Enum('active',))
     )
     rows = [{'sample_plate_id': bc_plate_id,
-             'sample_id': wells[well_id],
+             'sample_id': barcode_sequence_to_barcode_sample(wells[well_id]),
              'well_id': well_id,
              'row': row_col_dict["row"],
              'column': row_col_dict["column"],
@@ -239,10 +266,11 @@ def insert_barcode_well_records(bc_plate_id, wells):
 def upgrade():
     ngs_barcode_pair_table = create_barcode_table()
     ngs_barcode_pairs, max_value = populate_values(ngs_barcode_pair_table)
-    wells = build_plate_wells(ngs_barcode_pairs)
     create_cycle_sequence(max_value)
+    wells, barcode_sequences = build_plate_wells(ngs_barcode_pairs)
+    insert_barcode_sample_records(barcode_sequences)
     bc_plate_id = insert_barcode_plate_record()
-    # insert_barcode_well_records(bc_plate_id, wells)
+    insert_barcode_well_records(bc_plate_id, wells)
 
 
 def downgrade():

@@ -23,6 +23,8 @@ db_metadata = MetaData(bind=db.engine)  # for autoload / schema reflection
 
 NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
 NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
+NGS_BARCODE_SAMPLE_PREFIX = 'BCS_'
+
 
 def create_unique_object_id(prefix=""):
     return prefix + str(bson.ObjectId())
@@ -699,6 +701,10 @@ class NGSBarcodePair(db.Model):
     """from Austin"""
     __tablename__ = "ngs_barcode_pair"
 
+    # NOTE: To disable a single barcode pair seen as a bad combination for
+    # ngs, simply delete that row from this table.  App code currently
+    # allows up to 1000 consecutive missing barcodes.
+
     pk = db.Column(db.Integer, primary_key=True)
     i7_sequence_id = db.Column(db.String(40),
                                # db.ForeignKey("barcode_sequence.sequence_id"),
@@ -710,4 +716,8 @@ class NGSBarcodePair(db.Model):
     reverse_primer_i7_well_column = db.Column(db.Integer, nullable=False)
     forward_primer_i5_well_row = db.Column(db.String(10), nullable=False)
     forward_primer_i5_well_column = db.Column(db.Integer, nullable=False)
+
+
+def barcode_sequence_to_barcode_sample(barcode_sequence_name):
+    return NGS_BARCODE_SAMPLE_PREFIX + barcode_sequence_name.split("_")[1]
 
