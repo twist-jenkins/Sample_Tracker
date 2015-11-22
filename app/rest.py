@@ -12,16 +12,15 @@ from sqlalchemy.sql import func
 from app import app
 from app import db
 from app.utils import scoped_session
-from dbmodels import SampleTransformSpec, SampleTransfer
+from dbmodels import SampleTransformSpec, SampleTransfer, NGS_BARCODE_PLATE
+from dbmodels import NGSPreppedSample, NGSBarcodePair, create_unique_object_id
+from dbmodels import barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
-from app.routes.spreadsheet import make_ngs_prepped_sample
 from app import miseq
 
 api = flask_restful.Api(app)
 
 from marshmallow import Schema, fields
-
-NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
 
 
 class SpecSchema(Schema):
@@ -252,12 +251,16 @@ class TransformSpecListResource(flask_restful.Resource):
 
 
 def modify_before_insert(db_session, spec):
-    # hack for ngs barcoding
-    # might be useful for primer hitpicking etc
+    # Hack for ngs barcoding.
+    # Client currently sends the plate to be barcoded as the source_plate
+    # until it sends that plate as the destination plate, backend
+    # needs to rejigger the transform spec to make sense.
+    # Similar thing might be needed for primer hitpicking etc.
 
     if "details" not in spec.data_json:
         return False
 
+    # if not "ngs barcoding" step, do nothing
     details = spec.data_json["details"]
     if "transfer_type_id" in details:
         if details["transfer_type_id"] != 26:
@@ -286,7 +289,7 @@ def modify_before_insert(db_session, spec):
         i7_oper = oper.copy()
         i7_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
         i7_oper["source_well_name"] = i7_rowcol
-        i7_oper["source_sample_id"] = ngs_pair.i7_sequence_id
+        i7_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(ngs_pair.i7_sequence_id)
         i7_oper["source_plate_well_count"] = 384
         i7_oper["destination_sample_id"] = nps_id
         new_operations.append(i7_oper)
@@ -296,10 +299,75 @@ def modify_before_insert(db_session, spec):
         i5_oper = oper.copy()
         i5_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
         i5_oper["source_well_name"] = i5_rowcol
-        i5_oper["source_sample_id"] = ngs_pair.i5_sequence_id
+        i5_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(ngs_pair.i5_sequence_id)
         i5_oper["source_plate_well_count"] = 384
         i5_oper["destination_sample_id"] = nps_id
         new_operations.append(i5_oper)
 
     spec.data_json["operations"] = new_operations
+    spec.data_json["destinations"] = spec.data_json["sources"]
+    spec.data_json["sources"] = [{
+        "id": None,
+        "type": "plate",
+        "details": {
+            "text": "NGS barcoding source plate",
+            "id": NGS_BARCODE_PLATE,
+        }
+    }]
     return True
+
+
+def make_ngs_prepped_sample(db_session, source_sample_id,
+                            destination_well_id):
+    operator = current_user
+
+    # Grab next pair of barcodes
+    ngs_pair = None
+    tries_remaining = 1000
+    while not ngs_pair and tries_remaining > 0:
+        tries_remaining -= 1
+        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
+        if not next_index_sql:
+            raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
+        ngs_barcode_pair_index = db_session.execute(next_index_sql)
+        ngs_pair = (db.session.query(NGSBarcodePair)
+                    .filter_by(pk=ngs_barcode_pair_index)
+                    .first())
+    if not ngs_pair:
+        raise KeyError("ngs_barcode_pair_index %s not found"
+                       % ngs_barcode_pair_index)
+
+    # Create NPS
+    nps_id = create_unique_object_id("NPS_")
+    description = 'SMT stub descr.'  # e.g. "RCA 16 hours  Gene 12 Clone 2"
+    notes = 'SMT - well %s' % destination_well_id  # e.g. "" for alpha NPSs
+    insert_size_expected = -1
+    parent_process_id = None  # e.g. 'SPP_0008' for alpha NPSs
+    external_barcode = None
+    reagent_type_set_lot_id = None  # e.g. 'RTSL_5453e163e208466dd26d3aa4'
+    status = None
+    parent_transfer_process_id = None
+    date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    nps_sample = NGSPreppedSample(nps_id, source_sample_id,
+                                  description,
+                                  ngs_pair.i5_sequence_id,
+                                  ngs_pair.i7_sequence_id,
+                                  notes,
+                                  insert_size_expected,
+                                  date_created,
+                                  operator.operator_id,
+                                  parent_process_id,
+                                  external_barcode,
+                                  reagent_type_set_lot_id,
+                                  status,
+                                  parent_transfer_process_id)
+
+    logging.debug('NPS_ID %s for %s assigned [%s, %s]',
+                  nps_id, source_sample_id,
+                  ngs_pair.i5_sequence_id,
+                  ngs_pair.i7_sequence_id)
+
+    db_session.add(nps_sample)
+    db_session.flush()
+
+    return nps_id, ngs_pair
