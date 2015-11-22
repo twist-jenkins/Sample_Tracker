@@ -97,8 +97,8 @@ def miseq_csv_template(rows, run_id):
     cw.writerow(["[Data]"])
 
     cw.writerow(['Sample_ID', 'Sample_Name', 'Sample_Plate', 'Sample_Well',
-                 'I7_Index_ID index', 'I5_Index_ID', 'index2', 'GenomeFolder',
-                 'Sample_Project', 'Description'])
+                 'I7_Index_ID', 'index', 'I5_Index_ID', 'index2',
+                 'GenomeFolder', 'Sample_Project', 'Description'])
 
     for row in rows:
         # make data row
