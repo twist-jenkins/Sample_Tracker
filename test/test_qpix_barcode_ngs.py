@@ -328,10 +328,23 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def test_small_ngs_barcoding_spec_golden(self):
-        spec = EXAMPLE_BARCODING_SPEC.copy()
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
-        dest_plate_2_barcode = rnd + '_2'
+
+        # 1. create a target plate
+        data = {"sampleTransferTypeId": 2,
+                "sampleTransferTemplateId": 1,
+                "sourcePlates": [self.root_plate_barcode],
+                "destinationPlates": [dest_plate_1_barcode]}
+        rv = self.client.post('/api/v1/track-sample-step',
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert result["success"] is True
+
+        # 2. create an ngs barcoding spec (type 26)
+        spec = EXAMPLE_BARCODING_SPEC.copy()
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
@@ -343,8 +356,6 @@ class TestCase(unittest.TestCase):
             ('A1', dest_plate_1_barcode, 'A1', 96),
             ('A1', dest_plate_1_barcode, 'A2', 96),
             ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
         ]]
         spec["operations"] = transfer_map
         spec["details"] = {
@@ -356,7 +367,7 @@ class TestCase(unittest.TestCase):
             "transfer_type_id": 26
         }
 
-        # 1. post the spec -- this replaces post('/api/v1/track-sample-step')
+        # 3. post the spec -- this replaces post('/api/v1/track-sample-step')
 
         rv = self.client.post('/api/v1/rest/transform-specs',
                               data=json.dumps({"plan": spec}),
@@ -364,30 +375,23 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201, rv.data
         new_spec_url = rv.headers['location']
 
-        # 2. the spec should now exist but not be executed yet
+        # 4. the spec should now exist but not be executed yet
 
         result = json.loads(rv.data)
         assert "data" in result
         assert "data_json" in result["data"]
         assert result["data"]["date_executed"] is None
 
-        # 3. the spec should have some foo
+        # 5. the spec should have BCS_ going in and NPS_ going out
 
         operations = result["data"]["data_json"]["operations"]
         for well in operations:
-            assert well["source_sample_id"][0:3] == "BC_"
+            assert well["source_sample_id"][0:4] == "BCS_"
             assert well["destination_sample_id"][0:4] == "NPS_"
 
-        # 4. there should be no plate yet
+        # 7. We should be able to get an echo worklist
 
-        rv = self.client.get('/api/v1/basic-plate-info/%s'
-                             % dest_plate_1_barcode,
-                             content_type='application/json')
-        assert rv.status_code == 404, rv.data
-
-        # 5. We should be able to get an echo worklist
-
-        # 6. Now execute
+        # 8. Now execute
 
         # properly:
         # headers = [("Transform-Execution", "Immediate")]
@@ -408,12 +412,6 @@ class TestCase(unittest.TestCase):
         date_executed = data["date_executed"]
         assert date_executed is not None
 
-        # 7. there should now be a plate
-
-        rv = self.client.get('/api/v1/basic-plate-info/%s'
-                             % dest_plate_1_barcode,
-                             content_type='application/json')
-        assert rv.status_code == 200, rv.data
 
 if __name__ == '__main__':
     unittest.main()

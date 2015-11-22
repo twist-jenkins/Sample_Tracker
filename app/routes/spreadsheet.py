@@ -21,8 +21,7 @@ from app.models import create_destination_plate
 from app.dbmodels import (create_unique_object_id, SampleTransfer,
                           SamplePlate, SamplePlateLayout, ClonedSample,
                           SamplePlateType, SampleTransferDetail,
-                          SampleView, NGSPreppedSample,
-                          NGSBarcodePair)
+                          SampleView, NGS_BARCODE_PLATE)
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -97,6 +96,7 @@ def create_adhoc_sample_movement(db_session,
         destination_plate_barcode = well["destination_plate_barcode"]
         destination_col_and_row = well["destination_well_name"]
         destination_well_count = str(well["destination_plate_well_count"])
+        destination_sample_id = well.get("destination_sample_id", None)
 
         #print "WELL: ", well
 
@@ -213,16 +213,39 @@ def create_adhoc_sample_movement(db_session,
         #
         # 3. Obtain (or create if we haven't yet added a row for it in the database) the row for this well-to-well
         # transfer's destination plate.
-        #
+        # - It may be new, in which case we create a new plate orm object.
+        # - We may have created it on a previous loop iteration.
+        # - It may already exist in the database, if in_place_transform.
+        # - It may already exist in the database, if merge_transform.
 
-        # BUGFIX 11/17/2015: for in-place transforms, don't create a new plate!
+        merge_transform_flag = (source_plate_barcode == NGS_BARCODE_PLATE)
+
         in_place_transform_flag = (destination_plate_barcode == source_plate_barcode)
-        if in_place_transform_flag:
-            destination_plate = source_plate
-        else:
-            destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
-            if not destination_plate:
 
+        destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
+
+        if not destination_plate:
+
+            if merge_transform_flag:
+                # TODO: add lots more kinds of merge transforms.
+                destination_plate = db_session.query(SamplePlate).filter_by(external_barcode=destination_plate_barcode).first()
+
+                if not destination_plate:
+                    logging.info(" %s encountered error creating sample transfer. "
+                                 "There is no destination plate with the barcode: [%s]",
+                                 g.user.first_and_last_name, destination_plate_barcode)
+                    return {
+                        "success": False,
+                        "errorMessage": "There is no destination plate with the barcode: [%s]" % (destination_plate_barcode)
+                    }
+
+            elif in_place_transform_flag:
+                # BUGFIX 11/17/2015: for in-place transforms, 
+                # don't create a new plate!
+                # TODO: clarify same-same transfer destination plate.
+                destination_plate = source_plate
+
+            else:
                 try:
                     destination_plate = create_destination_plate(
                         db_session,
@@ -231,6 +254,7 @@ def create_adhoc_sample_movement(db_session,
                         sample_plate_type.type_id,
                         storage_location_id,
                         sample_transfer_template_id)
+                    db_session.flush()
                 except IndexError:
                     err_msg = ("Encountered error creating sample "
                                "transfer. Could not create destination plate: [%s]"
@@ -241,7 +265,7 @@ def create_adhoc_sample_movement(db_session,
                         "errorMessage": err_msg % destination_plate_barcode
                     }
 
-                destination_plates_by_barcode[destination_plate_barcode] = destination_plate
+            destination_plates_by_barcode[destination_plate_barcode] = destination_plate
 
         #
         logging.warn('4. Get the "source plate well"')
@@ -265,7 +289,7 @@ def create_adhoc_sample_movement(db_session,
         else:
             plate_size = None
 
-        if not source_plate_well:
+        if not source_plate_well and not merge_transform_flag:
             error_well_id = source_well_id
             if plate_size:
                 if plate_size == "48":
@@ -325,13 +349,29 @@ def create_adhoc_sample_movement(db_session,
 
         existing_sample_plate_layout = db_session.query(SamplePlateLayout).filter(and_(
             SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
-            SamplePlateLayout.sample_id==source_plate_well.sample_id,
+            # relax for ngs
+            # SamplePlateLayout.sample_id==source_plate_well.sample_id,
             SamplePlateLayout.well_id==destination_well_id
             )).first()
 
         #existing_sample_plate_layout = True
 
-        if existing_sample_plate_layout and not in_place_transform_flag:
+        if in_place_transform_flag:
+            if not existing_sample_plate_layout:
+                return {
+                "success":False,
+                "errorMessage":"This in-place-transform destination plate [%s] contains no sample in well [%s]" % (destination_plate.external_barcode,
+                    source_plate_well.well_id)
+                }
+        elif  merge_transform_flag:
+            if not existing_sample_plate_layout:
+                return {
+                "success":False,
+                "errorMessage":"This merge-transform destination plate [%s] contains no sample in well [%s]" % (destination_plate.external_barcode,
+                    source_plate_well.well_id)
+                }
+        elif existing_sample_plate_layout:
+            # still wanted in context of in-place transforms and merge transforms?
             return {
                 "success":False,
                 "errorMessage":"This destination plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
@@ -341,14 +381,11 @@ def create_adhoc_sample_movement(db_session,
         #
         logging.warn("4.  Set destination_sample_id.  Accession cloned_sample if necessary.")
         #
-        new_sample_id = sample_type_handler(db_session,
-                                            sample_transfer_type_id,
-                                            source_plate_well,
-                                            destination_well_id)
-        if new_sample_id is None:
-            destination_sample_id = source_plate_well.sample_id
-        else:
-            destination_sample_id = new_sample_id
+        if not destination_sample_id:
+            destination_sample_id = sample_handler(db_session,
+                                                   sample_transfer_type_id,
+                                                   source_plate_well,
+                                                   destination_well_id)
 
         #
         # 5. Create a row representing a well in the desination plate.
@@ -362,30 +399,42 @@ def create_adhoc_sample_movement(db_session,
         #    source_plate_well.row,source_plate_well.column)
         #db_session.add(destination_plate_well)
 
-        if in_place_transform_flag:
-            if destination_sample_id != source_plate_well.sample_id:
-                source_plate_well.sample_id = destination_sample_id
-                db_session.flush()
+        if in_place_transform_flag or merge_transform_flag:
+            destination_plate_well = existing_sample_plate_layout
+            if destination_plate_well.sample_id != destination_sample_id:
+                destination_plate_well.sample_id = destination_sample_id  # TODO: is this even necessary orm-wise?
+            destination_plate_well.operator_id = operator.operator_id  # unfortunately this will wipe out the old operator_id
+            #if destination_sample_id != source_plate_well.sample_id:
+                #source_plate_well.sample_id = destination_sample_id # ???? WRONG! ??
+                #db_session.flush()                
         else:
             destination_plate_well = SamplePlateLayout(
-                destination_plate.sample_plate_id, destination_sample_id,
-                destination_well_id, operator.operator_id,
-                source_plate_well.row, source_plate_well.column)
+                destination_plate.sample_plate_id, 
+                destination_sample_id,
+                destination_well_id, 
+                operator.operator_id,
+                source_plate_well.row, 
+                source_plate_well.column)
             db_session.add(destination_plate_well)
 
-            # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
-            logging.warn("DESTINATION PLATE WELL: %s ", destination_plate_well)
+        # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
+        logging.warn("DESTINATION PLATE WELL: %s ", destination_plate_well)
 
-            #
-            logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
-            # in the "desination" plate.
-            #
-            source_to_destination_well_transfer = SampleTransferDetail(
-                sample_transfer.id, order_number, source_plate.sample_plate_id,
-                source_plate_well.well_id, source_plate_well.sample_id,
-                destination_plate.sample_plate_id, destination_plate_well.well_id,
-                destination_plate_well.sample_id)
-            db_session.add(source_to_destination_well_transfer)
+        #
+        logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
+        # in the "desination" plate.
+        #
+        source_to_destination_well_transfer = SampleTransferDetail(
+            sample_transfer.id, 
+            order_number, 
+            source_plate_well.sample_plate_id,
+            source_plate_well.well_id, 
+            source_plate_well.sample_id,
+            destination_plate_well.sample_plate_id, 
+            destination_plate_well.well_id,
+            destination_plate_well.sample_id)
+        db_session.add(source_to_destination_well_transfer)
+        db_session.flush()
 
         order_number += 1
 
@@ -401,20 +450,15 @@ def create_adhoc_sample_movement(db_session,
         "success":True
     }
 
-def sample_type_handler(db_session, sample_transfer_type_id,
+def sample_handler(db_session, sample_transfer_type_id,
                         source_plate_well, destination_well_id):
     if sample_transfer_type_id in (15, 16):  # QPix To 96/384 plates
         return make_cloned_sample(db_session,
                                   source_plate_well.sample_id,
                                   destination_well_id)
-    elif sample_transfer_type_id in (26,):  # NGS prep: barcode hitpicking
-        # TODO: disable, we're moving this to pre-execution of transform spec
-        nps_id, ngs_pair = make_ngs_prepped_sample(db_session,
-                                                   source_plate_well.sample_id,
-                                                   destination_well_id)
-        return nps_id
     else:
-        return None  # no new sample
+        return source_plate_well.sample_id  # no new sample
+
 
 def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     operator = g.user
@@ -446,58 +490,3 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
 
     return cs_id
 
-
-def make_ngs_prepped_sample(db_session, source_sample_id,
-                            destination_well_id):
-    operator = g.user
-
-    # Grab next pair of barcodes
-    ngs_pair = None
-    tries_remaining = 1000
-    while not ngs_pair and tries_remaining > 0:
-        tries_remaining -= 1
-        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
-        if not next_index_sql:
-            raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
-        ngs_barcode_pair_index = db_session.execute(next_index_sql)
-        ngs_pair = (db.session.query(NGSBarcodePair)
-                    .filter_by(pk=ngs_barcode_pair_index)
-                    .first())
-    if not ngs_pair:
-        raise KeyError("ngs_barcode_pair_index %s not found"
-                       % ngs_barcode_pair_index)
-
-    # Create NPS
-    nps_id = create_unique_object_id("NPS_")
-    description = 'SMT stub descr.'  # e.g. "RCA 16 hours  Gene 12 Clone 2"
-    notes = 'SMT - well %s' % destination_well_id  # e.g. "" for alpha NPSs
-    insert_size_expected = -1
-    parent_process_id = None  # e.g. 'SPP_0008' for alpha NPSs
-    external_barcode = None
-    reagent_type_set_lot_id = None  # e.g. 'RTSL_5453e163e208466dd26d3aa4'
-    status = None
-    parent_transfer_process_id = None
-    date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    nps_sample = NGSPreppedSample(nps_id, source_sample_id,
-                                  description,
-                                  ngs_pair.i5_sequence_id,
-                                  ngs_pair.i7_sequence_id,
-                                  notes,
-                                  insert_size_expected,
-                                  date_created,
-                                  operator.operator_id,
-                                  parent_process_id,
-                                  external_barcode,
-                                  reagent_type_set_lot_id,
-                                  status,
-                                  parent_transfer_process_id)
-
-    logging.debug('NPS_ID %s for %s assigned [%s, %s]',
-                  nps_id, source_sample_id,
-                  ngs_pair.i5_sequence_id,
-                  ngs_pair.i7_sequence_id)
-
-    db_session.add(nps_sample)
-    db_session.flush()
-
-    return nps_id, ngs_pair
