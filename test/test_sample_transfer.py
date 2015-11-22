@@ -38,11 +38,11 @@ class TestCase(unittest.TestCase):
         # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 
-    def disabled_test_aliquot_standard_template_golden(self):
+    def test_aliquot_standard_template_golden(self):
         data = {"sampleTransferTypeId": 2,
                 "sampleTransferTemplateId": 1,
                 "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": [rnd_bc(), rnd_bc(), rnd_bc(), rnd_bc()]}
+                "destinationPlates": [rnd_bc(), ]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
