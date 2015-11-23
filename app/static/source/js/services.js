@@ -161,6 +161,13 @@ app = angular.module('twist.app')
                 var specReq = ApiRequestObj.getGet('rest/transform-specs/' + specId);
                 return $http(specReq);
             }
+            ,executeTransformSpec: function (specId) {
+                var executeReq = ApiRequestObj.getPut('rest/transform-specs/' + specId);
+                executeReq.headers = {
+                    'Transform-Execution': 'Immediate'
+                }
+                return $http(executeReq);
+            }
             ,saveAndConditionallyExecuteTransformSpec: function (planData, executeNow) {
                 var saveAndExReq = ApiRequestObj.getPost('rest/transform-specs');
                 saveAndExReq.data = {

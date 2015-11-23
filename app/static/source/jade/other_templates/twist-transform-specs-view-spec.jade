@@ -3,6 +3,15 @@ div(class="twst-view-transform-spec-main")
     div(ng-if="!specLoading")
         button(class="twst-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec list
         h2 Viewing Spec:&nbsp;
+        div(class="twst-view-transform-spec-download-options")
+            div(class="twst-view-transform-spec-download-options-worklists")
+                div Download Worklist
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv")
+                    button Echo
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv")
+                    button Hamilton
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv")
+                    button MiSeq
         div(class="twst-view-transform-spec-details")
             p Spec Id:&nbsp;
                 strong {{selectedSpec.spec_id}}
@@ -17,19 +26,8 @@ div(class="twst-view-transform-spec-main")
                     p Destination(s):
                     ul
                         li(ng-repeat="destination in selectedSpec.plan.destinations") {{destination.details.id}}
-            button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
-            h3 Download:
-                &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv") [Echo]
-                &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv") [Hamilton]
-                &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv") [MiSeq]
-                &nbsp;
-                &nbsp;
-                &nbsp;
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.execute") [Execute]
 
+            // button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
             h3 Operations:
             table(class="twst-data-readout-table twst-transform-spec-preview-table")
                 tr

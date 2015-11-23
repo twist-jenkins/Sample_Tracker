@@ -412,8 +412,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.transformSpecs = [];
         $scope.selectedSpec = null;
 
-        var deleteSuccess = function (plan) {
-            $scope.specActionResultMessage = 'Spec <strong>' + plan.id + '</strong> was successfully deleted.' ;
+        var announceSuccess = function (spec, action) {
+            $scope.specActionResultMessage = 'Spec <strong>' + spec.spec_id + '</strong> was successfully  ' + action + 'd.' ;
             $scope.specActionResultVisible = 1;
 
             $timeout(function () {
@@ -424,8 +424,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }, 5000);
         };
 
-        var deleteError = function (plan) {
-            $scope.specActionResultMessage = 'An error occured while trying to delete spec <strong>' + plan.id + '</strong>.' ;
+        var announceError = function (spec, action) {
+            $scope.specActionResultMessage = 'An error occured while trying to ' + action + ' spec <strong>' + spec.spec_id + '</strong>.' ;
             $scope.specActionResultVisible = -1;
 
             $timeout(function () {
@@ -436,36 +436,74 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }, 5000);
         };
 
-        $scope.deleteSpec = function (plan) {
+        $scope.deleteSpec = function (spec) {
 
             var deleteConfirmModal = $modal.open({
                 templateUrl: 'twist-confirm-spec-delete-modal.html'
                 ,size: 'md'
-                ,controller: ['$scope', '$modalInstance', 'plan',  
-                    function($scope, $modalInstance, plan) {
+                ,controller: ['$scope', '$modalInstance', 'spec',  
+                    function($scope, $modalInstance, spec) {
 
-                        $scope.plan = plan;
+                        $scope.spec = spec;
 
                         $scope.clickCancel = function() {
                             $modalInstance.dismiss();
                         }
                         $scope.clickDelete = function() {
 
-                            plan.deleting = true;
-                            Api.deleteTransformSpec(plan.id).success(function (data) {
+                            spec.updating = true;
+                            Api.deleteTransformSpec(spec.spec_id).success(function (data) {
                                 loadSpecs();
                                 $modalInstance.close();
-                                deleteSuccess(plan);
+                                announceSuccess(spec, 'delete');
                             }).error(function () {
+                                spec.updating = false;
                                 $modalInstance.close();
-                                deleteError(plan); 
+                                announceError(spec, 'delete'); 
                             });
                         }
                     }
                 ]
                 ,resolve: {
-                    plan: function() {
-                        return plan;
+                    spec: function() {
+                        return spec;
+                    }
+                }
+            });
+
+        };
+
+        $scope.executeSpec = function (spec) {
+
+            var deleteConfirmModal = $modal.open({
+                templateUrl: 'twist-confirm-spec-execute-modal.html'
+                ,size: 'md'
+                ,controller: ['$scope', '$modalInstance', 'spec',  
+                    function($scope, $modalInstance, spec) {
+
+                        $scope.spec = spec;
+
+                        $scope.clickCancel = function() {
+                            $modalInstance.dismiss();
+                        }
+                        $scope.clickExecute = function() {
+
+                            spec.updating = true;
+                            Api.executeTransformSpec(spec.spec_id).success(function (data) {
+                                loadSpecs();
+                                $modalInstance.close();
+                                announceSuccess(spec, 'execute');
+                            }).error(function () {
+                                spec.updating = false;
+                                $modalInstance.close();
+                                announceError(spec, 'execute'); 
+                            });
+                        }
+                    }
+                ]
+                ,resolve: {
+                    spec: function() {
+                        return spec;
                     }
                 }
             });

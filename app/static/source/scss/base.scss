@@ -65,6 +65,7 @@ $twst-minty-green-bg: #c7ddd2;
 $twst-selected-blue: #1893E2;
 $twst-dark-red: #990000;
 $twst-common-border: 1px solid #aaa;
+$twst-common-border-light: 1px solid #ddd;
 
 @mixin after-clear {
     content: ".";
@@ -1617,6 +1618,38 @@ strong {
                     span {
                         font-weight: bold;
                         color: #000;
+                    }
+                }
+
+                .twst-view-transform-spec-download-options {
+                    position: relative;
+                    display: block;
+                    float: right;
+                    margin: 1em 1em 0 0;
+
+                    .twst-view-transform-spec-download-options-worklists {
+                        display: inline-block;
+                        border-radius: 0.3em;
+                        border: $twst-common-border-light;
+
+                        div, a {
+                            padding: 0.5em;
+                        }
+
+                        a {
+                            display: block;
+                            border-top: $twst-common-border-light;
+
+                            &:hover {
+                                background-color: $twst-minty-green-bg;
+                            }
+
+
+                            button {
+                                border: 0;
+                                background: none;
+                            }
+                        }
                     }
                 }
 
