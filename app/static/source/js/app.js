@@ -127,7 +127,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var executeNow = true;
 
             //the newer specs are the ones that save the transform but do not execute it immediately
-            if ($scope.transformSpec.details.transfer_template_id == 25) {
+            if ($scope.transformSpec.details.transfer_template_id == 25 || $scope.transformSpec.details.transfer_template_id == 26 || $scope.transformSpec.details.transfer_template_id == 27 || $scope.transformSpec.details.transfer_template_id == 28 || $scope.transformSpec.details.transfer_template_id == 29) {
                 executeNow = false;
             }
 
