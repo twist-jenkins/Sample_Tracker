@@ -1,12 +1,12 @@
 div(class="twst-modal")
     div(class="twst-modal-header")
-        h2 Delete a Transform Spec
+        h2 Execute a Transform Spec
     div(class="twst-modal-body")
         div(class="twst-modal-message")
-            p Are you sure you want to delete this Transform Spec?
+            p Execution cannot be undone. Are you sure you want to execute this Transform Spec?
             p(class="twst-1em-top-margin") Spec Id: &nbsp;
                 strong {{spec.spec_id}}
     div(class="twst-modal-footer")
             div(class="twst-modal-buttons")
-                button(ng-click="clickDelete()" class="twst-button twst-red-button twst-delete-button") Delete
+                button(ng-click="clickExecute()" class="twst-button twst-blue-button twst-delete-button") Execute
                 button(ng-click="clickCancel()" class="btn-link twst-cancel-button") cancel
