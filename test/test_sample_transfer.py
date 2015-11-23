@@ -27,9 +27,9 @@ class TestCase(unittest.TestCase):
         # assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
-        db.create_all()
+        # db.create_all()
         cls.root_plate_barcode = 'SRN 000577 SM-30'  # qtray
-        #RootPlate().create_in_db("XFER_ROOT3",
+        #cls.root_plate_barcode = RootPlate().create_in_db("XFER_ROOT",
         #                                                  db.engine)
 
     @classmethod
@@ -38,11 +38,11 @@ class TestCase(unittest.TestCase):
         # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 
-    def DISABLED_test_aliquot_standard_template_golden(self):
-        data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplateId": 2,  # ??
+    def test_aliquot_standard_template_golden(self):
+        data = {"sampleTransferTypeId": 2,
+                "sampleTransferTemplateId": 1,
                 "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": [rnd_bc()]}
+                "destinationPlates": [rnd_bc(), ]}
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -134,79 +134,6 @@ class TestCase(unittest.TestCase):
                               content_type='application/json')
         assert rv.status_code == 200, rv.data
         result = json.loads(rv.data)
-        assert result["success"] is True
-
-    def test_small_qpix_to_96_golden(self):
-        rnd = rnd_bc()
-        dest_plate_1_barcode = rnd + '_1'
-        dest_plate_2_barcode = rnd + '_2'
-        transfer_map = [{
-            "source_plate_barcode": self.root_plate_barcode,
-            "source_well_name": src_well,
-            "destination_plate_barcode": dest_plate,
-            "destination_well_name": dest_well,
-            "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
-        ]]
-        data = {"sampleTransferTypeId": 15,  # QPix To 96 plates
-                "sampleTransferTemplateId": 21,
-                "transferMap": transfer_map
-                }
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200, rv.data
-        result = json.loads(rv.data)
-        assert result["success"] is True
-
-        rv = self.client.get('/api/v1/plate-barcodes/%s'
-                             % dest_plate_1_barcode,
-                             content_type='application/json')
-        assert rv.status_code == 200, rv.data
-        result = json.loads(rv.data)
-        print result
-        assert result["success"] is True
-
-    def test_small_ngs_prep_golden(self):
-        rnd = rnd_bc()
-        dest_plate_1_barcode = rnd + '_1'
-        dest_plate_2_barcode = rnd + '_2'
-        transfer_map = [{
-            "source_plate_barcode": self.root_plate_barcode,
-            "source_well_name": src_well,
-            "destination_plate_barcode": dest_plate,
-            "destination_well_name": dest_well,
-            "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
-        ]]
-
-        data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
-                "sampleTransferTemplateId": 21,
-                "transferMap": transfer_map
-                }
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200, rv.data
-        result = json.loads(rv.data)
-        assert result["success"] is True
-
-        rv = self.client.get('/api/v1/plate-barcodes/%s'
-                             % dest_plate_1_barcode,
-                             content_type='application/json')
-        assert rv.status_code == 200, rv.data
-        result = json.loads(rv.data)
-        print result
         assert result["success"] is True
 
 if __name__ == '__main__':

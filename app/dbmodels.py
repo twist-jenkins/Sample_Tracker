@@ -21,6 +21,11 @@ from sqlalchemy.dialects import postgresql
 
 db_metadata = MetaData(bind=db.engine)  # for autoload / schema reflection
 
+NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
+NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
+NGS_BARCODE_SAMPLE_PREFIX = 'BCS_'
+
+
 def create_unique_object_id(prefix=""):
     return prefix + str(bson.ObjectId())
 
@@ -207,13 +212,24 @@ class Sample(db.Model):
             self.type_id, self.operator_id, self.name)
 
 
-class GeneAssemblySampleView(db.Model):
+class SampleView(db.Model):
     try:
         __table__ = db.Table("sample_view", db_metadata,
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
         __table__ = db.Table("gene_assembly_sample", db_metadata,
+                             db.Column("sample_id", db.String(40),
+                                       primary_key=True), autoload=False)
+
+
+class MiSeqSampleView(db.Model):
+    try:
+        __table__ = db.Table("miseq_sample_view", db_metadata,
+                             db.Column("sample_id", db.String(40),
+                                       primary_key=True), autoload=True)
+    except:
+        __table__ = db.Table("ngs_prepped_sample", db_metadata,
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=False)
 
@@ -619,6 +635,9 @@ class ClonedSample(Sample):
 class NGSPreppedSample(Sample):
     """NGS prepped sample -- Simpler version based on twist_core"""
     __tablename__ = "ngs_prepped_sample"
+    # FIXME: re-enable barcode foreign keys,
+    # without needing to pull in barcode object --
+
     # type info
     sample_id = db.Column(
         db.String(40), db.ForeignKey("sample.sample_id"),
@@ -639,6 +658,7 @@ class NGSPreppedSample(Sample):
         nullable=True)
     insert_size_expected = db.Column(db.Integer, nullable=False)
     notes = db.Column(db.String(1024))
+
     # relations
     parent_sample = db.relationship(
         "Sample", uselist=False,
@@ -675,4 +695,29 @@ class NGSPreppedSample(Sample):
         self.insert_size_expected = insert_size_expected
         if notes:
             self.notes = notes
+
+
+class NGSBarcodePair(db.Model):
+    """from Austin"""
+    __tablename__ = "ngs_barcode_pair"
+
+    # NOTE: To disable a single barcode pair seen as a bad combination for
+    # ngs, simply delete that row from this table.  App code currently
+    # allows up to 1000 consecutive missing barcodes.
+
+    pk = db.Column(db.Integer, primary_key=True)
+    i7_sequence_id = db.Column(db.String(40),
+                               # db.ForeignKey("barcode_sequence.sequence_id"),
+                               nullable=False)
+    i5_sequence_id = db.Column(db.String(40),
+                               # db.ForeignKey("barcode_sequence.sequence_id"),
+                               nullable=False)
+    reverse_primer_i7_well_row = db.Column(db.String(10), nullable=False)
+    reverse_primer_i7_well_column = db.Column(db.Integer, nullable=False)
+    forward_primer_i5_well_row = db.Column(db.String(10), nullable=False)
+    forward_primer_i5_well_column = db.Column(db.Integer, nullable=False)
+
+
+def barcode_sequence_to_barcode_sample(barcode_sequence_name):
+    return NGS_BARCODE_SAMPLE_PREFIX + barcode_sequence_name.split("_")[1]
 
