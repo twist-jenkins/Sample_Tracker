@@ -543,10 +543,29 @@ app = angular.module('twist.app')
                                             ,destination_plate_well_count: 0
                                         };
                                         operations.push(operationRow);
-
                                     }
 
+                                    base.operations = operations;
+                                    break;
+                                case 30:
+                                    /* for NGS, the destination plate is the same as the source plate (as entered)
+                                    * BUT the source plate we record is a placeholder for the dna barcodes plate
+                                    * so we need to adjust the generated operations to reflect this */
+                                    var operations = [];
 
+                                    var plate = base.sources[0];
+                                    for (var j=0; j<plate.items.length;j++) {
+                                        var sourceWell = plate.items[j];
+                                        var operationRow = {
+                                            source_plate_barcode: 'NGS_BARCODE_PLATE'
+                                            ,source_well_name: sourceWell.column_and_row
+                                            ,source_sample_id: sourceWell.sample_id
+                                            ,destination_plate_barcode: plate.details.id
+                                            ,destination_well_name: sourceWell.column_and_row
+                                            ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
+                                        };
+                                        operations.push(operationRow);
+                                    }
 
                                     base.operations = operations;
                                     break;
@@ -623,7 +642,12 @@ app = angular.module('twist.app')
                 base.details = typeObj;
                 base.details['transfer_type_id'] = typeObj.id;
                 base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
-                if (base.details.transfer_template_id == 25 || base.details.transfer_template_id == 26 || base.details.transfer_template_id == 27 || base.details.transfer_template_id == 28 || base.details.transfer_template_id == 29) {
+                if (base.details.transfer_template_id == 25 || 
+                    base.details.transfer_template_id == 26 || 
+                    base.details.transfer_template_id == 27 || 
+                    base.details.transfer_template_id == 28 || 
+                    base.details.transfer_template_id == 29 || 
+                    base.details.transfer_template_id == 30) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
