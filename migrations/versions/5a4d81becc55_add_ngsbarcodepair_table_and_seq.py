@@ -19,6 +19,7 @@ from sqlalchemy.sql import table, column
 from sqlalchemy import String, Integer, DateTime, Enum
 
 from app.dbmodels import create_unique_object_id
+from app.dbmodels import barcode_sequence_to_barcode_sample
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 from app.plate_to_plate_maps import maps_json
 
