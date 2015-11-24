@@ -1021,6 +1021,11 @@ app = angular.module('twist.app')
                     delete plate.details.title;
                 }
 
+                /* for NGS barcoding transforms, we need to add the source plate as the destination */
+                if (base.details.transfer_template_id == 30) {
+                    obj.destinations = angular.copy(base.sources);
+                }
+
                 obj.operations = angular.copy(base.operations);
                 obj.details = angular.copy(base.details);
 
