@@ -1114,6 +1114,18 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
+                ,31: {  // keyed to sample_transfer_template_id in the database
+                    description: 'NGS: sample sheet generation'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
             }
             ,rowColumnMaps: {
                 SPTT_0006: {

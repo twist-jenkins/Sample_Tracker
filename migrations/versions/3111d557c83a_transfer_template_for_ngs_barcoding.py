@@ -32,6 +32,7 @@ sql_param_names_t_type = ("id", "name", "stti", "spc", "dpc")
 
 desired_values_t_type = [
     [26, "NGS prep: barcode hitpicking", 30, 1, 0]
+    ,[50, "NGS: sample sheet generation", 31, 1, 0]
 ]
 
 
@@ -53,6 +54,7 @@ sql_param_names_t_template = ("id", "name", "ioto", "spwc", "dpwc")
 
 desired_values_t_template = [
     [30, "NGS Barcoding", "F", None, None]
+    ,[31, "NGS: sample sheet generation", "F", None, None]
 ]
 
 def upgrade():
