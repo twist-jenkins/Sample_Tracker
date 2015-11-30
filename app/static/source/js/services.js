@@ -529,6 +529,7 @@ app = angular.module('twist.app')
                                 case 27:
                                 case 28:
                                 case 29:
+                                case 31:
                                     /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
                                     var operations = [];
 
@@ -647,7 +648,8 @@ app = angular.module('twist.app')
                     base.details.transfer_template_id == 27 || 
                     base.details.transfer_template_id == 28 || 
                     base.details.transfer_template_id == 29 || 
-                    base.details.transfer_template_id == 30) {
+                    base.details.transfer_template_id == 30 || 
+                    base.details.transfer_template_id == 31) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
