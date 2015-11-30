@@ -11,6 +11,7 @@ revision = '5a4d81becc55'
 down_revision = '2508b1c64724'
 
 import csv
+import logging
 from datetime import datetime
 
 from alembic import op
@@ -23,6 +24,7 @@ from app.dbmodels import barcode_sequence_to_barcode_sample
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 from app.plate_to_plate_maps import maps_json
 
+logging.basicConfig(level=logging.INFO)
 
 def create_barcode_table():
     #
@@ -79,6 +81,7 @@ def populate_values(ngs_barcode_pair_table):
     for ix, pair in enumerate(ngs_barcode_pairs):
         assert int(pair["pk"]) == ix
     max_value = ix
+    print "Inserting %d pairs..." % len(ngs_barcode_pairs)
     op.bulk_insert(ngs_barcode_pair_table, ngs_barcode_pairs)
     print ("Created table 'ngs_barcode_pair': "
            "%d ngs_barcode_pairs added to DB" % len(ngs_barcode_pairs))
@@ -144,6 +147,7 @@ def build_plate_wells(ngs_barcode_pairs):
             rowcol = (pair[row_key], int(pair[col_key]))
             well_id = reverse_map[rowcol]
             barcode_seq = pair[seq_key]
+            # print("Adding barcode seq %s" % barcode_seq)
             barcode_sequences.add(barcode_seq)
             if well_id in wells:
                 assert wells[well_id] == barcode_seq
@@ -265,12 +269,20 @@ def insert_barcode_well_records(bc_plate_id, wells):
 
 
 def upgrade():
+    """spammy since monitoring high latency connection"""
+    print("1. create_barcode_table")
     ngs_barcode_pair_table = create_barcode_table()
+    print("2. populate_values")
     ngs_barcode_pairs, max_value = populate_values(ngs_barcode_pair_table)
+    print("3. create_cycle_sequence")
     create_cycle_sequence(max_value)
+    print("4. build_plate_wells")
     wells, barcode_sequences = build_plate_wells(ngs_barcode_pairs)
+    print("5. insert_barcode_sample_records")
     insert_barcode_sample_records(barcode_sequences)
+    print("6. insert_barcode_plate_record")
     bc_plate_id = insert_barcode_plate_record()
+    print("7. insert_barcode_well_records")
     insert_barcode_well_records(bc_plate_id, wells)
 
 
