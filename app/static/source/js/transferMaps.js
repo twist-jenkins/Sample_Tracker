@@ -1107,7 +1107,7 @@ app = angular.module('twist.app')
                     ,type: 'standard'
                     ,source: {
                         plateCount: 1
-                        ,variablePlateCount: false
+                        ,variablePlateCount: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1119,10 +1119,10 @@ app = angular.module('twist.app')
                     ,type: 'standard'
                     ,source: {
                         plateCount: 1
-                        ,variablePlateCount: false
+                        ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 0
+                        plateCount: 1
                         ,variablePlateCount: false
                     }
                 }

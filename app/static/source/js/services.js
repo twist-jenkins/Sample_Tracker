@@ -529,7 +529,6 @@ app = angular.module('twist.app')
                                 case 27:
                                 case 28:
                                 case 29:
-                                case 31:
                                     /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
                                     var operations = [];
 
@@ -569,6 +568,28 @@ app = angular.module('twist.app')
                                     }
 
                                     base.operations = operations;
+                                    break;
+                                case 31:
+                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
+                                    var operations = [];
+
+                                    if (base.destinationsReady) {
+                                        for (var i=0; i<base.sources.length;i++) {
+                                            var source = base.sources[i];
+                                            var operationRow = {
+                                                source_plate_barcode: source.details.id
+                                                ,source_well_name: 'Z0'
+                                                ,source_sample_id: '0000000'
+                                                ,destination_plate_barcode: '0000000-1'
+                                                ,destination_well_name: 'Z0'
+                                                ,destination_plate_well_count: 0
+                                            };
+                                            operations.push(operationRow);
+                                        }
+                                    }
+
+                                    base.operations = operations;
+
                                     break;
 
                                 default :
