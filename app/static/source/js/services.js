@@ -587,7 +587,7 @@ app = angular.module('twist.app')
                                             operations.push(operationRow);
                                         }
                                     }
-                                    
+
                                     base.operations = operations;
 
                                     break;
@@ -1045,7 +1045,7 @@ app = angular.module('twist.app')
                 }
 
                 /* for NGS barcoding transforms, we need to add the source plate as the destination */
-                if (base.details.transfer_template_id == 30 || base.details.transfer_template_id == 31) {
+                if (base.details.transfer_template_id == 30) {
                     obj.destinations = angular.copy(base.sources);
                 }
 
