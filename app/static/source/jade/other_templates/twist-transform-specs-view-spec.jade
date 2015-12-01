@@ -3,14 +3,14 @@ div(class="twst-view-transform-spec-main")
     div(ng-if="!specLoading")
         button(class="twst-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec list
         h2 Viewing Spec:&nbsp;
-        div(class="twst-view-transform-spec-download-options" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
+        div(class="twst-view-transform-spec-download-options" ng-if="selectedSpec.plan.details.transfer_type_id == 50 || selectedSpec.plan.details.transfer_type_id == 26")
             div(class="twst-view-transform-spec-download-options-worklists")
                 div Download Worklist
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv")
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv" ng-if="selectedSpec.plan.details.transfer_type_id == 26")
                     button Echo
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv")
-                    button Hamilton
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv")
+                // a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv")
+                //    button Hamilton
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
                     button MiSeq
         div(class="twst-view-transform-spec-details")
             p Spec Id:&nbsp;
