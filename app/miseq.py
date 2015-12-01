@@ -203,4 +203,106 @@ def echo_csv_for_nps(operations, fname, transfer_volume=100):
     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
     return response
 
+'''
+def create_msr(cur_session, form_params):
+    """Lifted from twist_lims/lims_app/util/temp_google.py handle_create_ngs_run """
+    ##############
+    # make ngs run
+    ##############
+    # replace with sequence or object id
+    print "Replace ngs run max with db sequence or object id"
+    max_run = cur_session.query(func.max(tdd.NGSRun.run_id)).one()
+    next_run_id = "MSR_%05d" % (int(max_run[0].split("_")[1]) + 1)
+    # get max run id (replace)
+    instrument_run_number = int(form_params['instrument_run_number'])
+    # get max analysis id
+    max_analysis = cur_session.query(
+        func.max(tdd.NGSSequencingAnalysis.analysis_id)).one()
+    next_analysis_id = "NSA_%05d" % (int(max_analysis[0].split("_")[1]) + 1)
+    # split adpator sequence from assay
+    miseq_adaptor_seq, miseq_assay = form_params['miseq_adapter'].split("_", 1)
+    # create ngs run
+    ngs_run = tdd.NGSRun(
+        next_run_id,
+        form_params['run_date'],
+        cur_operator.operator_id,
+        cur_instrument.instrument_id,
+        form_params['cartridge_id'],
+        form_params['flowcell_id'],
+        # max_run_num + 1,
+        instrument_run_number,
+        form_params['run_status'],
+        # strip nbsp; from copy and paste confluence
+        form_params['run_description'].replace(u'\xa0', ' '),
+        form_params['run_notes'],
+        form_params['miseq_workflow'],
+        form_params['miseq_chemistry'],
+        form_params['read1_cycles'],
+        form_params['read2_cycles'],
+        miseq_adaptor_seq,
+        miseq_assay,
+        form_params['miseq_quality_score_trim'],
+        )
+    ngs_run.instrument = cur_instrument
+    # need to store miseq kit lots (associate RTS)
+    cur_session.add(ngs_run)
 
+
+def create_nrsj(cur_session, form_params):
+    """Lifted from twist_lims/lims_app/util/temp_google.py handle_create_ngs_run line 2977"""
+    ##############
+    # parse sample map
+    ##############
+    sample_map_parser = lul.parse_map_xlsx(
+        form_params['ngs_qc_sample_map_xls'], "sample_map")
+    # make plate (of type)
+    run_ids = set([])
+    barcode_tups = set([])
+    variable_keys = set()
+    valid_map = OrderedDict()
+    found_map = OrderedDict()
+    for rec in sample_map_parser:
+
+        #
+        #
+        ngs_prepped_sample = None  # TODO: parse NPS
+
+        # this will be moved to process plat
+        # now create sample join (redundant info with plate layout -- refactor)
+        nrsj = tdd.NGSRunSampleJoin(
+            ngs_run.run_id,
+            ngs_prepped_sample.sample_id,
+            int(rec['sample_num_on_run']),
+            "-%s" % rec['sample_num_on_run'],  # dummy value
+            "-1",  # rec['plate_column_id']
+            )
+        nrsj.ngs_run = ngs_run
+        nrsj.sample = ngs_prepped_sample
+        valid_map[nrsj.sample_number_on_run] = ngs_prepped_sample
+        # add to db
+        cur_session.add(nrsj)
+        s3_objs["ngs_run_sample_join"].append(
+            (nrsj, {"run_id": next_run_id}))
+        # for each variable, store mapping
+        for var_key, var_val in rec.items():
+            # skip improper named variables
+            if not var_key.startswith("var_"):
+                continue
+            # skip blank vals
+            if not var_val:
+                continue
+            # store in found map
+            if nrsj.sample_number_on_run not in found_map:
+                found_map[nrsj.sample_number_on_run] = OrderedDict()
+            found_map[nrsj.sample_number_on_run][var_key] = var_val
+            # store variable key
+            variable_keys.add(var_key)
+            # always tag run id
+            run_var = "NGS Run ID"
+            variable_keys.add(run_var)
+            found_map[nrsj.sample_number_on_run][run_var] = ngs_run.run_id
+    if not found_map:
+        raise ValueError("No valid variables found. Check format")
+
+
+'''
