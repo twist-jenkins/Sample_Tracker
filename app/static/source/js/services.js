@@ -582,7 +582,7 @@ app = angular.module('twist.app')
                                                 ,source_sample_id: '0000000'
                                                 ,destination_plate_barcode: '0000000-1'
                                                 ,destination_well_name: 'Z0'
-                                                ,destination_plate_well_count: 0
+                                                ,destination_plate_well_count: 1
                                             };
                                             operations.push(operationRow);
                                         }
