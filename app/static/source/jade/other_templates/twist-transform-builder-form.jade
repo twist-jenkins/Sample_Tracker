@@ -72,4 +72,4 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
                         td {{::row.destination_plate_barcode}}
                         td {{::row.destination_well_name}}
                         td {{::row.destination_plate_well_count}}
-            div(class="twst-transform-spec-transfers-list-empty-msg" ng-if="!transformSpec.updating && !transformSpec.operations.length") The supplied data is insufficient to build a transform spec preview.
+        div(class="twst-transform-spec-transfers-list-empty-msg") {{transformSpec.error_message}}

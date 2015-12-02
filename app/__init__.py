@@ -133,6 +133,7 @@ login_manager.login_view = "login"
 
 
 from app import routes
+from app.routes import transfer
 from app import rest
 
 
@@ -413,7 +414,13 @@ def basic_plate_info(plate_barcode):
 def source_plate_well_data():
     return routes.source_plate_well_data()
 
+
 @app.route('/api/v1/check-plates-are-new', methods=['POST'])
 def check_plates_are_new():
     return routes.check_plates_are_new()
+
+
+@app.route('/api/v1/transfer-preview', methods=('POST',))
+def transfer_params():
+    return transfer.preview()
 

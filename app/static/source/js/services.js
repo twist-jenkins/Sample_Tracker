@@ -173,6 +173,21 @@ app = angular.module('twist.app')
                 }
                 return $http(saveAndExReq);
             }
+
+            ,previewTransformation: function(sources, destinations, transfer_type_id, transfer_template_id ) {
+                // kieran
+
+                var preview = ApiRequestObj.getPost('transfer-preview');
+                preview.data = {
+                    sources: sources,
+                    destinations: destinations,
+                    transfer_type_id: transfer_type_id,
+                    transfer_template_id: transfer_template_id
+                }
+                console.log('AJAX now');
+                return $http(preview);
+            }
+
         };
     }]
 )
@@ -283,6 +298,8 @@ app = angular.module('twist.app')
             base.planFromFile = false;
             base.autoUpdateSpec = true;
 
+            base.error_message = '';
+
             var updating = function () {
                 base.updating = true;
             }
@@ -350,25 +367,17 @@ app = angular.module('twist.app')
                                     }
                                 } else {
                                     /* all others */
-                                    for (var i=0;i< base.sources.length;i++) {
-                                        var plate = base.sources[i];
-                                        var wellsMap = base.map.plateWellToWellMaps[i];
-
-                                        for (var j=0; j<plate.items.length;j++) {
-                                            var sourceWell = plate.items[j];
-                                            var destWell = wellsMap[sourceWell.well_id];
-                                            var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
-                                            var operationRow = {
-                                                source_plate_barcode: plate.details.id
-                                                ,source_well_name: sourceWell.column_and_row
-                                                ,source_sample_id: sourceWell.sample_id
-                                                ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].details.id
-                                                ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
-                                                ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
-                                            };
-                                            operations.push(operationRow);
+                                    // kieran
+                                    Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id ).success( function(result) {
+                                        if( result.success ) {
+                                            base.error_message = 'good';
+                                            base.operations = result.data;
+                                        } else {
+                                            base.error_message = 'suck';
                                         }
-                                    }
+                                    }).error(function(data) {
+                                        // FIXME: do something here?
+                                    });
                                 }
                             }
 
