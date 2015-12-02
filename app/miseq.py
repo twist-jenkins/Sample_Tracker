@@ -4,7 +4,8 @@ import logging
 import json
 from datetime import datetime
 
-from flask import make_response, abort
+from flask import make_response
+from flask.ext.restful import abort
 from flask_login import current_user
 
 from dbmodels import MiSeqSampleView
@@ -248,61 +249,23 @@ def create_msr(cur_session, form_params):
     cur_session.add(ngs_run)
 
 
-def create_nrsj(cur_session, form_params):
-    """Lifted from twist_lims/lims_app/util/temp_google.py handle_create_ngs_run line 2977"""
-    ##############
-    # parse sample map
-    ##############
-    sample_map_parser = lul.parse_map_xlsx(
-        form_params['ngs_qc_sample_map_xls'], "sample_map")
-    # make plate (of type)
-    run_ids = set([])
-    barcode_tups = set([])
-    variable_keys = set()
-    valid_map = OrderedDict()
-    found_map = OrderedDict()
-    for rec in sample_map_parser:
-
-        #
-        #
-        ngs_prepped_sample = None  # TODO: parse NPS
-
-        # this will be moved to process plat
+def create_nrsj(cur_session, ngs_run, ngs_prepped_samples):
+    """Adapted from twist_lims/temp_google.py handle_create_ngs_run line 2977"""
+    for ix, ngs_prepped_sample in enumerate(ngs_prepped_samples):
+        sample_num_on_run = ix + 1
         # now create sample join (redundant info with plate layout -- refactor)
-        nrsj = tdd.NGSRunSampleJoin(
+        nrsj = NGSRunSampleJoin(
             ngs_run.run_id,
             ngs_prepped_sample.sample_id,
-            int(rec['sample_num_on_run']),
-            "-%s" % rec['sample_num_on_run'],  # dummy value
+            sample_num_on_run,
+            "-%s" % sample_num_on_run,  # dummy value
             "-1",  # rec['plate_column_id']
-            )
+        )
         nrsj.ngs_run = ngs_run
         nrsj.sample = ngs_prepped_sample
-        valid_map[nrsj.sample_number_on_run] = ngs_prepped_sample
         # add to db
         cur_session.add(nrsj)
-        s3_objs["ngs_run_sample_join"].append(
-            (nrsj, {"run_id": next_run_id}))
-        # for each variable, store mapping
-        for var_key, var_val in rec.items():
-            # skip improper named variables
-            if not var_key.startswith("var_"):
-                continue
-            # skip blank vals
-            if not var_val:
-                continue
-            # store in found map
-            if nrsj.sample_number_on_run not in found_map:
-                found_map[nrsj.sample_number_on_run] = OrderedDict()
-            found_map[nrsj.sample_number_on_run][var_key] = var_val
-            # store variable key
-            variable_keys.add(var_key)
-            # always tag run id
-            run_var = "NGS Run ID"
-            variable_keys.add(run_var)
-            found_map[nrsj.sample_number_on_run][run_var] = ngs_run.run_id
-    if not found_map:
-        raise ValueError("No valid variables found. Check format")
-
-
 '''
+
+
+
