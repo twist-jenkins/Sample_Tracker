@@ -553,18 +553,21 @@ app = angular.module('twist.app')
                                     * so we need to adjust the generated operations to reflect this */
                                     var operations = [];
 
-                                    var plate = base.sources[0];
-                                    for (var j=0; j<plate.items.length;j++) {
-                                        var sourceWell = plate.items[j];
-                                        var operationRow = {
-                                            source_plate_barcode: 'NGS_BARCODE_PLATE'
-                                            ,source_well_name: sourceWell.column_and_row
-                                            ,source_sample_id: sourceWell.sample_id
-                                            ,destination_plate_barcode: plate.details.id
-                                            ,destination_well_name: sourceWell.column_and_row
-                                            ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                        };
-                                        operations.push(operationRow);
+
+                                    for (var i=0; i<base.sources.length;i++) {
+                                        var plate = base.sources[i];
+                                        for (var j=0; j<plate.items.length;j++) {
+                                            var sourceWell = plate.items[j];
+                                            var operationRow = {
+                                                source_plate_barcode: 'NGS_BARCODE_PLATE'
+                                                ,source_well_name: sourceWell.column_and_row
+                                                ,source_sample_id: sourceWell.sample_id
+                                                ,destination_plate_barcode: plate.details.id
+                                                ,destination_well_name: sourceWell.column_and_row
+                                                ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
+                                            };
+                                            operations.push(operationRow);
+                                        }
                                     }
 
                                     base.operations = operations;
