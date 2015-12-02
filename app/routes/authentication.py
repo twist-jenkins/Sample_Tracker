@@ -68,10 +68,14 @@ def login_to_google(code, redirect_uri):
 
 #
 # Magically called by google_login plumbing when "login_user" is invoked (see "create_or_update_user").
+# FIXME: this function used to expect email address, but actually recieved the intials / operator_id
+#   (which seem to be the same thing, and what's returned by __unicode__)
 #
+
 @login_manager.user_loader
-def load_user(email):
-    return db.session.query(Operator).filter_by(email=email).first()
+def load_user(operator_id):
+    return db.session.query(Operator).filter_by(operator_id=operator_id).one()
+
 
 #
 # Called by the "oauth2callback" route code once the user's token and info have been retrieved.
@@ -83,8 +87,6 @@ def create_or_update_user(token, userinfo, **params):
     user_email = userinfo.get("email")
 
     logger.info(" Login attempt for user with email [%s]" % (user_email))
-
-    print ('@@ querying Operator with %s\n' % db) * 5
     operator = db.session.query(Operator).filter_by(email=user_email).first()
 
     if operator:
@@ -97,9 +99,8 @@ def create_or_update_user(token, userinfo, **params):
     #
     # This causes the "load_user" function to be called!!!
     #
-    login_user(operator)
-
-    #g.user = operator
+    if login_user(operator):
+        g.user = operator
 
     return redirect(url_for('new_home'))
 
