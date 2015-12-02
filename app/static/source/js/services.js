@@ -370,10 +370,10 @@ app = angular.module('twist.app')
                                     // kieran
                                     Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id ).success( function(result) {
                                         if( result.success ) {
-                                            base.error_message = 'good';
+                                            base.error_message = '';
                                             base.operations = result.data;
                                         } else {
-                                            base.error_message = 'suck';
+                                            base.error_message = result.message;
                                         }
                                     }).error(function(data) {
                                         // FIXME: do something here?

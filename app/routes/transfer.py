@@ -1,3 +1,4 @@
+from twistdb import *
 from twistdb.sampletrack import *
 
 from app import app, db
@@ -9,48 +10,72 @@ from json_tricks.nonp import loads # json w/ support for comments
 import logging
 logger = logging.getLogger()
 
+
+class WebError(Exception): pass
+
+
 def preview():
     assert request.method == 'POST'
 
-    assert str(request.json['transfer_template_id']) in TRANSFER_MAP
-    xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
+    try:
+        if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
+            raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
 
-    dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
-    assert xfer['destination']['plateCount'] == len(dest_barcodes)
-    assert xfer['source']['plateCount'] == len(request.json['sources'])
 
-    dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
-    assert dest_plate_type
+        xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
 
-    rows = []
-    
-    for src_idx, src in enumerate(request.json['sources']):
-        barcode = src['details']['id']
-        plate = db.session.query(SamplePlate) \
-                  .filter(SamplePlate.external_barcode == barcode) \
-                  .one()
+        dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
+        if xfer['destination']['plateCount'] != len(dest_barcodes):
+            raise WebError('Expected %d destination plates; got %d'
+                           % (xfer['destination']['plateCount'], len(dest_barcodes)))
 
-        for well in db.session.query(SamplePlateLayout) \
-                      .filter( SamplePlateLayout.sample_plate == plate ) \
-                      .order_by( SamplePlateLayout.well_id ):
+        if xfer['source']['plateCount'] != len(request.json['sources']):
+            raise WebError('Expected %d source plates; got %d'
+                           % (xfer['source']['plateCount'], len(request.json['sources'])))
 
-            dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well.well_id) ]
-            dest_barcode = dest_barcodes[ dest['destination_plate_number'] - 1]
-            dest_well = dest['destination_well_id']
+        dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
+        if not dest_plate_type:
+            raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
 
-            rows.append( {'source_plate_barcode':           barcode,
-                          'source_well_name':               well.well_name,
-                          'source_sample_id':               well.sample_id,
-                          'destination_plate_barcode':      dest_barcode,
-                          'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   xfer['destination']['wellCount'],
-                          })
+        rows = []
 
-    # NOTE: SampleTransferDetail holds this stuff after execution
-    return Response( response=json.dumps({'success': True,
-                                          'data': rows}),
-                     status=200,
-                     mimetype="application/json")
+        for src_idx, src in enumerate(request.json['sources']):
+            barcode = src['details']['id']
+            try:
+                plate = db.session.query(SamplePlate) \
+                                  .filter(SamplePlate.external_barcode == barcode) \
+                                  .one()
+            except MultipleResultsFound:
+                raise WebError('multiple plates found with barcode %s' % barcode)
+
+            for well in db.session.query(SamplePlateLayout) \
+                          .filter( SamplePlateLayout.sample_plate == plate ) \
+                          .order_by( SamplePlateLayout.well_id ):
+
+                dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well.well_id) ]
+                dest_barcode = dest_barcodes[ dest['destination_plate_number'] - 1]
+                dest_well = dest['destination_well_id']
+
+                rows.append( {'source_plate_barcode':           barcode,
+                              'source_well_name':               well.well_name,
+                              'source_sample_id':               well.sample_id,
+                              'destination_plate_barcode':      dest_barcode,
+                              'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
+                              'destination_plate_well_count':   xfer['destination']['wellCount'],
+                              })
+    except WebError as e:
+        return Response( response=json.dumps({'success': False,
+                                              'message': str(e),
+                                              'data': None}),
+                         status=200,
+                         mimetype="application/json")
+    else:
+        # NOTE: SampleTransferDetail holds this stuff after execution
+        return Response( response=json.dumps({'success': True,
+                                              'message': '',
+                                              'data': rows}),
+                         status=200,
+                         mimetype="application/json")
 
 def save():
     pass
