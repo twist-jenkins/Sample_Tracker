@@ -24,11 +24,11 @@ def create_destination_plate(db_session, operator, destination_barcode,
     check_destination_plate(db_session, destination_barcode, sample_transfer_template_id)
     destination_plate_name = create_unique_object_id("PLATE_")
     destination_plate_description = create_unique_object_id("PLATEDESC_")
-    plate = SamplePlate(source_plate_type_id,
-                        operator.operator_id,
-                        storage_location_id,
-                        destination_plate_name,
-                        destination_plate_description,
-                        destination_barcode)
+    plate = SamplePlate(type_id=source_plate_type_id,
+                        operator_id=operator.operator_id,
+                        storage_location_id=storage_location_id,
+                        name=destination_plate_name,
+                        description=destination_plate_description,
+                        external_barcode=destination_barcode)
     db_session.add(plate)
     return plate
