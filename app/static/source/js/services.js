@@ -332,64 +332,13 @@ app = angular.module('twist.app')
                                 }).error(function(data) {
                                     // FIXME: do something here?
                                 });
-
-                            /*
-                            var operations = [];
-                            
-                            if (base.details.transfer_template_id == 1 || base.details.transfer_template_id == 2) {
-                                //* sopurce and destination plate are same size and layout *
-                                var plate = base.sources[0];
-                                for (var j=0; j<plate.items.length;j++) {
-                                    var sourceWell = plate.items[j];
-                                    var operationRow = {
-                                        source_plate_barcode: plate.details.id
-                                        ,source_well_name: sourceWell.column_and_row
-                                        ,source_sample_id: sourceWell.sample_id
-                                        ,destination_plate_barcode: (base.details.transfer_template_id == 2 ? plate.details.id : base.destinations[0].details.id)
-                                        ,destination_well_name: sourceWell.column_and_row
-                                        ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                    };
-                                    operations.push(operationRow);
-                                }
-                            } else {
-                                //* source and destination are different size and/or layout*
-                                if (base.details.transfer_template_id == 23) {
-                                    //* merge source plate(s) into single destination plate *
-                                    var overlapCheckMap = {};
-                                    for (var i=0;i< base.sources.length;i++) {
-                                        var plate = base.sources[i];
-
-                                        for (var j=0; j<plate.items.length;j++) {
-                                            var sourceWell = plate.items[j];
-
-                                            if (overlapCheckMap[sourceWell.column_and_row]) {
-                                                base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.details.id + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
-                                                return;
-                                            } else {
-                                                overlapCheckMap[sourceWell.column_and_row] = plate.details.id;
-                                            }
-
-                                            var operationRow = {
-                                                source_plate_barcode: plate.details.id
-                                                ,source_well_name: sourceWell.column_and_row
-                                                ,source_sample_id: sourceWell.sample_id
-                                                ,destination_plate_barcode: base.destinations[0].details.id
-                                                ,destination_well_name: sourceWell.column_and_row
-                                                ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                            };
-                                            operations.push(operationRow);
-                                        }
-                                    }
-                                } else {
-                                    //* all others *
-                                    }
-                            base.operations = operations;
-                            */
                         
                         } else {
                             base.clearOperationsList();
                         }
                     } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
+                        // "rebatching for transformation"
+                        
                         if (base.sourcesReady) {
                             
                             var templateId = base.details.transfer_template_id;

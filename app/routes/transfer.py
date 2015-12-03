@@ -17,10 +17,45 @@ class WebError(Exception):
     short-circuit bad requests
     """
 
+def merge_transfer( sources, dests ):
+    assert len(dests) == 1
+
+    dest_barcode = dests[0]['details']['id']
+    if db.session.query(SamplePlate) \
+                 .filter(SamplePlate.external_barcode == dest_barcode) \
+                 .count():
+        raise WebError('destinate plate barcode "%s" already exists' % dest_barcode)
+
+    rows, seen = [], set()
+    for src in sources:
+        barcode = src['details']['id']
+        try:
+            plate = db.session.query(SamplePlate) \
+                              .filter(SamplePlate.external_barcode == barcode) \
+                              .one()
+        except MultipleResultsFound:
+            raise WebError('multiple plates found with barcode %s' % barcode)
+
+        for well in db.session.query(SamplePlateLayout) \
+                      .filter( SamplePlateLayout.sample_plate == plate ) \
+                      .order_by( SamplePlateLayout.well_id ):
+
+            if well.well_id in seen:
+                raise WebError('multiple source plates have occupied wells at %s' % plate.type.get_well_name( well.well_id ))
+            seen.add( well.well_id )
+
+            rows.append( {'source_plate_barcode':           barcode,
+                          'source_well_name':               well.well_name,
+                          'source_sample_id':               well.sample_id,
+                          'destination_plate_barcode':      dest_barcode,
+                          'destination_well_name':          plate.type.get_well_name( well.well_id ),
+                          'destination_plate_well_count':   plate.type.number_clusters,
+            })
+
+    return rows
+
 
 def preview():
-    print '@@\n' * 10
-    
     assert request.method == 'POST'
 
     try:
@@ -32,58 +67,61 @@ def preview():
 
         dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
-        if request.json['transfer_template_id'] in (1,2):
-            src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-            dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
-
-            dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
-
-        elif request.json['transfer_template_id'] == 23:
-            pass
+        if request.json['transfer_template_id'] == 23:
+            # merge source plate(s) into single destination plate
+            rows = merge_transfer( request.json['sources'], request.json['destinations'] )
 
         else:
-            if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
-                raise WebError('Expected %d distinct destination plate barcodes; got %d'
-                               % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
+            if request.json['transfer_template_id'] in (1,2):
+                src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+                dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
 
-            if xfer['source']['plateCount'] != len(request.json['sources']):
-                raise WebError('Expected %d source plates; got %d'
-                               % (xfer['source']['plateCount'], len(request.json['sources'])))
+                dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
 
-            dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
+            else:
+                if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                    raise WebError('Expected %d distinct destination plate barcodes; got %d'
+                                   % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-            def dest_lookup( src_idx, well_id ):
-                dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well_id) ]
-                dest_barcode = dest_barcodes[ dest['destination_plate_number'] - 1]
-                dest_well = dest['destination_well_id']
-                return dest_barcode, dest_well
+                if xfer['source']['plateCount'] != len(request.json['sources']):
+                    raise WebError('Expected %d source plates; got %d'
+                                   % (xfer['source']['plateCount'], len(request.json['sources'])))
 
-        if not dest_plate_type:
-            raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
-    
-        rows = []
+                dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
 
-        for src_idx, src in enumerate(request.json['sources']):
-            barcode = src['details']['id']
-            try:
-                plate = db.session.query(SamplePlate) \
-                                  .filter(SamplePlate.external_barcode == barcode) \
-                                  .one()
-            except MultipleResultsFound:
-                raise WebError('multiple plates found with barcode %s' % barcode)
+                def dest_lookup( src_idx, well_id ):
+                    dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well_id) ]
+                    dest_barcode = dest_barcodes[ dest['destination_plate_number'] - 1]
+                    dest_well = dest['destination_well_id']
+                    return dest_barcode, dest_well
 
-            for well in db.session.query(SamplePlateLayout) \
-                          .filter( SamplePlateLayout.sample_plate == plate ) \
-                          .order_by( SamplePlateLayout.well_id ):
-                dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
+            if not dest_plate_type:
+                raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
 
-                rows.append( {'source_plate_barcode':           barcode,
-                              'source_well_name':               well.well_name,
-                              'source_sample_id':               well.sample_id,
-                              'destination_plate_barcode':      dest_barcode,
-                              'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
-                              'destination_plate_well_count':   dest_plate_type.number_clusters,
-                              })
+            rows = []
+
+            for src_idx, src in enumerate(request.json['sources']):
+                barcode = src['details']['id']
+                try:
+                    plate = db.session.query(SamplePlate) \
+                                      .filter(SamplePlate.external_barcode == barcode) \
+                                      .one()
+                except MultipleResultsFound:
+                    raise WebError('multiple plates found with barcode %s' % barcode)
+
+                for well in db.session.query(SamplePlateLayout) \
+                              .filter( SamplePlateLayout.sample_plate == plate ) \
+                              .order_by( SamplePlateLayout.well_id ):
+                    dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
+
+                    rows.append( {'source_plate_barcode':           barcode,
+                                  'source_well_name':               well.well_name,
+                                  'source_sample_id':               well.sample_id,
+                                  'destination_plate_barcode':      dest_barcode,
+                                  'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
+                                  'destination_plate_well_count':   dest_plate_type.number_clusters,
+                                  })
+
     except WebError as e:
         return Response( response=json.dumps({'success': False,
                                               'message': str(e),
@@ -91,10 +129,6 @@ def preview():
                          status=200,
                          mimetype="application/json")
     else:
-        print '@@\n' * 5
-        print rows
-
-        # NOTE: SampleTransferDetail holds this stuff after execution
         return Response( response=json.dumps({'success': True,
                                               'message': '',
                                               'data': rows}),
