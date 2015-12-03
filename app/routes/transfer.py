@@ -11,7 +11,11 @@ import logging
 logger = logging.getLogger()
 
 
-class WebError(Exception): pass
+class WebError(Exception):
+    """
+    not the purest approach, but I'm using this for flow-control, to
+    short-circuit bad requests
+    """
 
 
 def preview():
@@ -25,9 +29,9 @@ def preview():
         xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
 
         dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
-        if xfer['destination']['plateCount'] != len(dest_barcodes):
-            raise WebError('Expected %d destination plates; got %d'
-                           % (xfer['destination']['plateCount'], len(dest_barcodes)))
+        if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+            raise WebError('Expected %d distinct destination plate barcodes; got %d'
+                           % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
         if xfer['source']['plateCount'] != len(request.json['sources']):
             raise WebError('Expected %d source plates; got %d'
