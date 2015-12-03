@@ -89,8 +89,6 @@ for name, bundle in assets_loader.load_bundles().iteritems():
 #
 ######################################################################################
 
-print ('@@@@ calling shim SQLAlchemy!! (%s)\n' % SQLAlchemyX) * 10
-
 db = SQLAlchemyX(app)
 
 '''

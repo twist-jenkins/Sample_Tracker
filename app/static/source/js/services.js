@@ -319,10 +319,25 @@ app = angular.module('twist.app')
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
 
                         if (base.sourcesReady && base.destinationsReady) {
+                        
+                            // kieran
+                            Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id )
+                                .success( function(result) {
+                                    if( result.success ) {
+                                        base.error_message = '';
+                                        base.operations = result.data;
+                                    } else {
+                                        base.error_message = result.message;
+                                    }
+                                }).error(function(data) {
+                                    // FIXME: do something here?
+                                });
+
+                            /*
                             var operations = [];
                             
                             if (base.details.transfer_template_id == 1 || base.details.transfer_template_id == 2) {
-                                /* sopurce and destination plate are same size and layout */
+                                //* sopurce and destination plate are same size and layout *
                                 var plate = base.sources[0];
                                 for (var j=0; j<plate.items.length;j++) {
                                     var sourceWell = plate.items[j];
@@ -337,9 +352,9 @@ app = angular.module('twist.app')
                                     operations.push(operationRow);
                                 }
                             } else {
-                                /* source and destination are different size and/or layout*/
+                                //* source and destination are different size and/or layout*
                                 if (base.details.transfer_template_id == 23) {
-                                    /* merge source plate(s) into single destination plate */
+                                    //* merge source plate(s) into single destination plate *
                                     var overlapCheckMap = {};
                                     for (var i=0;i< base.sources.length;i++) {
                                         var plate = base.sources[i];
@@ -366,22 +381,11 @@ app = angular.module('twist.app')
                                         }
                                     }
                                 } else {
-                                    /* all others */
-                                    // kieran
-                                    Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id ).success( function(result) {
-                                        if( result.success ) {
-                                            base.error_message = '';
-                                            base.operations = result.data;
-                                        } else {
-                                            base.error_message = result.message;
-                                        }
-                                    }).error(function(data) {
-                                        // FIXME: do something here?
-                                    });
-                                }
-                            }
-
+                                    //* all others *
+                                    }
                             base.operations = operations;
+                            */
+                        
                         } else {
                             base.clearOperationsList();
                         }

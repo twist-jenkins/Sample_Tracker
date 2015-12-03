@@ -25,14 +25,12 @@ class Config(object):
 
 
 class ProdConfig(Config):
-    print '@@ in ProdConfig'
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" #"postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb_prod"
     SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
     SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
 
 class StagingConfig(Config):
-    print '@@ in StagingConfig'
     SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
     """
     synapp_test=#

@@ -13,8 +13,6 @@ from flask import g, Flask, render_template, make_response, request, Response, r
 from app import app, db
 
 from twistdb.public import Operator
-print ('@@ imported Operator: %s\n' % Operator) * 10
-
 from app import login_manager
 
 import requests
