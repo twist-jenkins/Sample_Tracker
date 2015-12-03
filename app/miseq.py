@@ -165,7 +165,7 @@ def miseq_csv_for_nps(db_session, nps_ids):
     return response
 
 
-def echo_csv_for_nps(operations, fname, transfer_volume=100):
+def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
     """ assumes each oper looks like {
             "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
             "source_well_name": "A1",
@@ -200,6 +200,11 @@ def echo_csv_for_nps(operations, fname, transfer_volume=100):
                  current_user.first_and_last_name)
 
     response = make_response(csvout)
+
+    if fname is None:
+        datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+        fname = "ngs_barcoding_%s.echo.csv" % datestr
+
     assert fname[-4:] == '.csv'
     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
     return response

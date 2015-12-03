@@ -71,7 +71,7 @@ def formatted(db_session, data, fmt, spec):
             abort(404, message="Could not create miseq csv")
     if fmt == 'echo.csv':
         operations = data["data_json"]["operations"]
-        csv = miseq.echo_csv_for_nps(operations, "smt-echo.csv")
+        csv = miseq.echo_csv_for_nps(operations)
         if csv:
             return csv
         else:
