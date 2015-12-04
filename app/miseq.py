@@ -8,6 +8,8 @@ from flask import make_response
 from flask.ext.restful import abort
 from flask_login import current_user
 
+import twist_excel.workbook
+
 from dbmodels import MiSeqSampleView
 
 """ some of the templates and logic is from twistbio.util.miseq.py.
@@ -123,7 +125,66 @@ def miseq_csv_template(rows, run_id):
     return csvout
 
 
-def miseq_csv_for_nps(db_session, nps_ids):
+def sample_map_template(rows):
+
+    sio = StringIO.StringIO()
+    book = twist_excel.workbook.TwistExcelWorkbook(sio)
+
+    book.format.gray.set_align('center')
+    book.format.gray.set_align('vcenter')
+    book.format.gray.set_text_wrap()
+    book.format.gray.set_bold()
+
+    book.fields = (
+        book.Field("sample_num_on_run", 20, book.format.gray,
+                   "Sample Number On Run (For FASTQ Naming)"),
+        book.Field("sample_id", 10, book.format.gray,
+                   "Sample ID"),
+        book.Field("i5_sequence_id", 15, book.format.gray,
+                   "I5 Barcode Sequence ID (From Barcode Sequence table)"),
+        book.Field("i7_sequence_id", 15, book.format.gray,
+                   "I7 Barcode Sequence ID (From Barcode Sequence table)"),
+        book.Field("description", 60, book.format.gray,
+                   "Expected result description, notes about why on run, "
+                   "prep-related notes, which samples are controls, etc"),
+        book.Field("var_prep_type", 15, book.format.lime,
+                   "Variable: Prep"),
+        book.Field("var_parent_type ", 10, book.format.lime,
+                   "Variable: Parent type"),
+        book.Field("var_flag", 5, book.format.lime,
+                   "Variable: Flag"),
+    )
+
+    sheet = book.workbook.add_worksheet("NGS Run Map")
+    sheet.write('A1', ':table')
+    sheet.write('B1', "sample_map")
+    sheet.write('A3', 'Maps each sample on run to barcodes and one or more '
+                'variables under study. You can add as many categories '
+                '(columns) as you like, just match the var_xxx format '
+                'in row 6 (row 5 is ignored). Variables that do not start '
+                'with "var_" are ignored in row 6 -- do not use spaces.')
+    sheet.set_row(4, 72)
+    book.write_to(sheet, book.fields)
+
+    row_format = book.format.regular
+    for row_ix, row in enumerate(rows):
+        position = book.cell_position(row_ix)
+        col_vals = [
+            row_ix + 1,
+            row.parent_sample_id,  # CS_00233
+            row.i5_sequence_id,
+            row.i7_sequence_id,
+            strip_forbidden_chars(row.parent_description),
+            "Automated",
+            "Colony"
+        ]
+        sheet.write_row(position, col_vals, row_format)
+
+    return sio
+
+
+def nps_id_details(db_session, nps_ids):
+    """Raises error if some sample is not NPS_"""
 
     n_total = len(nps_ids)
     if n_total == 0:
@@ -150,18 +211,36 @@ def miseq_csv_for_nps(db_session, nps_ids):
         logging.error(err)
         abort(400, message=err)
 
-    run_id = "MSR_tbd"  # run.run_id
-    csvout = miseq_csv_template(rows, run_id)
+    return rows
 
+
+def miseq_csv_response(nps_detail_rows, fname=None):
+    """MiSeq CSV"""
+    run_id = "MSR_tbd"  # run.run_id
+    csvout = miseq_csv_template(nps_detail_rows, run_id)
     logging.info(" %s downloaded the MISEQ REPORT",
                  current_user.first_and_last_name)
-
-    # We need to modify the response, so the first thing we
-    # need to do is create a response out of the CSV string
     response = make_response(csvout)
-    # This is the key: Set the right header for the response
-    # to be downloaded, instead of just printed on the browser
-    response.headers["Content-Disposition"] = "attachment; filename=MiSeq_" + run_id + "_Report.csv"
+    if fname is None:
+        datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+        fname = "ngs_miseq_%s.csv" % datestr
+    response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
+    return response
+
+
+def sample_map_response(nps_detail_rows, fname=None):
+    """Sample Map XLSX"""
+    xlsx_out = sample_map_template(nps_detail_rows)
+    logging.info(" %s downloaded the SAMPLE MAP REPORT",
+                 current_user.first_and_last_name)
+    xlsx_out.seek(0)
+    mimt = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    response = make_response(xlsx_out.read())
+    response.mimetype = mimt
+    if fname is None:
+        datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+        fname = "ngs_sample_map_%s.xlsx" % datestr
+    response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
     return response
 
 
@@ -271,6 +350,3 @@ def create_nrsj(cur_session, ngs_run, ngs_prepped_samples):
         # add to db
         cur_session.add(nrsj)
 '''
-
-
-

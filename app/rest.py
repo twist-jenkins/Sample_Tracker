@@ -61,15 +61,18 @@ def json_api_error(err_list, status_code, headers=None):
 
 
 def formatted(db_session, data, fmt, spec):
-    if fmt == 'miseq.csv':
+    if fmt in ('miseq.csv', 'sample_map.xlsx'):
         nps_ids = [el["source_sample_id"]
                    for el in data["data_json"]["operations"]]
-        csv = miseq.miseq_csv_for_nps(db_session, nps_ids)
-        if csv:
-            return csv
+        rows = miseq.nps_id_details(db_session, nps_ids)
+
+        if fmt == 'miseq.csv':
+            return miseq.miseq_csv_response(rows)
+        elif fmt == 'sample_map.xlsx':
+            return miseq.sample_map_response(rows)
         else:
-            abort(404, message="Could not create miseq csv")
-    if fmt == 'echo.csv':
+            raise ValueError(fmt)
+    elif fmt == 'echo.csv':
         operations = data["data_json"]["operations"]
         csv = miseq.echo_csv_for_nps(operations)
         if csv:
