@@ -12,7 +12,7 @@ div(class="twst-view-transform-spec-main")
                 //    button Hamilton
                 a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
                     button MiSeq
-                a(href="/api/v1/rest/transform-specs/XXXXXXXX" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.sample_map.xlsx" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
                     button Sample Map
         div(class="twst-view-transform-spec-details")
             p Spec Id:&nbsp;
