@@ -8,8 +8,6 @@ from flask import make_response
 from flask.ext.restful import abort
 from flask_login import current_user
 
-import twist_excel.workbook
-
 from dbmodels import MiSeqSampleView
 
 """ some of the templates and logic is from twistbio.util.miseq.py.

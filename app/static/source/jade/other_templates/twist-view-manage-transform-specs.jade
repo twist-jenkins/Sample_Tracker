@@ -1,6 +1,7 @@
 div(class="twst-view-manage-transform-specs-main" ui-view)
     h3 Saved Transform Specs
-    div(class="twst-view-manage-transform-specs-list")
+    div(class="twst-spinner" ng-if="fetchingSpecs")
+    div(class="twst-view-manage-transform-specs-list" ng-if="!fetchingSpecs")
         table(class="twst-data-readout-table twst-transform-specs-list")
             tr
                 td(class="twst-data-readout-table-header") Spec Id
