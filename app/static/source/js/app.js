@@ -526,6 +526,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.getPrettyDateString = Formatter.getPrettyDateString;
 
         var loadSpecs = function () {
+            $scope.fetchingSpecs = true;
             Api.getTransformSpecs().success(function (data) {
                 $scope.fetchingSpecs = false;
                 
@@ -546,6 +547,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
 
                 $scope.transformSpecs = specs;
+                $scope.fetchingSpecs = false;
 
             });
         };
@@ -574,10 +576,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.specLoading = true;
             Api.getTransformSpec(specId).success(function (data) {
                 $scope.specLoading = false;
-                var thisSpec = data;
-                thisSpec.plan = JSON.parse(thisSpec.data_json.plan);
+                var thisSpec = data.data;
+                thisSpec.plan = thisSpec.data_json;
                 $scope.selectedSpec = thisSpec;
             });
+        } else {
+            console.log($scope.selectedSpec);
         }
     }]
 )
