@@ -33,6 +33,8 @@ def merge_transform( sources, dests ):
     rows, seen = [], set()
     for src in sources:
         barcode = src['details']['id']
+        print '@@ merge:', barcode
+
         try:
             plate = db.session.query(SamplePlate) \
                               .filter(SamplePlate.external_barcode == barcode) \
@@ -55,7 +57,7 @@ def merge_transform( sources, dests ):
                           'destination_well_name':          plate.type.get_well_name( well.well_id ),
                           'destination_plate_well_count':   plate.type.number_clusters,
             })
-
+    print rows
     return rows
 
 
@@ -116,6 +118,8 @@ def filter_transform( transfer_template_id, sources, dests ):
 def preview():
     assert request.method == 'POST'
 
+    print '@@ template_id:', request.json['transfer_template_id']
+
     try:
         if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
             raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
@@ -123,7 +127,11 @@ def preview():
 
         xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
 
-        dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
+        if request.json['transfer_template_id'] == 2:
+            # identity function
+            dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
+        else:
+            dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
         if request.json['transfer_template_id'] == 23:
             # merge source plate(s) into single destination plate
