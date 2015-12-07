@@ -313,13 +313,11 @@ app = angular.module('twist.app')
             };
 
             var updateOperationsList = function () {
-
                 if (base.autoUpdateSpec) {
 
-                    if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
-
+                    if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
+                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 26 && base.details.transfer_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
-                        
                             // kieran
                             Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id )
                                 .success( function(result) {
@@ -338,7 +336,7 @@ app = angular.module('twist.app')
                         }
                     } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                         // "rebatching for transformation"
-                        
+
                         if (base.sourcesReady) {
                             
                             var templateId = base.details.transfer_template_id;
@@ -480,31 +478,6 @@ app = angular.module('twist.app')
 
                                     break;
                                 
-                                case 26:
-                                case 27:
-                                case 28:
-                                case 29:
-                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
-                                    var operations = [];
-
-                                    for (var i=0; i<base.sources.length;i++) {
-                                        var source = base.sources[i];
-                                        var operationRow = {
-                                            source_plate_barcode: source.details.id
-                                            ,source_well_name: 'Z0'
-                                            ,source_sample_id: '0000000'
-                                            ,destination_plate_barcode: '0000000-1'
-                                            ,destination_well_name: 'Z0'
-                                            ,destination_plate_well_count: 0
-                                        };
-                                        operations.push(operationRow);
-
-                                    }
-
-
-
-                                    base.operations = operations;
-                                    break;
 
                                 default :
                                     console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
