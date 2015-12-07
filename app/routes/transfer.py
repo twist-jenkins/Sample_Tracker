@@ -1,5 +1,9 @@
 from twistdb import *
 from twistdb.sampletrack import *
+from twistdb.process import *
+from twistdb.public import *
+from twistdb.ngs import *
+import twistdb.ngs
 
 from app import app, db
 
@@ -17,7 +21,7 @@ class WebError(Exception):
     short-circuit bad requests
     """
 
-def merge_transfer( sources, dests ):
+def merge_transform( sources, dests ):
     assert len(dests) == 1
 
     dest_barcode = dests[0]['details']['id']
@@ -55,6 +59,60 @@ def merge_transfer( sources, dests ):
     return rows
 
 
+def filter_transform( transfer_template_id, sources, dests ):
+    rows = []
+    dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
+
+    if transfer_template_id == 27:
+        # current constraints:
+        #   1. source plates are 384 well plates full of CS's
+        #   2. destination plates are 96 well
+
+        dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
+        dest_ctr = 1
+
+        for src in sources:
+            barcode = src['details']['id']
+            well_to_passfail = {}
+            
+            for plate, well, cs, nps, summ in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
+                                                        .filter( SamplePlate.external_barcode == barcode ) \
+                                                        .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+                                                        .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ) \
+                                                        .join( NGSPreppedSample, NGSPreppedSample.parent_sample_id == SamplePlateLayout.sample_id ) \
+                                                        .join( CallerSummary, CallerSummary.sample_id == NGSPreppedSample.sample_id ) \
+                                                        .filter( CallerSummary.caller_stage == 'calling'):
+                if well.well_id in well_to_passfail:
+                    # we only store wells when they pass, so if it's there we don't need to look further
+                    continue
+
+                if plate.type_id != 'SPTT_0006':
+                    # FIXME: hard-coded for now
+                    raise WebError('selected source plates should be plain 384 well plates, while plate %s is %s / "%s"'
+                                   % (barcode, plate.type_id, plate.sample_plate_type.name))
+                if json.loads(summ.value)['OK to Ship'] == "Yes":
+                    well_to_passfail[ well.well_id ] = well
+
+            for well_id in sorted( well_to_passfail ):
+                well = well_to_passfail[well_id]
+                dest_plate_idx = dest_ctr / 96
+                dest_well = dest_ctr % 96
+                dest_ctr += 1
+
+                if dest_plate_idx >= len(dest_barcodes):
+                    raise WebError('we need at least %d destination plates, but only %d were provided'
+                                   % (dest_plate_idx + 1, len(dest_barcodes)))
+                rows.append( {'source_plate_barcode':           barcode,
+                              'source_well_name':               well.well_name,
+                              'source_sample_id':               well.sample_id,
+                              'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
+                              'destination_well_name':          dest_type.get_well_name( dest_well ),
+                              'destination_plate_well_count':   dest_type.number_clusters,
+                })
+
+    return rows
+
+
 def preview():
     assert request.method == 'POST'
 
@@ -69,8 +127,9 @@ def preview():
 
         if request.json['transfer_template_id'] == 23:
             # merge source plate(s) into single destination plate
-            rows = merge_transfer( request.json['sources'], request.json['destinations'] )
-
+            rows = merge_transform( request.json['sources'], request.json['destinations'] )
+        elif request.json['transfer_template_id'] == 27:
+            rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
         else:
             if request.json['transfer_template_id'] in (1,2):
                 src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
