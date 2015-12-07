@@ -22,10 +22,9 @@ from werkzeug import secure_filename
 
 from app import app, db
 
-from app.models import create_unique_object_id
-from app.dbmodels import Sample, SamplePlate, SamplePlateLayout, \
-    SamplePlateType, SampleTransferDetail
-from twistdb.sampletrack import SampleTransfer
+from twistdb import create_unique_id
+from twistdb.public import *
+from twistdb.sampletrack import *
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
@@ -383,8 +382,8 @@ def get_samples_list():
 def create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
     raise DeprecationWarning
 
-    destination_plate_name = create_unique_object_id("PLATE_")
-    destination_plate_description = create_unique_object_id("PLATEDESC_")
+    destination_plate_name = create_unique_id("PLATE_")()
+    destination_plate_description = create_unique_id("PLATEDESC_")()
     destination_plates.append(SamplePlate(source_plate_type_id,operator.operator_id,storage_location_id,
         destination_plate_name, destination_plate_description, destination_barcode))
     db.session.add(destination_plates[len(destination_plates) - 1])

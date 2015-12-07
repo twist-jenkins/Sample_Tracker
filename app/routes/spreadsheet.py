@@ -19,9 +19,10 @@ from app.utils import scoped_session
 from app.models import create_destination_plate
 from twistdb.public import *
 from twistdb.sampletrack import *
+from twistdb.ngs import *
 
-from app.dbmodels import create_unique_object_id, ClonedSample, \
-    NGSPreppedSample # GeneAssemblySampleView
+from twistdb import create_unique_id
+
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -395,11 +396,11 @@ def sample_type_handler(db_session, sample_transfer_type_id,
 
 def make_cloned_sample(db_session, source_plate_well, destination_well_id):
     operator = g.user
-    source_id = create_unique_object_id("tmp_src_")
+    source_id = create_unique_id("tmp_src_")()
     colony_name = "%d-%s" % (12, destination_well_id)
 
     # Create CS
-    cs_id = create_unique_object_id("CS_")
+    cs_id = create_unique_id("CS_")()
     cloned_sample = ClonedSample(cs_id, source_plate_well.sample_id, source_id,
                                  colony_name, None, None, None,
                                  operator.operator_id)
@@ -429,7 +430,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     operator = g.user
 
     # Create NPS
-    nps_id = create_unique_object_id("NPS_")
+    nps_id = create_unique_id("NPS_")()
     i5_sequence_id, i7_sequence_id = "i5a", "i7b"
     insert_size_expected = 1000
     parent_process_id = None

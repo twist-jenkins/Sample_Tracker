@@ -11,8 +11,7 @@ from sqlalchemy.sql import func
 from app import app
 from app import db
 from app.utils import scoped_session
-from dbmodels import SampleTransformSpec
-from twistdb.sampletrack import SampleTransfer
+from twistdb.sampletrack import SampleTransfer, SampleTransformSpec
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
 api = flask_restful.Api(app)

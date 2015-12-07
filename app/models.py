@@ -1,7 +1,7 @@
 import logging
 
-from app.dbmodels import SamplePlate
-from app.dbmodels import create_unique_object_id
+from twistdb.sampletrack import SamplePlate
+from twistdb import create_unique_id
 
 
 def check_destination_plate(db_session, barcode, sample_transfer_template_id):
@@ -22,8 +22,8 @@ def create_destination_plate(db_session, operator, destination_barcode,
     """creates a destination plate for a transfer"""
 
     check_destination_plate(db_session, destination_barcode, sample_transfer_template_id)
-    destination_plate_name = create_unique_object_id("PLATE_")
-    destination_plate_description = create_unique_object_id("PLATEDESC_")
+    destination_plate_name = create_unique_id("PLATE_")()
+    destination_plate_description = create_unique_id("PLATEDESC_")()
     plate = SamplePlate(type_id=source_plate_type_id,
                         operator_id=operator.operator_id,
                         storage_location_id=storage_location_id,

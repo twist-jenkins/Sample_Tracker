@@ -8,7 +8,7 @@ from app import db
 #from app import (BlogPostSectionType, UserSegment, CalendarEventType, NewsArticleType, MediaType, PublicationType)
 from sqlalchemy import or_, and_
 
-from app.dbmodels import (SampleTransferTemplate, SampleTransferTemplateDetails)
+from twistdb.sampletrack import (SampleTransferTemplate, SampleTransferTemplateDetails)
 
 import collections
 

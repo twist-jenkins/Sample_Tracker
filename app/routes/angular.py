@@ -430,6 +430,9 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
 def plate_details(sample_plate_barcode, format, basic_data_only=False):
 
+    # FIXME KIERAN
+    basic_data_only = True
+
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
     if not sample_plate:
@@ -503,10 +506,11 @@ def plate_details(sample_plate_barcode, format, basic_data_only=False):
     wells = []
 
 
-    if basic_data_only:
+    if  basic_data_only:
         dbQ = db.session.query(SamplePlateLayout)
 
     else:
+        # FIXME: port to new schema - kieran
         dbQ = (
             db.session.query(
                 SamplePlateLayout,
