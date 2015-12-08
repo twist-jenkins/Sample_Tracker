@@ -14,12 +14,13 @@ import datetime
 
 from app import app
 from app import db
+from twistdb.db import Base
 
 from sqlalchemy import MetaData
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.dialects import postgresql
 
-db_metadata = MetaData(bind=db.engine)  # for autoload / schema reflection
+db_metadata = Base.metadata
 
 NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
 NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
@@ -50,9 +51,8 @@ class SampleView(db.Model):
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
-        __table__ = db.Table("gene_assembly_sample", db_metadata,
-                             db.Column("sample_id", db.String(40),
-                                       primary_key=True), autoload=False)
+        from twistdb.public import GeneAssemblySample
+        __table__ = GeneAssemblySample.__table__
 
 
 class MiSeqSampleView(db.Model):
@@ -61,30 +61,9 @@ class MiSeqSampleView(db.Model):
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
-        __table__ = db.Table("ngs_prepped_sample", db_metadata,
-                             db.Column("sample_id", db.String(40),
-                                       primary_key=True), autoload=False)
+        from twistdb.ngs import NGSPreppedSample
+        __table__ = NGSPreppedSample.__table__
 
-
-class NGSBarcodePair(db.Model):
-    """from Austin"""
-    __tablename__ = "ngs_barcode_pair"
-
-    # NOTE: To disable a single barcode pair seen as a bad combination for
-    # ngs, simply delete that row from this table.  App code currently
-    # allows up to 1000 consecutive missing barcodes.
-
-    pk = db.Column(db.Integer, primary_key=True)
-    i7_sequence_id = db.Column(db.String(40),
-                               # db.ForeignKey("barcode_sequence.sequence_id"),
-                               nullable=False)
-    i5_sequence_id = db.Column(db.String(40),
-                               # db.ForeignKey("barcode_sequence.sequence_id"),
-                               nullable=False)
-    reverse_primer_i7_well_row = db.Column(db.String(10), nullable=False)
-    reverse_primer_i7_well_column = db.Column(db.Integer, nullable=False)
-    forward_primer_i5_well_row = db.Column(db.String(10), nullable=False)
-    forward_primer_i5_well_column = db.Column(db.Integer, nullable=False)
 
 
 def barcode_sequence_to_barcode_sample(barcode_sequence_name):

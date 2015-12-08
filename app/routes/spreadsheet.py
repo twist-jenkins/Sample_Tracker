@@ -35,6 +35,11 @@ from well_count_to_plate_type_name import well_count_to_plate_type_name
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
 
 
+# FIXME: there are a bunch of model instantiations in this thing, and they're
+#   all gonna break with the new twistdb models
+#   -- kieran
+
+
 def error_response(status_code, message):
     # TODO: remove duplicate code -- use JSON-API?
     response = jsonify({'success': False, 'message': message})
