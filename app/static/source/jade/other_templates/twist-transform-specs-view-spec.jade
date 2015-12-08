@@ -3,9 +3,20 @@ div(class="twst-view-transform-spec-main")
     div(ng-if="!specLoading")
         button(class="twst-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec list
         h2 Viewing Spec:&nbsp;
+        div(class="twst-view-transform-spec-download-options" ng-if="selectedSpec.plan.details.transfer_type_id == 50 || selectedSpec.plan.details.transfer_type_id == 26")
+            div(class="twst-view-transform-spec-download-options-worklists")
+                div Download Worklist
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv" ng-if="selectedSpec.plan.details.transfer_type_id == 26")
+                    button Echo
+                // a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.hamilton.csv")
+                //    button Hamilton
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
+                    button MiSeq
+                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.sample_map.xlsx" ng-if="selectedSpec.plan.details.transfer_type_id == 50")
+                    button Sample Map
         div(class="twst-view-transform-spec-details")
             p Spec Id:&nbsp;
-                strong {{selectedSpec.id}}
+                strong {{selectedSpec.spec_id}}
             p Title:&nbsp;
                 strong {{selectedSpec.plan.title}}
             div(class="twst-view-transform-spec-sources-destinations")
@@ -17,7 +28,8 @@ div(class="twst-view-transform-spec-main")
                     p Destination(s):
                     ul
                         li(ng-repeat="destination in selectedSpec.plan.destinations") {{destination.details.id}}
-            button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
+
+            // button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
             h3 Operations:
             table(class="twst-data-readout-table twst-transform-spec-preview-table")
                 tr
@@ -26,7 +38,7 @@ div(class="twst-view-transform-spec-main")
                     td(class="twst-data-readout-table-header") Source Well
                     td(class="twst-data-readout-table-header") Destination Plate
                     td(class="twst-data-readout-table-header") Destination Well
-                    td(class="twst-data-readout-table-header") Destination Well Count  
+                    td(class="twst-data-readout-table-header") Destination Well Count
                 tr(ng-repeat="row in selectedSpec.plan.operations")
                     td {{::row.source_sample_id}}
                     td {{::row.source_plate_barcode}}

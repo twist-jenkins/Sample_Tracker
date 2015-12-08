@@ -1,2 +1,2 @@
 #!/bin/sh
-env PYTHONPATH=. py.test test
+env WEBSITE_ENV=local PYTHONPATH=. py.test test

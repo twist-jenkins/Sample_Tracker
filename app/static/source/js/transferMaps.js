@@ -1102,6 +1102,30 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
+                ,30: {  // keyed to sample_transfer_template_id in the database
+                    description: 'NGS Barcoding'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
+                ,31: {  // keyed to sample_transfer_template_id in the database
+                    description: 'NGS: sample sheet generation'
+                    ,type: 'standard'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 1
+                        ,variablePlateCount: false
+                    }
+                }
             }
             ,rowColumnMaps: {
                 SPTT_0006: {

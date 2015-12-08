@@ -399,14 +399,16 @@ def update_barcode():
 def sample_transfers():
     return routes.sample_transfers()
 
-@app.route('/api/v1/plate-barcodes/<sample_plate_barcode>/<format>', methods=['GET'])
-@app.route('/api/v1/plate-barcodes/<sample_plate_barcode>', defaults={'format':"json"}, methods=['GET'])
-def plate_details(sample_plate_barcode, format):
-    return routes.plate_details(sample_plate_barcode,format)
+@app.route('/api/v1/plate-barcodes/<sample_plate_barcode>/<fmt>',
+           methods=['GET'])
+@app.route('/api/v1/plate-barcodes/<sample_plate_barcode>',
+           defaults={'fmt': 'json'}, methods=['GET'])
+def plate_details(sample_plate_barcode, fmt):
+    return routes.plate_details(sample_plate_barcode, fmt)
 
 @app.route('/api/v1/basic-plate-info/<plate_barcode>', methods=['GET'])
 def basic_plate_info(plate_barcode):
-    return routes.plate_details(plate_barcode,"json", True)
+    return routes.plate_details(plate_barcode, "json", True)
 
 @app.route('/api/v1/source-plate-well-data', methods=['POST'])
 def source_plate_well_data():

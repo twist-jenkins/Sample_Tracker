@@ -161,6 +161,13 @@ app = angular.module('twist.app')
                 var specReq = ApiRequestObj.getGet('rest/transform-specs/' + specId);
                 return $http(specReq);
             }
+            ,executeTransformSpec: function (specId) {
+                var executeReq = ApiRequestObj.getPut('rest/transform-specs/' + specId);
+                executeReq.headers = {
+                    'Transform-Execution': 'Immediate'
+                }
+                return $http(executeReq);
+            }
             ,saveAndConditionallyExecuteTransformSpec: function (planData, executeNow) {
                 var saveAndExReq = ApiRequestObj.getPost('rest/transform-specs');
                 saveAndExReq.data = {
@@ -477,9 +484,8 @@ app = angular.module('twist.app')
                                     }
 
                                     break;
-                                
 
-                                default :
+                            default :
                                     console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
                                     break;
                             }
@@ -551,7 +557,13 @@ app = angular.module('twist.app')
                 base.details = typeObj;
                 base.details['transfer_type_id'] = typeObj.id;
                 base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
-                if (base.details.transfer_template_id == 25 || base.details.transfer_template_id == 26 || base.details.transfer_template_id == 27 || base.details.transfer_template_id == 28 || base.details.transfer_template_id == 29) {
+                if (base.details.transfer_template_id == 25 || 
+                    base.details.transfer_template_id == 26 || 
+                    base.details.transfer_template_id == 27 || 
+                    base.details.transfer_template_id == 28 || 
+                    base.details.transfer_template_id == 29 || 
+                    base.details.transfer_template_id == 30 || 
+                    base.details.transfer_template_id == 31) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
@@ -923,6 +935,11 @@ app = angular.module('twist.app')
                     delete plate.updating;
                     delete plate.loaded;
                     delete plate.details.title;
+                }
+
+                /* for NGS barcoding transforms, we need to add the source plate as the destination */
+                if (base.details.transfer_template_id == 30) {
+                    obj.destinations = angular.copy(base.sources);
                 }
 
                 obj.operations = angular.copy(base.operations);

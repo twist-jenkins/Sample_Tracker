@@ -14,6 +14,9 @@
 
 
 from app import app
+import os
+
+port = int(os.environ.get('WEBSITE_PORT', 80))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=port)
