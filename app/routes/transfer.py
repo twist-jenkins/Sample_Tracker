@@ -133,6 +133,10 @@ def preview():
         else:
             dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
+            if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                raise WebError('Expected %d distinct destination plate barcodes; got %d'
+                               % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
+
         if request.json['transfer_template_id'] == 23:
             # merge source plate(s) into single destination plate
             rows = merge_transform( request.json['sources'], request.json['destinations'] )

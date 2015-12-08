@@ -30,5 +30,6 @@ def create_destination_plate(db_session, operator, destination_barcode,
                         name=destination_plate_name,
                         description=destination_plate_description,
                         external_barcode=destination_barcode)
+
     db_session.add(plate)
     return plate

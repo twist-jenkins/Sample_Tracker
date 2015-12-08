@@ -18,7 +18,6 @@ from app.routes.spreadsheet import create_step_record_adhoc
 
 from app import app, db, googlelogin
 
-
 from twistdb.sampletrack import *
 from twistdb.public import *
 
@@ -474,9 +473,6 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
 def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
-    # FIXME KIERAN
-    basic_data_only = True
-
     sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
 
     if not sample_plate:
@@ -554,74 +550,10 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     wells = []
 
-<<<<<<< HEAD
-
-    if  basic_data_only:
-        dbQ = db.session.query(SamplePlateLayout)
-
-    else:
-        # FIXME: port to new schema - kieran
-        dbQ = (
-            db.session.query(
-                SamplePlateLayout,
-                GeneAssemblySampleView
-            ).filter(SamplePlateLayout.sample_id == GeneAssemblySampleView.sample_id)
-        )
-
-    qry = dbQ.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
-    rows = qry.all()
-
-    sample_view_attrs = (
-        'sample_type',
-        'sample_date_created',
-        'resistance_marker_plan',
-        'cloning_process_id_plan',
-        'cloning_process_id_actual',
-        'sample_name',
-        'sample_operator_id',
-        'sample_operator_first_and_last_name',
-        'sample_description',
-        'sample_parent_process_id',
-        'sample_status',
-        'cor_order_id',
-        'cor_order_date',
-        'cor_customer_id',
-        'cid_institution_id',
-        'coi_order_item_id',
-        'coi_line_item_number',
-        'coi_order_configuration_id',
-        'coi_received_datetime',
-        'coi_due_datetime',
-        'coi_priority',
-        'coi_order_item_status_id',
-        'coi_order_item_type_id',
-        'coi_order_item_delivery_format_id',
-        'coi_customer_sequence_num',
-        'coi_customer_line_item_id',
-        'coi_customer_line_item_description',
-        'coi_description',
-        'coi_notes',
-        'ga_sagi_id',
-        'sagi_sag_id',
-        'sagi_date_created',
-        'sagg_date_created',
-        'sagg_fivep_ps_id',
-        'sagg_threep_ps_id',
-        'sagg_fivep_as_id',
-        'sagg_fivep_as_dir',
-        'sagg_threep_as_id',
-        'sagg_threep_as_dir',
-        'gs_sequence_id',
-        'gs_seq',
-        'gs_name',
-        'gs_description'
-    )
-=======
     if basic_data_only:
         dbq = db.session.query(SamplePlateLayout)
         qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
         rows = qry.all()
->>>>>>> master
 
         for well in rows:
             wells.append({
