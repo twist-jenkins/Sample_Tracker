@@ -12,13 +12,12 @@ from sqlalchemy.sql import func
 from app import app
 from app import db
 from app.utils import scoped_session
-<<<<<<< HEAD
-from twistdb.sampletrack import SampleTransfer, SampleTransformSpec
-=======
-from dbmodels import SampleTransformSpec, SampleTransfer, NGS_BARCODE_PLATE
-from dbmodels import NGSPreppedSample, NGSBarcodePair, create_unique_object_id
+
+from twistdb.sampletrack import *
+from twistdb.ngs import *
+from twistdb import create_unique_id
 from dbmodels import barcode_sequence_to_barcode_sample
->>>>>>> master
+
 from app.routes.spreadsheet import create_adhoc_sample_movement
 from app import miseq
 
@@ -345,7 +344,7 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
                        % ngs_barcode_pair_index)
 
     # Create NPS
-    nps_id = create_unique_object_id("NPS_")
+    nps_id = create_unique_id("NPS_")()
     description = 'SMT stub descr.'  # e.g. "RCA 16 hours  Gene 12 Clone 2"
     notes = 'SMT - well %s' % destination_well_id  # e.g. "" for alpha NPSs
     insert_size_expected = -1

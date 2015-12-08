@@ -18,19 +18,12 @@ from sqlalchemy.sql import func
 from app import app, db
 from app.utils import scoped_session
 from app.models import create_destination_plate
-<<<<<<< HEAD
 from twistdb.public import *
 from twistdb.sampletrack import *
 from twistdb.ngs import *
 
 from twistdb import create_unique_id
 
-=======
-from app.dbmodels import (create_unique_object_id, SampleTransfer,
-                          SamplePlate, SamplePlateLayout, ClonedSample,
-                          SamplePlateType, SampleTransferDetail,
-                          SampleView, NGS_BARCODE_PLATE)
->>>>>>> master
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -475,13 +468,10 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     colony_name = "%d-%s" % (12, destination_well_id)
 
     # Create CS
-<<<<<<< HEAD
-    cs_id = create_unique_id("CS_")()
-    cloned_sample = ClonedSample(cs_id, source_plate_well.sample_id, source_id,
-=======
     cs_id = create_unique_object_id("CS_")
+    cs_id = create_unique_id("CS_")()
+              
     cloned_sample = ClonedSample(cs_id, source_sample_id, source_id,
->>>>>>> master
                                  colony_name, None, None, None,
                                  operator.operator_id)
 
@@ -504,7 +494,6 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
 
     return cs_id
 
-<<<<<<< HEAD
 
 def make_ngs_prepped_sample(db_session, source_plate_well,
                             destination_well_id):
@@ -540,5 +529,3 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
     db_session.flush()
 
     return nps_id
-=======
->>>>>>> master
