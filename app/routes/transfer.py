@@ -3,8 +3,9 @@ from twistdb.sampletrack import *
 from twistdb.process import *
 from twistdb.public import *
 from twistdb.ngs import *
+from twistdb.frag import *
 import twistdb.ngs
-
+from collections import defaultdict
 from app import app, db
 
 from flask import g, make_response, request, Response, session, jsonify
@@ -60,23 +61,45 @@ def merge_transform( sources, dests ):
     print rows
     return rows
 
-
 def filter_transform( transfer_template_id, sources, dests ):
+    # current constraints:
+    #   1. source plates are 384 well plates full of CS's
+    #   2. destination plates are 96 well
+
     rows = []
     dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
-    if transfer_template_id == 27:
-        # current constraints:
-        #   1. source plates are 384 well plates full of CS's
-        #   2. destination plates are 96 well
+    dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
+    dest_ctr = 1
 
-        dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
-        dest_ctr = 1
-
-        for src in sources:
-            barcode = src['details']['id']
+    if transfer_template_id == 26:
+        def filter_wells( barcode ):
             well_to_passfail = {}
-            
+            for plate, orig_well, sample in db.session.query( SamplePlate, SamplePlateLayout, Sample ) \
+                                           .filter( SamplePlate.external_barcode == barcode ) \
+                                           .join( SamplePlateLayout ) \
+                                           .join( Sample ):
+                scores = set()
+                for fa_well in sample.fraganalyzer_sample_wells:
+                    if fa_well.human_classification:
+                        [hum] = fa.human_classification
+                        score = hum.qc_call
+                    else:
+                        if fa_well.ok_to_ship():
+                            score = 'Pass'
+                        elif fa_well.borderline_to_ship():
+                            score = 'Warn'
+                        else:
+                            score = 'Fail'
+                    scores.add( score )
+                if 'Fail' not in scores:
+                    # pass!
+                    well_to_passfail[ orig_well.well_id ] = orig_well
+            return well_to_passfail
+
+    elif transfer_template_id == 27:
+        def filter_wells( barcode ):
+            well_to_passfail = {}
             for plate, well, cs, nps, summ in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
                                                         .filter( SamplePlate.external_barcode == barcode ) \
                                                         .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
@@ -95,24 +118,31 @@ def filter_transform( transfer_template_id, sources, dests ):
                 if json.loads(summ.value)['OK to Ship'] == "Yes":
                     well_to_passfail[ well.well_id ] = well
 
-            for well_id in sorted( well_to_passfail ):
-                well = well_to_passfail[well_id]
-                dest_plate_idx = dest_ctr / 96
-                dest_well = dest_ctr % 96
-                dest_ctr += 1
+            return well_to_passfail
+    else:
+        raise WebError("What transform id is %s??" % transfer_template_id)          
 
-                if dest_plate_idx >= len(dest_barcodes):
-                    raise WebError('we need at least %d destination plates, but only %d were provided'
-                                   % (dest_plate_idx + 1, len(dest_barcodes)))
-                rows.append( {'source_plate_barcode':           barcode,
-                              'source_well_name':               well.well_name,
-                              'source_sample_id':               well.sample_id,
-                              'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
-                              'destination_well_name':          dest_type.get_well_name( dest_well ),
-                              'destination_plate_well_count':   dest_type.number_clusters,
-                })
+    for src in sources:
+        barcode = src['details']['id']
+        well_to_passfail = filter_wells( barcode )
 
-    return rows
+        for well_id in sorted( well_to_passfail ):
+            well = well_to_passfail[well_id]
+            dest_plate_idx = dest_ctr / 96
+            dest_well = dest_ctr % 96
+            dest_ctr += 1
+
+            if dest_plate_idx >= len(dest_barcodes):
+                raise WebError('we need at least %d destination plates, but only %d were provided'
+                               % (dest_plate_idx + 1, len(dest_barcodes)))
+            rows.append( {'source_plate_barcode':           barcode,
+                          'source_well_name':               well.well_name,
+                          'source_sample_id':               well.sample_id,
+                          'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
+                          'destination_well_name':          dest_type.get_well_name( dest_well ),
+                          'destination_plate_well_count':   dest_type.number_clusters,
+            })
+
 
 
 def preview():
@@ -124,24 +154,28 @@ def preview():
         if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
             raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
 
-
         xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
-
+        
         if request.json['transfer_template_id'] == 2:
             # identity function
             dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
         else:
             dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
-            if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+            # FIXME: 26 and 27 demand 0 destination plates
+            if request.json['transfer_template_id'] not in (26, 27) \
+               and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+
                 raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
-
+    
         if request.json['transfer_template_id'] == 23:
             # merge source plate(s) into single destination plate
             rows = merge_transform( request.json['sources'], request.json['destinations'] )
-        elif request.json['transfer_template_id'] == 27:
+
+        elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+
         else:
             if request.json['transfer_template_id'] in (1,2):
                 src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
