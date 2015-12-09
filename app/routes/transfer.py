@@ -66,7 +66,6 @@ def filter_transform( transfer_template_id, sources, dests ):
     #   1. source plates are 384 well plates full of CS's
     #   2. destination plates are 96 well
 
-    rows = []
     dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
     dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
@@ -80,6 +79,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                                            .join( SamplePlateLayout ) \
                                            .join( Sample ):
                 scores = set()
+                # FIXME: pull this into main loop
                 for fa_well in sample.fraganalyzer_sample_wells:
                     if fa_well.human_classification:
                         [hum] = fa.human_classification
@@ -122,10 +122,11 @@ def filter_transform( transfer_template_id, sources, dests ):
     else:
         raise WebError("What transform id is %s??" % transfer_template_id)          
 
+    rows = []
     for src in sources:
         barcode = src['details']['id']
         well_to_passfail = filter_wells( barcode )
-
+                                                     
         for well_id in sorted( well_to_passfail ):
             well = well_to_passfail[well_id]
             dest_plate_idx = dest_ctr / 96
@@ -142,7 +143,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                           'destination_well_name':          dest_type.get_well_name( dest_well ),
                           'destination_plate_well_count':   dest_type.number_clusters,
             })
-
+    return rows
 
 
 def preview():
