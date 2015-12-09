@@ -470,7 +470,6 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     colony_name = "%d-%s" % (12, destination_well_id)
 
     # Create CS
-    cs_id = create_unique_object_id("CS_")
     cs_id = create_unique_id("CS_")()
               
     cloned_sample = ClonedSample( sample_id=cs_id, parent_sample_id=source_sample_id, source_id=source_id,

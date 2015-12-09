@@ -446,13 +446,11 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         raise IndexError(err)
 
     # create a row representing a well in the destination plate.
-    destination_plate_well = SamplePlateLayout(
-        destination_plate.sample_plate_id,
-        source_plate_well.sample_id,
-        destination_plate_well_id,
-        operator.operator_id,
-        row,
-        column)
+    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                sample_id=source_plate_well.sample_id,
+                                                well_id=destination_plate_well_id,
+                                                operator_id=operator.operator_id,
+                                                row=row, column=column)
 
     db_session.add(destination_plate_well)
 

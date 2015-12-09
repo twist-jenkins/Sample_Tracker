@@ -509,9 +509,12 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
             #
             # 3a. Create a row representing a well in the desination plate.
             #
-            destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-                source_plate_well.sample_id,destination_plate_well_id,operator.operator_id,source_plate_well.row,source_plate_well.column)
-
+            destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                        well_id=destination_plate_well_id,
+                                                        sample_id=source_plate_well.sample_id,
+                                                        operator_id=operator.operator_id,
+                                                        row=source_plate_well.row,
+                                                        column=source_plate_well.column )
             db.session.add(destination_plate_well)
 
             #
@@ -605,9 +608,12 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                     #
                     # 3a. Create a row representing a well in the desination plate.
                     #
-                    destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-                        source_plate.wells[source_plate_well_id].sample_id,order_number,operator.operator_id,source_plate.wells[source_plate_well_id].row,source_plate.wells[source_plate_well_id].column)
-
+                    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                                well_id=order_number, # ?? could this be right?
+                                                                sample_id=source_plate.wells[source_plate_well_id].sample_id,
+                                                                operator_id=operator.operator_id,
+                                                                row=source_plate.wells[source_plate_well_id].row,
+                                                                column=source_plate.wells[source_plate_well_id].column )
                     db.session.add(destination_plate_well)
 
                     #
