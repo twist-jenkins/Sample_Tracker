@@ -73,14 +73,12 @@ def filter_transform( transfer_template_id, sources, dests ):
 
     if transfer_template_id == 26:
         def filter_wells( barcode ):
-            well_to_passfail = {}
-            for plate, orig_well, sample in db.session.query( SamplePlate, SamplePlateLayout, Sample ) \
-                                           .filter( SamplePlate.external_barcode == barcode ) \
-                                           .join( SamplePlateLayout ) \
-                                           .join( Sample ):
-                scores = set()
-                # FIXME: pull this into main loop
-                for fa_well in sample.fraganalyzer_sample_wells:
+            well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
+            for plate, orig_well, sample, fa_well in db.session.query( SamplePlate, SamplePlateLayout, Sample, FraganalyzerRunSampleSummaryJoin ) \
+                                                               .filter( SamplePlate.external_barcode == barcode ) \
+                                                               .join( SamplePlateLayout ) \
+                                                               .join( Sample ) \
+                                                               .join( FraganalyzerRunSampleSummaryJoin ):
                     if fa_well.human_classification:
                         [hum] = fa.human_classification
                         score = hum.qc_call
@@ -91,10 +89,14 @@ def filter_transform( transfer_template_id, sources, dests ):
                             score = 'Warn'
                         else:
                             score = 'Fail'
-                    scores.add( score )
-                if 'Fail' not in scores:
+                    well_scores[ orig_well.well_id ]['well'] = orig_well
+                    well_scores[ orig_well.well_id ]['scores'].add( score )
+
+            well_to_passfail = {}
+            for well_id, d in well_scores.items():
+                if 'Fail' not in d['scores']:
                     # pass!
-                    well_to_passfail[ orig_well.well_id ] = orig_well
+                    well_to_passfail[ well_id ] = d['well']
             return well_to_passfail
 
     elif transfer_template_id == 27:
@@ -120,7 +122,7 @@ def filter_transform( transfer_template_id, sources, dests ):
 
             return well_to_passfail
     else:
-        raise WebError("What transform id is %s??" % transfer_template_id)          
+        raise WebError("What transform id is %s??" % transfer_template_id)
 
     rows = []
     for src in sources:
