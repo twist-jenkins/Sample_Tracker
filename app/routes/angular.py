@@ -312,9 +312,8 @@ def create_step_record():
         with scoped_session(db.engine) as db_session:
 
             # Create a "sample_transfer" row representing this entire transfer.
-            sample_transfer = SampleTransfer(sample_transfer_type_id,
-                                             None,
-                                             operator.operator_id)
+            sample_transfer = SampleTransfer(sample_transfer_type_id=sample_transfer_type_id,
+                                             operator_id=operator.operator_id)
             db_session.add(sample_transfer)
 
             for barcode in source_barcodes:
@@ -459,15 +458,14 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = SampleTransferDetail(
-        sample_transfer.id,
-        order_number,
-        source_plate.sample_plate_id,
-        source_plate_well.well_id,
-        source_plate_well.sample_id,
-        destination_plate.sample_plate_id,
-        destination_plate_well.well_id,
-        destination_plate_well.sample_id)
+    source_to_dest_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+                                                         item_order_number=order_number,
+                                                         source_sample_plate_id=source_plate.sample_plate_id,
+                                                         source_well_id=source_plate_well.well_id,
+                                                         source_sample_id=source_plate_well.sample_id,
+                                                         destination_sample_plate_id=destination_plate.sample_plate_id,
+                                                         destination_well_id=destination_plate_well.well_id,
+                                                         destination_sample_id=destination_plate_well.sample_id)
     db_session.add(source_to_dest_well_transfer)
 
 
