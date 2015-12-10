@@ -16,7 +16,7 @@ from app.utils import scoped_session
 from twistdb.sampletrack import *
 from twistdb.ngs import *
 from twistdb import create_unique_id
-from dbmodels import barcode_sequence_to_barcode_sample
+from dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 
 from app.routes.spreadsheet import create_adhoc_sample_movement
 from app import miseq
@@ -332,7 +332,7 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
     tries_remaining = 1000
     while not ngs_pair and tries_remaining > 0:
         tries_remaining -= 1
-        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq')
+        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq', schema='sampletrack')
         if not next_index_sql:
             raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
         ngs_barcode_pair_index = db_session.execute(next_index_sql)
@@ -351,22 +351,22 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
     parent_process_id = None  # e.g. 'SPP_0008' for alpha NPSs
     external_barcode = None
     reagent_type_set_lot_id = None  # e.g. 'RTSL_5453e163e208466dd26d3aa4'
-    status = None
+    status = 'active' # FIXME: is this the right status?
     parent_transfer_process_id = None
     date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    nps_sample = NGSPreppedSample(nps_id, source_sample_id,
-                                  description,
-                                  ngs_pair.i5_sequence_id,
-                                  ngs_pair.i7_sequence_id,
-                                  notes,
-                                  insert_size_expected,
-                                  date_created,
-                                  operator.operator_id,
-                                  parent_process_id,
-                                  external_barcode,
-                                  reagent_type_set_lot_id,
-                                  status,
-                                  parent_transfer_process_id)
+    nps_sample = NGSPreppedSample( sample_id=nps_id,
+                                   parent_sample_id=source_sample_id,
+                                   description=description,
+                                   i5_sequence_id=ngs_pair.i5_sequence_id,
+                                   i7_sequence_id=ngs_pair.i7_sequence_id,
+                                   notes=notes,
+                                   insert_size_expected=insert_size_expected,
+                                   operator_id=operator.operator_id,
+                                   parent_process_id=parent_process_id,
+                                   external_barcode=external_barcode,
+                                   #reagent_type_set_lot_id=reagent_type_set_lot_id,
+                                   status=status,
+                                   parent_transfer_process_id=parent_transfer_process_id)
 
     logging.debug('NPS_ID %s for %s assigned [%s, %s]',
                   nps_id, source_sample_id,
