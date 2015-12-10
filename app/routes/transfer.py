@@ -72,6 +72,7 @@ def filter_transform( transfer_template_id, sources, dests ):
     dest_ctr = 1
 
     if transfer_template_id == 26:
+        # frag analyzer
         def filter_wells( barcode ):
             well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
             for plate, orig_well, sample, fa_well in db.session.query( SamplePlate, SamplePlateLayout, Sample, FraganalyzerRunSampleSummaryJoin ) \
@@ -100,6 +101,7 @@ def filter_transform( transfer_template_id, sources, dests ):
             return well_to_passfail
 
     elif transfer_template_id == 27:
+        # NGS pass/fail
         def filter_wells( barcode ):
             well_to_passfail = {}
             for plate, well, cs, nps, summ in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
@@ -117,6 +119,8 @@ def filter_transform( transfer_template_id, sources, dests ):
                     # FIXME: hard-coded for now
                     raise WebError('selected source plates should be plain 384 well plates, while plate %s is %s / "%s"'
                                    % (barcode, plate.type_id, plate.sample_plate_type.name))
+
+                # this is an implicit OR: for a given parent CS plate well, we often have multiple NPS samples
                 if json.loads(summ.value)['OK to Ship'] == "Yes":
                     well_to_passfail[ well.well_id ] = well
 

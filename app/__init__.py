@@ -34,7 +34,7 @@ import assets
 ##  syslog.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO)
-SHOW_SQLALCHEMY_ECHO_TRACE = True
+SHOW_SQLALCHEMY_ECHO_TRACE = False # True
 if SHOW_SQLALCHEMY_ECHO_TRACE:
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -63,7 +63,11 @@ app.debug = True
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',app.config['SQLALCHEMY_DATABASE_URI'])
 
-print "USING DATABASE: ", app.config['SQLALCHEMY_DATABASE_URI']
+
+from twistdb.db import initdb
+
+# initialize database engine:
+initdb(engine_url = app.config['SQLALCHEMY_DATABASE_URI'])
 
 UPLOAD_FOLDER = 'app/static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -90,20 +94,6 @@ for name, bundle in assets_loader.load_bundles().iteritems():
 ######################################################################################
 
 db = SQLAlchemyX(app)
-
-'''
-@app.before_first_request
-def setup():
-    """
-    from http://stackoverflow.com/questions/19119725/how-to-use-flask-sqlalchemy-with-existing-sqlalchemy-model
-    """
-    # Recreate database each time for demo
-    Base.metadata.drop_all(bind=db.engine)
-    Base.metadata.create_all(bind=db.engine)
-'''
-
-# from dbmodels import *  ## this import does not seem compatible with autoload
-
 
 
 ######################################################################################

@@ -69,3 +69,4 @@ class MiSeqSampleView(db.Model):
 def barcode_sequence_to_barcode_sample(barcode_sequence_name):
     return NGS_BARCODE_SAMPLE_PREFIX + barcode_sequence_name.split("_")[1]
 
+
