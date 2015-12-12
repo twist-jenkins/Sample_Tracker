@@ -33,26 +33,22 @@ def upgrade():
           sp.status,
           subq.sample_transfer_type_id,
           subq.date_transfer,
-          subq.name,
-          subq.sample_transfer_template_id,
-          subq.prior_transfer_type_id
+          stt.name,
+          stt.sample_transfer_template_id,
+          stt.prior_transfer_type_id
        from (
           Select distinct
               det.destination_sample_plate_id as sample_plate_id,
               det.sample_transfer_id,
               st.sample_transfer_type_id,
               st.date_transfer,
-              stt.name,
-              stt.sample_transfer_template_id,
-              stt.prior_transfer_type_id,
               Row_Number() Over ( Partition By det.destination_sample_plate_id
                                   Order By date_transfer ) As rnk
           From  sample_transfer_detail det
           join sample_transfer st on st.id = det.sample_transfer_id
-          join sample_transfer_type stt on stt.id = st.sample_transfer_type_id
-
       ) as subq
       join sample_plate sp on sp.sample_plate_id = subq.sample_plate_id
+      join sample_transfer_type stt on stt.id = subq.sample_transfer_type_id
       where subq.rnk = 1; -- most recent step
     """
     op.execute(prior_sql)
