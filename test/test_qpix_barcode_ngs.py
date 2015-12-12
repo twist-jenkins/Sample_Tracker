@@ -18,7 +18,7 @@ from app import login_manager
 from test_flask_app import AutomatedTestingUser, rnd_bc
 # from test_flask_app import RootPlate
 
-EXAMPLE_BARCODING_SPEC = {
+EXAMPLE_NGS_BARCODING_SPEC = {
     "type":"plate_step",
     "title":"NGS prep: barcode hitpicking",
     "sources":[{
@@ -344,7 +344,7 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
         # 2. create an ngs barcoding spec (type 26)
-        spec = EXAMPLE_BARCODING_SPEC.copy()
+        spec = EXAMPLE_NGS_BARCODING_SPEC.copy()
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
