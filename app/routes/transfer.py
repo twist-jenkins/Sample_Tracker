@@ -79,7 +79,8 @@ def filter_transform( transfer_template_id, sources, dests ):
                                                                .filter( SamplePlate.external_barcode == barcode ) \
                                                                .join( SamplePlateLayout ) \
                                                                .join( Sample ) \
-                                                               .join( FraganalyzerRunSampleSummaryJoin ):
+                                                               .join( FraganalyzerRunSampleSummaryJoin ) \
+                                                               .filter( FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
                     if fa_well.human_classification:
                         [hum] = fa.human_classification
                         score = hum.qc_call
@@ -95,8 +96,7 @@ def filter_transform( transfer_template_id, sources, dests ):
 
             well_to_passfail = {}
             for well_id, d in well_scores.items():
-                if 'Fail' not in d['scores']:
-                    # pass!
+                if d['scores'] == set(['Warn']):
                     well_to_passfail[ well_id ] = d['well']
             return well_to_passfail
 
