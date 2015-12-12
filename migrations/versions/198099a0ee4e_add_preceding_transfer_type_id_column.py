@@ -26,12 +26,19 @@ def upgrade():
 
     prior_sql = """
       create view sampletrack.plate_prior_step_view as
-      select * from (
+      select
+          subq.sample_plate_id,
+          sp.external_barcode,
+          sp.type_id,
+          sp.status,
+          subq.sample_transfer_type_id,
+          subq.date_transfer,
+          subq.name,
+          subq.sample_transfer_template_id,
+          subq.prior_transfer_type_id
+       from (
           Select distinct
-              sp.sample_plate_id,
-              sp.type_id,
-              sp.external_barcode,
-              sp.status,
+              det.destination_sample_plate_id as sample_plate_id,
               det.sample_transfer_id,
               st.sample_transfer_type_id,
               st.date_transfer,
@@ -43,9 +50,10 @@ def upgrade():
           From  sample_transfer_detail det
           join sample_transfer st on st.id = det.sample_transfer_id
           join sample_transfer_type stt on stt.id = st.sample_transfer_type_id
-          join sample_plate sp on sp.sample_plate_id = det.destination_sample_plate_id
+
       ) as subq
-      where rnk = 1; -- most recent step
+      join sample_plate sp on sp.sample_plate_id = subq.sample_plate_id
+      where subq.rnk = 1; -- most recent step
     """
     op.execute(prior_sql)
 
