@@ -28,11 +28,11 @@ def upgrade():
       create view sampletrack.plate_prior_step_view as
       select * from (
           Select distinct
+              sp.sample_plate_id,
               sp.type_id,
               sp.external_barcode,
               sp.status,
               det.sample_transfer_id,
-              det.destination_sample_plate_id,
               st.sample_transfer_type_id,
               st.date_transfer,
               stt.name,

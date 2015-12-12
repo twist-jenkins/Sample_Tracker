@@ -234,6 +234,17 @@ class MiSeqSampleView(db.Model):
                                        primary_key=True), autoload=False)
 
 
+class PlatePriorStepView(db.Model):
+    try:
+        __table__ = db.Table("plate_prior_step_view", db_metadata,
+                             db.Column("sample_plate_id", db.String(40),
+                                       primary_key=True), autoload=True)
+    except:
+        __table__ = db.Table("sample_plate", db_metadata,
+                             db.Column("sample_plate_id", db.String(40),
+                                       primary_key=True), autoload=False)
+
+
 class SamplePlate(db.Model):
 
     sample_plate_id = db.Column(db.String(40), primary_key=True)
