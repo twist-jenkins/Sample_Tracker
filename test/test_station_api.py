@@ -36,7 +36,7 @@ class TestCase(unittest.TestCase):
         print result
         assert result is not None
 
-    def test_plates_at_all_steps(self):
+    def DISABLED_TAKES_12s_test_plates_at_all_steps(self):
         for step in range(51):
             resp = self.client.get('/api/v1/rest/plates?ready_for_step=%d'
                                    % step, content_type='application/json')
