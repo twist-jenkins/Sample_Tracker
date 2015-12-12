@@ -18,8 +18,15 @@ from marshmallow import Schema, fields
 
 
 class PlateInfoSchema(Schema):
+    # samplePlateId = fields.Str(attribute="sample_plate_id")
     externalBarcode = fields.Str(attribute="external_barcode")
-
+    plateTypeId = fields.Int(attribute="type_id")
+    plateStatus = fields.Str(attribute="status")
+    transferTypeId = fields.Int(attribute="sample_transfer_type_id")
+    dateTransfer = fields.Date(attribute="date_transfer")
+    transferTypeName = fields.Str(attribute="name")
+    transferTemplateId = fields.Int(attribute="sample_transfer_template_id")
+    priorTransferTypeId = fields.Int(attribute="prior_transfer_type_id")
 
 plate_info_schema = PlateInfoSchema()
 
