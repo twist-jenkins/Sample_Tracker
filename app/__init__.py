@@ -117,10 +117,9 @@ login_manager.login_view = "login"
 #
 ######################################################################################
 
-
 from app import routes
 from app import rest
-
+from app.routes import plates
 
 # ==========================
 #
@@ -248,6 +247,10 @@ rest.api.add_resource(rest.TransformSpecListResource,
 # 3. PUT: Execute existing spec
 rest.api.add_resource(rest.TransformSpecResource,
                       '/api/v1/rest/transform-specs/<spec_id>')
+
+
+rest.api.add_resource(plates.PlateListResource,
+                      '/api/v1/rest/plates')
 
 
 # older REST API routes:
