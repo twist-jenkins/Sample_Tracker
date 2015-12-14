@@ -122,101 +122,7 @@ module.exports = function(grunt) {
 
         //END NEW ANGULAR APP
 
-        ,less: {
-            common_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                },
-                files: {
-                  "app/static/source/css/main.css": "app/static/source/less/main.less" // destination file and source file
-                }
-            },
-            index_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/index.css": "app/static/source/less/views/index.less" // destination file and source file
-                }
-            },
-            recordSampleTransfer_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/recordSampleTransfer.css": "app/static/source/less/views/recordSampleTransfer.less" // destination file and source file
-                }
-            },
-
-            viewSampleTransfers_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/viewSampleTransfers.css": "app/static/source/less/views/viewSampleTransfers.less" // destination file and source file
-                }
-            },
-
-            editPlate_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/editPlate.css": "app/static/source/less/views/editPlate.less" // destination file and source file
-                }
-            },
-            sampleReport_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/sampleReport.css": "app/static/source/less/views/sampleReport.less" // destination file and source file
-                }
-            },
-            plateReport_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/plateReport.css": "app/static/source/less/views/plateReport.less" // destination file and source file
-                }
-            },
-            index_ie8_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/index_ie8.css": "app/static/source/less/views/index_ie8.less" // destination file and source file
-                }
-            },
-            index_ie9_css: {
-                options: {
-                  compress: false,
-                  yuicompress: false,
-                  /*optimization: 2*/
-                },
-                files: {
-                  "app/static/source/css/views/index_ie9.css": "app/static/source/less/views/index_ie9.less" // destination file and source file
-                }
-            },
-        },
-
-        copy: {
+        ,copy: {
 
 
 
@@ -268,101 +174,9 @@ module.exports = function(grunt) {
                 src: '**/bootstrap-typeahead.min.js',
                 dest: 'app/static/js',
                 expand: true
-            },
+            }
 
-            easyModal_js: {
-                cwd: 'app/static/bower_components/easyModal.js',
-                src: '**/jquery.easyModal.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            handlebars_js: {
-                cwd: 'app/static/bower_components/handlebars',
-                src: '**/handlebars.min.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            moment_js: {
-                cwd: 'app/static/bower_components/moment/min',
-                src: '**/*.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            rlite_js: {
-                cwd: 'app/static/bower_components/rlite',
-                src: '**/*.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            jquery_easing_js: {
-                cwd: 'app/static/bower_components/jquery.easing/js',
-                src: '**/*.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            underscore_js: {
-                cwd: 'app/static/bower_components/underscore',
-                src: ['underscore*.js'],
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            bootstrap_js: {
-                cwd: 'app/static/bower_components/bootstrap/dist/js',
-                src: '**/*',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            bootstrap_css: {
-                cwd: 'app/static/bower_components/bootstrap/dist/css',
-                src: '**/*',
-                dest: 'app/static/css',
-                expand: true
-            },
-
-            bootstrap_fonts: {
-                cwd: 'app/static/bower_components/bootstrap/dist/fonts',
-                src: '**/*',
-                dest: 'app/static/fonts',
-                expand: true
-            },
-
-            fontawesome_css: {
-                cwd: 'app/static/bower_components/font-awesome/css',
-                src: '**/*',
-                dest: 'app/static/css',
-                expand: true
-            },
-
-            fontawesome_fonts: {
-                cwd: 'app/static/bower_components/font-awesome/fonts',
-                src: '**/*',
-                dest: 'app/static/fonts',
-                expand: true
-            },
-
-
-            remodal_js: {
-                cwd: 'app/static/bower_components/remodal/dist',
-                src: '**/*.js',
-                dest: 'app/static/js',
-                expand: true
-            },
-
-            remodal_css: {
-                cwd: 'app/static/bower_components/remodal/dist',
-                src: '**/*.css',
-                dest: 'app/static/css',
-                expand: true
-            },
-
-            source_images: {
+            ,source_images: {
                 cwd: 'app/static/source/images',
                 src: '**/*',
                 dest: 'app/static/images',
@@ -414,31 +228,13 @@ module.exports = function(grunt) {
     });
 
     grunt.registerTask('default', 'Running "DEFAULT", compiling everything.', [
-        'bower-install-simple',
-        'less:common_css',
-        'less:index_css',
-        'less:index_ie8_css',
-        'less:index_ie9_css',
-
-
-        'copy:bootstrapTypeahead_js',
-        'copy:easyModal_js',
-        'copy:handlebars_js',
-
-        'copy:rlite_js',
-        'copy:moment_js',
-        'copy:jquery_easing_js',
-        'copy:underscore_js',
-        'copy:bootstrap_js',
-        'copy:bootstrap_css',
-        'copy:bootstrap_fonts',
-        'copy:fontawesome_css',
-        'copy:fontawesome_fonts',
-        'copy:source_images',
+        'bower-install-simple'
+        ,'copy:bootstrapTypeahead_js'
+        ,'copy:source_images'
 
 
         // NEW ANGULAR APP
-        'githash'
+        ,'githash'
         ,'clean'
         ,'jade:compile_home'
         ,'jade:compile_templates'
@@ -452,31 +248,13 @@ module.exports = function(grunt) {
     ]);
 
     grunt.registerTask('heroku', 'Running "DEFAULT", compiling everything.', [
-        'bower-install-simple',
-        'less:common_css',
-        'less:index_css',
-        'less:index_ie8_css',
-        'less:index_ie9_css',
-
-        'copy:bootstrapTypeahead_js',
-        'copy:easyModal_js',
-        'copy:handlebars_js',
-
-        'copy:rlite_js',
-        'copy:moment_js',
-        'copy:jquery_js',
-        'copy:jquery_easing_js',
-        'copy:underscore_js',
-        'copy:bootstrap_js',
-        'copy:bootstrap_css',
-        'copy:bootstrap_fonts',
-        'copy:fontawesome_css',
-        'copy:fontawesome_fonts',
-        'copy:source_images',
+        'bower-install-simple'
+        ,'copy:bootstrapTypeahead_js'
+        ,'copy:source_images'
 
 
         // NEW ANGULAR APP
-        'githash'
+        ,'githash'
         ,'clean'
         ,'jade:compile_home'
         ,'jade:compile_templates'
