@@ -63,6 +63,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
                 route += '.' + Constants.FILE_UPLOAD;
+            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
+                route += '.' + Constants.HAMILTON_OPERATION;
             } else {
                 route += '.' + Constants.STANDARD_TEMPLATE;
             }
@@ -85,8 +87,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }
 
+            console.log($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE);
+
             if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
                 $scope.templateTypeSelection = Constants.FILE_UPLOAD;
+            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
+                $scope.templateTypeSelection = Constants.HAMILTON_OPERATION;
             } else {
                 $scope.templateTypeSelection = Constants.STANDARD_TEMPLATE;
             }
@@ -190,6 +196,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.Constants = Constants;
 
         $scope.selectTransferTemplateType = function (which) {
+            if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep()) {
+                return false;
+            } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
+                return false;
+            } 
             $state.go('root.record_transform.step_type_selected.' + which);
         };
 
@@ -197,8 +208,16 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.templateTypeSelection = which;
         };
 
+        $scope.isHamiltonStep = function () {
+            if (selectedTranferTypeId == 13) {
+                return true; 
+            }
+            return false;
+        }
+
+        var selectedTranferTypeId;
         $scope.initTransferTypes.success(function (data) {
-            var selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
+            selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
             $scope.setSelectedOption(selectedTranferTypeId);
         });
     }]
@@ -215,6 +234,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     function ($scope, $state, $stateParams, Constants) {
         //inherits scope from trackStepController via stepTypeSelectedController
         $scope.setTransferTemplate(Constants.STANDARD_TEMPLATE);
+    }]
+)
+
+.controller('hamiltonOperationController', ['$scope', '$state', '$stateParams', 'Constants', 
+    function ($scope, $state, $stateParams, Constants) {
+        //inherits scope from trackStepController via stepTypeSelectedController
+        $scope.setTransferTemplate(Constants.HAMILTON_OPERATION);
     }]
 )
 
@@ -704,6 +730,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/standard-template'
             ,template: ''
             ,controller: 'standardTemplateController'
+        }).state('root.record_transform.step_type_selected.hamilton_operation', {
+            url: '/hamilton-wizard'
+            ,template: ''
+            ,controller: 'hamiltonOperationController'
         }).state('root.edit_barcode', { 
             url: 'edit-barcode'
             ,templateUrl: 'twist-edit-barcode.html'
