@@ -77,3 +77,6 @@ def upgrade():
 
     upgradeTransferTemplates();
     upgradeTransferTypes();
+
+def downgrade():
+    pass
