@@ -1079,15 +1079,18 @@ app = angular.module('twist.app')
                     }
                 }
                 ,28: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Shipping'
-                    ,type: 'standard_template'
+                    description: 'Hitpicking for shipping'
+                    ,type: 'hamilton'
                     ,source: {
-                        plateCount: 1
+                        plateCount: 32
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 0
+                        plateCount: 4
                         ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        
                     }
                 }
                 ,29: {  // keyed to sample_transfer_template_id in the database
@@ -1124,6 +1127,21 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 1
                         ,variablePlateCount: false
+                    }
+                }
+                ,32: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Hitpicking for miniprep'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 32
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+
                     }
                 }
             }
@@ -1731,6 +1749,34 @@ app = angular.module('twist.app')
                 ,SPTT_0006: {
                     description: 'Generic 384 well plastic plate'
                     ,wellCount: 384
+                }
+            }
+            ,hamiltons: {
+                'HAM04': {
+                    label: 'Jupiter 2 - STAR Plus'
+                    ,type: 'Star Plus'
+                    ,id: 'HAM04'
+                    ,deckAreas: {
+                        'left side': {
+                            columnWidth: 30
+                        }
+                        ,'middle partition': {
+                            columnWidth: 12
+                        }
+                        ,'right side': {
+                            columnWidth: 24
+                        }
+                    }
+                }
+                ,'HAM01': {
+                    label: 'Galactica - STAR'
+                    ,type: 'Star Plus'
+                    ,id: 'HAM01'
+                    ,deckAreas: {
+                        'main': {
+                            columnWidth: 54
+                        }
+                    }
                 }
             }
         };
