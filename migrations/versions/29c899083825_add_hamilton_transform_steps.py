@@ -62,7 +62,9 @@ def upgradeTransferTypes():
 
     desired_values = [
         [39, "Hitpicking for Miniprep", 32, 0, 0, 38]
-        [48, "Hitpicking for Shipping", 28, 0, 0, 47]
+        ,[41, "UNUSED", 20, 0, 0, 41]
+        ,[42, "Plate Merge", 23, 1, 1, 41]
+        ,[48, "Hitpicking for Shipping", 28, 0, 0, 47]
     ]
 
     for row_values in desired_values:

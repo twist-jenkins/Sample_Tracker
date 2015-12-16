@@ -1738,3 +1738,89 @@ strong {
     }
     
 }
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******* HAMILTON WIZARD
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-hamilton-wizard-main {
+    margin-top:1em;
+    position: relative;
+    &:after {
+        @include after-clear;
+    }
+
+    .twst-hamilton-wizard-deck-visualizer {
+        position: relative;
+
+        .twst-hamilton-wizard-deck-columns {
+            border: 1px solid #ccc;
+            border-left: 0;
+            display: table;
+            width: 100%;
+            position: absolute;
+            z-index: 1;
+
+            .twst-hamilton-wizard-deck-column {
+                display: table-cell;
+                max-width: 0.93em;
+                min-width: 0.93em;
+
+                &:hover {
+                    background-color: #f2f2f2;
+
+                    .twst-hamilton-wizard-deck-column-inner {
+                        .twst-hamilton-wizard-deck-column-hover-label {
+                            visibility: visible;
+                        }
+                    }
+                }
+
+                &:first-child {
+                    .twst-hamilton-wizard-deck-column-inner {
+                        border-color: #ccc;
+                    }
+                }
+
+                .twst-hamilton-wizard-deck-column-inner {
+                    display: block;
+                    position: relative;
+                    width: 100%;
+                    height: 22em;
+                    border-left: 1px solid #eee;
+
+                    .twst-hamilton-wizard-deck-column-hover-label {
+                        visibility: hidden;
+                        position: absolute;
+                        top: -1em;
+                        left: -1.2em;
+                        width: 8em;
+                        font-size: 0.75em;
+                        color: #ddd;
+                    }
+
+                    .twst-hamilton-wizard-deck-column-number {
+                        position: absolute;
+                        bottom: -1.1em;
+                        color: #ccc;
+                        font-size: 0.9em;
+                        text-align: center;
+                    }
+                }
+            }
+        }
+
+        .twst-hamilton-wizard-deck-contents {
+            position: relative;
+            height: 22em; 
+            margin-bottom: 2em;
+            z-index: 2;
+        }
+    }
+}

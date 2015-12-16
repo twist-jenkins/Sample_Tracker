@@ -1079,15 +1079,18 @@ app = angular.module('twist.app')
                     }
                 }
                 ,28: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Shipping'
-                    ,type: 'standard_template'
+                    description: 'Hitpicking for shipping'
+                    ,type: 'hamilton'
                     ,source: {
-                        plateCount: 1
+                        plateCount: 32
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 0
+                        plateCount: 4
                         ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        
                     }
                 }
                 ,29: {  // keyed to sample_transfer_template_id in the database
@@ -1124,6 +1127,111 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 1
                         ,variablePlateCount: false
+                    }
+                }
+                ,32: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Hitpicking for miniprep'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 32
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        'HAM04': {
+                            'left side': {
+                                carriers: [
+                                    {
+                                        startTrack: 1
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        } 
+                                    }
+                                    ,{
+                                        startTrack: 7
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 13
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 19
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 25
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                ]
+                            }
+                            ,'right side': {
+                                carriers: [
+                                    {
+                                        startTrack: 43
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 49
+                                        ,plates: {
+                                            1: {empty: true}
+                                            ,2: {empty: true}
+                                            ,3: {empty: true}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 55
+                                        ,plates: {
+                                            1: {plateFor: 'destination'}
+                                            ,2: {plateFor: 'destination'}
+                                            ,3: {plateFor: 'destination'}
+                                            ,4: {plateFor: 'destination'}
+                                            ,5: {empty: true}
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        
                     }
                 }
             }
@@ -1731,6 +1839,60 @@ app = angular.module('twist.app')
                 ,SPTT_0006: {
                     description: 'Generic 384 well plastic plate'
                     ,wellCount: 384
+                }
+            }
+            ,hamiltons: {
+                'HAM04': {
+                    label: 'Jupiter 2 - STAR Plus'
+                    ,type: 'Star Plus'
+                    ,id: 'HAM04'
+                    ,deckRegions: {
+                        'left side': {
+                            columnWidth: 30
+                            ,startRack: 1
+                        }
+                        ,'middle partition': {
+                            columnWidth: 12
+                            ,startRack: 31
+                        }
+                        ,'right side': {
+                            columnWidth: 24
+                            ,startRack: 43
+                        }
+                    }
+                }
+                ,'HAM01': {
+                    label: 'Galactica - STAR'
+                    ,type: 'Star Plus'
+                    ,id: 'HAM01'
+                    ,deckRegions: {
+                        'main': {
+                            columnWidth: 54
+                            ,startRack: 1
+                        }
+                    }
+                }
+                ,'HAM0X': {
+                    label: 'Enterprise - STAR'
+                    ,type: 'Star'
+                    ,id: 'HAM0X'
+                    ,deckRegions: {
+                        'main': {
+                            columnWidth: 54
+                            ,startRack: 1
+                        }
+                    }
+                }
+                ,'HAM0Y': {
+                    label: 'Millenium Falcon - STAR'
+                    ,type: 'Star'
+                    ,id: 'HAM0Y'
+                    ,deckRegions: {
+                        'main': {
+                            columnWidth: 54
+                            ,startRack: 1
+                        }
+                    }
                 }
             }
         };

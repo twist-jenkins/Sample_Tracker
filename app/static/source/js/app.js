@@ -87,8 +87,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }
 
-            console.log($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE);
-
             if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
                 $scope.templateTypeSelection = Constants.FILE_UPLOAD;
             } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
@@ -209,7 +207,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTranferTypeId == 13) {
+            if (selectedTranferTypeId == 39 || selectedTranferTypeId == 48) {
                 return true; 
             }
             return false;
@@ -237,10 +235,23 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('hamiltonOperationController', ['$scope', '$state', '$stateParams', 'Constants', 
-    function ($scope, $state, $stateParams, Constants) {
+.controller('hamiltonOperationController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 
+    function ($scope, $state, $stateParams, Constants, Maps) {
         //inherits scope from trackStepController via stepTypeSelectedController
         $scope.setTransferTemplate(Constants.HAMILTON_OPERATION);
+    }]
+)
+
+.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 
+    function ($scope, $state, $stateParams, Constants, Maps) {
+
+        $scope.hamiltonColumns = [];
+        for (var i=0; i<68; i++) {
+            $scope.hamiltonColumns.push({id: i});
+        }
+
+        var selectedHamiltonId = $stateParams.hamilton_id.toUpperCase();
+        $scope.setSelectedHamilton(Maps.hamiltons[selectedHamiltonId]);
     }]
 )
 
@@ -724,16 +735,36 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             ,controller: 'stepTypeSelectedController'
         }).state('root.record_transform.step_type_selected.file_upload', {
             url: '/custom-file-upload'
-            ,template: ''
-            ,controller: 'customExcelUploadController'
+            ,views: {
+                "transformTypePlaceholderView@root.record_transform.step_type_selected": {
+                    template: ''
+                    ,controller: 'customExcelUploadController'
+                }
+            }
         }).state('root.record_transform.step_type_selected.standard_template', {
             url: '/standard-template'
-            ,template: ''
-            ,controller: 'standardTemplateController'
+            ,views: {
+                "transformTypePlaceholderView@root.record_transform.step_type_selected": {
+                    template: ''
+                    ,controller: 'standardTemplateController'
+                }
+            }
         }).state('root.record_transform.step_type_selected.hamilton_operation', {
             url: '/hamilton-wizard'
-            ,template: ''
-            ,controller: 'hamiltonOperationController'
+            ,views: {
+                "transformTypePlaceholderView@root.record_transform.step_type_selected": {
+                    template: ''
+                    ,controller: 'hamiltonOperationController'
+                }
+            }
+        }).state('root.record_transform.step_type_selected.hamilton_operation.hamilton_selected', {
+            url: '/:hamilton_id/:hamilton_name'
+            ,views: {
+                "hamiltonWizard@root.record_transform.step_type_selected": {
+                    templateUrl: 'twist-hamilton-wizard.html'
+                    ,controller: 'hamiltonWizardController'
+                }
+            }
         }).state('root.edit_barcode', { 
             url: 'edit-barcode'
             ,templateUrl: 'twist-edit-barcode.html'

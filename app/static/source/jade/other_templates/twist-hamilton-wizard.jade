@@ -1,0 +1,9 @@
+div(class="twst-hamilton-wizard-main")
+    div(class="twst-hamilton-wizard-deck-visualizer")
+        div(class="twst-hamilton-wizard-deck-columns")
+            div(class="twst-hamilton-wizard-deck-column twst-hamilton-wizard-deck-column-{{::(column.id + 1)}}" ng-repeat="column in hamiltonColumns")
+                div(class="twst-hamilton-wizard-deck-column-inner")
+                    span(class="twst-hamilton-wizard-deck-column-hover-label") Track {{::(column.id + 1)}}
+                    span(class="twst-hamilton-wizard-deck-column-number" ng-if="::((column.id + 1)%5 == 0 || (column.id + 1) == 1)") {{::(column.id + 1)}}
+        div(class="twst-hamilton-wizard-deck-contents")
+            div(class="twst-hamilton-wizard-deck-region" ng-repeat="(key, value) in selectedHamilton.deckRegions") {{key}}
