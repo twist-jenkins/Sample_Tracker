@@ -1141,7 +1141,97 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-
+                        'HAM04': {
+                            'left side': {
+                                carriers: [
+                                    {
+                                        startTrack: 1
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        } 
+                                    }
+                                    ,{
+                                        startTrack: 7
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 13
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 19
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 25
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                ]
+                            }
+                            ,'right side': {
+                                carriers: [
+                                    {
+                                        startTrack: 43
+                                        ,plates: {
+                                            1: {plateFor: 'source'}
+                                            ,2: {plateFor: 'source'}
+                                            ,3: {plateFor: 'source'}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 49
+                                        ,plates: {
+                                            1: {empty: true}
+                                            ,2: {empty: true}
+                                            ,3: {empty: true}
+                                            ,4: {plateFor: 'source'}
+                                            ,5: {plateFor: 'source'}
+                                        }
+                                    }
+                                    ,{
+                                        startTrack: 55
+                                        ,plates: {
+                                            1: {plateFor: 'destination'}
+                                            ,2: {plateFor: 'destination'}
+                                            ,3: {plateFor: 'destination'}
+                                            ,4: {plateFor: 'destination'}
+                                            ,5: {empty: true}
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                        
                     }
                 }
             }
@@ -1756,15 +1846,18 @@ app = angular.module('twist.app')
                     label: 'Jupiter 2 - STAR Plus'
                     ,type: 'Star Plus'
                     ,id: 'HAM04'
-                    ,deckAreas: {
+                    ,deckRegions: {
                         'left side': {
                             columnWidth: 30
+                            ,startRack: 1
                         }
                         ,'middle partition': {
                             columnWidth: 12
+                            ,startRack: 31
                         }
                         ,'right side': {
                             columnWidth: 24
+                            ,startRack: 43
                         }
                     }
                 }
@@ -1772,9 +1865,32 @@ app = angular.module('twist.app')
                     label: 'Galactica - STAR'
                     ,type: 'Star Plus'
                     ,id: 'HAM01'
-                    ,deckAreas: {
+                    ,deckRegions: {
                         'main': {
                             columnWidth: 54
+                            ,startRack: 1
+                        }
+                    }
+                }
+                ,'HAM0X': {
+                    label: 'Enterprise - STAR'
+                    ,type: 'Star'
+                    ,id: 'HAM0X'
+                    ,deckRegions: {
+                        'main': {
+                            columnWidth: 54
+                            ,startRack: 1
+                        }
+                    }
+                }
+                ,'HAM0Y': {
+                    label: 'Millenium Falcon - STAR'
+                    ,type: 'Star'
+                    ,id: 'HAM0Y'
+                    ,deckRegions: {
+                        'main': {
+                            columnWidth: 54
+                            ,startRack: 1
                         }
                     }
                 }

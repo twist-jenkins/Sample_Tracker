@@ -235,8 +235,8 @@ app = angular.module("twist.app")
                 ,templateTypeSelection: '=?'
             }
             ,templateUrl: 'twist-transform-builder-form.html'
-            ,controller: ['$scope', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
-                function ($scope, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
+            ,controller: ['$scope', '$state', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+                function ($scope, $state, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
 
                     $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
 
@@ -246,6 +246,8 @@ app = angular.module("twist.app")
                     $scope.Constants = Constants;
 
                     $scope.cachedFileData = null;
+
+                    $scope.hamiltons = Maps.hamiltons;
 
                     /* refresh the current transfer plan based on changes to plates inputs or upload file */
                     $scope.updateTransferPlan = function (val, which, itemIndex) {
@@ -317,6 +319,17 @@ app = angular.module("twist.app")
                             }, 150);
                         }
                     };
+
+                    $scope.setSelectedHamilton = function (hamilton) {
+                        $scope.selectedHamilton = hamilton;
+                    };
+
+                    $scope.selectHamilton = function (hamilton) {
+                        $state.go('root.record_transform.step_type_selected.hamilton_operation.hamilton_selected', {
+                            hamilton_id: hamilton.id.toLowerCase()
+                            ,hamilton_name: Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace(hamilton.label))
+                        });
+                    }
 
                 }
             ]
