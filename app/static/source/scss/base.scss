@@ -607,6 +607,7 @@ strong {
     font-size: 2em;
     margin-right: 0.25em;
     cursor: pointer;
+    background-color: #fff;
 
     &.twst-custom-radio-as-checkbox {
         border-radius: 0;
@@ -716,6 +717,21 @@ strong {
         background: -ms-linear-gradient(top,  #dbffec 0%,#ffffff 68%); /* IE10+ */
         background: linear-gradient(to bottom,  #dbffec 0%,#ffffff 68%); /* W3C */
         filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dbffec', endColorstr='#ffffff',GradientType=0 ); /* IE6-9 */
+    }
+
+    &.twst-disabled-tab {
+        cursor: default;
+        opacity: 0.3;
+        background: #eee;
+        color: #ccc;
+
+        &:hover {
+            color: #ccc;
+        }
+
+        .twst-custom-radio {
+            cursor: default;
+        }
     }
 
     .twst-custom-radio-label {

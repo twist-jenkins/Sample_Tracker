@@ -49,7 +49,8 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
         div(class="twst-record-step-excel-upload-area" twst-drop-target="catchFile") Drop the transfer file here
             twst-thumb-validation-icon(validation="transformSpec.operations.length" error="fileErrors.length" errors-invisible="true")
             div(class="twst-spinner twst-parsing-file-spinner" ng-if="parsingFile")
-    div(class="twst-transform-spec")
+    div(class="twst-record-step-hamilton-wizard" ng-if="templateTypeSelection == Constants.HAMILTON_OPERATION") Hamilton WIZ
+    div(class="twst-transform-spec" ng-show="templateTypeSelection != Constants.HAMILTON_OPERATION")
         div(class="twst-transform-spec-show-btn" ng-click="showTransferPlan = !showTransferPlan")
             div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")
             span(class="twst-custom-radio-label") Preview Transform Spec

@@ -1,10 +1,13 @@
 div(class="twst-record-step-transfer-toggle-controls" ng-if="transformSpec.details")
-            div(class="twst-tab twst-record-step-main-tab" ng-click="selectTransferTemplateType(Constants.STANDARD_TEMPLATE)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.STANDARD_TEMPLATE}")
+            div(class="twst-tab twst-record-step-main-tab" ng-click="selectTransferTemplateType(Constants.STANDARD_TEMPLATE)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.STANDARD_TEMPLATE, 'twst-disabled-tab': isHamiltonStep()}")
                 div(class="twst-custom-radio twst-selected-{{templateTypeSelection == Constants.STANDARD_TEMPLATE}}" val="standard")
                 span(class="twst-custom-radio-label") Use standard template
-            div(class="twst-tab twst-record-step-main-tab" ng-click="selectTransferTemplateType(Constants.FILE_UPLOAD)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.FILE_UPLOAD}")
+            div(class="twst-tab twst-record-step-main-tab" ng-click="selectTransferTemplateType(Constants.FILE_UPLOAD)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.FILE_UPLOAD, 'twst-disabled-tab': isHamiltonStep()}")
                 div(class="twst-custom-radio twst-selected-{{templateTypeSelection == Constants.FILE_UPLOAD}} twst-upload-via-excel-radio" val="file")
                 span(class="twst-custom-radio-label") Upload Transfer File
+            div(class="twst-tab twst-record-step-main-tab" ng-click="selectTransferTemplateType(Constants.HAMILTON_OPERATION)" ng-class="{'twst-active-tab': templateTypeSelection == Constants.HAMILTON_OPERATION, 'twst-disabled-tab': !isHamiltonStep()}")
+                div(class="twst-custom-radio twst-selected-{{templateTypeSelection == Constants.HAMILTON_OPERATION}} twst-upload-via-excel-radio" val="file")
+                span(class="twst-custom-radio-label") Hamilton Wizard
 div(class="twst-tab-body" ng-class="{'twst-transform-spec-barcodes-mode': templateTypeSelection == Constants.STANDARD_TEMPLATE, 'twst-transform-spec-file-mode': templateTypeSelection == Constants.FILE_UPLOAD}")
     twst-transform-builder-form(transform-spec="transformSpec" template-type-selection="templateTypeSelection")
     div(ui-view ng-if="transformSpec.details")

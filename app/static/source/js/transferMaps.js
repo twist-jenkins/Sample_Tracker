@@ -30,7 +30,7 @@ app = angular.module('twist.app')
                 }
                 ,13: {  // keyed to sample_transfer_template_id in the database
                     description: '384 to 4x96'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,wellCount: 384
@@ -435,7 +435,7 @@ app = angular.module('twist.app')
                 }
                 ,14: {  // keyed to sample_transfer_template_id in the database
                     description: '96 to 2x48'
-                    ,type: 'standard'
+                    ,type: 'hamilton'
                     ,source: {
                         plateCount: 1
                         ,wellCount: 96
@@ -566,7 +566,7 @@ app = angular.module('twist.app')
                 }
                 ,18: {  // keyed to sample_transfer_template_id in the database
                     description: '4x96 to 384'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 4
                         ,wellCount: 96
@@ -1018,7 +1018,7 @@ app = angular.module('twist.app')
                 }
                 ,23: {  // keyed to sample_transfer_template_id in the database
                     description: 'Plate Merge'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1042,7 +1042,7 @@ app = angular.module('twist.app')
                 }
                 ,25: {  // keyed to sample_transfer_template_id in the database
                     description: 'Rebatching for Transformation'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1056,7 +1056,7 @@ app = angular.module('twist.app')
                 }
                 ,26: {  // keyed to sample_transfer_template_id in the database
                     description: 'Fragment Analyzer'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1068,7 +1068,7 @@ app = angular.module('twist.app')
                 }
                 ,27: {  // keyed to sample_transfer_template_id in the database
                     description: 'NGS QC Pass'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1080,7 +1080,7 @@ app = angular.module('twist.app')
                 }
                 ,28: {  // keyed to sample_transfer_template_id in the database
                     description: 'Shipping'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1092,7 +1092,7 @@ app = angular.module('twist.app')
                 }
                 ,29: {  // keyed to sample_transfer_template_id in the database
                     description: 'Reformatting for Purification'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1104,7 +1104,7 @@ app = angular.module('twist.app')
                 }
                 ,30: {  // keyed to sample_transfer_template_id in the database
                     description: 'NGS Barcoding'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
@@ -1116,7 +1116,7 @@ app = angular.module('twist.app')
                 }
                 ,31: {  // keyed to sample_transfer_template_id in the database
                     description: 'NGS: sample sheet generation'
-                    ,type: 'standard'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
