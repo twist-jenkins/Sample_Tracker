@@ -1,6 +1,5 @@
 from twistdb import *
 from twistdb.sampletrack import *
-from twistdb.process import *
 from twistdb.public import *
 from twistdb.ngs import *
 from twistdb.frag import *
