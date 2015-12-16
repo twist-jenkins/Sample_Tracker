@@ -87,8 +87,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }
 
-            console.log($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE);
-
             if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
                 $scope.templateTypeSelection = Constants.FILE_UPLOAD;
             } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
@@ -209,7 +207,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTranferTypeId == 13) {
+            if (selectedTranferTypeId == 39 || selectedTranferTypeId == 48) {
                 return true; 
             }
             return false;
