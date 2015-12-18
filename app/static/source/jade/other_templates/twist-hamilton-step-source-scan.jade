@@ -1,0 +1,7 @@
+div(class="twst-hamilton-step")
+    div("twst-hamilton-step-direction")
+        span(class="twst-bullet-number") 3
+        span Scan source positions and plates:
+        //        
+            span(class="twst-hamilton-carriers-remaining" ng-ig="scannedCarrierCount < hamiltonDataObj.allCarriers.length") {{hamiltonDataObj.allCarriers.length - scannedCarrierCount}} remaining
+            button(class="twst-button twst-red-button twst-carriers-start-over-button" ng-click="restartCarrierScan()") start over

@@ -312,6 +312,32 @@ strong {
     }
 }
 
+.twst-barcode-input {
+    font-family: consolas, 'andale mono', monospace;
+    background: url("../images/barcode.svg");
+    background-size: 4em;
+    background-repeat: no-repeat;
+    background-position: 96% center;
+}
+
+.twst-bullet-number {
+    position: relative;
+    display: inline-block;
+    line-height: 1.4em;
+    width: 1.75em;
+    height: 1.75em;
+    background-color: #dbffec;
+    border-radius: 50%;
+    padding: 0.2em;
+    color: #337251;
+    font-size: 1.7em;
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #337251;
+    margin-right: 0.3em;
+    top: 0.1em;
+}
+
 .twst-disabled-link {
     cursor: default;
     color: #aaa;
@@ -1758,7 +1784,6 @@ strong {
 /******************************************************************************************************************************************************/
 
 .twst-hamilton-wizard-main {
-    margin-top:1em;
     position: relative;
     &:after {
         @include after-clear;
@@ -1767,6 +1792,36 @@ strong {
     .twst-change-hamilton-btn {
         padding: 0.25em;
         font-size: 0.8em;
+    }
+
+    .twst-hamilton-wizard-visualizer-header {
+        display: table;
+        width: 100%;
+    }
+
+    .twst-hamilton-wizard-visualizer-header-left,
+    .twst-hamilton-wizard-visualizer-header-right {
+        display: table-cell;
+    }
+
+    .twst-hamilton-wizard-visualizer-header-right {
+        text-align: right;
+    }
+
+    .twst-hamilton-step-guidance-element {
+        .twst-hamilton-carriers-remaining {
+            font-size: 1.3em;
+            padding-left: 0.5em;
+            color: $twst-darker-green;
+        }
+
+        .twst-carriers-start-over-button {
+            position: relative;
+            top: -0.2em;
+            padding: 0.3em;
+            font-size: 0.8em;
+            margin-left: 0.4em;
+        }
     }
 
     .twst-hamilton-wizard-deck-visualizer {
@@ -1872,6 +1927,7 @@ strong {
                 display: block;
                 float: left;
                 cursor: pointer;
+                background: rgba(255, 0, 0, 0.1);
 
                 &.twst-hamilton-wizard-carrier-5x96 {
                     height: 22em;
@@ -1887,13 +1943,56 @@ strong {
                     }
                 }
 
+                &.twst-highlighted-carrier {
+                    background: rgba(255, 248, 206, 0.3);
+                    .twst-hamilton-wizard-carrier-scan-label {
+                        display: block;
+                    }
+
+                    &.twst-scanned-carrier.twst-hamilton-wizard-carrier-scanned-label {
+                        display: none;
+                    }
+                }
+
+                &.twst-scanned-carrier {
+                    background: rgba(219, 255, 236, 0.5);
+                    .twst-hamilton-wizard-carrier-scanned-label {
+                        display: block;
+                    }
+                }
+
                 .twst-hamilton-wizard-carrier-hover-label {
                     position: absolute;
                     width: 100%;
-                    bottom: 0.1em;
+                    top: 0.1em;
                     visibility: hidden;
                     color: $twst-darker-green;
                     text-align: center;
+                    opacity: 0.6;
+                }
+
+                .twst-hamilton-wizard-carrier-input {
+                    position: absolute;
+                    left: -10000px;
+                }
+
+                .twst-hamilton-wizard-carrier-scan-label, .twst-hamilton-wizard-carrier-scanned-label {
+                    position: absolute;
+                    display: none;
+                    bottom: 0;
+                    text-align: center;
+                    width: 100%;
+                    font-size: 0.8em;
+                    padding-bottom: 0.2em;
+                    color: #337251;
+                }
+
+                .twst-hamilton-wizard-carrier-scan-label {
+                    
+                }
+
+                .twst-hamilton-wizard-carrier-scanned-label {
+                    font-size: 0.7em;
                 }
 
                 &:hover {
@@ -1906,7 +2005,6 @@ strong {
                 .twst-hamilton-wizard-carrier-inner {
                     width:100%;
                     border-right: $twst-common-border;
-                    background: rgba(255, 255, 255, 0.8);
 
                     .twst-hamilton-wizard-plate {
                         position: relative;
