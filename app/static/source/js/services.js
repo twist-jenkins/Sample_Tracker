@@ -232,6 +232,18 @@ app = angular.module('twist.app')
                 var d = new Date(dateString);
                 return d.toLocaleString();
             }
+            ,addLeadingZero: function (number, finalLength) {
+
+                if (finalLength == null) {
+                    finalLength = 2;
+                }
+
+                numberString = number + '';
+                while (numberString.length < finalLength) {
+                    numberString = '0' + number;
+                }
+                return numberString;
+            }
         }
     }]
 )

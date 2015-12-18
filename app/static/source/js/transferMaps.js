@@ -1146,53 +1146,63 @@ app = angular.module('twist.app')
                                 carriers: [
                                     {
                                         startTrack: 1
-                                        ,plates: {
-                                            1: {plateFor: 'source'}
-                                            ,2: {plateFor: 'source'}
-                                            ,3: {plateFor: 'source'}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        } 
+                                        ,index: 1
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 5}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 3}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 1}
+                                        ]
                                     }
                                     ,{
                                         startTrack: 7
-                                        ,plates: {
-                                            1: {plateFor: 'source'}
-                                            ,2: {plateFor: 'source'}
-                                            ,3: {plateFor: 'source'}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        }
+                                        ,index: 2
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 10}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 9}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 8}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 7}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 6}
+                                        ]
                                     }
                                     ,{
                                         startTrack: 13
-                                        ,plates: {
-                                            1: {plateFor: 'source'}
-                                            ,2: {plateFor: 'source'}
-                                            ,3: {plateFor: 'source'}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        }
+                                        ,index: 3
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 15}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 14}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 13}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 12}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 11}
+                                        ]
                                     }
                                     ,{
                                         startTrack: 19
-                                        ,plates: {
-                                            1: {plateFor: 'source'}
-                                            ,2: {plateFor: 'source'}
-                                            ,3: {plateFor: 'source'}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        }
+                                        ,index: 4
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 20}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 19}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 18}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 17}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 16}
+                                        ]
                                     }
                                     ,{
                                         startTrack: 25
-                                        ,plates: {
-                                            1: {plateFor: 'source'}
-                                            ,2: {plateFor: 'source'}
-                                            ,3: {plateFor: 'source'}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        }
+                                        ,index: 5
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 25}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 24}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 23}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 22}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 21}
+                                        ]
                                     }
                                 ]
                             }
@@ -1200,33 +1210,39 @@ app = angular.module('twist.app')
                                 carriers: [
                                     {
                                         startTrack: 43
-                                        ,plates: {
-                                            1: {plateFor: 'source'}
-                                            ,2: {plateFor: 'source'}
-                                            ,3: {plateFor: 'source'}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        }
+                                        ,index: 6
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 30}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 29}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 28}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 27}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 26}
+                                        ]
                                     }
                                     ,{
                                         startTrack: 49
-                                        ,plates: {
-                                            1: {empty: true}
-                                            ,2: {empty: true}
-                                            ,3: {empty: true}
-                                            ,4: {plateFor: 'source'}
-                                            ,5: {plateFor: 'source'}
-                                        }
+                                        ,index: 7
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 32}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 31}
+                                            ,{unused: true, localIndex: 3}
+                                            ,{unused: true, localIndex: 2}
+                                            ,{unused: true, localIndex: 1}
+                                        ]
                                     }
                                     ,{
                                         startTrack: 55
-                                        ,plates: {
-                                            1: {plateFor: 'destination'}
-                                            ,2: {plateFor: 'destination'}
-                                            ,3: {plateFor: 'destination'}
-                                            ,4: {plateFor: 'destination'}
-                                            ,5: {empty: true}
-                                        }
+                                        ,index: 8
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {unused: true, localIndex: 5}
+                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 4}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3}
+                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 2}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 1}
+                                        ]
                                     }
                                 ]
                             }
@@ -1846,18 +1862,19 @@ app = angular.module('twist.app')
                     label: 'Jupiter 2 - STAR Plus'
                     ,type: 'Star Plus'
                     ,id: 'HAM04'
+                    ,trackCount: 68
                     ,deckRegions: {
                         'left side': {
-                            columnWidth: 30
-                            ,startRack: 1
+                            trackWidth: 30
+                            ,startTrack: 1
                         }
                         ,'middle partition': {
-                            columnWidth: 12
-                            ,startRack: 31
+                            trackWidth: 12
+                            ,startTrack: 31
                         }
                         ,'right side': {
-                            columnWidth: 24
-                            ,startRack: 43
+                            trackWidth: 24
+                            ,startTrack: 43
                         }
                     }
                 }
@@ -1867,8 +1884,8 @@ app = angular.module('twist.app')
                     ,id: 'HAM01'
                     ,deckRegions: {
                         'main': {
-                            columnWidth: 54
-                            ,startRack: 1
+                            trackWidth: 54
+                            ,startTrack: 1
                         }
                     }
                 }
@@ -1878,8 +1895,8 @@ app = angular.module('twist.app')
                     ,id: 'HAM0X'
                     ,deckRegions: {
                         'main': {
-                            columnWidth: 54
-                            ,startRack: 1
+                            trackWidth: 54
+                            ,startTrack: 1
                         }
                     }
                 }
@@ -1889,10 +1906,16 @@ app = angular.module('twist.app')
                     ,id: 'HAM0Y'
                     ,deckRegions: {
                         'main': {
-                            columnWidth: 54
-                            ,startRack: 1
+                            trackWidth: 54
+                            ,startTrack: 1
                         }
                     }
+                }
+            },
+            carriers: {
+                '5x96': {
+                    label: 'Five 96-well plates'
+                    ,trackWidth: 6
                 }
             }
         };

@@ -242,8 +242,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 
-    function ($scope, $state, $stateParams, Constants, Maps) {
+.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 'Formatter', 
+    function ($scope, $state, $stateParams, Constants, Maps, Formatter) {
+
+        $scope.Formatter = Formatter;
 
         $scope.hamiltonColumns = [];
         for (var i=0; i<68; i++) {
@@ -252,6 +254,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         var selectedHamiltonId = $stateParams.hamilton_id.toUpperCase();
         $scope.setSelectedHamilton(Maps.hamiltons[selectedHamiltonId]);
+
+        $scope.hamiltonDataObj = angular.copy();
+
+        $scope.carriers = Maps.carriers;
     }]
 )
 
