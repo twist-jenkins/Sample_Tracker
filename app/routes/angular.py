@@ -563,7 +563,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             db.session.query(
                 SamplePlateLayout,
                 SampleView
-            ).filter(SamplePlateLayout.sample_id == SampleView.sample_id)
+            ).filter(SamplePlateLayout.sample_id == SampleView.c.sample_id)
         )
         qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
         rows = qry.all()
