@@ -485,6 +485,55 @@ app = angular.module('twist.app')
                                         base.clearOperationsList();
                                     }
 
+                                break;
+
+                            case 30:
+                                    /* for NGS, the destination plate is the same as the source plate (as entered)
+                                    * BUT the source plate we record is a placeholder for the dna barcodes plate
+                                    * so we need to adjust the generated operations to reflect this */
+                                    var operations = [];
+
+
+                                    for (var i=0; i<base.sources.length;i++) {
+                                        var plate = base.sources[i];
+                                        for (var j=0; j<plate.items.length;j++) {
+                                            var sourceWell = plate.items[j];
+                                            var operationRow = {
+                                                source_plate_barcode: 'NGS_BARCODE_PLATE'
+                                                ,source_well_name: sourceWell.column_and_row
+                                                ,source_sample_id: sourceWell.sample_id
+                                                ,destination_plate_barcode: plate.details.id
+                                                ,destination_well_name: sourceWell.column_and_row
+                                                ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
+                                            };
+                                            operations.push(operationRow);
+                                        }
+                                    }
+
+                                    base.operations = operations;
+                                    break;
+                                case 31:
+                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
+                                    var operations = [];
+
+                                    if (base.destinationsReady) {
+                                        for (var i=0; i<base.sources.length;i++) {
+                                            var plate = base.sources[i];
+                                            for (var j=0; j<plate.items.length;j++) {
+                                                var sourceWell = plate.items[j];
+                                                var operationRow = {
+                                                    source_plate_barcode: plate.details.id
+                                                    ,source_well_name: sourceWell.column_and_row
+                                                    ,source_sample_id: sourceWell.sample_id
+                                                    ,destination_plate_barcode: base.destinations[0].details.id
+                                                    ,destination_well_name: 'A1'
+                                                    ,destination_plate_well_count: 1
+                                                };
+                                                operations.push(operationRow);
+                                            }
+                                        }
+                                    }
+                                    base.operations = operations;
                                     break;
 
                             default :
