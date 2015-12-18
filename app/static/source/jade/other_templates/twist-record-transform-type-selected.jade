@@ -9,5 +9,4 @@ div(class="twst-record-step-transfer-toggle-controls" ng-if="transformSpec.detai
                 div(class="twst-custom-radio twst-selected-{{templateTypeSelection == Constants.HAMILTON_OPERATION}} twst-upload-via-excel-radio" val="file")
                 span(class="twst-custom-radio-label") Hamilton Wizard
 div(class="twst-tab-body" ng-class="{'twst-transform-spec-barcodes-mode': templateTypeSelection == Constants.STANDARD_TEMPLATE, 'twst-transform-spec-file-mode': templateTypeSelection == Constants.FILE_UPLOAD}")
-    twst-transform-builder-form(transform-spec="transformSpec" template-type-selection="templateTypeSelection")
-    div(ui-view="transformTypePlaceholderView" ng-if="transformSpec.details")
+    div(ui-view)

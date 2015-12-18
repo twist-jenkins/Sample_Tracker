@@ -947,6 +947,13 @@ strong {
         }
     }
 
+    .twst-record-step-hamilton-wizard {
+        .twst-record-step-start-hamilton-button {
+            font-size: 1.2em;
+            margin-top: 1em;
+        }
+    }
+
     .twst-transform-spec {
         margin-top: 2em;
         position: relative;
@@ -1757,9 +1764,15 @@ strong {
         @include after-clear;
     }
 
+    .twst-change-hamilton-btn {
+        padding: 0.25em;
+        font-size: 0.8em;
+    }
+
     .twst-hamilton-wizard-deck-visualizer {
         position: relative;
         font-size: 0.96em;
+        margin-top: 0.3em;
 
         .twst-hamilton-wizard-deck-columns {
             display: block;

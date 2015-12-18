@@ -1418,5 +1418,21 @@ app = angular.module('twist.app')
     }
 ])
 
+.factory('HamiltonGuidance', [
+    function () {
+        var steps = {
+            '39-HAM04': {
+                '':''
+            }
+        }
+        return {
+            steps: steps,
+            getSteps: function (which) {
+                return steps[which];
+            }
+        };
+    }
+])
+
 
 ;

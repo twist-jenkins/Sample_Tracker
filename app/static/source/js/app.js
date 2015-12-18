@@ -52,6 +52,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
 
+        $scope.Constants = Constants;
+
         $scope.transformSpec = TransformBuilder.newTransformSpec();
         $scope.transformSpec.setPlateStepDefaults();
 
@@ -59,18 +61,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transformSpec.setTransformSpecDetails(option);
             $scope.transformSpec.setTitle(option.text);
 
-            var route = 'root.record_transform.step_type_selected';
+            var route = 'root.record_transform.step_type_selected.tab_selected';
+
+            var whichTab = Constants.STANDARD_TEMPLATE;
 
             if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
-                route += '.' + Constants.FILE_UPLOAD;
+                whichTab = Constants.FILE_UPLOAD;
             } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
-                route += '.' + Constants.HAMILTON_OPERATION;
-            } else {
-                route += '.' + Constants.STANDARD_TEMPLATE;
+                whichTab = Constants.HAMILTON_OPERATION;
             }
 
             $state.go(route, {
                 selected_step_type_id: option.id + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.stripNonAlphaNumeric(option.text, true, true).trim())
+                ,selected_tab: whichTab
             });
         }
 
@@ -199,7 +202,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
                 return false;
             } 
-            $state.go('root.record_transform.step_type_selected.' + which);
+            $state.go('root.record_transform.step_type_selected.tab_selected', {
+                selected_tab: which
+            });
         };
 
         $scope.setTransferTemplate = function (which) {
@@ -221,29 +226,104 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('customExcelUploadController', ['$scope', '$state', '$stateParams', 'Constants', 
-    function ($scope, $state, $stateParams, Constants) {
-        //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate(Constants.FILE_UPLOAD);
+.controller('tabSelectedController', ['$scope', '$state', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
+
+        $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
+
+        $scope.excelFileStats = {};
+        $scope.fileErrors = [];
+
+        $scope.Constants = Constants;
+
+        $scope.cachedFileData = null;
+
+        /* refresh the current transfer plan based on changes to plates inputs or upload file */
+        $scope.updateTransferPlan = function (val, which, itemIndex) {
+            if (val && val.length > 5) {
+                if (which == Constants.PLATE_SOURCE) {
+                    $scope.transformSpec.addSource(itemIndex);
+                } else if (which == Constants.PLATE_DESTINATION) {
+                    $scope.transformSpec.addDestination(itemIndex);
+                }
+            } else {
+                if (which == Constants.PLATE_SOURCE) {
+                    $scope.transformSpec.checkSourcesReady();
+                } else if (which == Constants.PLATE_DESTINATION) {
+                    $scope.transformSpec.checkDestinationsReady();
+                }
+            }
+        };
+
+        $scope.$watch('templateTypeSelection', function (newVal, oldVal) {
+            if (newVal == Constants.FILE_UPLOAD && $scope.cachedFileData) {
+                $scope.catchFile();
+            } else if (newVal == Constants.STANDARD_TEMPLATE) {
+                $scope.transformSpec.transferFromFile(false);
+            }
+        });
+
+        $scope.clearExcelUploadData = function () {
+            $scope.excelFileStats = {};
+            $scope.fileErrors = [];
+        };
+
+        $scope.catchFile = function (fileData, error) {
+            $scope.parsingFile = true;
+
+            if (error) {
+                $scope.clearExcelUploadData();
+                $scope.fileErrors.push(error);
+                $scope.excelFileStats = {};
+                $scope.transformSpec.clearOperationsList();
+                $scope.parsingFile = false;
+            } else {
+                // called in timeout to give the spinner time to render
+                $timeout(function () {
+                    $scope.clearExcelUploadData();
+
+                    if (!fileData) {
+                        fileData = $scope.cachedFileData;
+                    } else {
+                        $scope.cachedFileData = fileData;
+                    };
+
+                    FileParser.getTransferRowsFromFile(fileData, $scope.transformSpec).then(function (resultData) {
+                        $scope.excelFileStats = resultData.stats;
+                        $scope.fileErrors = resultData.errors;
+
+                        if (!resultData.errors.length) {
+                            $scope.transformSpec.transferFromFile(true, resultData);
+                        } else {
+                            $scope.transformSpec.clearOperationsList();
+                        } 
+
+                        $scope.parsingFile = false;
+
+                    }, function (errorData) {
+                        $scope.fileErrors = 'Error: Unknown error while parsing this file.';
+                        $scope.parsingFile = false;
+                    });
+     
+                }, 150);
+            }
+        };
+
+        $scope.selectedHamiltonInfo = 'unselected'; /* var to allow access in this scope in order to hide the "start hamilton wizard" button */
+
+        $scope.startHamiltonSteps = function () {
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard');
+        }
+
+        $scope.setSelectedHamiltonInfo = function (info) {
+            $scope.selectedHamiltonInfo = info;
+        }
+
     }]
 )
 
-.controller('standardTemplateController', ['$scope', '$state', '$stateParams', 'Constants', 
-    function ($scope, $state, $stateParams, Constants) {
-        //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate(Constants.STANDARD_TEMPLATE);
-    }]
-)
-
-.controller('hamiltonOperationController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 
-    function ($scope, $state, $stateParams, Constants, Maps) {
-        //inherits scope from trackStepController via stepTypeSelectedController
-        $scope.setTransferTemplate(Constants.HAMILTON_OPERATION);
-    }]
-)
-
-.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 'Formatter', 
-    function ($scope, $state, $stateParams, Constants, Maps, Formatter) {
+.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 'Formatter', 'HamiltonGuidance', '$timeout', 
+    function ($scope, $state, $stateParams, Constants, Maps, Formatter, HamiltonGuidance, $timeout) {
 
         $scope.Formatter = Formatter;
 
@@ -252,12 +332,41 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.hamiltonColumns.push({id: i});
         }
 
-        var selectedHamiltonId = $stateParams.hamilton_id.toUpperCase();
-        $scope.setSelectedHamilton(Maps.hamiltons[selectedHamiltonId]);
-
-        $scope.hamiltonDataObj = angular.copy();
-
         $scope.carriers = Maps.carriers;
+
+        $scope.setSelectedHamilton = function (hamilton) {
+            $scope.selectedHamilton = hamilton;
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
+                hamilton_info: hamilton.id.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace(hamilton.label))
+            });
+        };
+
+        $scope.hamiltonBarcodeChange = function () {
+            var barcode = $scope.hamiltonBarcode.trim();
+            if (barcode != '' && barcode.length > 4) {
+                $scope.setSelectedHamilton(Maps.hamiltons[$scope.hamiltonBarcode]);
+            }
+        };
+
+        $scope.changeHamilton = function () {
+            $scope.selectedHamilton = null;
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
+                hamilton_info: null
+            });
+        }
+
+        $scope.selectedHamiltonInfo = $stateParams.hamilton_info;
+        $scope.setSelectedHamiltonInfo($scope.selectedHamiltonInfo);
+
+        if ($scope.selectedHamiltonInfo) {
+            $scope.setSelectedHamilton(Maps.hamiltons[$scope.selectedHamiltonInfo.split('-')[0].toUpperCase()]);   
+            $scope.hamiltonDataObj = {
+                steps: HamiltonGuidance.getSteps($scope.transformSpec.details.transfer_type_id + '-' + $scope.selectedHamilton.id)
+                ,deckRegions: angular.copy($scope.transformSpec.map.hamiltonDetails[$scope.selectedHamilton.id])
+            }
+        } else {
+            $timeout(function () { jQuery('.twst-hamilton-wizard-hamilton-barcode-input').focus(); }, 0);
+        }
     }]
 )
 
@@ -739,7 +848,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:selected_step_type_id'
             ,templateUrl: 'twist-record-transform-type-selected.html'
             ,controller: 'stepTypeSelectedController'
-        }).state('root.record_transform.step_type_selected.file_upload', {
+        }).state('root.record_transform.step_type_selected.tab_selected', {
+            url: '/:selected_tab'
+            ,templateUrl: 'twist-record-transform-tab-selected.html'
+            ,controller: 'tabSelectedController'
+        })
+        /*.state('root.record_transform.step_type_selected.file_upload', {
             url: '/custom-file-upload'
             ,views: {
                 "transformTypePlaceholderView@root.record_transform.step_type_selected": {
@@ -763,10 +877,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     ,controller: 'hamiltonOperationController'
                 }
             }
-        }).state('root.record_transform.step_type_selected.hamilton_operation.hamilton_selected', {
-            url: '/:hamilton_id/:hamilton_name'
+        })*/
+        .state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
+            url: '/:hamilton_info'
             ,views: {
-                "hamiltonWizard@root.record_transform.step_type_selected": {
+                "hamiltonWizard@root.record_transform.step_type_selected.tab_selected": {
                     templateUrl: 'twist-hamilton-wizard.html'
                     ,controller: 'hamiltonWizardController'
                 }

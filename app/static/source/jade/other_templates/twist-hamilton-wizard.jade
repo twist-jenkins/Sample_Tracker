@@ -1,18 +1,26 @@
 div(class="twst-hamilton-wizard-main")
-    div(class="twst-hamilton-wizard-deck-visualizer")
-        div(class="twst-hamilton-wizard-deck-columns")
-            div(class="twst-hamilton-wizard-deck-column twst-hamilton-wizard-deck-column-{{::(column.id + 1)}}" ng-repeat="column in hamiltonColumns")
-                div(class="twst-hamilton-wizard-deck-column-inner")
-                    span(class="twst-hamilton-wizard-deck-column-hover-label") Track {{::(column.id + 1)}}
-                    span(class="twst-hamilton-wizard-deck-column-number" ng-if="::((column.id + 1)%5 == 0 || (column.id + 1) == 1)") {{::(column.id + 1)}}
-        div(class="twst-hamilton-wizard-deck-contents" style="width: {{selectedHamilton.trackCount}}em;")
-            div(class="twst-hamilton-wizard-deck-region" ng-repeat="(key, value) in selectedHamilton.deckRegions" style="left: {{(value.startTrack - 1)}}em")
-                div(class="twst-hamilton-wizard-deck-region-inner" style="width: {{value.trackWidth}}em;")
-                    div(class="twst-hamilton-wizard-carrier twst-hamilton-wizard-carrier-{{carrier.type}}" ng-repeat="carrier in transformSpec.map.hamiltonDetails[selectedHamilton.id][key].carriers" style="width: {{carriers[carrier.type].trackWidth}}em")
-                        div(class="twst-hamilton-wizard-carrier-hover-label") Carrier {{carrier.index}}
-                        div(class="twst-hamilton-wizard-carrier-inner")
-                            div(class="twst-hamilton-wizard-plate twst-hamilton-wizard-plate-for-{{plate.plateFor}}" ng-class="{'twst-hamilton-unused-plate': plate.unused}" ng-repeat="plate in carrier.plates")
-                                span(class="twst-hamilton-wizard-plate-empty" ng-if="::plate.unused") UNUSED
-                                span(class="twst-hamilton-wizard-plate-data-index-label" ng-if="::!plate.unused") 
-                                    span(class="twst-hamilton-wizard-plate-data-index-label-letter") {{(plate.plateFor == 'source' ? 'S' : 'D')}}
-                                    span {{Formatter.addLeadingZero(plate.dataIndex)}}
+
+    p(ng-show="!selectedHamilton") 1. Scan the Hamilton's Barcode:
+        input(class="twst-hamilton-wizard-hamilton-barcode-input" type="text" ng-model="hamiltonBarcode" placeholder="Scan barcode" ng-change="hamiltonBarcodeChange()")
+
+    div(ng-if="selectedHamilton")
+        p Selected Hamilton:
+            strong &nbsp;{{selectedHamilton.label}}
+            button(class="twst-button twst-change-hamilton-btn" ng-click="changeHamilton()") change
+        div(class="twst-hamilton-wizard-deck-visualizer" ng-if="selectedHamilton")
+            div(class="twst-hamilton-wizard-deck-columns")
+                div(class="twst-hamilton-wizard-deck-column twst-hamilton-wizard-deck-column-{{::(column.id + 1)}}" ng-repeat="column in hamiltonColumns")
+                    div(class="twst-hamilton-wizard-deck-column-inner")
+                        span(class="twst-hamilton-wizard-deck-column-hover-label") Track {{::(column.id + 1)}}
+                        span(class="twst-hamilton-wizard-deck-column-number" ng-if="::((column.id + 1)%5 == 0 || (column.id + 1) == 1)") {{::(column.id + 1)}}
+            div(class="twst-hamilton-wizard-deck-contents" style="width: {{selectedHamilton.trackCount}}em;")
+                div(class="twst-hamilton-wizard-deck-region" ng-repeat="(key, value) in selectedHamilton.deckRegions" style="left: {{(value.startTrack - 1)}}em")
+                    div(class="twst-hamilton-wizard-deck-region-inner" style="width: {{value.trackWidth}}em;")
+                        div(class="twst-hamilton-wizard-carrier twst-hamilton-wizard-carrier-{{carrier.type}}" ng-repeat="carrier in hamiltonDataObj.deckRegions[key].carriers" style="width: {{carriers[carrier.type].trackWidth}}em")
+                            div(class="twst-hamilton-wizard-carrier-hover-label") Carrier {{carrier.index}}
+                            div(class="twst-hamilton-wizard-carrier-inner")
+                                div(class="twst-hamilton-wizard-plate twst-hamilton-wizard-plate-for-{{plate.plateFor}}" ng-class="{'twst-hamilton-unused-plate': plate.unused}" ng-repeat="plate in carrier.plates")
+                                    span(class="twst-hamilton-wizard-plate-empty" ng-if="::plate.unused") UNUSED
+                                    span(class="twst-hamilton-wizard-plate-data-index-label" ng-if="::!plate.unused") 
+                                        span(class="twst-hamilton-wizard-plate-data-index-label-letter") {{(plate.plateFor == 'source' ? 'S' : 'D')}}
+                                        span {{Formatter.addLeadingZero(plate.dataIndex)}}
