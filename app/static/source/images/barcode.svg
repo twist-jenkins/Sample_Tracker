@@ -1,5 +1,5 @@
 <svg viewBox="0 0 470 200" xmlns="http://www.w3.org/2000/svg">
-    <g>
+    <g opacity="0.25">
         <line id="svg_2" y2="201.03149" x2="10" y1="0.78825" x1="10" stroke-width="20" stroke="#000000" fill="none"/>
         <line id="svg_3" y2="201.03149" x2="30" y1="0.78825" x1="30" stroke-width="11" stroke="#000000" fill="none"/>
         <line id="svg_4" y2="200.24323" x2="75" y1="-0.00001" x1="75" stroke-width="25" stroke="#000000" fill="none"/>

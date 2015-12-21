@@ -310,20 +310,45 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.startHamiltonSteps = function () {
-            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard');
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_select');
         }
 
-        /* to hide the "start button we set this otherwise uneeded variable here */
-        $scope.selectedHamiltonInfo = 'unselected'; /* var to allow access in this scope in order to hide the "start hamilton wizard" button */
-        $scope.setSelectedHamiltonInfo = function (info) {
-            $scope.selectedHamiltonInfo = info;
+        $scope.setSelectedHamilton = function (hamilton) {
+            $scope.selectedHamilton = hamilton;
         }
 
     }]
 )
 
-.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 'Formatter', '$timeout', 
-    function ($scope, $state, $stateParams, Constants, Maps, Formatter, $timeout) {
+.controller('hamiltonSelectController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 'Formatter', '$timeout', 'Api', 
+    function ($scope, $state, $stateParams, Constants, Maps, Formatter, $timeout, Api) {
+        $scope.hamiltonBarcodeChange = function () {
+            $timeout.cancel($scope.hamiltonBarcodeChangeTimeout);
+            var barcode = $scope.hamiltonBarcode.trim();
+            if (barcode != '' && barcode.length > 4) {
+                $scope.hamiltonBarcodeChangeTimeout = $timeout(function () {
+                    var apiCall = Api.getHamiltonByBarcode(barcode).success(function (data) {
+                        $scope.loadingHamilton = false;
+                        $scope.setSelectedHamilton(data);
+                        $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
+                            hamilton_info: $scope.selectedHamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedHamilton.label))
+                        });
+                    }).error(function (error) {
+                        $scope.loadingHamilton = false;
+                        $scope.hamiltonBarcode = null;
+                        $scope.hamiltonBarcodeErrorMessage = 'The scanned barcode - <strong>' + barcode + '</strong> - was not found. Please re-scan.';
+                        $scope.hamiltonBarcodeErrorMessageVisible = -1;
+                    });
+                }, 200);
+            }
+        };
+
+        $timeout(function () { jQuery('.twst-hamilton-wizard-hamilton-barcode-input').focus(); }, 0);
+    }]
+)
+
+.controller('hamiltonWizardController', ['$scope', '$state', '$stateParams', 'Constants', 'Maps', 'Formatter', '$timeout', 'Api', 
+    function ($scope, $state, $stateParams, Constants, Maps, Formatter, $timeout, Api) {
 
         $scope.Formatter = Formatter;
 
@@ -335,29 +360,46 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.carriers = Maps.carriers;
 
         $scope.setSelectedHamilton = function (hamilton) {
-            $scope.selectedHamilton = angular.copy(hamilton);
+            $scope.selectedHamilton = hamilton;
             $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
-                hamilton_info: hamilton.id.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace(hamilton.label))
-                ,current_step_id: 'carrier-scan'
-            });
+                hamilton_info: hamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace(hamilton.label))
+            }, {notify: false});
+            $scope.hamiltonDataObj = {
+                deckRegions: angular.copy($scope.transformSpec.map.hamiltonDetails[$scope.selectedHamilton.barcode])
+            };
+            $scope.decorateHamiltonDataObj($scope.hamiltonDataObj);
+            $timeout(function () {
+                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.carrier_scan');
+            }, 0);
         };
 
-        $scope.hamiltonBarcodeChange = function () {
-            var barcode = $scope.hamiltonBarcode.trim();
-            if (barcode != '' && barcode.length > 4) {
-                $scope.setSelectedHamilton(Maps.hamiltons[$scope.hamiltonBarcode]);
+        $scope.clearHamiltonBarcodeErrorMessage = function () {
+            $scope.hamiltonBarcodeErrorMessage = null;
+            $scope.hamiltonBarcodeErrorMessageVisible = 0;  
+        }
+
+        $scope.getHamiltonByBarcode = function(barcode) {
+            if (!$scope.selectedHamilton || $scope.selectedHamilton.barcode != barcode) {
+                console.log($scope.selectedHamilton);
+                $scope.loadingHamilton = true;
+                var apiCall = Api.getHamiltonByBarcode(barcode).success(function (data) {
+                    $scope.loadingHamilton = false;
+                    $scope.setSelectedHamilton(data)
+                }).error(function (error) {
+                    $scope.loadingHamilton = false;
+                    $scope.hamiltonBarcode = null;
+                    $scope.hamiltonBarcodeErrorMessage = 'The scanned barcode - <strong>' + barcode + '</strong> - was not found. Please re-scan.';
+                    $scope.hamiltonBarcodeErrorMessageVisible = -1;
+                });
             }
         };
 
         $scope.changeHamilton = function () {
             $scope.selectedHamilton = null;
-            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
-                hamilton_info: null
-            });
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_select');
         }
 
         $scope.selectedHamiltonInfo = $stateParams.hamilton_info;
-        $scope.setSelectedHamiltonInfo($scope.selectedHamiltonInfo);
 
         /* this function adds ordered arrays that reference the carriers and plates in their position in the deckRegions
          * We'll use the ordered arrays for the guidance when scanning barcodes for carrier, carrier position & plate.
@@ -365,7 +407,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
          */
         $scope.decorateHamiltonDataObj = function (hamObj) {
             hamObj.allCarriers = [];
-            hamObj.allPlates = []; 
+            hamObj.allSourcePlates = [];
+            hamObj.allDestinationPlates = [];
             for (region in hamObj.deckRegions) {
                 var theseCarriers = hamObj.deckRegions[region].carriers;
                 for (var i=0; i<theseCarriers.length;i++) {
@@ -376,7 +419,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var thisCarrier = hamObj.allCarriers[i];
                 for (var j=0; j<thisCarrier.plates.length; j++) {
                     var thisPlate = thisCarrier.plates[j];
-                    hamObj.allPlates.push(thisPlate);
+                    if (thisPlate.plateFor == 'source') {
+                        hamObj.allSourcePlates.push(thisPlate);
+                    } else if (thisPlate.plateFor == 'destination') {
+                        hamObj.allDestinationPlates.push(thisPlate);
+                    }
+                    
                 }
             } 
 
@@ -390,7 +438,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }); 
 
-            hamObj.allPlates.sort(function (a,b) {
+            hamObj.allSourcePlates.sort(function (a,b) {
                 if (a.dataIndex < b.dataIndex) {
                     return -1;
                 } else if (a.dataIndex > b.dataIndex) {
@@ -398,7 +446,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 } else {
                     return 0;
                 }
-            });           
+            });
+
+            hamObj.allDestinationPlates.sort(function (a,b) {
+                if (a.dataIndex < b.dataIndex) {
+                    return -1;
+                } else if (a.dataIndex > b.dataIndex) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });            
         }
 
         /*
@@ -412,6 +470,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }
         $scope.setHighlightedPlate = function (plate) {
             $scope.highlightedPlate = plate;
+            $timeout(function () {
+                jQuery('.twst-hamilton-wizard-plate-' + plate.dataIndex + ' .twst-hamilton-wizard-plate-input').focus();
+            }, 0);
         }
         $scope.scannedCarrierCount = 0;
         $scope.findNextCarrierForScan = function () {
@@ -438,19 +499,65 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         };
         $scope.scannedCarrierBarcode;
+        var barcodeFinishedTimeout = null;
         $scope.carrierBarcodeScanned = function () {
-            if ($scope.highlightedCarrier.barcode.length > 7 && $scope.highlightedCarrier.barcode.indexOf('CARR') != -1) {
-                $scope.findNextCarrierForScan();
+            $scope.clearScannedItemErrorMessage();
+            if (barcodeFinishedTimeout) {
+                $timeout.cancel(barcodeFinishedTimeout);
+            }
+            barcodeFinishedTimeout = $timeout(function () {
+                if ($scope.highlightedCarrier.barcode.length > 4 && $scope.highlightedCarrier.barcode.indexOf(Constants.HAMILTON_CARRIER_BARCODE_PREFIX) == -1) {
+                    $scope.highlightedCarrier.barcode = null;
+                    $scope.scannedItemErrorMessage = 'This barcode is not a CARRIER barcode. Please scan again.';
+                    $scope.scannedItemErrorMessageVisible = -1;
+                } else if ($scope.highlightedCarrier.barcode.length > 7 && $scope.highlightedCarrier.barcode.indexOf(Constants.HAMILTON_CARRIER_BARCODE_PREFIX) != -1) {
+                    $scope.clearScannedItemErrorMessage();
+                    $scope.findNextCarrierForScan();
+                }
+            }, 200);
+        };
+        $scope.clearScannedItemErrorMessage = function () {
+            $scope.scannedItemErrorMessage = null;
+            $scope.scannedItemErrorMessageVisible = 0;  
+        }
+        $scope.scannedSourcePlateCount = 0;
+        $scope.findNextSourcePlateForScan = function () {
+            var firstFound = false;
+            var scannedSourcePlateCount = 0;
+            for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length;i++) {
+                var plate = $scope.hamiltonDataObj.allSourcePlates[i];
+                if (!plate.barcode && !firstFound) {
+                    $scope.setHighlightedPlate(plate);
+                    plate.nextToScan = true;
+                    firstFound = true;
+                } else {
+                    plate.nextToScan = false;
+                    if (plate.barcode) {
+                        scannedSourcePlateCount++;
+                    }
+                }
+            }
+            $scope.scannedSourcePlateCount = scannedSourcePlateCount;
+            
+            /* if all plates are scanned, show/enable the "finish source scan" button */
+        };
+        $scope.plateBarcodeScanned = function () {
+            if ($scope.highlightedPlate.barcode.length > 3 && $scope.highlightedPlate.barcode.indexOf(Constants.HAMILTON_PLATE_BARCODE_PREFIX) == -1) {
+                $scope.highlightedPlate.barcode = null;
+                $scope.scannedItemErrorMessage = 'This barcode is not a PLATE barcode. Please scan again.';
+                $scope.scannedItemErrorMessageVisible = -1;
+            } else if ($scope.highlightedPlate.barcode.length > 7 && $scope.highlightedPlate.barcode.indexOf(Constants.HAMILTON_PLATE_BARCODE_PREFIX) != -1) {
+                $scope.clearScannedItemErrorMessage();
+                $scope.findNextSourcePlateForScan();
             }
         };
 
         if ($scope.selectedHamiltonInfo) {
-            $scope.setSelectedHamilton(Maps.hamiltons[$scope.selectedHamiltonInfo.split('-')[0].toUpperCase()]);   
-            $scope.hamiltonDataObj = {
-                deckRegions: angular.copy($scope.transformSpec.map.hamiltonDetails[$scope.selectedHamilton.id])
-            };
-            $scope.decorateHamiltonDataObj($scope.hamiltonDataObj);
-            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.carrier_scan');
+            if ($scope.selectedHamilton) {
+                $scope.setSelectedHamilton($scope.selectedHamilton);
+            } else {
+                $scope.getHamiltonByBarcode($scope.selectedHamiltonInfo.split('-')[0].toUpperCase());
+            }
         } else {
             $timeout(function () { jQuery('.twst-hamilton-wizard-hamilton-barcode-input').focus(); }, 0);
         }
@@ -473,7 +580,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('hamiltonWizardSourceScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 
     function ($scope, $state, $http, Api, $timeout) {
-        console.log('Source scan!');
+        $scope.findNextSourcePlateForScan();
+        console.log($scope.hamiltonDataObj);
     }]
 )
 
@@ -985,7 +1093,15 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }
         })*/
-        .state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
+        .state('root.record_transform.step_type_selected.tab_selected.hamilton_select', {
+            url: '/select'
+            ,views: {
+                "hamiltonWizard@root.record_transform.step_type_selected.tab_selected": {
+                    templateUrl: 'twist-hamilton-select.html'
+                    ,controller: 'hamiltonSelectController'
+                }
+            }
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
             url: '/:hamilton_info'
             ,views: {
                 "hamiltonWizard@root.record_transform.step_type_selected.tab_selected": {

@@ -755,3 +755,79 @@ def check_plates_are_new():
             status=200, \
             mimetype="application/json")
     return(resp)
+
+##################
+#### Hamailton operation endpoints
+##################
+
+hamiltons = {
+    "HAM04": {
+        "label": "Jupiter 2 - STAR Plus"
+        ,"type": "Star Plus"
+        ,"barcode": "HAM04"
+        ,"trackCount": 68
+        ,"deckRegions": {
+            "left side": {
+                "trackWidth": 30
+                ,"startTrack": 1
+            }
+            ,"middle partition": {
+                "trackWidth": 12
+                ,"startTrack": 31
+            }
+            ,"right side": {
+                "trackWidth": 24
+                ,"startTrack": 43
+            }
+        }
+    }
+    ,"HAM01": {
+        "label": "Galactica - STAR"
+        ,"type": "Star Plus"
+        ,"barcode": "HAM01"
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+    ,"HAM0Z": {
+        "label": "Enterprise - STAR"
+        ,"type": "Star"
+        ,"barcode": "HAM0X"
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+    ,"HAM0Y": {
+        "label": "Millenium Falcon - STAR"
+        ,"type": "Star"
+        ,"barcode": "HAM0Y"
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+}
+
+
+
+def get_hamilton_by_barcode(hamilton_barcode):
+    
+    if hamilton_barcode in hamiltons:
+        respData = hamiltons[hamilton_barcode] 
+    else:
+        errmsg = "There is no Hamilton with the barcode: [%s]"
+        return error_response(404, errmsg % hamilton_barcode)
+
+    
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp) 

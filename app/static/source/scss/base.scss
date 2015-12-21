@@ -1303,14 +1303,11 @@ strong {
         top: 1em;
     }
 
-    .twst-message {
-        margin-bottom: 1em;
-    }
-
     .twst-record-step-result-message {
         position: relative;
         float: right;
         max-width: 50%;
+        margin-bottom: 1em;
     }
 
     .twst-record-step-transfer-toggle-controls {
@@ -1777,6 +1774,49 @@ strong {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
+/******* HAMILTON SELECT
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+
+.twst-hamilton-select-main {
+    .twst-hamilton-barcode-inputs {
+        display: table;
+        width: 100%;
+
+        .twst-hamilton-barcode-inputs-left, .twst-hamilton-barcode-inputs-right {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .twst-hamilton-barcode-inputs-left {
+            min-width: 50%;
+
+            .twst-spinner {
+                position: absolute;
+                left: 35em;
+                top: 1em;
+                font-size: 0.8em;
+                top: 2em;
+            }
+        }
+
+        .twst-hamilton-barcode-error-message {
+            position: relative;
+            float: right;
+            font-size: 0.7em;
+        }
+
+    }
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
 /******* HAMILTON WIZARD
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -1902,6 +1942,17 @@ strong {
             margin-bottom: 2em;
             z-index: 2;
 
+            .twst-hamilton-wizard-error-message {
+                position: absolute;
+                top: 40%;
+                width: 80%;
+                left: 10%;
+
+                .twst-message {
+                    box-shadow: 0 0 5em orange;
+                }
+            }
+
             .twst-hamilton-wizard-deck-region {
                 position: absolute;
                 top: 0;
@@ -1958,6 +2009,13 @@ strong {
                     background: rgba(219, 255, 236, 0.5);
                     .twst-hamilton-wizard-carrier-scanned-label {
                         display: block;
+
+                        .twst-hamilton-wizard-carrier-scanned-label-checkmark {
+                            display: inline-block;
+                            font-size: 1.5em;
+                            position: relative;
+                            top: 0.1em;
+                        }
                     }
                 }
 
@@ -1982,7 +2040,7 @@ strong {
                     bottom: 0;
                     text-align: center;
                     width: 100%;
-                    font-size: 0.8em;
+                    font-size: 0.7em;
                     padding-bottom: 0.2em;
                     color: #337251;
                 }
@@ -1992,7 +2050,7 @@ strong {
                 }
 
                 .twst-hamilton-wizard-carrier-scanned-label {
-                    font-size: 0.7em;
+                    font-size: 0.65em;
                 }
 
                 &:hover {
@@ -2012,6 +2070,12 @@ strong {
                         padding: 0.2em;
                         height: 4em;
                         margin-bottom: 0.2em;
+                        background: rgba(200, 200, 200, 0.1);
+
+                        .twst-hamilton-wizard-plate-input {
+                            position: absolute;
+                            left: -10000px;
+                        }
 
                         &.twst-hamilton-unused-plate {
                             background: #ddd;
@@ -2020,6 +2084,26 @@ strong {
                             .twst-hamilton-wizard-plate-empty {
                                 color: #fff;
                                 line-height: 4em;
+                            }
+                        }
+
+                        &.twst-highlighted-plate {
+                            background: rgba(255, 248, 206, 0.7);
+
+                            .twst-hamilton-wizard-plate-scan-label {
+                                display: block;
+                            }
+
+                            &.twst-scanned-plate.twst-hamilton-wizard-plate-scanned-label {
+                                display: none;
+                            }
+                        }
+
+                        &.twst-scanned-plate {
+                            background: rgba(255, 248, 206, 0.7);
+
+                            .twst-hamilton-wizard-plate-scanned-label {
+                                display: block;
                             }
                         }
 
@@ -2059,6 +2143,16 @@ strong {
                                 font-weight: bold;
                                 padding-right: 0.1em;
                             }
+                        }
+
+                        .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label {
+                            position: absolute;
+                            display: none;
+                            text-align: center;
+                            width: 100%;
+                            font-size: 0.7em;
+                            padding-bottom: 0.2em;
+                            color: #337251;
                         }
                     }
                 }

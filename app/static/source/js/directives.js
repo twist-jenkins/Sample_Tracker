@@ -129,15 +129,42 @@ app = angular.module("twist.app")
     }
 ])
 
-.directive('twstMessage', ['$sce',  
-    function($sce) {
+.directive('twstMessage', ['$sce', '$timeout',  
+    function($sce, $timeout) {
         return {
             restrict: 'E'
             ,scope: {
                 message: '='
                 ,visibleAndValid: '='
+                ,clearParentData: '='
+                ,fadeWait:'=?'
             }
             ,template: '<div class="twst-message" ng-class="{\'twst-message-visible\':visibleAndValid, \'twst-success\': visibleAndValid > 0, \'twst-error\': visibleAndValid < 0}"><span class="twst-message-text" ng-bind-html="message"></span></div>'
+            ,controller: ['$scope', '$element',    
+                function($scope, $element) { 
+
+                    if ($scope.fadeWait == null) {
+                        $scope.fadeWait = 5000;
+                    }
+
+                    if ($scope.fadeWait != 'never') {
+                        $scope.$watch('visibleAndValid', function(newValue, oldValue) {
+                            $timeout.cancel($scope.fadeTimeout);
+                            $timeout.cancel($scope.clearParentTimeout);
+                            if (newValue != 0) {
+                                $scope.fadeTimeout = $timeout(function () {
+                                    $scope.visibleAndValid = 0;
+                                    $scope.clearParentTimeout = $timeout(function () {
+                                        if ($scope.clearParentData) {
+                                            $scope.clearParentData();
+                                        }
+                                    }, 800);
+                                }, $scope.fadeWait);
+                            };
+                        }) 
+                    }
+                }
+            ]
         };
     }
 ])

@@ -19,6 +19,9 @@ app = angular.module('twist.app')
             ,SOURCE_TYPE_PLATE: 'plate'
             ,HAMILTON_OPERATION: 'hamilton_operation'
             ,HAMILTON_TRANSFER_TYPE: 'hamilton'
+            ,HAMILTON_CARRIER_BARCODE_PREFIX: 'CARR'
+            ,HAMILTON_CARRIER_POSITION_BARCODE_PREFIX: 'CARP'
+            ,HAMILTON_PLATE_BARCODE_PREFIX: 'PLT'
         };
     }]
 )
@@ -182,6 +185,21 @@ app = angular.module('twist.app')
                 }
                 return $http(saveAndExReq);
             }
+            //hamilton calls
+            ,getHamiltonByBarcode: function (hamBarcode) {
+                var hamReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode);
+                return $http(hamReq);
+            }
+            ,getCarrierByBarcode: function (carrierBarcode) {
+                var carrierReq = ApiRequestObj.getGet('rest-ham/carriers/' + carrierBarcode);
+                return $http(carrierReq);
+            }
+            ,getHamiltonPlateByBarcode: function (plateBarcode) {
+                var plateReq = ApiRequestObj.getGet('rest-ham/hamilton-plates/' + plateBarcode);
+                return $http(plateReq);
+            }
+
+
         };
     }]
 )

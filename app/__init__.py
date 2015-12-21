@@ -405,3 +405,9 @@ def source_plate_well_data():
 def check_plates_are_new():
     return routes.check_plates_are_new()
 
+# hamilton operation routes
+
+@app.route('/api/v1/rest-ham/hamiltons/<hamilton_barcode>', methods=['GET'])
+def get_hamilton_by_barcode(hamilton_barcode):
+    return routes.get_hamilton_by_barcode(hamilton_barcode)
+
