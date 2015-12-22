@@ -816,6 +816,149 @@ hamiltons = {
     }
 }
 
+carriers = {
+    "CARR0001" : {
+        "positions": {
+            "CARR0001-01" : {
+                "index": 1
+            }
+            ,"CARR0001-02" : {
+                "index": 2
+            }
+            ,"CARR0001-03" : {
+                "index": 3
+            }
+            ,"CARR0001-04" : {
+                "index": 4
+            }
+            ,"CARR0001-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0002" : {
+        "positions": {
+            "CARR0002-01" : {
+                "index": 1
+            }
+            ,"CARR0002-02" : {
+                "index": 2
+            }
+            ,"CARR0002-03" : {
+                "index": 3
+            }
+            ,"CARR0002-04" : {
+                "index": 4
+            }
+            ,"CARR0002-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0003" : {
+        "positions": {
+            "CARR0003-01" : {
+                "index": 1
+            }
+            ,"CARR0003-02" : {
+                "index": 2
+            }
+            ,"CARR0003-03" : {
+                "index": 3
+            }
+            ,"CARR0003-04" : {
+                "index": 4
+            }
+            ,"CARR0003-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0004" : {
+        "positions": {
+            "CARR0004-01" : {
+                "index": 1
+            }
+            ,"CARR0004-02" : {
+                "index": 2
+            }
+            ,"CARR0004-03" : {
+                "index": 3
+            }
+            ,"CARR0004-04" : {
+                "index": 4
+            }
+            ,"CARR0004-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0005" : {
+        "positions": {
+            "CARR0005-01" : {
+                "index": 1
+            }
+            ,"CARR0005-02" : {
+                "index": 2
+            }
+            ,"CARR0005-03" : {
+                "index": 3
+            }
+            ,"CARR0005-04" : {
+                "index": 4
+            }
+            ,"CARR0005-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0006" : {
+        "positions": {
+            "CARR0006-01" : {
+                "index": 1
+            }
+            ,"CARR0006-02" : {
+                "index": 2
+            }
+            ,"CARR0006-03" : {
+                "index": 3
+            }
+            ,"CARR0006-04" : {
+                "index": 4
+            }
+            ,"CARR0006-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0007" : {
+        "positions": {
+            "CARR0007-01" : {
+                "index": 1
+            }
+            ,"CARR0007-02" : {
+                "index": 2
+            }
+            ,"CARR0007-03" : {
+                "index": 3
+            }
+            ,"CARR0007-04" : {
+                "index": 4
+            }
+            ,"CARR0007-05" : {
+                "index": 5
+            }
+
+        }
+    }   
+}
+
 
 
 def get_hamilton_by_barcode(hamilton_barcode):
@@ -831,3 +974,16 @@ def get_hamilton_by_barcode(hamilton_barcode):
             status=200, \
             mimetype="application/json")
     return(resp) 
+
+def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
+
+    if carrier_barcode in carriers:
+        respData = carriers[carrier_barcode] 
+    else:
+        errmsg = "There is no carrier with the barcode: [%s]"
+        return error_response(404, errmsg % carrier_barcode)
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)

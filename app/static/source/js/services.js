@@ -190,8 +190,8 @@ app = angular.module('twist.app')
                 var hamReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode);
                 return $http(hamReq);
             }
-            ,getCarrierByBarcode: function (carrierBarcode) {
-                var carrierReq = ApiRequestObj.getGet('rest-ham/carriers/' + carrierBarcode);
+            ,getCarrierByBarcode: function (carrierBarcode, hamBarcode) {
+                var carrierReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode + '/carriers/' + carrierBarcode);
                 return $http(carrierReq);
             }
             ,getHamiltonPlateByBarcode: function (plateBarcode) {

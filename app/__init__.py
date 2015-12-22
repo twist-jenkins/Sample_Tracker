@@ -411,3 +411,7 @@ def check_plates_are_new():
 def get_hamilton_by_barcode(hamilton_barcode):
     return routes.get_hamilton_by_barcode(hamilton_barcode)
 
+@app.route('/api/v1/rest-ham/hamiltons/<hamilton_barcode>/carriers/<carrier_barcode>', methods=['GET'])
+def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
+    return routes.get_carrier_by_barcode(carrier_barcode, hamilton_barcode)
+

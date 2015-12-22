@@ -380,9 +380,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.getHamiltonByBarcode = function(barcode) {
             if (!$scope.selectedHamilton || $scope.selectedHamilton.barcode != barcode) {
-                console.log($scope.selectedHamilton);
                 $scope.loadingHamilton = true;
-                var apiCall = Api.getHamiltonByBarcode(barcode).success(function (data) {
+                Api.getHamiltonByBarcode(barcode).success(function (data) {
+                    $scope.clearHamiltonBarcodeErrorMessage();
                     $scope.loadingHamilton = false;
                     $scope.setSelectedHamilton(data)
                 }).error(function (error) {
@@ -501,22 +501,27 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.scannedCarrierBarcode;
         var barcodeFinishedTimeout = null;
         $scope.carrierBarcodeScanned = function () {
-            $scope.clearScannedItemErrorMessage();
-            if (barcodeFinishedTimeout) {
+            if ($scope.selectedHamilton.barcode && $scope.selectedHamilton.barcode.length) {
                 $timeout.cancel(barcodeFinishedTimeout);
+                barcodeFinishedTimeout = $timeout(function () {
+                    $scope.loadingCarrier = true;
+                    Api.getCarrierByBarcode($scope.highlightedCarrier.barcode, $scope.selectedHamilton.barcode).success(function (data) {
+                        $scope.loadingCarrier = false;
+                        $scope.clearScannedItemErrorMessage();
+                        $scope.highlightedCarrier.positions = data.positions;
+                        $scope.findNextCarrierForScan();
+                    }).error(function (error) {
+                        $scope.clearScannedItemErrorMessage();
+                        $scope.scannedItemErrorMessage = 'The scanned barcode - <strong>' + $scope.highlightedCarrier.barcode + '</strong> - was not found. Please re-scan.';
+                        $scope.loadingCarrier = false;
+                        $scope.highlightedCarrier.barcode = null;
+                        $scope.scannedItemErrorMessageVisible = -1;
+                    });
+                }, 200);   
             }
-            barcodeFinishedTimeout = $timeout(function () {
-                if ($scope.highlightedCarrier.barcode.length > 4 && $scope.highlightedCarrier.barcode.indexOf(Constants.HAMILTON_CARRIER_BARCODE_PREFIX) == -1) {
-                    $scope.highlightedCarrier.barcode = null;
-                    $scope.scannedItemErrorMessage = 'This barcode is not a CARRIER barcode. Please scan again.';
-                    $scope.scannedItemErrorMessageVisible = -1;
-                } else if ($scope.highlightedCarrier.barcode.length > 7 && $scope.highlightedCarrier.barcode.indexOf(Constants.HAMILTON_CARRIER_BARCODE_PREFIX) != -1) {
-                    $scope.clearScannedItemErrorMessage();
-                    $scope.findNextCarrierForScan();
-                }
-            }, 200);
         };
         $scope.clearScannedItemErrorMessage = function () {
+            console.log('ssssss');
             $scope.scannedItemErrorMessage = null;
             $scope.scannedItemErrorMessageVisible = 0;  
         }

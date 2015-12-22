@@ -1857,62 +1857,7 @@ app = angular.module('twist.app')
                     ,wellCount: 384
                 }
             }
-            ,hamiltons: {
-                'HAM04': {
-                    label: 'Jupiter 2 - STAR Plus'
-                    ,type: 'Star Plus'
-                    ,id: 'HAM04'
-                    ,trackCount: 68
-                    ,deckRegions: {
-                        'left side': {
-                            trackWidth: 30
-                            ,startTrack: 1
-                        }
-                        ,'middle partition': {
-                            trackWidth: 12
-                            ,startTrack: 31
-                        }
-                        ,'right side': {
-                            trackWidth: 24
-                            ,startTrack: 43
-                        }
-                    }
-                }
-                ,'HAM01': {
-                    label: 'Galactica - STAR'
-                    ,type: 'Star Plus'
-                    ,id: 'HAM01'
-                    ,deckRegions: {
-                        'main': {
-                            trackWidth: 54
-                            ,startTrack: 1
-                        }
-                    }
-                }
-                ,'HAM0X': {
-                    label: 'Enterprise - STAR'
-                    ,type: 'Star'
-                    ,id: 'HAM0X'
-                    ,deckRegions: {
-                        'main': {
-                            trackWidth: 54
-                            ,startTrack: 1
-                        }
-                    }
-                }
-                ,'HAM0Y': {
-                    label: 'Millenium Falcon - STAR'
-                    ,type: 'Star'
-                    ,id: 'HAM0Y'
-                    ,deckRegions: {
-                        'main': {
-                            trackWidth: 54
-                            ,startTrack: 1
-                        }
-                    }
-                }
-            },
-            carriers: {
+            ,carriers: {
                 '5x96': {
                     label: 'Five 96-well plates'
                     ,trackWidth: 6
