@@ -1849,13 +1849,12 @@ strong {
     }
 
     .twst-hamilton-step-guidance-element {
-        .twst-hamilton-carriers-remaining {
-            font-size: 1.3em;
-            padding-left: 0.5em;
+        .twst-hamilton-carriers-remaining, .twst-hamilton-source-plates-remaining {
+            padding-left: 1em;
             color: $twst-darker-green;
         }
 
-        .twst-carriers-start-over-button {
+        .twst-carriers-start-over-button, .twst-source-plates-start-over-button {
             position: relative;
             top: -0.2em;
             padding: 0.3em;
@@ -1996,6 +1995,7 @@ strong {
 
                 &.twst-highlighted-carrier {
                     background: rgba(255, 248, 206, 0.3);
+                    box-shadow: 0 0 5em orange;
                     .twst-hamilton-wizard-carrier-scan-label {
                         display: block;
                     }
@@ -2089,6 +2089,7 @@ strong {
 
                         &.twst-highlighted-plate {
                             background: rgba(255, 248, 206, 0.7);
+                            box-shadow: 0 0 5em orange;
 
                             .twst-hamilton-wizard-plate-scan-label {
                                 display: block;

@@ -146,7 +146,9 @@ app = angular.module("twist.app")
                             $timeout(function () {
                                 $scope.visibleAndValid = 0;
                                 $timeout(function () {
-                                    $scope.clearParentData();
+                                    if ($scope.clearParentData) {
+                                        $scope.clearParentData();
+                                    }
                                 }, 800);
                             }, 5000);
                         };

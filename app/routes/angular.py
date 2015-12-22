@@ -956,6 +956,26 @@ carriers = {
             }
 
         }
+    }
+    ,"CARR0008" : {
+        "positions": {
+            "CARR0008-01" : {
+                "index": 1
+            }
+            ,"CARR0008-02" : {
+                "index": 2
+            }
+            ,"CARR0008-03" : {
+                "index": 3
+            }
+            ,"CARR0008-04" : {
+                "index": 4
+            }
+            ,"CARR0008-05" : {
+                "index": 5
+            }
+
+        }
     }   
 }
 
