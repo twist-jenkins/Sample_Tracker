@@ -1020,3 +1020,17 @@ def get_plate_ready_for_step(plate_barcode, transform_type_id):
             status=200, \
             mimetype="application/json")
     return(resp)
+
+def process_hamilton_sources(transform_type_id):
+
+    data = request.json
+    plateBarcodes = data["plateBarcodes"]
+
+    respData = {
+        "required_destination_plate_count": 3
+    }
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)

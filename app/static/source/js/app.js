@@ -480,7 +480,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             /* plateBarcode should only be in the list once  */
             var alreadyFound = false;
             var plateBarcode = plate.barcode;
-            var whichPlateArray = (plate.plateFor == 'source' ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
+            var whichPlateArray = (plate.plateFor == Constants.PLATE_SOURCE ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
 
             for (var i=0; i<whichPlateArray.length;i++) {
                 var thisPlate = whichPlateArray[i];
@@ -570,7 +570,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         };
         $scope.clearScannedItemErrorMessage = function () {
-            console.log('ssssss');
             $scope.scannedItemErrorMessage = null;
             $scope.scannedItemErrorMessageVisible = 0;  
         }
@@ -582,7 +581,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var whichPlateArray = (plateFor == 'source' ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
             for (var i=0; i<whichPlateArray.length;i++) {
                 var plate = whichPlateArray[i];
-                if (!plate.barcode && !firstFound) {
+                if (!plate.barcode && !firstFound && !plate.unused) {
                     $scope.setHighlightedPlate(plate, positionOrPlate);
                     plate.nextToScan = true;
                     firstFound = true;
@@ -593,14 +592,15 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     }
                 }
             }
-            if (plateFor == 'source') {
-                $scope.scannedSourcePlateCount = scannedPlateCount;  
-            } else if (plateFor == 'destination') {
-                $scope.scannedDestinationPlateCount = scannedPlateCount;  
+            if (plateFor == Constants.PLATE_SOURCE) {
+                $scope.scannedSourcePlateCount = scannedPlateCount;
+            } else if (plateFor == Constants.PLATE_DESTINATION) {
+                $scope.scannedDestinationPlateCount = scannedPlateCount;
+                if ($scope.scannedDestinationPlateCount == $scope.hamiltonDataObj.allDestinationPlates.length) {
+                    $scope.highlightedPlate = null;
+                    jQuery('input:focus').trigger('blur');
+                }
             }
-            
-            
-            /* if all plates are scanned, show/enable the "finish source scan" button */
         };
         $scope.plateBarcodeScanned = function () {
             if ($scope.highlightedPlate.barcode && $scope.highlightedPlate.barcode.length) {
@@ -622,17 +622,41 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     } else {
                         barcodeFinishedTimeout = $timeout(function () {
                             $scope.confirmingPlate = true;
-                            Api.confirmPlateReadyForTransform($scope.highlightedPlate.barcode, $scope.transformSpec.details.transfer_type_id).success(function (data) {
-                                $scope.confirmingPlate = false;
-                                $scope.clearScannedItemErrorMessage();
-                                $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
-                            }).error(function (error) {
-                                $scope.clearScannedItemErrorMessage();
-                                $scope.scannedItemErrorMessage = 'The plate barcode was not found. Please scan the <strong>barcode</strong> for ' + $scope.highlightedPlate.plateFor + ' plate ' + $scope.highlightedPlate.dataIndex;
-                                $scope.confirmingPlate = false;
-                                $scope.highlightedPlate.barcode = null;
-                                $scope.scannedItemErrorMessageVisible = -1;
-                            });
+                            if ($scope.highlightedPlate.plateFor == Constants.PLATE_SOURCE) {
+                                Api.confirmPlateReadyForTransform($scope.highlightedPlate.barcode, $scope.transformSpec.details.transfer_type_id).success(function (data) {
+                                    $scope.confirmingPlate = false;
+                                    $scope.clearScannedItemErrorMessage();
+                                    $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+                                }).error(function (error) {
+                                    $scope.clearScannedItemErrorMessage();
+                                    $scope.scannedItemErrorMessage = 'The plate barcode was not found. Please scan the <strong>barcode</strong> for ' + $scope.highlightedPlate.plateFor + ' plate ' + $scope.highlightedPlate.dataIndex;
+                                    $scope.confirmingPlate = false;
+                                    $scope.highlightedPlate.barcode = null;
+                                    $scope.scannedItemErrorMessageVisible = -1;
+                                });
+                            } else if ($scope.highlightedPlate.plateFor == Constants.PLATE_DESTINATION) {
+                                Api.checkDestinationPlatesAreNew([$scope.highlightedPlate.barcode]).success(function (data) {
+                                    if (!data.success) {
+                                        /* plate already exists - error */
+                                        $scope.clearScannedItemErrorMessage();
+                                        $scope.scannedItemErrorMessage = 'A plate already exists in the database with the scanned barcode.';
+                                        $scope.confirmingPlate = false;
+                                        $scope.highlightedPlate.barcode = null;
+                                        $scope.scannedItemErrorMessageVisible = -1;
+                                    } else {
+                                        /* plate is new */
+                                        $scope.confirmingPlate = false;
+                                        $scope.clearScannedItemErrorMessage();
+                                        $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+                                    }
+                                }).error(function (data) {
+                                    $scope.clearScannedItemErrorMessage();
+                                    $scope.scannedItemErrorMessage = 'An error occured in checking this barcode. Please re-scan.';
+                                    $scope.confirmingPlate = false;
+                                    $scope.highlightedPlate.barcode = null;
+                                    $scope.scannedItemErrorMessageVisible = -1;
+                                });
+                            }
                         }, 200);
                     }
                 } else {
@@ -696,7 +720,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('hamiltonWizardCarrierScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 
     function ($scope, $state, $http, Api, $timeout) {
         $scope.findNextCarrierForScan();
-
+        console.log($scope.hamiltonDataObj);
         $scope.restartCarrierScan = function () {
             for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
@@ -718,9 +742,71 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 plate.positionScanned = null;
                 $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
             }
-        }
+        };
 
+        $scope.sourcePlateScanComplete = function () {
+            if ($scope.scannedSourcePlateCount && !$scope.processingSources) {
+
+                /* TODO: api call to submit source plates and get # of destination plates        */
+
+                var scannedPlateBarcodes = [];
+
+                for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length;i++) {
+                    var plate = $scope.hamiltonDataObj.allSourcePlates[i];
+                    if (plate.barcode) {
+                        scannedPlateBarcodes.push(plate.barcode);
+                    }
+                }
+
+                $scope.processingSources = true;
+
+                Api.processHamiltonSources(scannedPlateBarcodes, $scope.transformSpec.details.transfer_type_id).success(function (data) {
+                    console.log(data);
+                    $scope.processingSources = false;
+                    var destinationPlateCount = data.required_destination_plate_count;
+
+                    var newAllDestinationPlates = [];
+
+                    for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
+                        var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
+                        plate.optional = false;
+                        if (plate.dataIndex > destinationPlateCount) {
+                            plate.unused = true;
+                        } else {
+                            newAllDestinationPlates.push(plate);
+                        }
+                    }
+
+                    $scope.hamiltonDataObj.allDestinationPlates = newAllDestinationPlates;
+
+                    $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
+                }).error(function (error) {
+                    $scope.processingSources = false;
+                    $scope.clearScannedItemErrorMessage();
+                    $scope.scannedItemErrorMessage = 'There was an error processing these sources. Please try again.';
+                    $scope.scannedItemErrorMessageVisible = -1;
+                });
+            }
+        };
+    }]
+)
+
+.controller('hamiltonWizardDestinationScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
+    function ($scope, $state, $http, Api, $timeout, Constants) {
+        $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
         console.log($scope.hamiltonDataObj);
+        $scope.restartDestinationPlateScan = function () {
+            for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
+                var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
+                plate.barcode = null;
+                plate.positionScanned = null;
+                $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+            }
+        };
+
+        $scope.desinationPlateScanComplete = function () {
+            
+        };
     }]
 )
 
@@ -1262,6 +1348,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-source-scan.html'
                     ,controller: 'hamiltonWizardSourceScanController'
+                }
+            }
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan', {
+            url: '/destination-scan'
+            ,views: {
+                "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                    templateUrl: 'twist-hamilton-step-destination-scan.html'
+                    ,controller: 'hamiltonWizardDestinationScanController'
                 }
             }
         }).state('root.edit_barcode', { 

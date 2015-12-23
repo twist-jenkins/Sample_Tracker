@@ -1238,9 +1238,9 @@ app = angular.module('twist.app')
                                         ,type: '5x96'
                                         ,plates: [
                                             {unused: true, localIndex: 5}
-                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 4}
-                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3}
-                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 2}
+                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 2, optional: true}
                                             ,{plateFor: 'destination', localIndex: 1, dataIndex: 1}
                                         ]
                                     }

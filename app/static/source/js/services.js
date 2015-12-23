@@ -202,7 +202,13 @@ app = angular.module('twist.app')
                 var plateReq = ApiRequestObj.getGet('rest-ham/hamilton-plates/' + plateBarcode + '/transform/' + transformTypeId);
                 return $http(plateReq);
             }
-
+            ,processHamiltonSources: function (plateBarcodes, transformTypeId) {
+                var processReq = ApiRequestObj.getPost('rest-ham/hamilton-plates/transform/' + transformTypeId);
+                processReq.data = {
+                    plateBarcodes: plateBarcodes
+                }
+                return $http(processReq);
+            }
 
         };
     }]

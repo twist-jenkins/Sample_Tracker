@@ -1,10 +1,14 @@
 div(class="twst-hamilton-select-main twst-hamilton-barcode-inputs")
     div(class="twst-hamilton-barcode-inputs")
-        div(class="twst-hamilton-barcode-inputs-left")
-            span(class="twst-bullet-number") 1
-            span Scan the Hamilton's Barcode:
-            input(class="twst-hamilton-wizard-hamilton-barcode-input twst-barcode-input" type="text" ng-model="hamiltonBarcode" placeholder="Scan barcode" ng-change="hamiltonBarcodeChange()")
-            div(class="twst-spinner" ng-if="loadingHamilton")
-        div(class="twst-hamilton-barcode-inputs-right")
-            div(class="twst-hamilton-barcode-error-message")
+        div(class="twst-hamilton-step-direction")
+            div(class="twst-bullet-number") 1
+            div(class="twst-hamilton-step-direction-text")
+                span(class="twst-hamilton-step-direction-heading") HAMILTON SELECTION:
+                strong(class="twst-hamilton-step-direction-main") Scan the Hamilton's Barcode:
+        div(class="twst-hamilton-barcode-input-body")
+            div(class="twst-hamilton-barcode-inputs-left")
+                input(class="twst-hamilton-wizard-hamilton-barcode-input twst-barcode-input" type="text" ng-model="hamiltonBarcode" placeholder="Scan barcode" ng-change="hamiltonBarcodeChange()")
+                div(class="twst-spinner" ng-if="loadingHamilton")
+            div(class="twst-hamilton-barcode-inputs-right")
+                div(class="twst-hamilton-barcode-error-message")
                 twst-message(message="hamiltonBarcodeErrorMessage" visible-and-valid="hamiltonBarcodeErrorMessageVisible" clear-parent-data="clearHamiltonBarcodeErrorMessage")

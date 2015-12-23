@@ -2,11 +2,7 @@ div(class="twst-hamilton-wizard-main")
     div(ng-if="selectedHamilton")
         div(class="twst-hamilton-wizard-visualizer-header")
             div(class="twst-hamilton-wizard-visualizer-header-left")
-                div(class="twst-hamilton-step-guidance-element" ui-view="hamiltonStep")
-            div(class="twst-hamilton-wizard-visualizer-header-right")
-                p Selected Hamilton:
-                    strong &nbsp;{{selectedHamilton.label}}
-                    button(class="twst-button twst-change-hamilton-btn" ng-click="changeHamilton()") change
+                div(class="twst-hamilton-step-guidance-element" ui-view="hamiltonStep")   
         div(class="twst-hamilton-wizard-deck-visualizer" ng-if="selectedHamilton")
             div(class="twst-hamilton-wizard-deck-columns")
                 div(class="twst-hamilton-wizard-deck-column twst-hamilton-wizard-deck-column-{{::(column.id + 1)}}" ng-repeat="column in hamiltonColumns")
@@ -24,16 +20,20 @@ div(class="twst-hamilton-wizard-main")
                                 span(class="twst-hamilton-wizard-carrier-scanned-label-checkmark") &#10003;
                                 span carrier scanned
                             div(class="twst-hamilton-wizard-carrier-inner")
-                                div(class="twst-hamilton-wizard-plate twst-hamilton-wizard-plate-{{plate.dataIndex}} twst-hamilton-wizard-plate-for-{{plate.plateFor}}" ng-class="{'twst-hamilton-unused-plate': plate.unused, 'twst-highlighted-plate': plate.dataIndex && plate.dataIndex == highlightedPlate.dataIndex && plate.plateFor == highlightedPlate.plateFor, 'twst-scanned-plate': plate.barcode}" ng-repeat="plate in carrier.plates")
+                                div(class="twst-hamilton-wizard-plate twst-hamilton-wizard-plate-{{plate.dataIndex}} twst-hamilton-wizard-plate-for-{{plate.plateFor}}" ng-class="{'twst-hamilton-unused-plate': plate.unused, 'twst-highlighted-plate': plate.dataIndex && plate.dataIndex == highlightedPlate.dataIndex && plate.plateFor == highlightedPlate.plateFor, 'twst-scanned-plate': plate.barcode, 'twst-optional-plate': plate.optional}" ng-repeat="plate in carrier.plates")
                                     div(class="twst-hamilton-wizard-plate-scan-label") Ready to scan
                                         span(class="twst-hamilton-wizard-plate-scan-label-position-scanned-{{plate.positionScanned == true}}") {{plate.positionScanned ? 'PLATE' : 'POSITION'}}
                                     div(class="twst-hamilton-wizard-plate-scanned-label") 
                                         span(class="twst-hamilton-wizard-plate-scanned-label-checkmark") &#10003;
                                         span plate scanned
                                     input(class="twst-hamilton-wizard-plate-input" type="text" ng-model="highlightedPlate.barcode" ng-change="plateBarcodeScanned()")
-                                    span(class="twst-hamilton-wizard-plate-empty" ng-if="::plate.unused") UNUSED
-                                    span(class="twst-hamilton-wizard-plate-data-index-label" ng-if="::!plate.unused") 
+                                    span(class="twst-hamilton-wizard-plate-empty" ng-if="plate.unused") UNUSED
+                                    span(class="twst-hamilton-wizard-plate-optional-label" ng-if="plate.optional") optional
+                                    span(class="twst-hamilton-wizard-plate-data-index-label" ng-if="!plate.unused") 
                                         span(class="twst-hamilton-wizard-plate-data-index-label-letter") {{(plate.plateFor == 'source' ? 'S' : 'D')}}
                                         span {{Formatter.addLeadingZero(plate.dataIndex)}}
                 div(class="twst-hamilton-wizard-error-message" ng-if="scannedItemErrorMessage")
                     twst-message(message="scannedItemErrorMessage" visible-and-valid="scannedItemErrorMessageVisible" clear-parent-data="clearScannedItemErrorMessage")
+            p Selected Hamilton:
+                strong &nbsp;{{selectedHamilton.label}}
+                button(class="twst-button twst-change-hamilton-btn" ng-click="changeHamilton()") change

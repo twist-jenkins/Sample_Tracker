@@ -1,7 +1,9 @@
 div(class="twst-hamilton-step")
-    div("twst-hamilton-step-direction")
-        span(class="twst-bullet-number") 2
-        span CARRIERS: 
-            strong(ng-bind-html="currentStepInstruction")
-            span(class="twst-hamilton-carriers-remaining" ng-if="scannedCarrierCount < hamiltonDataObj.allCarriers.length") {{hamiltonDataObj.allCarriers.length - scannedCarrierCount}} carrier{{hamiltonDataObj.allCarriers.length - scannedCarrierCount == 1 ? '' : 's'}} remaining
-            button(class="twst-button twst-red-button twst-carriers-start-over-button" ng-click="restartCarrierScan()") start over
+    div(class="twst-hamilton-step-direction")
+        div(class="twst-bullet-number") 2
+        div(class="twst-hamilton-step-direction-text")
+            div(class="twst-hamilton-step-stats")
+                p(class="twst-hamilton-carriers-remaining" ng-if="scannedCarrierCount < hamiltonDataObj.allCarriers.length") {{hamiltonDataObj.allCarriers.length - scannedCarrierCount}} carrier{{hamiltonDataObj.allCarriers.length - scannedCarrierCount == 1 ? '' : 's'}} remaining
+                button(class="twst-button twst-red-button twst-carriers-start-over-button" ng-click="restartCarrierScan()") restart carrier scan
+            span(class="twst-hamilton-step-direction-heading") SCAN CARRIERS:
+            strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
