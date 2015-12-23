@@ -1837,19 +1837,23 @@ strong {
             display: block;
             float: right;
             text-align: center;
-            padding: 0.5em;
+            padding: 0 0.5em 0.5em 0;
+            position: relative;
+            top: 0.4em;
         }
         
         .twst-hamilton-step-direction-heading {
             display: block;
-            padding: 0.3em 0 0.3em 0.5em;
+            padding: 0.5em 0 0 0.5em;
             font-weight: bold;
-            font-size: 1.2em;
+            font-size: 0.8em;
             color: #91CAAD;
         }
 
         .twst-hamilton-step-direction-main {
-            margin-left: 0.6em;
+            font-size: 1.3em;
+            display: inline-block;
+            margin: 0.3em 0 0 0.3em;
         }
 
     }
