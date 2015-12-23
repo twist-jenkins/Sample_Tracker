@@ -26,6 +26,7 @@ div(class="twst-hamilton-wizard-main")
                             div(class="twst-hamilton-wizard-carrier-inner")
                                 div(class="twst-hamilton-wizard-plate twst-hamilton-wizard-plate-{{plate.dataIndex}} twst-hamilton-wizard-plate-for-{{plate.plateFor}}" ng-class="{'twst-hamilton-unused-plate': plate.unused, 'twst-highlighted-plate': plate.dataIndex && plate.dataIndex == highlightedPlate.dataIndex && plate.plateFor == highlightedPlate.plateFor, 'twst-scanned-plate': plate.barcode}" ng-repeat="plate in carrier.plates")
                                     div(class="twst-hamilton-wizard-plate-scan-label") Ready to scan
+                                        span(class="twst-hamilton-wizard-plate-scan-label-position-scanned-{{plate.positionScanned == true}}") {{plate.positionScanned ? 'PLATE' : 'POSITION'}}
                                     div(class="twst-hamilton-wizard-plate-scanned-label") 
                                         span(class="twst-hamilton-wizard-plate-scanned-label-checkmark") &#10003;
                                         span plate scanned

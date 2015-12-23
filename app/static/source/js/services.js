@@ -198,8 +198,8 @@ app = angular.module('twist.app')
                 var carrierReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode + '/carriers/' + carrierBarcode);
                 return $http(carrierReq);
             }
-            ,getHamiltonPlateByBarcode: function (plateBarcode) {
-                var plateReq = ApiRequestObj.getGet('rest-ham/hamilton-plates/' + plateBarcode);
+            ,confirmPlateReadyForTransform: function (plateBarcode, transformTypeId) {
+                var plateReq = ApiRequestObj.getGet('rest-ham/hamilton-plates/' + plateBarcode + '/transform/' + transformTypeId);
                 return $http(plateReq);
             }
 

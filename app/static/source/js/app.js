@@ -476,6 +476,25 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             return false;   
         }
 
+        $scope.checkAlreadyScannedPlate = function (plate) {
+            /* plateBarcode should only be in the list once  */
+            var alreadyFound = false;
+            var plateBarcode = plate.barcode;
+            var whichPlateArray = (plate.plateFor == 'source' ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
+
+            for (var i=0; i<whichPlateArray.length;i++) {
+                var thisPlate = whichPlateArray[i];
+                if (thisPlate.barcode == plateBarcode) {
+                    if (alreadyFound) {
+                        return true;
+                    } else {
+                        alreadyFound = true;
+                    }                    
+                } 
+            } 
+            return false;   
+        }
+
         /*
         * Functions in this scope for UI highlighting from (children) Hamilton Step controllers
         */
@@ -556,41 +575,34 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.scannedItemErrorMessageVisible = 0;  
         }
         $scope.scannedSourcePlateCount = 0;
-        $scope.findNextSourcePlateForScan = function (which) {
+        $scope.scannedDestinationPlateCount = 0;
+        $scope.findNextPlateForScan = function (plateFor, positionOrPlate) {
             var firstFound = false;
-            var scannedSourcePlateCount = 0;
-            for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length;i++) {
-                var plate = $scope.hamiltonDataObj.allSourcePlates[i];
+            var scannedPlateCount = 0;
+            var whichPlateArray = (plateFor == 'source' ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
+            for (var i=0; i<whichPlateArray.length;i++) {
+                var plate = whichPlateArray[i];
                 if (!plate.barcode && !firstFound) {
-                    $scope.setHighlightedPlate(plate, which);
+                    $scope.setHighlightedPlate(plate, positionOrPlate);
                     plate.nextToScan = true;
                     firstFound = true;
                 } else {
                     plate.nextToScan = false;
                     if (plate.barcode) {
-                        scannedSourcePlateCount++;
+                        scannedPlateCount++;
                     }
                 }
             }
-            $scope.scannedSourcePlateCount = scannedSourcePlateCount;
+            if (plateFor == 'source') {
+                $scope.scannedSourcePlateCount = scannedPlateCount;  
+            } else if (plateFor == 'destination') {
+                $scope.scannedDestinationPlateCount = scannedPlateCount;  
+            }
+            
             
             /* if all plates are scanned, show/enable the "finish source scan" button */
         };
         $scope.plateBarcodeScanned = function () {
-
-            /*
-            if ($scope.highlightedPlate.barcode.length > 3 && $scope.highlightedPlate.barcode.indexOf(Constants.HAMILTON_PLATE_BARCODE_PREFIX) == -1) {
-                $scope.highlightedPlate.barcode = null;
-                $scope.scannedItemErrorMessage = 'This barcode is not a PLATE barcode. Please scan again.';
-                $scope.scannedItemErrorMessageVisible = -1;
-            } else if ($scope.highlightedPlate.barcode.length > 7 && $scope.highlightedPlate.barcode.indexOf(Constants.HAMILTON_PLATE_BARCODE_PREFIX) != -1) {
-                $scope.clearScannedItemErrorMessage();
-                $scope.findNextSourcePlateForScan();
-            }
-            */
-
-
-
             if ($scope.highlightedPlate.barcode && $scope.highlightedPlate.barcode.length) {
                 $timeout.cancel(barcodeFinishedTimeout);
                 /* Scanning plates is more complicated than carriers sincer we also scan carrier positions for plates 
@@ -602,9 +614,27 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                  */
                 if ($scope.highlightedPlate.positionScanned) {
                     /* This should be a plate barcode. */
-                    barcodeFinishedTimeout = $timeout(function () {
-                        console.log('READY FOR SOURCE SCAN');
-                    }, 200);
+                    if ($scope.checkAlreadyScannedPlate($scope.highlightedPlate)) {
+                        $scope.clearScannedItemErrorMessage();
+                        $scope.scannedItemErrorMessage = 'This plate has already been scanned. Please scan the <strong>barcode</strong> for ' + $scope.highlightedPlate.plateFor + ' plate ' + $scope.highlightedPlate.dataIndex;
+                        $scope.highlightedPlate.barcode = null;
+                        $scope.scannedItemErrorMessageVisible = -1;
+                    } else {
+                        barcodeFinishedTimeout = $timeout(function () {
+                            $scope.confirmingPlate = true;
+                            Api.confirmPlateReadyForTransform($scope.highlightedPlate.barcode, $scope.transformSpec.details.transfer_type_id).success(function (data) {
+                                $scope.confirmingPlate = false;
+                                $scope.clearScannedItemErrorMessage();
+                                $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+                            }).error(function (error) {
+                                $scope.clearScannedItemErrorMessage();
+                                $scope.scannedItemErrorMessage = 'The plate barcode was not found. Please scan the <strong>barcode</strong> for ' + $scope.highlightedPlate.plateFor + ' plate ' + $scope.highlightedPlate.dataIndex;
+                                $scope.confirmingPlate = false;
+                                $scope.highlightedPlate.barcode = null;
+                                $scope.scannedItemErrorMessageVisible = -1;
+                            });
+                        }, 200);
+                    }
                 } else {
                     /* This should be a position barcode. Check the plate's carrier to see if this is a valid barcode and its the barcode for this position */
                     barcodeFinishedTimeout = $timeout(function () {
@@ -615,7 +645,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                                 /* then we're ready for the plate barcode */
                                 $scope.highlightedPlate.positionScanned = true;
                                 $scope.highlightedPlate.barcode = null;
-                                $scope.findNextSourcePlateForScan(Constants.HAMILTON_ELEMENT_PLATE);
+                                $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_PLATE);
                             } else {
                                 /* right carrier but prompt operator to scan correct position barcode */
                                 delete $scope.highlightedPlate.positionScanned;
@@ -636,34 +666,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         }
                     }, 200);
                 }
-                /*
-                if ($scope.checkAlreadyScannedCarrier($scope.highlightedCarrier.barcode)) {
-                    $scope.clearScannedItemErrorMessage();
-                    $scope.scannedItemErrorMessage = 'The scanned barcode has already been scanned. Please scan the highlighted carrier.';
-                    $scope.loadingCarrier = false;
-                    $scope.highlightedCarrier.barcode = null;
-                    $scope.scannedItemErrorMessageVisible = -1;
-                } else {
-                    barcodeFinishedTimeout = $timeout(function () {
-                        $scope.loadingPlate = true;
-                        Api.getCarrierByBarcode($scope.highlightedCarrier.barcode, $scope.selectedHamilton.barcode).success(function (data) {
-                            $scope.loadingPlate = false;
-                            $scope.clearScannedItemErrorMessage();
-                            $scope.highlightedCarrier.positions = data.positions;
-                            $scope.findNextCarrierForScan();
-                        }).error(function (error) {
-                            $scope.clearScannedItemErrorMessage();
-                            $scope.scannedItemErrorMessage = 'The scanned barcode - <strong>' + $scope.highlightedCarrier.barcode + '</strong> - was not found. Please re-scan.';
-                            $scope.loadingPlate = false;
-                            $scope.highlightedCarrier.barcode = null;
-                            $scope.scannedItemErrorMessageVisible = -1;
-                        });
-                    }, 200);
-                } 
-                */  
             }
-
-
         };
 
         $scope.currentStepInstruction = 'Scan carriers from left to right';
@@ -706,7 +709,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('hamiltonWizardSourceScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
     function ($scope, $state, $http, Api, $timeout, Constants) {
-        $scope.findNextSourcePlateForScan(Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+        $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+        
+        $scope.restartSourcePlateScan = function () {
+            for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length;i++) {
+                var plate = $scope.hamiltonDataObj.allSourcePlates[i];
+                plate.barcode = null;
+                plate.positionScanned = null;
+                $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+            }
+        }
+
         console.log($scope.hamiltonDataObj);
     }]
 )

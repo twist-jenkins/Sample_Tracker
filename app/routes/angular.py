@@ -1007,3 +1007,16 @@ def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
             status=200, \
             mimetype="application/json")
     return(resp)
+
+def get_plate_ready_for_step(plate_barcode, transform_type_id):
+
+    if plate_barcode:
+        respData = True
+    else:
+        errmsg = "This plate is not ready for transform type [%s]"
+        return error_response(404, errmsg % transform_type_id)
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)

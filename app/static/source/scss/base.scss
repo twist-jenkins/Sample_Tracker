@@ -2101,7 +2101,7 @@ strong {
                         }
 
                         &.twst-scanned-plate {
-                            background: rgba(255, 248, 206, 0.7);
+                            background: rgba(115, 241, 174, 0.5);
 
                             .twst-hamilton-wizard-plate-scanned-label {
                                 display: block;
@@ -2154,6 +2154,20 @@ strong {
                             font-size: 0.7em;
                             padding-bottom: 0.2em;
                             color: #337251;
+                        }
+
+                        .twst-hamilton-wizard-plate-scan-label {
+                            span {
+                                display: inline-block;
+                                clear: left;
+                                font-weight: bold;
+                                font-size: 1.4em;
+                                padding-top: 0.4em;
+
+                                &.twst-hamilton-wizard-plate-scan-label-position-scanned-true {
+                                    color: #923BBB;
+                                }
+                            }
                         }
                     }
                 }

@@ -415,3 +415,7 @@ def get_hamilton_by_barcode(hamilton_barcode):
 def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
     return routes.get_carrier_by_barcode(carrier_barcode, hamilton_barcode)
 
+@app.route('/api/v1/rest-ham/hamilton-plates/<plate_barcode>/transform/<transform_type_id>', methods=['GET'])
+def get_plate_ready_for_step(plate_barcode, transform_type_id):
+    return routes.get_plate_ready_for_step(plate_barcode, transform_type_id)
+
