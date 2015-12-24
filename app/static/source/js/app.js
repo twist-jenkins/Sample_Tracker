@@ -902,7 +902,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         Api.getTransformSpec($scope.savedSpecIdToFinish).success(function (data) {
             $scope.clearScannedItemErrorMessage();
             $scope.savedSpecToFinish = data.data;
-            console.log($scope.savedSpecToFinish);
         }).error(function (data) {
             $scope.savedSpecToFinish = null;
         });
@@ -1269,13 +1268,16 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('transformSpecViewSpecController', ['$scope', '$state', '$stateParams', 'TransformBuilder', 'Api', 
-    function ($scope, $state, $stateParams, TransformBuilder, Api) {
+.controller('transformSpecViewSpecController', ['$scope', '$state', '$stateParams', 'TransformBuilder', 'Api', 'Formatter', '$location', 
+    function ($scope, $state, $stateParams, TransformBuilder, Api, Formatter, $location) {
 
         $scope.backToSpecList = function () {
             $state.go('root.transform_specs.view_manage');
         }
 
+        $scope.continueHamilton = function () {
+            $location.path('/record-transform/' + $scope.selectedSpec.plan.details.transfer_type_id + '-' + Formatter.lowerCaseAndSpaceToDash($scope.selectedSpec.plan.title) + '/hamilton_operation/' + $scope.selectedSpec.plan.details.hamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedSpec.plan.details.hamilton.label)) + '/finish-run/' + $scope.selectedSpec.spec_id)
+        };
 
         var specId = $stateParams.spec_id;
         if (!$scope.selectedSpec) {
