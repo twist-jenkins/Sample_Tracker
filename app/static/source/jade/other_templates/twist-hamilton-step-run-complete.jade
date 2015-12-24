@@ -1,7 +1,11 @@
 div(class="twst-hamilton-step")      
     div(class="twst-hamilton-step-direction")
-        div(class="twst-bullet-number") Finished
+        div(class="twst-bullet-number") 6
         div(class="twst-hamilton-step-direction-text")
             div(class="twst-hamilton-step-direction-heading") HAMILTON FINISHED:
                 div(class="twst-spinner" ng-if="callingPlateTrasher")
             strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
+    div(class="twst-hamilton-wizard-run-complete twst-hamilton-barcode-input-body")
+        p The Hamilton run was successfully recorded.
+        button(class="twst-button twst-red-button" ng-click="trashSamples(savedSpecId)") Trash Samples or Plates from this Run
+        button(class="twst-button" ng-click="hamiltonDone()") Done

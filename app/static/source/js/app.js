@@ -421,30 +421,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.showFinishRun = function () {
             $scope.showFinishRunControls = true;
         };
-        $scope.setSavedSpecToFinish = function (savedSpecToFinish, spec_id) {
-            $scope.savedSpecToFinish = savedSpecToFinish;
-            $scope.savedSpecIdToFinish = spec_id || savedSpecToFinish.spec_id;
-        }
-        $scope.getPrettySpecDate = function (dateString) {
-            var date = new Date(dateString);
-            return date.toLocaleString();
-        }
-        $scope.runFinished = function () {
-            if (!$scope.finishiningRun) {
-                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete');
-                /*
-                $scope.finishiningRun = true;
-                Api.executeTransformSpec($scope.savedSpecToFinish.spec_id + 'error').success(function (data) {
-                    $scope.finishiningRun = false;
-                    $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete');
-                }).error(function (error) {
-                    $scope.finishiningRun = false;
-                    $scope.clearScannedItemErrorMessage();
-                    $scope.showScannedItemErrorMessage('This Hamilton run could not be finished. Please try again.');
-                });
-                */
-            }
-        };
 
         /* this function adds ordered arrays that reference the carriers and plates in their position in the deckRegions
          * We'll use the ordered arrays for the guidance when scanning barcodes for carrier, carrier position & plate.
@@ -899,15 +875,36 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('hamiltonWizardFinishRunController', ['$scope', '$state', '$stateParams', 'Api', '$timeout',  
     function ($scope, $state, $stateParams, Api, $timeout) {
-        /* TO DO:  retrieve saved spec so's we know what to mark as executed */
-        var savedSpecId = $stateParams.saved_spec_id;
+
+        $scope.savedSpecIdToFinish = $stateParams.saved_spec_id;
         $scope.currentStepInstruction = 'Click "Run Finished" once the Hamilton run is complete.';
-        Api.getTransformSpec(savedSpecId).success(function (data) {
+
+        $scope.getPrettySpecDate = function (dateString) {
+            var date = new Date(dateString);
+            return date.toLocaleString();
+        }
+        $scope.runFinished = function () {
+            if (!$scope.finishiningRun) {
+                $scope.finishiningRun = true;
+                Api.executeTransformSpec($scope.savedSpecIdToFinish).success(function (data) {
+                    $scope.finishiningRun = false;
+                    $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete', {
+                        saved_spec_id: $scope.savedSpecIdToFinish
+                    });
+                }).error(function (error) {
+                    $scope.finishiningRun = false;
+                    $scope.clearScannedItemErrorMessage();
+                    $scope.showScannedItemErrorMessage('This Hamilton run could not be finished. Please try again.');
+                });
+            }
+        };
+
+        Api.getTransformSpec($scope.savedSpecIdToFinish).success(function (data) {
             $scope.clearScannedItemErrorMessage();
-            $scope.setSavedSpecToFinish(data.data);
+            $scope.savedSpecToFinish = data.data;
             console.log($scope.savedSpecToFinish);
         }).error(function (data) {
-            $scope.setSavedSpecToFinish(null, savedSpecId);
+            $scope.savedSpecToFinish = null;
         });
         $scope.showFinishRun();
     }]
@@ -916,8 +913,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('hamiltonWizardRunCompleteController', ['$scope', '$state', '$stateParams', 'Api', '$timeout',  
     function ($scope, $state, $stateParams, Api, $timeout) {
         /* TO DO:  retrieve saved spec so's we know what to mark as executed */
-        var savedSpecId = $stateParams.saved_spec_id;
-        $scope.currentStepInstruction = 'Run recorded. Record any trashed samples or plates by clicking "Trash Samples"';
+        $scope.savedSpecId = $stateParams.saved_spec_id;
+        $scope.currentStepInstruction = 'Trash any bad wells or plates now.';
+        $scope.showFinishRun();
+
+        $scope.hamiltonDone = function () {
+            $scope.clearForm();
+        };
+
     }]
 )
 
@@ -1472,7 +1475,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.finish_run', {
             url: '/finish-run/:saved_spec_id'
             ,views: {
-                "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                "hamiltonFinish@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-finish-run.html'
                     ,controller: 'hamiltonWizardFinishRunController'
                 }
@@ -1480,7 +1483,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete', {
             url: '/run-complete/:saved_spec_id'
             ,views: {
-                "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                "hamiltonFinish@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-run-complete.html'
                     ,controller: 'hamiltonWizardRunCompleteController'
                 }
