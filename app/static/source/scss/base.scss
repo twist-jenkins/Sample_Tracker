@@ -1848,6 +1848,14 @@ strong {
             font-weight: bold;
             font-size: 0.8em;
             color: #91CAAD;
+
+            .twst-spinner {
+                position: relative;
+                margin: 0 0 0 3em;
+                display: inline-block;
+                font-size: 0.7em;
+                top: 0.25em;
+            }
         }
 
         .twst-hamilton-step-direction-main {
@@ -2238,6 +2246,55 @@ strong {
                     }
                 }
             }
+        }
+    }
+
+    .twst-hamilton-wizard-finish-run-controls {
+        border: 1px solid #98C7AF;
+        border-top: 0;
+        border-radius: 0 0 0.5em 0.5em;
+        padding: 1em;
+
+        .twst-hamilton-wizard-finish-run-details {
+            font-size: 1.2em;
+            line-height: 1.6em;
+
+            .twst-hamilton-wizard-finish-run-plates {
+                display: table;
+                width: 100%;
+                margin-top: 1em;
+                padding-top: 1em;
+                border-top: 1px solid #98C7AF;
+
+                > div {
+                    display: table-cell;
+                    width: 50%;
+                }
+            }
+
+            .twst-hamilton-wizard-finish-run-sources-list, .twst-hamilton-wizard-finish-run-destinations-list {
+                margin-left: 1em;
+                li {
+                    margin-top: 0.5em;
+                    margin-left: 1em;
+                    list-style-type: disc;
+                }
+            }
+        }
+
+        .twst-hamilton-wizard-finish-run-button {
+            position: relative;
+            display: block;
+            float: right;
+            font-size: 1.5em;
+        }
+
+        .twst-hamilton-wizard-error-message {
+            display: block;
+            position: absolute;
+            width: 80%;
+            top: 50%;
+            left: 10%;
         }
     }
 }

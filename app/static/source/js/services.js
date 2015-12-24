@@ -1068,7 +1068,9 @@ app = angular.module('twist.app')
                     delete plate.details.parentPlates;
                     delete plate.details.parentToThisTaskName;
                     delete plate.details.thisToChildTaskName
-                    delete plate.details.plateDetails.dateCreatedFormatted;;
+                    if (plate.details.plateDetails) {
+                        delete plate.details.plateDetails.dateCreatedFormatted;
+                    }
                     delete plate.details.success;
                     delete plate.items;
                     delete plate.updating;
