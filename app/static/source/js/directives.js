@@ -31,6 +31,7 @@ app = angular.module("twist.app")
                         ,{text: 'Transform Specs', link: 'root.transform_specs.view_manage', match: 'root.transform_specs'}
                         ,{text: 'View Steps', link: 'root.view_steps'} 
                         ,{text: 'Sample Details', link: 'root.sample_details'}
+                        ,{text: 'Trash Samples', link: 'root.trash_samples'}
                     ];
                 }
             ]
@@ -239,6 +240,63 @@ app = angular.module("twist.app")
                     });
                 }
             ]
+        };
+    }
+])
+
+.directive('viewBox', [ 
+    function() {
+        return {
+            scope: {
+                plate: '='
+            }
+            ,restrict: 'A'
+            ,link: function($scope, element, attrs) {
+                var getViewBox = function () {
+                    return "0 0 " + ($scope.plate.rowLength*30 + 5*$scope.plate.rowLength + 35) + ' ' + ($scope.plate.wellCount/$scope.plate.rowLength*30 + 5*$scope.plate.wellCount/$scope.plate.rowLength + 35);
+                }
+                element.get(0).setAttribute("viewBox", getViewBox());
+            }
+        };
+    }
+])
+
+.directive('plateView', [ 
+    function() {
+        return {
+            scope: {
+                plate: '='
+                ,clickFunc: '=?'
+            }
+            ,templateUrl: 'twist-plate-view.html'
+            ,controller: ['$scope', '$sce', function ($scope, $sce) {
+
+                $scope.getX = function (well) {
+                    return (well.col)*30 + 5*well.col;
+                };
+
+                $scope.getTooltip = function (well) {
+                    return '<div class="twst-plate-view-well-tooltip">Sample Id:<br/><strong>' + well.sampleId + '</strong></div>';
+                };
+
+                $scope.getY = function (well) {
+                    return (well.row)*30 + 5*well.row;
+                };
+
+                $scope.getViewBox = function (plate) {
+                    return "0 0 " + (plate.rowLength*30 + 5*plate.rowLength) + ' ' + (plate.wellCount/plate.rowLength*30 + 5*plate.wellCount/plate.rowLength);
+                }
+
+                $scope.wellClicked = function (well) {
+                    if (well.sampleId) {
+                        well.highlighted = !well.highlighted;
+
+                        if ($scope.clickFunc) {
+                            $scope.clickFunc(well)
+                        }
+                    }
+                };
+            }]
         };
     }
 ])

@@ -920,6 +920,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.clearForm();
         };
 
+        $scope.trashSamples = function (transformSpecId) {
+
+        }
+
     }]
 )
 
@@ -1279,6 +1283,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $location.path('/record-transform/' + $scope.selectedSpec.plan.details.transfer_type_id + '-' + Formatter.lowerCaseAndSpaceToDash($scope.selectedSpec.plan.title) + '/hamilton_operation/' + $scope.selectedSpec.plan.details.hamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedSpec.plan.details.hamilton.label)) + '/finish-run/' + $scope.selectedSpec.spec_id)
         };
 
+        $scope.trashSamples = function (spec_id) {
+            $state.go('root.trash_samples.by_transform_spec', {
+                spec_id: spec_id
+            });
+        }
+
         var specId = $stateParams.spec_id;
         if (!$scope.selectedSpec) {
             $scope.specLoading = true;
@@ -1334,6 +1344,103 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.editing();
             console.log($scope.transformSpec);
         }
+    }]
+)
+
+.controller('trashSamplesController', ['$scope', '$state', '$stateParams', 
+    function ($scope, $state, $stateParams) {
+        console.log('TRASH!!!!');
+    }]
+)
+
+.controller('trashSamplesByTransformSpecController', ['$scope', '$state', '$stateParams', 'Api', 
+    function ($scope, $state, $stateParams, Api) {
+        $scope.spec_id = $stateParams.spec_id;
+
+        $scope.openTrashPlateEditor = function (plateBarcode) {
+            $scope.setPlateBarcodeForEdit(plateBarcode);
+            $state.go('root.trash_samples.by_transform_spec.for_plate', {
+                plate_barcode: plateBarcode
+            });
+        }
+
+        $scope.setPlateBarcodeForEdit = function (plateBarcode) {
+            $scope.plateBarcodeForEdit = plateBarcode;
+        };
+
+        $scope.specLoading = true;
+        Api.getTransformSpec($scope.spec_id).success(function (data) {
+            $scope.specLoading = false;
+            var thisSpec = data.data;
+            thisSpec.plan = thisSpec.data_json;
+            $scope.selectedSpec = thisSpec;
+            $scope.executedDateString = (new Date($scope.selectedSpec.date_executed)).toLocaleString();
+            console.log($scope.selectedSpec);
+        }).error(function () {
+            console.log('Error loading spec.');
+        });
+    }]
+)
+
+.controller('trashSamplesByTransformSpecPlateController', ['$scope', '$state', '$stateParams', 'Api', 'Maps', 
+    function ($scope, $state, $stateParams, Api, Maps) {
+        $scope.plate_barcode = $stateParams.plate_barcode;
+        $scope.setPlateBarcodeForEdit($scope.plate_barcode);
+        
+        $scope.selectedWellCount = 0;
+        $scope.plateWellClicked = function (well) {
+            if (well.highlighted) {
+                $scope.selectedWellCount++;
+            } else {
+                $scope.selectedWellCount--;
+            }  
+        };
+
+        $scope.toggleSelectAll = function () {
+            if ($scope.selectedWellCount == $scope.plate.wells.length) {
+                //unselect all
+                for (well in $scope.plate.wellMap) {
+                    var well = $scope.plate.wellMap[well];
+                    if (well.sampleId) {
+                        well.highlighted = false;
+                    }
+                }
+                $scope.selectedWellCount = 0;
+            } else {
+                //select all
+                for (well in $scope.plate.wellMap) {
+                    var well = $scope.plate.wellMap[well];
+                    if (well.sampleId) {
+                        well.highlighted = true;
+                        $scope.plateWellClicked(well);
+                    }
+                }
+                $scope.selectedWellCount = $scope.plate.wells.length;
+            }
+        };
+
+        $scope.loadingPlate = true;
+        Api.getBasicPlateDetails($scope.plate_barcode).success(function (data) {
+            $scope.loadingPlate = false;
+            var thisPlate = new Maps.plateTemplates[data.plateDetails.type]();
+            delete thisPlate.description;
+            thisPlate.filledWellCount = data.wells.length;
+            $.extend(thisPlate, data);
+
+            for (var i=0; i< data.wells.length; i++) {
+                var well = data.wells[i];
+                thisPlate.addSampleId(well.column_and_row, well.sample_id);
+            }
+            thisPlate.plateDetails['barcode'] = $scope.plate_barcode;
+            $scope.plate = thisPlate;
+            console.log($scope.plate);
+        }).error(function () {
+            console.log('Error loading plate details.');
+        });
+
+        $scope.$on('$destroy', function () {
+            $scope.setPlateBarcodeForEdit(null);
+        });
     }]
 )
 
@@ -1542,6 +1649,18 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/spec/:spec_id'
             ,templateUrl: 'twist-transform-specs-editor.html'
             ,controller: 'transformSpecEditorController'
+        }).state('root.trash_samples', {
+            url: 'trash-samples'
+            ,templateUrl: 'twist-trash-samples.html'
+            ,controller: 'trashSamplesController'
+        }).state('root.trash_samples.by_transform_spec', {
+            url: '/transform-spec/:spec_id'
+            ,templateUrl: 'twist-trash-samples-by-transform-spec.html'
+            ,controller: 'trashSamplesByTransformSpecController'
+        }).state('root.trash_samples.by_transform_spec.for_plate', {
+            url: '/plate/:plate_barcode'
+            ,templateUrl: 'twist-trash-samples-by-transform-spec-plate.html'
+            ,controller: 'trashSamplesByTransformSpecPlateController'
         })
         ;
     }

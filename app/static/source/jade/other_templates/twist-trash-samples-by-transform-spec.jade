@@ -1,0 +1,23 @@
+div(class="twst-trash-samples-by-transform-spec-main")
+    div(class="twst-spinner" ng-if="specLoading")
+    div(class="twst-trash-samples-by-transform-spec-controls" ng-if="!specLoading")
+        h2 Transform Step Id {{'#' + selectedSpec.spec_id}} 
+            span(class="twst-trash-samples-by-transform-spec-plate-barcode-heading" ng-if="plateBarcodeForEdit") - Plate {{'#' + plateBarcodeForEdit}}
+        p Date executed: 
+            strong {{executedDateString}}
+        div(ui-view)
+            div(class="twst-trash-samples-spec-plate-list")
+                div(class="twst-trash-samples-spec-plate-list-sources")
+                    p Source Plates
+                    ul
+                        li(ng-repeat="source in selectedSpec.plan.sources") {{source.details.id}}
+                            button(class="twst-button twst-red-button twst-trash-plate-button" ng-click="openTrashPlateEditor(source.details.id)") trash...
+                div(class="twst-trash-samples-spec-plate-list-destinations")
+                    p Destination Plates
+                    ul
+                        li(ng-repeat="destination in selectedSpec.plan.destinations") {{destination.details.id}}
+                            button(class="twst-button twst-red-button twst-trash-plate-button" ng-click="openTrashPlateEditor(destination.details.id)") trash...
+
+        
+
+    

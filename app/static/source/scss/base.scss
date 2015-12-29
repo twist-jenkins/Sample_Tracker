@@ -600,6 +600,66 @@ strong {
 }
 
 /**********************************************************************************************************/
+/*** PLATE VISUALIZER ***/
+/**********************************************************************************************************/
+
+.twst-plate-view {
+    z-index: 1;
+
+    .twst-plate-view-header {
+        margin: 0.5em 0; 
+        strong {
+            padding-left: 2em;
+
+            &:first-child {
+                padding-left: 0;
+            }
+        }
+    }
+
+    .twst-plate-view-plate {
+        border: 1px solid $twst-darker-green;
+
+        ellipse {
+            &:hover {
+                fill: #ffff00;
+
+                &.twst-click-highlighted-well {
+                    fill: #F59C9C;
+                }
+            }
+        }
+
+        .twst-plate-visualizer-well {
+            stroke-width: 1;
+            stroke: #888;
+            fill: #fff;
+        }
+
+        .twst-filled-well {
+            fill: $twst-minty-green-bg;
+            stroke: #000;
+        }
+
+        .twst-ga-highlighted-well {
+            fill: #00ff00;
+        }
+
+        .twst-click-highlighted-well {
+            fill: #F59C9C;
+        } 
+    } 
+
+    .tooltip {
+        z-index: 1000;
+
+        .twst-plate-view-well-tooltip {
+            text-align: left;
+        }
+    } 
+}
+
+/**********************************************************************************************************/
 /*** CUSTOM RADIO ***/
 /**********************************************************************************************************/
 
@@ -912,7 +972,7 @@ strong {
             }
 
             .twst-record-step-excel-upload-summary-row-count-item {
-                 margin-left: 0.5em;
+                margin-left: 0.5em;
 
                 li {
                     margin-top: 0.5em;
@@ -1184,7 +1244,7 @@ strong {
 
         a {
             display: table-cell;
-            width: 16.667%;
+            width: 14.2%;
             text-align: center;
             font-size: 1.1em;
             padding: 0.45em 0;
@@ -2318,6 +2378,106 @@ strong {
             font-size: 0.8em;
             line-height: 1em;
             margin-right: 2em;
+        }
+    }
+}
+
+.twst-trash-samples-by-transform-spec-main {
+    
+    .twst-trash-samples-by-transform-spec-controls {
+        padding: 0 2em;
+
+        h2 {
+            font-size:1.3em;
+            font-weight: bold;
+            margin-bottom: 0.5em;
+
+            .twst-trash-samples-by-transform-spec-plate-barcode-heading {
+                color: $twst-darker-green;
+            }
+        }
+
+        .twst-trash-samples-spec-plate-list {
+            display: table;
+            width: 70%;
+            margin-top: 1em;
+        
+            .twst-trash-samples-spec-plate-list-sources, .twst-trash-samples-spec-plate-list-destinations {
+                display: table-cell;
+                width: 50%;
+
+                ul {
+                    margin-left: 0.5em;
+
+                    li {
+                        margin-top: 0.5em;
+                        margin-left: 1em;
+                        list-style-type: disc;
+                        line-height: 2em;
+
+                        &:hover {
+                            background: $twst-minty-green;
+                        }
+                    }
+                }
+            }
+
+            .twst-trash-samples-spec-plate-list-destinations {
+                padding-left: 2em;
+            }
+
+            .twst-trash-plate-button {
+                position: relative;
+                font-size: 0.8em;
+                padding: 0.2em;
+                opacity: 0.5;
+                float: right;
+                line-height: 1em;
+                top: 0.4em;
+                margin-right: 0.5em;
+
+                &:hover {
+                    opacity: 1;
+                }
+            }
+
+        }
+
+        .twst-trash-samples-plate-main {
+            display: table;
+            width: 100%;
+
+            .twst-trash-samples-plate-left, .twst-trash-samples-plate-right {
+                display: table-cell;
+                vertical-align: top;
+            }
+
+            .twst-trash-samples-plate-right {
+                padding: 2em 0 2em 1em;
+                width: 90%;
+
+                h3 {
+                    font-weight: bold;
+                    font-size: 1.2em;
+                    margin-bottom: 1em;
+                }
+
+                p {
+                    margin-bottom: 1em;
+                }
+
+                .twst-tselect-all-wells-btn {
+                    font-size: 0.8em;
+                    padding: 0.2em;
+                    position: relative;
+                    float: right;
+                }
+
+                .twst-trash-selected-wells-btn {
+                    font-size: 1.3em;
+                    margin-top: 1.5em;
+                }
+            }
         }
     }
 }

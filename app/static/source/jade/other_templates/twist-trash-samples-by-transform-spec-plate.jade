@@ -1,0 +1,13 @@
+div(class="twst-trash-samples-by-transform-spec-plate-main")
+    div(class="twst-spinner" ng-if="loadingPlate")
+    div(class="twst-trash-samples-plate-main" ng-if="!loadingPlate")
+        div(class="twst-trash-samples-plate-left")
+            <plate-view plate="plate" click-func="plateWellClicked"></plate-view>
+        div(class="twst-trash-samples-plate-right")
+            h3 Trash Samples from this Plate
+            p Click a well to select that sample for trashing.
+            p Selected Wells: 
+                strong {{selectedWellCount == plate.wells.length ? 'All' : selectedWellCount}}
+                button(class="twst-button twst-green-button twst-tselect-all-wells-btn" ng-click="toggleSelectAll()") select all
+
+            button(class="twst-button twst-red-button twst-trash-selected-wells-btn" ng-class="{'twst-disabled-button': !selectedWellCount}" ng-click="trashSelectedWells()") Trash Selected Wells
