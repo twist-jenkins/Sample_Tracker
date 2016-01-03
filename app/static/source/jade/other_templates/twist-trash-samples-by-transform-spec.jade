@@ -3,6 +3,7 @@ div(class="twst-trash-samples-by-transform-spec-main")
     div(class="twst-trash-samples-by-transform-spec-controls" ng-if="!specLoading")
         h2 Transform Step Id {{'#' + selectedSpec.spec_id}} 
             span(class="twst-trash-samples-by-transform-spec-plate-barcode-heading" ng-if="plateBarcodeForEdit") - Plate {{'#' + plateBarcodeForEdit}}
+            button(class="twst-button twst-return-to-spec-list" ng-click="backToSpec()" ng-if="plateBarcodeForEdit") &#171; return to plate lists
         p Date executed: 
             strong {{executedDateString}}
         div(ui-view)

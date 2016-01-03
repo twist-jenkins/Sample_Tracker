@@ -253,7 +253,7 @@ app = angular.module("twist.app")
             ,restrict: 'A'
             ,link: function($scope, element, attrs) {
                 var getViewBox = function () {
-                    return "0 0 " + ($scope.plate.rowLength*30 + 5*$scope.plate.rowLength + 35) + ' ' + ($scope.plate.wellCount/$scope.plate.rowLength*30 + 5*$scope.plate.wellCount/$scope.plate.rowLength + 35);
+                    return "0 0 " + ($scope.plate.rowLength*30 + 8*$scope.plate.rowLength + 56) + ' ' + ($scope.plate.wellCount/$scope.plate.rowLength*30 + 8*$scope.plate.wellCount/$scope.plate.rowLength + 56);
                 }
                 element.get(0).setAttribute("viewBox", getViewBox());
             }
@@ -271,21 +271,23 @@ app = angular.module("twist.app")
             ,templateUrl: 'twist-plate-view.html'
             ,controller: ['$scope', '$sce', function ($scope, $sce) {
 
+                $scope.alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+                $scope.getLetter = function (ind) {
+                    return $scope.alphabet.charAt(Math.floor(ind/$scope.plate.rowLength))
+                };
+
                 $scope.getX = function (well) {
-                    return (well.col)*30 + 5*well.col;
+                    return (well.col)*30 + 8*well.col + 15;
                 };
 
                 $scope.getTooltip = function (well) {
-                    return '<div class="twst-plate-view-well-tooltip">Sample Id:<br/><strong>' + well.sampleId + '</strong></div>';
+                    return '<div class="twst-plate-view-well-tooltip"><div class="twst-plate-view-well-tooltip-inner"><h3>' + $scope.alphabet.charAt(well.row - 1) + well.col + '</h3><div>' + (well.trashed ? '<span class="twst-plate-view-well-trashed">TRASHED</span>' : '') + 'Sample Id:<br/><strong>' + well.sampleId + '</strong></div></div></div>';
                 };
 
                 $scope.getY = function (well) {
-                    return (well.row)*30 + 5*well.row;
+                    return (well.row)*30 + 8*well.row + 20;
                 };
-
-                $scope.getViewBox = function (plate) {
-                    return "0 0 " + (plate.rowLength*30 + 5*plate.rowLength) + ' ' + (plate.wellCount/plate.rowLength*30 + 5*plate.wellCount/plate.rowLength);
-                }
 
                 $scope.wellClicked = function (well) {
                     if (well.sampleId) {

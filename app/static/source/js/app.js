@@ -1347,9 +1347,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('trashSamplesController', ['$scope', '$state', '$stateParams', 
-    function ($scope, $state, $stateParams) {
-        console.log('TRASH!!!!');
+.controller('trashSamplesController', ['$scope', '$state', '$stateParams', 'TypeAhead', '$timeout',  
+    function ($scope, $state, $stateParams, TypeAhead, $timeout) {
+        $scope.getTransformSpecIds = TypeAhead.getTransformSpecIds;
+
+        $scope.transformSpec = {};
+
+        $scope.transformIdSelected = function () {
+            $state.go('root.trash_samples.by_transform_spec', {
+                spec_id: $scope.transformSpec.id
+            });
+        }
     }]
 )
 
@@ -1366,6 +1374,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.setPlateBarcodeForEdit = function (plateBarcode) {
             $scope.plateBarcodeForEdit = plateBarcode;
+        };
+
+        $scope.backToSpec = function () {
+            $state.go('root.trash_samples.by_transform_spec', {
+                spec_id: $scope.spec_id
+            });
         };
 
         $scope.specLoading = true;
@@ -1396,8 +1410,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }  
         };
 
-        $scope.toggleSelectAll = function () {
-            if ($scope.selectedWellCount == $scope.plate.wells.length) {
+        $scope.toggleSelectAll = function (forceNone) {
+            if (forceNone || $scope.selectedWellCount == $scope.plate.wells.length) {
                 //unselect all
                 for (well in $scope.plate.wellMap) {
                     var well = $scope.plate.wellMap[well];
@@ -1416,6 +1430,45 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     }
                 }
                 $scope.selectedWellCount = $scope.plate.wells.length;
+            }
+        };
+
+        $scope.clearTrashSamplesErrorMessage = function () {
+            $scope.trashSamplesErrorMessage = null;
+            $scope.trashSamplesErrorMessageVisible = 0;  
+        }
+
+        $scope.trashSelectedWells = function () {
+            if ($scope.selectedWellCount && !$scope.trashingWells) {
+                var trashIds = [];
+                var trashedWells = [];
+
+                for (well in $scope.plate.wellMap) {
+                    var well = $scope.plate.wellMap[well];
+                    if (well.highlighted) {
+                        trashIds.push(well.sampleId);
+                        trashedWells.push(well);
+                    }
+                }
+
+                $scope.trashingWells = true;
+                Api.trashSamples(trashIds).success(function (data) {
+                    $scope.trashingWells = false;
+                    $scope.toggleSelectAll(true);
+
+                    $scope.trashSamplesErrorMessage = 'The selected samples have been trashed.';
+                    $scope.trashSamplesErrorMessageVisible = 1;
+
+                    for (var i=0; i<trashedWells.length;i++) {
+                        trashedWells[i].trashed = true;
+                    }
+                }).error(function (data) {
+                    $scope.trashingWells = false;
+                    $scope.trashSamplesErrorMessage = 'Error trashing samples. Please try again.';
+                    $scope.trashSamplesErrorMessageVisible = 11;
+                });
+
+                console.log(trashIds);
             }
         };
 

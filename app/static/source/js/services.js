@@ -209,6 +209,13 @@ app = angular.module('twist.app')
                 }
                 return $http(processReq);
             }
+            ,trashSamples: function (sampleIds) {
+                var trashReq = ApiRequestObj.getPost('rest-ham/trash-samples');
+                trashReq.data = {
+                    sampleIds: sampleIds
+                }
+                return $http(trashReq);
+            }
 
         };
     }]
@@ -303,6 +310,22 @@ app = angular.module('twist.app')
                     for (var i=0; i< resp.data.length ;i++) {
                         if (resp.data[i].toLowerCase().indexOf(queryText) != -1) {
                             goodData.push(resp.data[i]);
+                        }
+                    }
+                    return goodData;
+                });
+            }
+            ,getTransformSpecIds: function (queryText) {
+                return Api.getTransformSpecs(queryText).then(function (resp) {
+                    queryText = queryText.toLowerCase();
+
+                    var goodData = [];
+                    console.log(queryText)
+                    console.log(resp);
+                    for (var i=0; i< resp.data.data.length ;i++) {
+                        var specId = resp.data.data[i].spec_id + '';
+                        if (specId.toLowerCase().indexOf(queryText) != -1) {
+                            goodData.push(specId);
                         }
                     }
                     return goodData;

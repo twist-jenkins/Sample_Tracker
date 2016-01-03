@@ -1034,3 +1034,18 @@ def process_hamilton_sources(transform_type_id):
             status=200, \
             mimetype="application/json")
     return(resp)
+
+def trash_samples():
+
+    data = request.json
+    sampleIds = data["sampleIds"]
+
+    respData = {
+        "all_trashed": True
+    }
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+

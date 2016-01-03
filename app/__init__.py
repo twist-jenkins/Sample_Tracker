@@ -423,4 +423,8 @@ def get_plate_ready_for_step(plate_barcode, transform_type_id):
 def process_hamilton_sources(transform_type_id):
     return routes.process_hamilton_sources(transform_type_id)
 
+@app.route('/api/v1/rest-ham/trash-samples', methods=['POST'])
+def trash_samples():
+    return routes.trash_samples()
+
 

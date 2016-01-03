@@ -1,4 +1,4 @@
-div(class="twst-plate-view" style="width:{{(plate.rowLength*30 + 5*plate.rowLength + 35)*0.65}}px;")
+div(class="twst-plate-view" style="width:{{(plate.rowLength*30 + 8*plate.rowLength + 56)*0.65}}px;")
     div(class="twst-plate-view-header")
         strong Barcode: 
         span {{plate.plateDetails.barcode}} 
@@ -9,4 +9,7 @@ div(class="twst-plate-view" style="width:{{(plate.rowLength*30 + 5*plate.rowLeng
     div(class="twst-plate-view-plate")
         svg(view-box plate="plate" xmlns="http://www.w3.org/2000/svg" ng-if="plate.wellMap")
             g
-                ellipse(mouse-aware ng-repeat="well in plate.wellMap track by well.index" ry="15" rx="15" id="svg_2" well="well" ng-attr-cy="{{getY(well)}}" ng-attr-cx="{{getX(well)}}" class="twst-plate-visualizer-well twst-{{well.sampleId}}" ng-class="{'twst-filled-well': well.sampleId, 'twst-click-highlighted-well': well.highlighted}" ng-click="wellClicked(well)" tooltip-html="getTooltip(well)" tooltip-trigger tooltip-enable="well.sampleId" tooltip-animation="false" tooltip-placement="top" tooltip-append-to-body="true")
+                g(ng-repeat="well in plate.wellMap track by well.index")
+                    text(class="twst-plate-visualizer-label" ng-if="$index%plate.rowLength == 0" text-anchor="middle" id="svg_1" ng-attr-y="{{getY(well) + 8 }}" x="18" stroke-width="0" stroke="#000000" fill="#000000") {{getLetter($index)}}
+                    text(class="twst-plate-visualizer-label twst-plate-visualizer-label-column-number" ng-if="$index < plate.rowLength" text-anchor="middle" id="svg_1" y="30" ng-attr-x="{{getX(well)}}" stroke-width="0" stroke="#000000" fill="#000000") {{$index%plate.rowLength + 1}}
+                    ellipse(mouse-aware ry="15" rx="15" id="svg_2" well="well" ng-attr-cy="{{getY(well)}}" ng-attr-cx="{{getX(well)}}" class="twst-plate-visualizer-well twst-{{well.sampleId}}" ng-class="{'twst-filled-well': well.sampleId, 'twst-click-highlighted-well': well.highlighted, 'twst-trashed-well': well.trashed}" ng-click="wellClicked(well)" tooltip-html="getTooltip(well)" tooltip-trigger tooltip-enable="well.sampleId" tooltip-animation="false" tooltip-placement="top" tooltip-append-to-body="true")
