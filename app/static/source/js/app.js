@@ -173,12 +173,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         };
 
-        $scope.clearForm = function () {
+        $scope.clearForm = function (skipGo) {
             $scope.stepTypeDropdownValue = Constants.STEP_TYPE_DROPDOWN_LABEL;
             $scope.transformSpec = TransformBuilder.newTransformSpec();
             $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
-            $state.go('root.record_transform');
+            if (!skipGo) {
+                $state.go('root.record_transform');
+            }
         };
 
         /* populate the sample types pulldown */
@@ -222,6 +224,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.initTransferTypes.success(function (data) {
             selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
             $scope.setSelectedOption(selectedTranferTypeId);
+        });
+
+        $scope.$on('$destroy', function () {
+            $scope.clearForm(true);
         });
     }]
 )
