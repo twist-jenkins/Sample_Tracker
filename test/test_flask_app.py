@@ -15,6 +15,10 @@ from flask_login import AnonymousUserMixin
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
+
+import sys
+print '@@', sys.path
+
 from app import app
 from app import db
 from app import login_manager

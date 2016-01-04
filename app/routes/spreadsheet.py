@@ -18,10 +18,13 @@ from sqlalchemy.sql import func
 from app import app, db
 from app.utils import scoped_session
 from app.models import create_destination_plate
-from app.dbmodels import (create_unique_object_id, SampleTransfer,
-                          SamplePlate, SamplePlateLayout, ClonedSample,
-                          SamplePlateType, SampleTransferDetail,
-                          SampleView, NGS_BARCODE_PLATE)
+from twistdb.public import *
+from twistdb.sampletrack import *
+from twistdb.ngs import *
+from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
+
+from twistdb import create_unique_id
+
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
@@ -31,6 +34,11 @@ from well_mappings import (get_col_and_row_for_well_id_48,
 from well_count_to_plate_type_name import well_count_to_plate_type_name
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
+
+
+# FIXME: there are a bunch of model instantiations in this thing, and they're
+#   all gonna break with the new twistdb models
+#   -- kieran
 
 
 def error_response(status_code, message):
@@ -70,9 +78,9 @@ def create_adhoc_sample_movement(db_session,
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
     #
     operator = g.user
-    sample_transfer = SampleTransfer(sample_transfer_type_id,
-                                     transform_spec_id,
-                                     operator.operator_id)
+    sample_transfer = SampleTransfer(sample_transfer_type_id=sample_transfer_type_id,
+                                     sample_transform_spec_id=transform_spec_id,
+                                     operator_id=operator.operator_id)
     db_session.add(sample_transfer)
     db_session.flush()
 
@@ -408,13 +416,10 @@ def create_adhoc_sample_movement(db_session,
                 #source_plate_well.sample_id = destination_sample_id # ???? WRONG! ??
                 #db_session.flush()                
         else:
-            destination_plate_well = SamplePlateLayout(
-                destination_plate.sample_plate_id, 
-                destination_sample_id,
-                destination_well_id, 
-                operator.operator_id,
-                source_plate_well.row, 
-                source_plate_well.column)
+            destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                        sample_id=destination_sample_id, well_id=destination_well_id, 
+                                                        operator_id=operator.operator_id, row=source_plate_well.row, 
+                                                        column=source_plate_well.column)
             db_session.add(destination_plate_well)
 
         # print "DESTINATION PLATE WELL: %s " % (str(destination_plate_well))
@@ -424,15 +429,14 @@ def create_adhoc_sample_movement(db_session,
         logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
         # in the "desination" plate.
         #
-        source_to_destination_well_transfer = SampleTransferDetail(
-            sample_transfer.id, 
-            order_number, 
-            source_plate_well.sample_plate_id,
-            source_plate_well.well_id, 
-            source_plate_well.sample_id,
-            destination_plate_well.sample_plate_id, 
-            destination_plate_well.well_id,
-            destination_plate_well.sample_id)
+        source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+                                                                    item_order_number=order_number,
+                                                                    source_sample_plate_id=source_plate_well.sample_plate_id,
+                                                                    source_well_id=source_plate_well.well_id, 
+                                                                    source_sample_id=source_plate_well.sample_id,
+                                                                    destination_sample_plate_id=destination_plate_well.sample_plate_id, 
+                                                                    destination_well_id=destination_plate_well.well_id,
+                                                                    destination_sample_id=destination_plate_well.sample_id)
         db_session.add(source_to_destination_well_transfer)
         db_session.flush()
 
@@ -462,14 +466,14 @@ def sample_handler(db_session, sample_transfer_type_id,
 
 def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     operator = g.user
-    source_id = create_unique_object_id("tmp_src_")
+    source_id = create_unique_id("tmp_src_")()
     colony_name = "%d-%s" % (12, destination_well_id)
 
     # Create CS
-    cs_id = create_unique_object_id("CS_")
-    cloned_sample = ClonedSample(cs_id, source_sample_id, source_id,
-                                 colony_name, None, None, None,
-                                 operator.operator_id)
+    cs_id = create_unique_id("CS_")()
+              
+    cloned_sample = ClonedSample( sample_id=cs_id, parent_sample_id=source_sample_id, source_id=source_id,
+                                  colony_name=colony_name, operator_id=operator.operator_id )
 
     # Add CLO
     clo = None
@@ -490,3 +494,35 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
 
     return cs_id
 
+
+def make_ngs_prepped_sample(db_session, source_plate_well,
+                            destination_well_id):
+    operator = g.user
+
+    # Create NPS
+    nps_id = create_unique_id("NPS_")()
+    i5_sequence_id, i7_sequence_id = "i5a", "i7b"
+    insert_size_expected = 1000
+    parent_process_id = None
+    external_barcode = None
+    reagent_type_set_lot_id = None
+    status = None
+    parent_transfer_process_id = None
+    # FIXME: we should just leave notes & description blank, no?
+    nps_sample = NGSPreppedSample( sample_id=nps_id, parent_sample_id=source_plate_well.sample_id,
+                                   description="temp nps description", i5_sequence_id=i5_sequence_id,
+                                   i7_sequence_id=i7_sequence_id, notes="temp nps notes",
+                                   insert_size_expected=insert_size_expected, date_created=datetime.utcnow(),
+                                   operator_id=operator.operator_id, parent_process_id=parent_process_id,
+                                   external_barcode=external_barcode, 
+                                   reagent_type_set_lot_id=reagent_type_set_lot_id, status=status,
+                                   parent_transfer_process_id=parent_transfer_process_id)
+
+    logging.info('NPS_ID %s for %s assigned [%s, %s]',
+                 nps_id, source_plate_well.sample_id,
+                 i5_sequence_id, i7_sequence_id)
+
+    db_session.add(nps_sample)
+    db_session.flush()
+
+    return nps_id

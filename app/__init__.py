@@ -14,7 +14,8 @@ import logging
 from flask import Flask, request, send_from_directory
 from flask_assets import Environment
 from webassets.loaders import PythonLoader as PythonAssetsLoader
-from flask.ext.sqlalchemy import SQLAlchemy
+from twistdb.db import SQLAlchemyX
+#from flask.ext.sqlalchemy import SQLAlchemy
 
 import assets
 
@@ -33,7 +34,7 @@ import assets
 ##  syslog.setFormatter(formatter)
 
 logging.basicConfig(level=logging.INFO)
-SHOW_SQLALCHEMY_ECHO_TRACE = True
+SHOW_SQLALCHEMY_ECHO_TRACE = False # True
 if SHOW_SQLALCHEMY_ECHO_TRACE:
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -61,8 +62,13 @@ app.debug = True
 ######################################################################################
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL',app.config['SQLALCHEMY_DATABASE_URI'])
-
 print "USING DATABASE: ", app.config['SQLALCHEMY_DATABASE_URI']
+
+
+from twistdb.db import initdb
+
+# initialize database engine:
+initdb(engine_url = app.config['SQLALCHEMY_DATABASE_URI'])
 
 UPLOAD_FOLDER = 'app/static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -88,10 +94,7 @@ for name, bundle in assets_loader.load_bundles().iteritems():
 #
 ######################################################################################
 
-db = SQLAlchemy(app)
-
-# from dbmodels import *  ## this import does not seem compatible with autoload
-
+db = SQLAlchemyX(app)
 
 
 ######################################################################################
@@ -119,6 +122,7 @@ login_manager.login_view = "login"
 
 
 from app import routes
+from app.routes import transfer
 from app import rest
 
 
@@ -401,9 +405,14 @@ def basic_plate_info(plate_barcode):
 def source_plate_well_data():
     return routes.source_plate_well_data()
 
+
 @app.route('/api/v1/check-plates-are-new', methods=['POST'])
 def check_plates_are_new():
     return routes.check_plates_are_new()
+
+@app.route('/api/v1/transfer-preview', methods=('POST',))
+def transfer_params():
+    return transfer.preview()
 
 # hamilton operation routes
 
@@ -426,5 +435,3 @@ def process_hamilton_sources(transform_type_id):
 @app.route('/api/v1/rest-ham/trash-samples', methods=['POST'])
 def trash_samples():
     return routes.trash_samples()
-
-

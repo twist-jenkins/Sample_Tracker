@@ -29,7 +29,8 @@ from sqlalchemy import and_
 
 from app import app, db
 
-from app.dbmodels import Operator, SampleTransferType, SampleTransfer, SampleTransferDetail
+from twistdb.sampletrack import SampleTransfer, SampleTransferType, SampleTransferDetail
+from twistdb.public import Operator
 
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
