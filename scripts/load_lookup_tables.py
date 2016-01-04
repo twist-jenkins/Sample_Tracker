@@ -7,7 +7,6 @@ import codecs, cStringIO
 from app import db
 #from app import (BlogPostSectionType, UserSegment, CalendarEventType, NewsArticleType, MediaType, PublicationType)
 from sqlalchemy import or_, and_
-from twistdb.process import StorageLocation
 from twistdb.sampletrack import SampleTransfer, SampleTransferType, SampleTransferDetail, \
     SamplePlate, SamplePlateLayout, SamplePlateType
 from twistdb.public import Operator, SampleType, Sample, SampleType
