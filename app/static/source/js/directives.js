@@ -31,6 +31,7 @@ app = angular.module("twist.app")
                         ,{text: 'Transform Specs', link: 'root.transform_specs.view_manage', match: 'root.transform_specs'}
                         ,{text: 'View Steps', link: 'root.view_steps'} 
                         ,{text: 'Sample Details', link: 'root.sample_details'}
+                        ,{text: 'Trash Samples', link: 'root.trash_samples'}
                     ];
                 }
             ]
@@ -129,15 +130,32 @@ app = angular.module("twist.app")
     }
 ])
 
-.directive('twstMessage', ['$sce',  
-    function($sce) {
+.directive('twstMessage', ['$sce', '$timeout',  
+    function($sce, $timeout) {
         return {
             restrict: 'E'
             ,scope: {
                 message: '='
                 ,visibleAndValid: '='
+                ,clearParentData: '='
             }
             ,template: '<div class="twst-message" ng-class="{\'twst-message-visible\':visibleAndValid, \'twst-success\': visibleAndValid > 0, \'twst-error\': visibleAndValid < 0}"><span class="twst-message-text" ng-bind-html="message"></span></div>'
+            ,controller: ['$scope', '$element',    
+                function($scope, $element) {
+                    $scope.$watch('visibleAndValid', function(newValue, oldValue) {
+                        if (newValue != 0) {
+                            $timeout(function () {
+                                $scope.visibleAndValid = 0;
+                                $timeout(function () {
+                                    if ($scope.clearParentData) {
+                                        $scope.clearParentData();
+                                    }
+                                }, 800);
+                            }, 5000);
+                        };
+                    }) 
+                }
+            ]
         };
     }
 ])
@@ -226,113 +244,91 @@ app = angular.module("twist.app")
     }
 ])
 
-.directive('twstTransformBuilderForm', [ 
+.directive('viewBox', [ 
     function() {
         return {
-            restrict: 'E'
-            ,scope: {
-                transformSpec: '='
-                ,templateTypeSelection: '=?'
+            scope: {
+                plate: '='
             }
-            ,templateUrl: 'twist-transform-builder-form.html'
-            ,controller: ['$scope', '$state', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
-                function ($scope, $state, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
-
-                    $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
-
-                    $scope.excelFileStats = {};
-                    $scope.fileErrors = [];
-
-                    $scope.Constants = Constants;
-
-                    $scope.cachedFileData = null;
-
-                    $scope.hamiltons = Maps.hamiltons;
-
-                    /* refresh the current transfer plan based on changes to plates inputs or upload file */
-                    $scope.updateTransferPlan = function (val, which, itemIndex) {
-                        if (val && val.length > 5) {
-                            if (which == Constants.PLATE_SOURCE) {
-                                $scope.transformSpec.addSource(itemIndex);
-                            } else if (which == Constants.PLATE_DESTINATION) {
-                                $scope.transformSpec.addDestination(itemIndex);
-                            }
-                        } else {
-                            if (which == Constants.PLATE_SOURCE) {
-                                $scope.transformSpec.checkSourcesReady();
-                            } else if (which == Constants.PLATE_DESTINATION) {
-                                $scope.transformSpec.checkDestinationsReady();
-                            }
-                        }
-                    };
-
-                    $scope.$watch('templateTypeSelection', function (newVal, oldVal) {
-                        if (newVal == Constants.FILE_UPLOAD && $scope.cachedFileData) {
-                            $scope.catchFile();
-                        } else if (newVal == Constants.STANDARD_TEMPLATE) {
-                            $scope.transformSpec.transferFromFile(false);
-                        }
-                    });
-
-                    $scope.clearExcelUploadData = function () {
-                        $scope.excelFileStats = {};
-                        $scope.fileErrors = [];
-                    };
-
-                    $scope.catchFile = function (fileData, error) {
-                        $scope.parsingFile = true;
-
-                        if (error) {
-                            $scope.clearExcelUploadData();
-                            $scope.fileErrors.push(error);
-                            $scope.excelFileStats = {};
-                            $scope.transformSpec.clearOperationsList();
-                            $scope.parsingFile = false;
-                        } else {
-                            // called in timeout to give the spinner time to render
-                            $timeout(function () {
-                                $scope.clearExcelUploadData();
-
-                                if (!fileData) {
-                                    fileData = $scope.cachedFileData;
-                                } else {
-                                    $scope.cachedFileData = fileData;
-                                };
-
-                                FileParser.getTransferRowsFromFile(fileData, $scope.transformSpec).then(function (resultData) {
-                                    $scope.excelFileStats = resultData.stats;
-                                    $scope.fileErrors = resultData.errors;
-
-                                    if (!resultData.errors.length) {
-                                        $scope.transformSpec.transferFromFile(true, resultData);
-                                    } else {
-                                        $scope.transformSpec.clearOperationsList();
-                                    } 
-
-                                    $scope.parsingFile = false;
-
-                                }, function (errorData) {
-                                    $scope.fileErrors = 'Error: Unknown error while parsing this file.';
-                                    $scope.parsingFile = false;
-                                });
-                 
-                            }, 150);
-                        }
-                    };
-
-                    $scope.setSelectedHamilton = function (hamilton) {
-                        $scope.selectedHamilton = hamilton;
-                    };
-
-                    $scope.selectHamilton = function (hamilton) {
-                        $state.go('root.record_transform.step_type_selected.hamilton_operation.hamilton_selected', {
-                            hamilton_id: hamilton.id.toLowerCase()
-                            ,hamilton_name: Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace(hamilton.label))
-                        });
-                    }
-
+            ,restrict: 'A'
+            ,link: function($scope, element, attrs) {
+                var getViewBox = function () {
+                    return "0 0 " + ($scope.plate.rowLength*30 + 8*$scope.plate.rowLength + 56) + ' ' + ($scope.plate.wellCount/$scope.plate.rowLength*30 + 8*$scope.plate.wellCount/$scope.plate.rowLength + 56);
                 }
-            ]
+                element.get(0).setAttribute("viewBox", getViewBox());
+            }
+        };
+    }
+])
+
+.directive('plateView', [ 
+    function() {
+        return {
+            scope: {
+                plate: '='
+                ,clickFunc: '=?'
+            }
+            ,templateUrl: 'twist-plate-view.html'
+            ,controller: ['$scope', '$sce', function ($scope, $sce) {
+
+                $scope.alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+                $scope.getLetter = function (ind) {
+                    return $scope.alphabet.charAt(Math.floor(ind/$scope.plate.rowLength))
+                };
+
+                $scope.getX = function (well) {
+                    return (well.col)*30 + 8*well.col + 15;
+                };
+
+                $scope.getTooltip = function (well) {
+                    return '<div class="twst-plate-view-well-tooltip"><div class="twst-plate-view-well-tooltip-inner"><h3>' + $scope.alphabet.charAt(well.row - 1) + well.col + '</h3><div>' + (well.trashed ? '<span class="twst-plate-view-well-trashed">TRASHED</span>' : '') + 'Sample Id:<br/><strong>' + well.sampleId + '</strong></div></div></div>';
+                };
+
+                $scope.getY = function (well) {
+                    return (well.row)*30 + 8*well.row + 20;
+                };
+
+                $scope.wellClicked = function (well) {
+                    if (well.sampleId) {
+                        well.highlighted = !well.highlighted;
+
+                        if ($scope.clickFunc) {
+                            $scope.clickFunc(well)
+                        }
+                    }
+                };
+            }]
+        };
+    }
+])
+
+.directive('twstHamiltonWizardThumbsUpMedallion', ['$timeout',  
+    function($timeout) {
+        return {
+            scope: {
+                fadeFinish: '='
+                ,thumbsUpIndex: '='
+            }
+            ,restrict: 'A'
+            ,template: '<div class="twst-hamilton-wizard-thumbs-up-medallion-inner"><twst-thumb-validation-icon validation="1" error="0"></twst-thumb-validation-icon></div>'
+            ,link: function($scope, element, attrs) {
+                element.addClass('twst-hamilton-wizard-thumbs-up-medallion');
+                $timeout(function () {
+                    element.addClass('twst-hamilton-wizard-thumbs-up-medallion-rise');
+                }, 0);
+
+                var fader = $timeout(function () {
+                    element.addClass('twst-hamilton-wizard-thumbs-up-transparent');
+                    $timeout(function () {
+                        $scope.fadeFinish($scope.thumbsUpIndex);
+                    }, 200);
+                }, 400);
+
+                element.on('$destroy', function() {
+                  $timeout.cancel(fader);
+                });
+            }
         };
     }
 ])

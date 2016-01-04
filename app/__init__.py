@@ -410,8 +410,28 @@ def source_plate_well_data():
 def check_plates_are_new():
     return routes.check_plates_are_new()
 
-
 @app.route('/api/v1/transfer-preview', methods=('POST',))
 def transfer_params():
     return transfer.preview()
 
+# hamilton operation routes
+
+@app.route('/api/v1/rest-ham/hamiltons/<hamilton_barcode>', methods=['GET'])
+def get_hamilton_by_barcode(hamilton_barcode):
+    return routes.get_hamilton_by_barcode(hamilton_barcode)
+
+@app.route('/api/v1/rest-ham/hamiltons/<hamilton_barcode>/carriers/<carrier_barcode>', methods=['GET'])
+def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
+    return routes.get_carrier_by_barcode(carrier_barcode, hamilton_barcode)
+
+@app.route('/api/v1/rest-ham/hamilton-plates/<plate_barcode>/transform/<transform_type_id>', methods=['GET'])
+def get_plate_ready_for_step(plate_barcode, transform_type_id):
+    return routes.get_plate_ready_for_step(plate_barcode, transform_type_id)
+
+@app.route('/api/v1/rest-ham/hamilton-plates/transform/<transform_type_id>', methods=['POST'])
+def process_hamilton_sources(transform_type_id):
+    return routes.process_hamilton_sources(transform_type_id)
+
+@app.route('/api/v1/rest-ham/trash-samples', methods=['POST'])
+def trash_samples():
+    return routes.trash_samples()

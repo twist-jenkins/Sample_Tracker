@@ -50,15 +50,11 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
             twst-thumb-validation-icon(validation="transformSpec.operations.length" error="fileErrors.length" errors-invisible="true")
             div(class="twst-spinner twst-parsing-file-spinner" ng-if="parsingFile")
     div(class="twst-record-step-hamilton-wizard" ng-if="templateTypeSelection == Constants.HAMILTON_OPERATION")
-        p(class="twst-input-label-block") Select the Hamilton:
-        div(class="btn-group twst-record-step-step-options-select" dropdown)
-            twst-thumb-validation-icon(validation="selectedHamilton" errors-invisible="true")
-            button(id="single-button" type="button" class="btn btn-primary" dropdown-toggle) {{selectedHamilton.label || 'Select a Hamilton...'}}&nbsp;
-                span(class="caret")
-            ul(class="dropdown-menu" role="menu" aria-labelledby="single-button")
-                li(role="menuitem" ng-repeat="hamilton in hamiltons")
-                    a(ng-click="selectHamilton(hamilton)") {{hamilton.label}}
-        div(ui-view="hamiltonWizard")
+        div
+            div(twst-hamilton-wizard-thumbs-up-medallion ng-repeat="thumbsUp in hamiltonThumbsUp" fade-finish="finishHamiltonThumbsUpFade" thumbs-up-index="thumbsUp")
+            div(ui-view="hamiltonWizard" autoscroll="true")
+                p The Hamilton Wizard will guide you through recording the plate data to create a worklist for this Hamilton run.
+                button(class="twst-button twst-blue-button twst-record-step-start-hamilton-button" ng-click="startHamiltonSteps()") Start Hamilton Wizard
 
     div(class="twst-transform-spec" ng-show="templateTypeSelection != Constants.HAMILTON_OPERATION")
         div(class="twst-transform-spec-show-btn" ng-click="showTransferPlan = !showTransferPlan")

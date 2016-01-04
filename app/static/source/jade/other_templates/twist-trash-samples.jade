@@ -1,0 +1,11 @@
+div(class="twst-trash-samples-main twst-child-page")
+    h1 Trash Samples
+    div(CLASS="twst-trash-samples-main-content" ui-view)
+        div(class="twst-trash-samples-main-options")
+            div(class="twst-trash-samples-main-option") 
+                h2 By Transform Step
+                input(type="text" class="form-control twst-trash-samples-main-spec-id" ng-model="transformSpec.id" typeahead="transformSpecId for transformSpecId in getTransformSpecIds($viewValue)" typeahead-loading="loadingLocations" typeahead-no-results="noResults" placeholder="Enter a step id" typeahead-on-select="transformIdSelected()")
+                button(class="twst-button" ng-click="transformIdSelected()") Go
+            
+
+        

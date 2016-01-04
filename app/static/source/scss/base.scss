@@ -99,6 +99,12 @@ $twst-common-border-light: 1px solid #ddd;
         text-decoration: none;
         color: #000;
     }
+
+    &.twst-disabled-button {
+        &:hover {
+            opacity: 0.7;
+        }
+    }
 }
 
 @mixin transform($transforms) {
@@ -302,14 +308,21 @@ strong {
     cursor: default;
     opacity: 0.7;
 
-
     &:hover {
-        opacity: 0.7;
+        opacity: 0.7 !important;
     }
 
     &:focus {
         outline: none;
     }
+}
+
+.twst-barcode-input {
+    font-family: consolas, 'andale mono', monospace;
+    background: url("../images/barcode.svg");
+    background-size: 4em;
+    background-repeat: no-repeat;
+    background-position: 96% center;
 }
 
 .twst-disabled-link {
@@ -530,6 +543,7 @@ strong {
         border: 1px solid $twst-darker-green;
         .twst-message-text:before {
             content: '\2713';
+            color: $twst-darker-green;
         }
     }
 
@@ -540,6 +554,7 @@ strong {
 
         .twst-message-text:before {
             content: '\2717';
+            color: $twst-dark-red;
         }
     }
 
@@ -549,6 +564,9 @@ strong {
         top: 0.2em;
         position: relative;
         margin-right: 0.15em;
+        content: '\2713';
+        color: rgba(0, 0, 0, 0);
+        width: 1.3em;
     }
 
     span.twst-step-text {
@@ -589,6 +607,107 @@ strong {
 
 .twst-2em-top-margin {
     margin-top: 2em !important;
+}
+
+/**********************************************************************************************************/
+/*** PLATE VISUALIZER ***/
+/**********************************************************************************************************/
+
+.twst-plate-view {
+    z-index: 1;
+
+    .twst-plate-view-header {
+        margin: 0.5em 0; 
+        strong {
+            padding-left: 2em;
+
+            &:first-child {
+                padding-left: 0;
+            }
+        }
+    }
+
+    .twst-plate-view-plate {
+        border: 1px solid $twst-darker-green;
+
+        ellipse {
+            &:hover {
+                fill: #ffff00;
+
+                &.twst-click-highlighted-well {
+                    fill: #F59C9C;
+                }
+            }
+        }
+
+        .twst-plate-visualizer-label {
+            font-size: 1.6em;
+            font-family: helvetica, arial, sans serif;
+        }
+
+        .twst-plate-visualizer-well {
+            stroke-width: 1;
+            stroke: #888;
+            fill: #fff;
+        }
+
+        .twst-filled-well {
+            fill: $twst-minty-green-bg;
+            stroke: #000;
+        }
+
+        .twst-ga-highlighted-well {
+            fill: #00ff00;
+        }
+
+        .twst-click-highlighted-well {
+            fill: #F59C9C;
+        } 
+
+        .twst-trashed-well {
+            fill: #000 !important;
+            stroke: red;
+        }
+    }  
+}
+
+/* plate tooltips get appended to the body so the style cannot be sub-classed */
+.tooltip {
+    z-index: 1000;
+
+    .tooltip-inner {
+        min-width: 275px;
+    }
+
+    .twst-plate-view-well-tooltip {
+        text-align: left;
+
+        .twst-plate-view-well-tooltip-inner {
+            display: table;
+            width: 100%;
+
+            h3, div {
+                display: table-cell;
+                vertical-align: middle;
+
+                .twst-plate-view-well-trashed {
+                    color: #ff0000;
+                    position: relative;
+                    float: right;
+                }
+            }
+
+            h3 {
+                display: block;
+                text-align: center;
+                font-size: 2em;
+                padding-right: 0.4em;
+                width: 20%;
+            }
+        }
+
+        
+    }
 }
 
 /**********************************************************************************************************/
@@ -904,7 +1023,7 @@ strong {
             }
 
             .twst-record-step-excel-upload-summary-row-count-item {
-                 margin-left: 0.5em;
+                margin-left: 0.5em;
 
                 li {
                     margin-top: 0.5em;
@@ -944,6 +1063,15 @@ strong {
                 background: $twst-minty-green-bg;
                 display: inline-block;
             }
+        }
+    }
+
+    .twst-record-step-hamilton-wizard {
+        position: relative;
+
+        .twst-record-step-start-hamilton-button {
+            font-size: 1.2em;
+            margin-top: 1em;
         }
     }
 
@@ -1169,7 +1297,7 @@ strong {
 
         a {
             display: table-cell;
-            width: 16.667%;
+            width: 14.2%;
             text-align: center;
             font-size: 1.1em;
             padding: 0.45em 0;
@@ -1227,6 +1355,7 @@ strong {
     text-align: center;
     width: 100%;
     background-color: $twst-minty-green-bg;
+    z-index:10;
 }
 
 
@@ -1269,14 +1398,11 @@ strong {
         top: 1em;
     }
 
-    .twst-message {
-        margin-bottom: 1em;
-    }
-
     .twst-record-step-result-message {
         position: relative;
         float: right;
         max-width: 50%;
+        margin-bottom: 1em;
     }
 
     .twst-record-step-transfer-toggle-controls {
@@ -1643,6 +1769,10 @@ strong {
                     float: right;
                     margin: 1em 1em 0 0;
 
+                    .twst-continue-hamilton-btn {
+                        margin-bottom: 1em;
+                    }
+
                     .twst-view-transform-spec-download-options-worklists {
                         display: inline-block;
                         border-radius: 0.3em;
@@ -1743,6 +1873,159 @@ strong {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
+/******* HAMILTON SELECT
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+.twst-hamilton-wizard-thumbs-up-medallion {
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    text-align: center;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+    @include transition(opacity .2s ease);
+    overflow: hidden;
+
+    &.twst-hamilton-wizard-thumbs-up-transparent {
+        opacity: 0; 
+    }
+
+    &.twst-hamilton-wizard-thumbs-up-medallion-rise {
+        .twst-hamilton-wizard-thumbs-up-medallion-inner {
+            top: 0;
+        } 
+    }
+
+    .twst-hamilton-wizard-thumbs-up-medallion-inner {
+        display: table;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        top: 100%;
+        @include transition(top .2s ease);
+
+        twst-thumb-validation-icon {
+            position: relative;
+            display: table-cell;
+            vertical-align: middle;
+            font-size: 6em;
+        }
+    }
+}
+
+.twst-hamilton-select-main {
+    .twst-hamilton-barcode-inputs {
+        display: table;
+        width: 100%;
+
+        .twst-hamilton-barcode-input-body {
+            border: 1px solid #98C7AF;
+            border-top: 0;
+            border-radius: 0 0 0.5em 0.5em;
+            padding: 1em;
+        }
+
+        .twst-hamilton-barcode-inputs-left, .twst-hamilton-barcode-inputs-right {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .twst-hamilton-barcode-inputs-left {
+            min-width: 50%;
+
+            .twst-spinner {
+                position: absolute;
+                left: 35em;
+                top: 1em;
+                font-size: 0.8em;
+                top: 2em;
+            }
+        }
+
+        .twst-hamilton-barcode-inputs-right {
+            padding-left: 1em;
+        }
+
+        .twst-hamilton-barcode-error-message {
+            position: relative;
+            float: right;
+            font-size: 0.7em;
+        }
+
+    }
+}
+
+.twst-hamilton-step-direction {
+    display: table;
+    width:100%;
+    position: relative;
+    margin-bottom: 0;
+    border-radius: 0.5em 0.5em 0 0;
+    background-color: #dbffec;
+    border: 1px solid #98C7AF;
+
+    .twst-bullet-number, .twst-hamilton-step-direction-text {
+        display: table-cell;
+    }
+
+    .twst-bullet-number {
+        min-width: 1.5em;
+        line-height: 1.7em;
+        background-color: #98C7AF;
+        border-radius: 0.2em 0 0 0;
+        font-size: 2em;
+        font-weight: bold;
+        text-align: center;
+        color: #fff;
+    }
+
+    .twst-hamilton-step-direction-text {
+        vertical-align: top;
+        width: 100%;
+
+        .twst-hamilton-step-stats {
+            display: block;
+            float: right;
+            text-align: center;
+            padding: 0 0.5em 0.5em 0;
+            position: relative;
+            top: 0.4em;
+        }
+        
+        .twst-hamilton-step-direction-heading {
+            display: block;
+            padding: 0.5em 0 0 0.5em;
+            font-weight: bold;
+            font-size: 0.8em;
+            color: #91CAAD;
+
+            .twst-spinner {
+                position: relative;
+                margin: 0 0 0 3em;
+                display: inline-block;
+                font-size: 0.7em;
+                top: 0.25em;
+            }
+        }
+
+        .twst-hamilton-step-direction-main {
+            font-size: 1.3em;
+            display: inline-block;
+            margin: 0.3em 0 0 0.3em;
+        }
+
+    }
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
 /******* HAMILTON WIZARD
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -1750,27 +2033,68 @@ strong {
 /******************************************************************************************************************************************************/
 
 .twst-hamilton-wizard-main {
-    margin-top:1em;
     position: relative;
     &:after {
         @include after-clear;
     }
 
+    .twst-change-hamilton-btn {
+        padding: 0.25em;
+        font-size: 0.8em;
+    }
+
+    .twst-hamilton-wizard-visualizer-header {
+        display: table;
+        width: 100%;
+    }
+
+    .twst-hamilton-wizard-visualizer-header-left,
+    .twst-hamilton-wizard-visualizer-header-right {
+        display: table-cell;
+    }
+
+    .twst-hamilton-wizard-visualizer-header-right {
+        text-align: right;
+    }
+
+    .twst-hamilton-step-guidance-element {
+        .twst-hamilton-carriers-remaining, .twst-hamilton-source-plates-remaining {
+            color: $twst-darker-green;
+        }
+
+        .twst-carriers-start-over-button, .twst-source-plates-start-over-button {
+            position: relative;
+            padding: 0.3em;
+            font-size: 0.8em;
+            margin-top: 0.2em;
+        }
+
+        .twst-hamilton-source-scan-complete-button {
+            position: absolute;
+            top: 0.75em;
+            margin-left: 3em;
+        }
+    }
+
     .twst-hamilton-wizard-deck-visualizer {
         position: relative;
+        font-size: 0.96em;
+        margin-top: 0.3em;
 
         .twst-hamilton-wizard-deck-columns {
-            border: 1px solid #ccc;
-            border-left: 0;
-            display: table;
+            display: block;
             width: 100%;
             position: absolute;
             z-index: 1;
+            margin: 0 auto;
 
             .twst-hamilton-wizard-deck-column {
-                display: table-cell;
-                max-width: 0.93em;
-                min-width: 0.93em;
+                display: block;
+                float: left;
+                max-width: 1em;
+                min-width: 1em;
+                border-top: 1px solid #ccc;
+                border-bottom: 1px solid #ccc;
 
                 &:hover {
                     background-color: #f2f2f2;
@@ -1785,6 +2109,14 @@ strong {
                 &:first-child {
                     .twst-hamilton-wizard-deck-column-inner {
                         border-color: #ccc;
+                        width: 100%;
+                    }
+                }
+
+                &:last-child {
+                    .twst-hamilton-wizard-deck-column-inner {
+                        border-right: 1px solid #ccc;
+                        width: 100%;
                     }
                 }
 
@@ -1821,6 +2153,457 @@ strong {
             height: 22em; 
             margin-bottom: 2em;
             z-index: 2;
+
+            .twst-hamilton-wizard-error-message {
+                position: absolute;
+                top: 40%;
+                width: 80%;
+                left: 10%;
+
+                .twst-message {
+                    box-shadow: 0 0 5em orange;
+                }
+            }
+
+            .twst-hamilton-wizard-deck-region {
+                position: absolute;
+                top: 0;
+                border: $twst-common-border;
+                border-right: 0;
+
+                &:after {
+                    @include after-clear;
+                }
+
+                &:last-child {
+                    border: $twst-common-border;   
+                }
+
+                .twst-hamilton-wizard-deck-region-inner {
+                    width:100%;
+                    height: 22em;
+                }
+            }
+
+            .twst-hamilton-wizard-carrier {
+                position: relative;
+                display: block;
+                float: left;
+                cursor: pointer;
+                background: rgba(255, 0, 0, 0.1);
+
+                &.twst-hamilton-wizard-carrier-5x96 {
+                    height: 22em;
+
+                    .twst-hamilton-wizard-carrier-inner {
+                        height: 22em;
+                    }
+                }
+
+                &:first-child {
+                    .twst-hamilton-wizard-carrier-inner {
+                        border-left: 0;
+                    }
+                }
+
+                &.twst-highlighted-carrier {
+                    background: rgba(255, 248, 206, 0.3);
+                    box-shadow: 0 0 1.5em #FF8D00;
+                    .twst-hamilton-wizard-carrier-scan-label {
+                        display: block;
+                    }
+
+                    &.twst-scanned-carrier.twst-hamilton-wizard-carrier-scanned-label {
+                        display: none;
+                    }
+                }
+
+                &.twst-scanned-carrier {
+                    background: rgba(219, 255, 236, 0.5);
+                    .twst-hamilton-wizard-carrier-scanned-label {
+                        display: block;
+
+                        .twst-hamilton-wizard-carrier-scanned-label-checkmark {
+                            display: inline-block;
+                            font-size: 1.5em;
+                            position: relative;
+                            top: 0.1em;
+                        }
+                    }
+                }
+
+                .twst-hamilton-wizard-carrier-hover-label {
+                    position: absolute;
+                    width: 100%;
+                    top: 0.1em;
+                    visibility: hidden;
+                    color: $twst-darker-green;
+                    text-align: center;
+                    opacity: 0.6;
+                }
+
+                .twst-hamilton-wizard-carrier-input {
+                    position: absolute;
+                    left: -10000px;
+                }
+
+                .twst-hamilton-wizard-carrier-scan-label, .twst-hamilton-wizard-carrier-scanned-label {
+                    position: absolute;
+                    display: none;
+                    bottom: 0;
+                    text-align: center;
+                    width: 100%;
+                    font-size: 0.7em;
+                    padding-bottom: 0.2em;
+                    color: #337251;
+                }
+
+                .twst-hamilton-wizard-carrier-scan-label {
+                    
+                }
+
+                .twst-hamilton-wizard-carrier-scanned-label {
+                    font-size: 0.65em;
+                }
+
+                &:hover {
+                    background: $twst-minty-green-bg;
+                    .twst-hamilton-wizard-carrier-hover-label {
+                        visibility: visible;
+                    }
+                }
+
+                .twst-hamilton-wizard-carrier-inner {
+                    width:100%;
+                    border-right: $twst-common-border;
+
+                    .twst-hamilton-wizard-plate {
+                        position: relative;
+                        border: 1px solid #000;
+                        padding: 0.2em;
+                        height: 4em;
+                        margin-bottom: 0.2em;
+                        background: rgba(200, 200, 200, 0.1);
+
+                        .twst-hamilton-wizard-plate-input {
+                            position: absolute;
+                            left: -10000px;
+                        }
+
+                        &.twst-optional-plate {
+                            background: rgba(195, 195, 195, 0.4);
+
+                            .twst-hamilton-wizard-plate-optional-label {
+                                display: block;
+                                text-align: center;
+                                padding-top: 1em;
+                                color: #aaa;
+                            }
+                        }
+
+                        &.twst-hamilton-unused-plate {
+                            background: #ddd;
+                            text-align: center;
+
+                            .twst-hamilton-wizard-plate-empty {
+                                color: #fff;
+                                line-height: 4em;
+                            }
+                        }
+
+                        &.twst-highlighted-plate {
+                            background: rgba(255, 248, 206, 0.7);
+                            box-shadow: 0 0 1.5em #FF8D00;
+
+                            .twst-hamilton-wizard-plate-scan-label {
+                                display: block;
+                            }
+
+                            &.twst-scanned-plate.twst-hamilton-wizard-plate-scanned-label {
+                                display: none;
+                            }
+                        }
+
+                        &.twst-scanned-plate {
+                            background: rgba(115, 241, 174, 0.5);
+
+                            .twst-hamilton-wizard-plate-scanned-label {
+                                display: block;
+                            }
+                        }
+
+                        &.twst-hamilton-wizard-plate-for-source {
+                            .twst-hamilton-wizard-plate-data-index-label {
+                                color: #b296ff;
+                                background-color: #e1d6ff;
+
+                                .twst-hamilton-wizard-plate-data-index-label-letter {
+                                    color: #412296;
+                                }
+                            }
+                        }
+
+                        &.twst-hamilton-wizard-plate-for-destination {
+                            .twst-hamilton-wizard-plate-data-index-label {
+                                color: #dd9454;
+                                background-color: #ffd4ad;
+
+                                .twst-hamilton-wizard-plate-data-index-label-letter {
+                                    color: #b75805;
+                                }
+                            }
+                        }
+
+                        .twst-hamilton-wizard-plate-optional {
+                            display: none;
+                        }
+
+                        .twst-hamilton-wizard-plate-data-index-label {
+                            font-size: 0.8em;
+                            position: absolute;
+                            right: 0;
+                            bottom: 0;
+                            padding: 0.2em;
+                            color: #bbb;
+                            background-color: #eee;
+
+                            .twst-hamilton-wizard-plate-data-index-label-letter {
+                                color: #777;
+                                font-weight: bold;
+                                padding-right: 0.1em;
+                            }
+                        }
+
+                        .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label {
+                            position: absolute;
+                            display: none;
+                            text-align: center;
+                            width: 100%;
+                            font-size: 0.7em;
+                            padding-bottom: 0.2em;
+                            color: #337251;
+                        }
+
+                        .twst-hamilton-wizard-plate-scan-label {
+                            span {
+                                display: inline-block;
+                                clear: left;
+                                font-weight: bold;
+                                font-size: 1.4em;
+                                padding-top: 0.4em;
+
+                                &.twst-hamilton-wizard-plate-scan-label-position-scanned-true {
+                                    color: #923BBB;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
+
+    .twst-hamilton-wizard-finish-run-controls {
+        border: 1px solid #98C7AF;
+        border-top: 0;
+        border-radius: 0 0 0.5em 0.5em;
+        padding: 1em;
+
+        .twst-hamilton-wizard-finish-run-details {
+            font-size: 1.2em;
+            line-height: 1.6em;
+
+            .twst-hamilton-wizard-finish-run-plates {
+                display: table;
+                width: 100%;
+                margin-top: 1em;
+                padding-top: 1em;
+                border-top: 1px solid #98C7AF;
+
+                > div {
+                    display: table-cell;
+                    width: 50%;
+                }
+            }
+
+            .twst-hamilton-wizard-finish-run-sources-list, .twst-hamilton-wizard-finish-run-destinations-list {
+                margin-left: 1em;
+                li {
+                    margin-top: 0.5em;
+                    margin-left: 1em;
+                    list-style-type: disc;
+                }
+            }
+        }
+
+        .twst-hamilton-wizard-finish-run-button {
+            position: relative;
+            display: block;
+            float: right;
+            font-size: 1.5em;
+        }
+
+        .twst-hamilton-wizard-error-message {
+            display: block;
+            position: absolute;
+            width: 80%;
+            top: 50%;
+            left: 10%;
+        }
+    }
+
+    .twst-hamilton-wizard-run-complete {
+        border: 1px solid #98C7AF;
+        border-top: 0;
+        border-radius: 0 0 0.5em 0.5em;
+        padding: 1em;
+        font-size: 1.2em;
+        line-height: 1.6em;
+
+        p {
+            margin-bottom: 1em;
+        }
+
+        .twst-button {
+            font-size: 0.8em;
+            line-height: 1em;
+            margin-right: 2em;
+        }
+    }
+}
+
+
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******* TRASH SAMPLES
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+/******************************************************************************************************************************************************/
+
+
+.twst-trash-samples-main {
+
+    .twst-trash-samples-main-content {
+        padding: 0 2em;
+
+        .twst-trash-samples-main-spec-id {
+            display: inline-block;
+            width: 12em;
+            margin-top: 0.5em;
+        }
+    }
+
+    .twst-trash-samples-by-transform-spec-main {
+    
+        .twst-trash-samples-by-transform-spec-controls {
+
+            h2 {
+                font-size:1.3em;
+                font-weight: bold;
+                margin-bottom: 0.5em;
+
+                .twst-trash-samples-by-transform-spec-plate-barcode-heading {
+                    color: $twst-darker-green;
+                }
+
+                .twst-return-to-spec-list {
+                    font-size: 0.8em;
+                    padding: 0.3em;
+                    position: relative;
+                    float: right;
+                    font-weight: normal;
+                }
+            }
+
+            .twst-trash-samples-spec-plate-list {
+                display: table;
+                width: 70%;
+                margin-top: 1em;
+            
+                .twst-trash-samples-spec-plate-list-sources, .twst-trash-samples-spec-plate-list-destinations {
+                    display: table-cell;
+                    width: 50%;
+
+                    ul {
+                        margin-left: 0.5em;
+
+                        li {
+                            margin-top: 0.5em;
+                            margin-left: 1em;
+                            list-style-type: disc;
+                            line-height: 2em;
+
+                            &:hover {
+                                background: $twst-minty-green;
+                            }
+                        }
+                    }
+                }
+
+                .twst-trash-samples-spec-plate-list-destinations {
+                    padding-left: 2em;
+                }
+
+                .twst-trash-plate-button {
+                    position: relative;
+                    font-size: 0.8em;
+                    padding: 0.2em;
+                    opacity: 0.5;
+                    float: right;
+                    line-height: 1em;
+                    top: 0.4em;
+                    margin-right: 0.5em;
+
+                    &:hover {
+                        opacity: 1;
+                    }
+                }
+
+            }
+
+            .twst-trash-samples-plate-main {
+                display: table;
+                width: 100%;
+
+                .twst-trash-samples-plate-left, .twst-trash-samples-plate-right {
+                    display: table-cell;
+                    vertical-align: top;
+                }
+
+                .twst-trash-samples-plate-right {
+                    padding: 2em 0 2em 1em;
+                    width: 90%;
+
+                    h3 {
+                        font-weight: bold;
+                        font-size: 1.2em;
+                        margin-bottom: 1em;
+                    }
+
+                    p {
+                        margin-bottom: 1em;
+                    }
+
+                    .twst-tselect-all-wells-btn {
+                        font-size: 0.8em;
+                        padding: 0.2em 0.4em;
+                        position: relative;
+                        float: right;
+                    }
+
+                    .twst-trash-selected-wells-btn {
+                        font-size: 1.3em;
+                        margin-top: 1.5em;
+                    }
+
+                    .twst-trash-samples-by-transform-spec-plate-message {
+                        margin-top: 1em;
+                    }
+                }
+            }
+        }
+    } 
 }
