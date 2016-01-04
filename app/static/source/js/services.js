@@ -19,6 +19,13 @@ app = angular.module('twist.app')
             ,SOURCE_TYPE_PLATE: 'plate'
             ,HAMILTON_OPERATION: 'hamilton_operation'
             ,HAMILTON_TRANSFER_TYPE: 'hamilton'
+            ,HAMILTON_CARRIER_BARCODE_PREFIX: 'CARR'
+            ,HAMILTON_CARRIER_POSITION_BARCODE_PREFIX: 'CARP'
+            ,HAMILTON_PLATE_BARCODE_PREFIX: 'PLT'
+            ,HAMILTON_ELEMENT_CARRIER: 'carrier'
+            ,HAMILTON_ELEMENT_CARRIER_POSITION: 'carrier-position'
+            ,HAMILTON_ELEMENT_PLATE: 'plate'
+
         };
     }]
 )
@@ -182,10 +189,8 @@ app = angular.module('twist.app')
                 }
                 return $http(saveAndExReq);
             }
-
             ,previewTransformation: function(sources, destinations, transfer_type_id, transfer_template_id ) {
                 // kieran
-
                 var preview = ApiRequestObj.getPost('transfer-preview');
                 preview.data = {
                     sources: sources,
@@ -193,8 +198,35 @@ app = angular.module('twist.app')
                     transfer_type_id: transfer_type_id,
                     transfer_template_id: transfer_template_id
                 }
-                console.log('AJAX now');
                 return $http(preview);
+            }
+
+            //hamilton calls
+            ,getHamiltonByBarcode: function (hamBarcode) {
+                var hamReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode);
+                return $http(hamReq);
+            }
+            ,getCarrierByBarcode: function (carrierBarcode, hamBarcode) {
+                var carrierReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode + '/carriers/' + carrierBarcode);
+                return $http(carrierReq);
+            }
+            ,confirmPlateReadyForTransform: function (plateBarcode, transformTypeId) {
+                var plateReq = ApiRequestObj.getGet('rest-ham/hamilton-plates/' + plateBarcode + '/transform/' + transformTypeId);
+                return $http(plateReq);
+            }
+            ,processHamiltonSources: function (plateBarcodes, transformTypeId) {
+                var processReq = ApiRequestObj.getPost('rest-ham/hamilton-plates/transform/' + transformTypeId);
+                processReq.data = {
+                    plateBarcodes: plateBarcodes
+                }
+                return $http(processReq);
+            }
+            ,trashSamples: function (sampleIds) {
+                var trashReq = ApiRequestObj.getPost('rest-ham/trash-samples');
+                trashReq.data = {
+                    sampleIds: sampleIds
+                }
+                return $http(trashReq);
             }
 
         };
@@ -247,6 +279,18 @@ app = angular.module('twist.app')
                 var d = new Date(dateString);
                 return d.toLocaleString();
             }
+            ,addLeadingZero: function (number, finalLength) {
+
+                if (finalLength == null) {
+                    finalLength = 2;
+                }
+
+                numberString = number + '';
+                while (numberString.length < finalLength) {
+                    numberString = '0' + number;
+                }
+                return numberString;
+            }
         }
     }]
 )
@@ -278,6 +322,22 @@ app = angular.module('twist.app')
                     for (var i=0; i< resp.data.length ;i++) {
                         if (resp.data[i].toLowerCase().indexOf(queryText) != -1) {
                             goodData.push(resp.data[i]);
+                        }
+                    }
+                    return goodData;
+                });
+            }
+            ,getTransformSpecIds: function (queryText) {
+                return Api.getTransformSpecs(queryText).then(function (resp) {
+                    queryText = queryText.toLowerCase();
+
+                    var goodData = [];
+                    console.log(queryText)
+                    console.log(resp);
+                    for (var i=0; i< resp.data.data.length ;i++) {
+                        var specId = resp.data.data[i].spec_id + '';
+                        if (specId.toLowerCase().indexOf(queryText) != -1) {
+                            goodData.push(specId);
                         }
                     }
                     return goodData;
@@ -966,7 +1026,9 @@ app = angular.module('twist.app')
                     delete plate.details.parentPlates;
                     delete plate.details.parentToThisTaskName;
                     delete plate.details.thisToChildTaskName
-                    delete plate.details.plateDetails.dateCreatedFormatted;;
+                    if (plate.details.plateDetails) {
+                        delete plate.details.plateDetails.dateCreatedFormatted;
+                    }
                     delete plate.details.success;
                     delete plate.items;
                     delete plate.updating;

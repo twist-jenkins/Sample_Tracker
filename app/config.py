@@ -12,7 +12,7 @@ class Config(object):
     SECRET_KEY = 'secret key, hi scott'
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb"
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
-    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
+    #SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
     SQLALCHEMY_ECHO = False
 
@@ -27,7 +27,7 @@ class Config(object):
 class ProdConfig(Config):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb" #"postgresql://twister:Of2dAd8cir5Y@10.10.21.42/twistdb_prod"
     SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
-    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
+    #SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
 
 class StagingConfig(Config):
@@ -44,8 +44,8 @@ class StagingConfig(Config):
 
 class DevConfig(Config):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
-    #SQLALCHEMY_DATABASE_URI = "postgresql://synapp_test_user:iE24YYYw7f7MRaFgW9uHf@10.10.20.20/synapp_test"
-    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
+    SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack_user:Of2dAd8cir5Y@10.10.53.47/synapp_test"
+    #SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
 
     DEBUG = True
 
@@ -63,4 +63,4 @@ class LocalConfig(Config):
     DEBUG = True
     # WTF_CSRF_ENABLED = True
     SQLALCHEMY_DATABASE_URI = "postgresql://test:test@dev01.twistbioscience.com/test"
-    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
+    #SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'

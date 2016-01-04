@@ -1,0 +1,30 @@
+div(class="twst-hamilton-step")      
+    div(class="twst-hamilton-step-direction")
+        div(class="twst-bullet-number") 5
+        div(class="twst-hamilton-step-direction-text")
+            div(class="twst-hamilton-step-direction-heading") HAMILTON COMPLETION:
+                div(class="twst-spinner" ng-if="finishiningRun")
+            strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
+    div(class="twst-hamilton-wizard-finish-run-controls twst-hamilton-barcode-input-body")
+        div(ng-if="!savedSpecToFinish")
+            p ERROR: A transform spec with an id of {{savedSpecIdToFinish}} was not found
+        div(class="twst-hamilton-wizard-finish-run-details" ng-if="savedSpecToFinish")
+            button(class="twst-button twst-blue-button twst-hamilton-wizard-finish-run-button" ng-class="{'twst-disabled-button': !savedSpecToFinish}" ng-click="runFinished()") Run Finished
+            p Hamilton: 
+                strong {{savedSpecToFinish.data_json.details.hamilton.label}}
+            p Worklist generated on: 
+                strong {{getPrettySpecDate(savedSpecToFinish.date_created)}}
+            div(class="twst-hamilton-wizard-finish-run-plates")
+                div
+                    p
+                        strong Sources Plates ({{savedSpecToFinish.data_json.sources.length}}):
+                    ul(class="twst-hamilton-wizard-finish-run-sources-list")
+                        li(ng-repeat="source in savedSpecToFinish.data_json.sources")
+                            a(href="#/plate-details/{{source.details.id}}") {{source.details.id}}
+                div
+                    p
+                        strong Destinations Plates ({{savedSpecToFinish.data_json.destinations.length}}):
+                    ul(class="twst-hamilton-wizard-finish-run-destinations-list")
+                        li(ng-repeat="destination in savedSpecToFinish.data_json.destinations") {{destination.details.id}}
+        div(class="twst-hamilton-wizard-error-message" ng-if="scannedItemErrorMessage")
+                twst-message(message="scannedItemErrorMessage" visible-and-valid="scannedItemErrorMessageVisible" clear-parent-data="clearScannedItemErrorMessage")

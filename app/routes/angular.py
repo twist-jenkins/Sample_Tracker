@@ -752,3 +752,297 @@ def check_plates_are_new():
             status=200, \
             mimetype="application/json")
     return(resp)
+
+##################
+#### Hamailton operation endpoints
+##################
+
+hamiltons = {
+    "HAM04": {
+        "label": "Jupiter 2 - STAR Plus"
+        ,"type": "Star Plus"
+        ,"barcode": "HAM04"
+        ,"trackCount": 68
+        ,"deckRegions": {
+            "left side": {
+                "trackWidth": 30
+                ,"startTrack": 1
+            }
+            ,"middle partition": {
+                "trackWidth": 12
+                ,"startTrack": 31
+            }
+            ,"right side": {
+                "trackWidth": 24
+                ,"startTrack": 43
+            }
+        }
+    }
+    ,"HAM01": {
+        "label": "Galactica - STAR"
+        ,"type": "Star Plus"
+        ,"barcode": "HAM01"
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+    ,"HAM0Z": {
+        "label": "Enterprise - STAR"
+        ,"type": "Star"
+        ,"barcode": "HAM0X"
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+    ,"HAM0Y": {
+        "label": "Millenium Falcon - STAR"
+        ,"type": "Star"
+        ,"barcode": "HAM0Y"
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+}
+
+carriers = {
+    "CARR0001" : {
+        "positions": {
+            "CARR0001-01" : {
+                "index": 1
+            }
+            ,"CARR0001-02" : {
+                "index": 2
+            }
+            ,"CARR0001-03" : {
+                "index": 3
+            }
+            ,"CARR0001-04" : {
+                "index": 4
+            }
+            ,"CARR0001-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0002" : {
+        "positions": {
+            "CARR0002-01" : {
+                "index": 1
+            }
+            ,"CARR0002-02" : {
+                "index": 2
+            }
+            ,"CARR0002-03" : {
+                "index": 3
+            }
+            ,"CARR0002-04" : {
+                "index": 4
+            }
+            ,"CARR0002-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0003" : {
+        "positions": {
+            "CARR0003-01" : {
+                "index": 1
+            }
+            ,"CARR0003-02" : {
+                "index": 2
+            }
+            ,"CARR0003-03" : {
+                "index": 3
+            }
+            ,"CARR0003-04" : {
+                "index": 4
+            }
+            ,"CARR0003-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0004" : {
+        "positions": {
+            "CARR0004-01" : {
+                "index": 1
+            }
+            ,"CARR0004-02" : {
+                "index": 2
+            }
+            ,"CARR0004-03" : {
+                "index": 3
+            }
+            ,"CARR0004-04" : {
+                "index": 4
+            }
+            ,"CARR0004-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0005" : {
+        "positions": {
+            "CARR0005-01" : {
+                "index": 1
+            }
+            ,"CARR0005-02" : {
+                "index": 2
+            }
+            ,"CARR0005-03" : {
+                "index": 3
+            }
+            ,"CARR0005-04" : {
+                "index": 4
+            }
+            ,"CARR0005-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0006" : {
+        "positions": {
+            "CARR0006-01" : {
+                "index": 1
+            }
+            ,"CARR0006-02" : {
+                "index": 2
+            }
+            ,"CARR0006-03" : {
+                "index": 3
+            }
+            ,"CARR0006-04" : {
+                "index": 4
+            }
+            ,"CARR0006-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0007" : {
+        "positions": {
+            "CARR0007-01" : {
+                "index": 1
+            }
+            ,"CARR0007-02" : {
+                "index": 2
+            }
+            ,"CARR0007-03" : {
+                "index": 3
+            }
+            ,"CARR0007-04" : {
+                "index": 4
+            }
+            ,"CARR0007-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0008" : {
+        "positions": {
+            "CARR0008-01" : {
+                "index": 1
+            }
+            ,"CARR0008-02" : {
+                "index": 2
+            }
+            ,"CARR0008-03" : {
+                "index": 3
+            }
+            ,"CARR0008-04" : {
+                "index": 4
+            }
+            ,"CARR0008-05" : {
+                "index": 5
+            }
+
+        }
+    }   
+}
+
+
+
+def get_hamilton_by_barcode(hamilton_barcode):
+    
+    if hamilton_barcode in hamiltons:
+        respData = hamiltons[hamilton_barcode] 
+    else:
+        errmsg = "There is no Hamilton with the barcode: [%s]"
+        return error_response(404, errmsg % hamilton_barcode)
+
+    
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp) 
+
+def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
+
+    if carrier_barcode in carriers:
+        respData = carriers[carrier_barcode] 
+    else:
+        errmsg = "There is no carrier with the barcode: [%s]"
+        return error_response(404, errmsg % carrier_barcode)
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
+def get_plate_ready_for_step(plate_barcode, transform_type_id):
+
+    if plate_barcode:
+        respData = True
+    else:
+        errmsg = "This plate is not ready for transform type [%s]"
+        return error_response(404, errmsg % transform_type_id)
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
+def process_hamilton_sources(transform_type_id):
+
+    data = request.json
+    plateBarcodes = data["plateBarcodes"]
+
+    respData = {
+        "required_destination_plate_count": 3
+    }
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
+def trash_samples():
+
+    data = request.json
+    sampleIds = data["sampleIds"]
+
+    respData = {
+        "all_trashed": True
+    }
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
