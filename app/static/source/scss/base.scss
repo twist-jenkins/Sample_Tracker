@@ -1067,6 +1067,8 @@ strong {
     }
 
     .twst-record-step-hamilton-wizard {
+        position: relative;
+
         .twst-record-step-start-hamilton-button {
             font-size: 1.2em;
             margin-top: 1em;
@@ -1877,6 +1879,43 @@ strong {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 
+.twst-hamilton-wizard-thumbs-up-medallion {
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    text-align: center;
+    height: 100%;
+    left: 0px;
+    top: 0px;
+    @include transition(opacity .2s ease);
+    overflow: hidden;
+
+    &.twst-hamilton-wizard-thumbs-up-transparent {
+        opacity: 0; 
+    }
+
+    &.twst-hamilton-wizard-thumbs-up-medallion-rise {
+        .twst-hamilton-wizard-thumbs-up-medallion-inner {
+            top: 0;
+        } 
+    }
+
+    .twst-hamilton-wizard-thumbs-up-medallion-inner {
+        display: table;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        top: 100%;
+        @include transition(top .2s ease);
+
+        twst-thumb-validation-icon {
+            position: relative;
+            display: table-cell;
+            vertical-align: middle;
+            font-size: 6em;
+        }
+    }
+}
 
 .twst-hamilton-select-main {
     .twst-hamilton-barcode-inputs {
@@ -2550,7 +2589,7 @@ strong {
 
                     .twst-tselect-all-wells-btn {
                         font-size: 0.8em;
-                        padding: 0.2em;
+                        padding: 0.2em 0.4em;
                         position: relative;
                         float: right;
                     }

@@ -323,6 +323,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.selectedHamilton = hamilton;
         }
 
+        $scope.hamiltonThumbsUp = [];
+        $scope.now = new Date();
+
+        $scope.flashHamiltonThumbsUp = function () {
+            $scope.hamiltonThumbsUp.push({id: $scope.now.toString(), index: $scope.hamiltonThumbsUp.length});
+        };
+
+        $scope.finishHamiltonThumbsUpFade = function (thumbsUp) {
+            $scope.hamiltonThumbsUp.splice(thumbsUp.index, 1);
+        }
+
     }]
 )
 
@@ -336,6 +347,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.loadingHamilton = true;
                     var apiCall = Api.getHamiltonByBarcode(barcode).success(function (data) {
                         $scope.loadingHamilton = false;
+                        $scope.flashHamiltonThumbsUp();
                         $scope.setSelectedHamilton(data);
                         $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
                             hamilton_info: $scope.selectedHamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedHamilton.label))
@@ -582,6 +594,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         Api.getCarrierByBarcode($scope.highlightedCarrier.barcode, $scope.selectedHamilton.barcode).success(function (data) {
                             $scope.loadingCarrier = false;
                             $scope.clearScannedItemErrorMessage();
+                            $scope.flashHamiltonThumbsUp();
                             $scope.highlightedCarrier.positions = data.positions;
                             $scope.findNextCarrierForScan();
                         }).error(function (error) {
@@ -655,6 +668,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                                 Api.confirmPlateReadyForTransform($scope.highlightedPlate.barcode, $scope.transformSpec.details.transfer_type_id).success(function (data) {
                                     $scope.confirmingPlate = false;
                                     $scope.clearScannedItemErrorMessage();
+                                    $scope.flashHamiltonThumbsUp();
                                     $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
                                 }).error(function (error) {
                                     $scope.clearScannedItemErrorMessage();
@@ -674,6 +688,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                                         /* plate is new */
                                         $scope.confirmingPlate = false;
                                         $scope.clearScannedItemErrorMessage();
+                                        $scope.flashHamiltonThumbsUp();
                                         $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
                                     }
                                 }).error(function (data) {
@@ -695,6 +710,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                                 /* then we're ready for the plate barcode */
                                 $scope.highlightedPlate.positionScanned = true;
                                 $scope.highlightedPlate.barcode = null;
+                                $scope.flashHamiltonThumbsUp();
                                 $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_PLATE);
                             } else {
                                 /* right carrier but prompt operator to scan correct position barcode */
@@ -706,7 +722,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                             /* scanned barcode is not a position on this carrier */
                             delete $scope.highlightedPlate.positionScanned;
                             $scope.showScannedItemErrorMessage('<strong>Invalid position barcode:</strong> Please scan carrier ' + $scope.highlightedPlate.carrier.index + ' position ' + $scope.highlightedPlate.localIndex);
-
                             $scope.highlightedPlate.barcode = null;
                         }
                     }, 200);
@@ -927,7 +942,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.trashSamples = function (transformSpecId) {
-
+            $state.go('root.trash_samples.by_transform_spec', {
+                spec_id: transformSpecId
+            });
         }
 
     }]
