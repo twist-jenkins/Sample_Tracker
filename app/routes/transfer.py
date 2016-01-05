@@ -150,6 +150,12 @@ def filter_transform( transfer_template_id, sources, dests ):
             })
     return rows
 
+def sample_data_determined_transform(transfer_template_id, sources, dests):
+    rows = []
+    # TO DO: return rows based on transfer_template_id
+    if transfer_template_id == 25:
+        rows = []
+    return rows
 
 def preview():
     assert request.method == 'POST'
@@ -162,6 +168,8 @@ def preview():
 
         xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
         
+        response_commands = []
+
         if request.json['transfer_template_id'] == 2:
             # identity function
             dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
@@ -181,6 +189,12 @@ def preview():
 
         elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+
+        elif request.json['transfer_template_id'] == 25:
+            # rebatching for transformation
+            rows = sample_data_determined_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+            # TO DO: Analyze plates to create resistance grouped destination plates
+            response_commands.append({"type": "SET_DESTINATIONS", "data": [{"type": "SPTT_0006", "title": "title"},{"type": "SPTT_0006", "title": "title"},{"type": "SPTT_0006", "title": "title"},{"type": "SPTT_0006", "title": "title"}]});
 
         else:
             if request.json['transfer_template_id'] in (1,2):
@@ -242,7 +256,8 @@ def preview():
     else:
         return Response( response=json.dumps({'success': True,
                                               'message': '',
-                                              'data': rows}),
+                                              'data': rows,
+                                              'responseCommands': response_commands}),
                          status=200,
                          mimetype="application/json")
 
