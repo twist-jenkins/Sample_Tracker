@@ -198,15 +198,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.Constants = Constants;
 
-        $scope.selectTransferTemplateType = function (which) {
+        $scope.selectTransferTemplateType = function (which, skipGo) {
             if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep()) {
                 return false;
             } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
                 return false;
             } 
-            $state.go('root.record_transform.step_type_selected.tab_selected', {
-                selected_tab: which
-            });
+            if (!skipGo) {
+                $state.go('root.record_transform.step_type_selected.tab_selected', {
+                    selected_tab: which
+                });
+            }
         };
 
         $scope.setTransferTemplate = function (which) {
@@ -232,8 +234,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('tabSelectedController', ['$scope', '$state', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
-    function ($scope, $state, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
+.controller('tabSelectedController', ['$scope', '$state', '$stateParams', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, $stateParams, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
 
         $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
 
@@ -334,6 +336,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.hamiltonThumbsUp.splice(thumbsUp.index, 1);
         }
 
+        $scope.selected_tab = $stateParams.selected_tab;
+        $scope.setTransferTemplate($scope.selected_tab);
     }]
 )
 
