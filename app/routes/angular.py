@@ -782,6 +782,7 @@ hamiltons = {
         "label": "Galactica - STAR"
         ,"type": "Star Plus"
         ,"barcode": "HAM01"
+        ,"trackCount": 54
         ,"deckRegions": {
             "main": {
                 "trackWidth": 54
@@ -789,10 +790,11 @@ hamiltons = {
             }
         }
     }
-    ,"HAM0Z": {
+    ,"HAM0X": {
         "label": "Enterprise - STAR"
         ,"type": "Star"
         ,"barcode": "HAM0X"
+        ,"trackCount": 54
         ,"deckRegions": {
             "main": {
                 "trackWidth": 54
@@ -804,6 +806,7 @@ hamiltons = {
         "label": "Millenium Falcon - STAR"
         ,"type": "Star"
         ,"barcode": "HAM0Y"
+        ,"trackCount": 54
         ,"deckRegions": {
             "main": {
                 "trackWidth": 54
