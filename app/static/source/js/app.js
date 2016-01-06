@@ -588,14 +588,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.finishCarrierScan = function () {
             $scope.highlightedCarrier = null;
 
-            for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
-                var thisCarrier = $scope.hamiltonDataObj.allCarriers[i];
-                for (var j=0; j<thisCarrier.plates.length; j++) {
-                    var thisPlate = thisCarrier.plates[j];
-                    if (thisPlate.plateFor == Constants.PLATE_SOURCE && !thisPlate.unused) {
-                        $scope.sourcePlatesNeedingScanCount++;
-                    }
-                    
+            for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length;i++) {
+                var thisPlate = $scope.hamiltonDataObj.allSourcePlates[i];
+                if (!thisPlate.unused) {
+                    $scope.sourcePlatesNeedingScanCount++;
                 }
             } 
 
@@ -793,11 +789,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.skipCurrentCarrierScan = function () {
             $scope.highlightedCarrier.scanSkipped = true;
             for (var j=0; j<$scope.highlightedCarrier.plates.length; j++) {
-                var thisPlate = $scope.highlightedCarrier.plates[j];
-                if (thisPlate.plateFor == 'source') {
-                    thisPlate.unused = true;
-                } 
-                
+                $scope.highlightedCarrier.plates[j].unused = true;
             }
             $scope.findNextCarrierForScan();
         }
