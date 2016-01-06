@@ -25,7 +25,8 @@ app = angular.module('twist.app')
             ,HAMILTON_ELEMENT_CARRIER: 'carrier'
             ,HAMILTON_ELEMENT_CARRIER_POSITION: 'carrier-position'
             ,HAMILTON_ELEMENT_PLATE: 'plate'
-
+            ,SHIPPING_TUBES_CARRIER_TYPE: 'SHIPPING_TUBES_CARRIER'
+            ,SHIPPING_TUBES_PLATE_TYPE: 'SHIPPING_TUBES_PLATE'
         };
     }]
 )

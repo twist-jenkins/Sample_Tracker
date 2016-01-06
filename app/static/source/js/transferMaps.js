@@ -1,7 +1,7 @@
 app = angular.module('twist.app')
 
-.factory('Maps', [
-    function () {
+.factory('Maps', ['Constants', 
+    function (Constants) {
         return {
             transferTemplates: {
                 1: {  // keyed to sample_transfer_template_id in the database
@@ -1364,9 +1364,9 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 22
                                         ,index: 2
-                                        ,type: 'SHIPPING_TUBES_CARRIER'
+                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
                                         ,plates: [
-                                            {plateFor: 'destination', type: 'SHIPPING_TUBES_PLATE', localIndex: 1, dataIndex: 1}
+                                            {plateFor: 'destination', type: Constants.SHIPPING_TUBES_PLATE_TYPE, localIndex: 1, dataIndex: 1}
                                         ]
                                     }
                                 ]
@@ -1390,9 +1390,9 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 39
                                         ,index: 2
-                                        ,type: 'SHIPPING_TUBES_CARRIER'
+                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
                                         ,plates: [
-                                            {plateFor: 'destination', type: 'SHIPPING_TUBES_PLATE', localIndex: 1, dataIndex: 1}
+                                            {plateFor: 'destination', type: Constants.SHIPPING_TUBES_PLATE_TYPE, localIndex: 1, dataIndex: 1}
                                         ]
                                     }
                                 ]
