@@ -1079,17 +1079,101 @@ app = angular.module('twist.app')
                     }
                 }
                 ,28: {  // keyed to sample_transfer_template_id in the database
-                    description: 'Hitpicking for shipping'
+                    description: 'Hitpicking for shipping in plates'
                     ,type: 'hamilton'
                     ,source: {
-                        plateCount: 32
+                        plateCount: 5
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 4
+                        plateCount: 10
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
+                        'HAM04': { // Jupiter 2
+                            'left side': {
+                                carriers: [
+                                    {
+                                        startTrack: 13
+                                        ,index: 1
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 19
+                                        ,index: 2
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'destination', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 25
+                                        ,index: 3
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'destination', localIndex: 5, dataIndex: 10, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 9, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 8, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 7, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 6, optional: true}
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        'HAM01': { // Galactica
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 20
+                                        ,index: 1
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 26
+                                        ,index: 2
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'destination', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 32
+                                        ,index: 3
+                                        ,type: '5x96'
+                                        ,plates: [
+                                            {plateFor: 'destination', localIndex: 5, dataIndex: 10, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 4, dataIndex: 9, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 8, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 2, dataIndex: 7, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 6, optional: true}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
                         
                     }
                 }
@@ -1141,7 +1225,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': {
+                        'HAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1149,10 +1233,10 @@ app = angular.module('twist.app')
                                         ,index: 1
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 5}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4}
-                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 3}
-                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2, optional: true}
                                             ,{plateFor: 'source', localIndex: 1, dataIndex: 1}
                                         ]
                                     }
@@ -1161,11 +1245,11 @@ app = angular.module('twist.app')
                                         ,index: 2
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 10}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 9}
-                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 8}
-                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 7}
-                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 6}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 10, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 9, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 8, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 7, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 6, optional: true}
                                         ]
                                     }
                                     ,{
@@ -1173,11 +1257,11 @@ app = angular.module('twist.app')
                                         ,index: 3
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 15}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 14}
-                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 13}
-                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 12}
-                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 11}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 15, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 14, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 13, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 12, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 11, optional: true}
                                         ]
                                     }
                                     ,{
@@ -1185,11 +1269,11 @@ app = angular.module('twist.app')
                                         ,index: 4
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 20}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 19}
-                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 18}
-                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 17}
-                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 16}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 20, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 19, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 18, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 17, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 16, optional: true}
                                         ]
                                     }
                                     ,{
@@ -1197,11 +1281,11 @@ app = angular.module('twist.app')
                                         ,index: 5
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 25}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 24}
-                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 23}
-                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 22}
-                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 21}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 25, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 24, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 23, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 22, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 21, optional: true}
                                         ]
                                     }
                                 ]
@@ -1213,11 +1297,11 @@ app = angular.module('twist.app')
                                         ,index: 6
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 30}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 29}
-                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 28}
-                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 27}
-                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 26}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 30, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 29, optional: true}
+                                            ,{plateFor: 'source', localIndex: 3, dataIndex: 28, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 27, optional: true}
+                                            ,{plateFor: 'source', localIndex: 1, dataIndex: 26, optional: true}
                                         ]
                                     }
                                     ,{
@@ -1225,8 +1309,8 @@ app = angular.module('twist.app')
                                         ,index: 7
                                         ,type: '5x96'
                                         ,plates: [
-                                            {plateFor: 'source', localIndex: 5, dataIndex: 32}
-                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 31}
+                                            {plateFor: 'source', localIndex: 5, dataIndex: 32, optional: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 31, optional: true}
                                             ,{unused: true, localIndex: 3}
                                             ,{unused: true, localIndex: 2}
                                             ,{unused: true, localIndex: 1}

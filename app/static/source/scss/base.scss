@@ -2081,78 +2081,78 @@ strong {
         font-size: 0.96em;
         margin-top: 0.3em;
 
-        .twst-hamilton-wizard-deck-columns {
-            display: block;
-            width: 100%;
-            position: absolute;
-            z-index: 1;
-            margin: 0 auto;
-
-            .twst-hamilton-wizard-deck-column {
-                display: block;
-                float: left;
-                max-width: 1em;
-                min-width: 1em;
-                border-top: 1px solid #ccc;
-                border-bottom: 1px solid #ccc;
-
-                &:hover {
-                    background-color: #f2f2f2;
-
-                    .twst-hamilton-wizard-deck-column-inner {
-                        .twst-hamilton-wizard-deck-column-hover-label {
-                            visibility: visible;
-                        }
-                    }
-                }
-
-                &:first-child {
-                    .twst-hamilton-wizard-deck-column-inner {
-                        border-color: #ccc;
-                        width: 100%;
-                    }
-                }
-
-                &:last-child {
-                    .twst-hamilton-wizard-deck-column-inner {
-                        border-right: 1px solid #ccc;
-                        width: 100%;
-                    }
-                }
-
-                .twst-hamilton-wizard-deck-column-inner {
-                    display: block;
-                    position: relative;
-                    width: 100%;
-                    height: 22em;
-                    border-left: 1px solid #eee;
-
-                    .twst-hamilton-wizard-deck-column-hover-label {
-                        visibility: hidden;
-                        position: absolute;
-                        top: -1em;
-                        left: -1.2em;
-                        width: 8em;
-                        font-size: 0.75em;
-                        color: #ddd;
-                    }
-
-                    .twst-hamilton-wizard-deck-column-number {
-                        position: absolute;
-                        bottom: -1.1em;
-                        color: #ccc;
-                        font-size: 0.9em;
-                        text-align: center;
-                    }
-                }
-            }
-        }
-
         .twst-hamilton-wizard-deck-contents {
             position: relative;
             height: 22em; 
-            margin-bottom: 2em;
+            margin: 0 auto 2em auto;
             z-index: 2;
+
+            .twst-hamilton-wizard-deck-columns {
+                display: block;
+                width: 100%;
+                position: absolute;
+                z-index: 1;
+                margin: 0 auto;
+
+                .twst-hamilton-wizard-deck-column {
+                    display: block;
+                    float: left;
+                    max-width: 1em;
+                    min-width: 1em;
+                    border-top: 1px solid #ccc;
+                    border-bottom: 1px solid #ccc;
+
+                    &:hover {
+                        background-color: #f2f2f2;
+
+                        .twst-hamilton-wizard-deck-column-inner {
+                            .twst-hamilton-wizard-deck-column-hover-label {
+                                visibility: visible;
+                            }
+                        }
+                    }
+
+                    &:first-child {
+                        .twst-hamilton-wizard-deck-column-inner {
+                            border-color: #ccc;
+                            width: 100%;
+                        }
+                    }
+
+                    &:last-child {
+                        .twst-hamilton-wizard-deck-column-inner {
+                            border-right: 1px solid #ccc;
+                            width: 100%;
+                        }
+                    }
+
+                    .twst-hamilton-wizard-deck-column-inner {
+                        display: block;
+                        position: relative;
+                        width: 100%;
+                        height: 22em;
+                        border-left: 1px solid #eee;
+
+                        .twst-hamilton-wizard-deck-column-hover-label {
+                            visibility: hidden;
+                            position: absolute;
+                            top: -1em;
+                            left: -1.2em;
+                            width: 8em;
+                            font-size: 0.75em;
+                            color: #ddd;
+                        }
+
+                        .twst-hamilton-wizard-deck-column-number {
+                            position: absolute;
+                            bottom: -1.1em;
+                            color: #ccc;
+                            font-size: 0.9em;
+                            text-align: center;
+                        }
+                    }
+                }
+            }
 
             .twst-hamilton-wizard-error-message {
                 position: absolute;
@@ -2170,9 +2170,14 @@ strong {
                 top: 0;
                 border: $twst-common-border;
                 border-right: 0;
+                z-index: 2;
 
                 &:after {
                     @include after-clear;
+                }
+
+                &:first-child {
+                    border-right: $twst-common-border;   
                 }
 
                 &:last-child {
@@ -2180,15 +2185,16 @@ strong {
                 }
 
                 .twst-hamilton-wizard-deck-region-inner {
+                    position: relative;
                     width:100%;
                     height: 22em;
                 }
             }
 
             .twst-hamilton-wizard-carrier {
-                position: relative;
+                position: absolute;
                 display: block;
-                float: left;
+                top: 0;
                 cursor: pointer;
                 background: rgba(255, 0, 0, 0.1);
 
@@ -2207,7 +2213,7 @@ strong {
                 }
 
                 &.twst-highlighted-carrier {
-                    background: rgba(255, 248, 206, 0.3);
+                    background: rgba(255, 239, 150, 0.6);
                     box-shadow: 0 0 1.5em #FF8D00;
                     .twst-hamilton-wizard-carrier-scan-label {
                         display: block;
@@ -2219,7 +2225,7 @@ strong {
                 }
 
                 &.twst-scanned-carrier {
-                    background: rgba(219, 255, 236, 0.5);
+                    background: rgba(182, 239, 209, 0.4);
                     .twst-hamilton-wizard-carrier-scanned-label {
                         display: block;
 
@@ -2291,18 +2297,20 @@ strong {
                         }
 
                         &.twst-optional-plate {
-                            background: rgba(195, 195, 195, 0.4);
+                            background: rgba(195, 195, 195, 0.3);
 
                             .twst-hamilton-wizard-plate-optional-label {
                                 display: block;
                                 text-align: center;
-                                padding-top: 1em;
-                                color: #aaa;
+                                padding-top: 1.8em;
+                                color: #f6f6f6;
+                                font-size: 0.7em;
+                                letter-spacing: 0.1em;
                             }
                         }
 
                         &.twst-hamilton-unused-plate {
-                            background: #ddd;
+                            background: rgba(221, 221, 221, 0.8);
                             text-align: center;
 
                             .twst-hamilton-wizard-plate-empty {
@@ -2322,6 +2330,13 @@ strong {
                             &.twst-scanned-plate.twst-hamilton-wizard-plate-scanned-label {
                                 display: none;
                             }
+
+                            &.twst-optional-plate {
+                                background: transparent;
+                                .twst-hamilton-wizard-plate-optional-label {
+                                    display: none;
+                                }
+                            }
                         }
 
                         &.twst-scanned-plate {
@@ -2329,6 +2344,12 @@ strong {
 
                             .twst-hamilton-wizard-plate-scanned-label {
                                 display: block;
+                            }
+
+                            &.twst-optional-plate {
+                                .twst-hamilton-wizard-plate-optional-label {
+                                    display: none;
+                                }
                             }
                         }
 
@@ -2359,7 +2380,7 @@ strong {
                         }
 
                         .twst-hamilton-wizard-plate-data-index-label {
-                            font-size: 0.8em;
+                            font-size: 0.9em;
                             position: absolute;
                             right: 0;
                             bottom: 0;
