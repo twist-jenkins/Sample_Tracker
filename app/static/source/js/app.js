@@ -399,6 +399,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.hamiltonColumns = $scope.hamiltonColumns.slice(0, $scope.selectedHamilton.trackCount);
             $timeout(function () {
                 if (!$scope.showFinishRunControls) {
+                    $scope.highlightedPlate = null;
                     $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.carrier_scan');
                 }
             }, 0);
@@ -787,11 +788,48 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }
 
         $scope.skipCurrentCarrierScan = function () {
-            $scope.highlightedCarrier.scanSkipped = true;
+
+            var whichKind = '';
+
             for (var j=0; j<$scope.highlightedCarrier.plates.length; j++) {
-                $scope.highlightedCarrier.plates[j].unused = true;
+                if (whichKind = $scope.highlightedCarrier.plates[j].plateFor) {
+                    break;
+                }
             }
-            $scope.findNextCarrierForScan();
+
+            if (whichKind != '') {
+
+                var scannedCarrierOfWhichKindCount = 0;
+                var carriersLeftOfWhichKindCount = 0;
+                /* we have to have at least 1 source and 1 destination carrier */
+                for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
+                    var carrier = $scope.hamiltonDataObj.allCarriers[i];
+                    // skip the current carrier
+                    if ($scope.highlightedCarrier.index != carrier.index) {
+                        if (carrier.plates[0].plateFor == whichKind) {
+                            if (carrier.barcode) {
+                                scannedCarrierOfWhichKindCount++;
+                            } else if (carrier.index > $scope.highlightedCarrier.index) {
+                                carriersLeftOfWhichKindCount++;
+                            }
+                        }
+                    }
+                }
+
+                if (!scannedCarrierOfWhichKindCount && !carriersLeftOfWhichKindCount) {
+                    $scope.showScannedItemErrorMessage('You must scan <strong>at least one ' + whichKind + ' carrier</strong>.');
+                    $scope.setHighlightedCarrier($scope.highlightedCarrier);
+                } else {
+                    $scope.highlightedCarrier.scanSkipped = true;
+                    for (var j=0; j<$scope.highlightedCarrier.plates.length; j++) {
+                        $scope.highlightedCarrier.plates[j].unused = true;
+                    }
+                    $scope.findNextCarrierForScan();
+                }
+
+            } else {
+                console.log('Highlighted carrier has no used plates.');
+            }
         }
     }]
 )
