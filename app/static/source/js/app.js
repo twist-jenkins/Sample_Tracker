@@ -565,13 +565,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var scannedCarrierCount = 0;
             for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
-                if (!carrier.barcode && !firstFound) {
+                if (!carrier.scanSkipped && !carrier.barcode && !firstFound) {
                     $scope.setHighlightedCarrier(carrier);
                     carrier.nextToScan = true;
                     firstFound = true;
                 } else {
                     carrier.nextToScan = false;
-                    if (carrier.barcode) {
+                    if (carrier.barcode || carrier.scanSkipped) {
                         scannedCarrierCount++;
                     }
                 }
@@ -579,10 +579,29 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.scannedCarrierCount = scannedCarrierCount;
             
             if ($scope.scannedCarrierCount == $scope.hamiltonDataObj.allCarriers.length) {
-                $scope.highlightedCarrier = null;
-                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.source_scan');
+                $scope.finishCarrierScan();
             }
         };
+
+        $scope.sourcePlatesNeedingScanCount = 0;
+
+        $scope.finishCarrierScan = function () {
+            $scope.highlightedCarrier = null;
+
+            for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
+                var thisCarrier = $scope.hamiltonDataObj.allCarriers[i];
+                for (var j=0; j<thisCarrier.plates.length; j++) {
+                    var thisPlate = thisCarrier.plates[j];
+                    if (thisPlate.plateFor == Constants.PLATE_SOURCE && !thisPlate.unused) {
+                        $scope.sourcePlatesNeedingScanCount++;
+                    }
+                    
+                }
+            } 
+
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.source_scan');
+        }
+
         $scope.scannedCarrierBarcode;
         var barcodeFinishedTimeout = null;
         $scope.carrierBarcodeScanned = function () {
@@ -626,7 +645,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.findNextPlateForScan = function (plateFor, positionOrPlate) {
             var firstFound = false;
             var scannedPlateCount = 0;
-            var whichPlateArray = (plateFor == 'source' ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
+            var whichPlateArray = (plateFor == Constants.PLATE_SOURCE ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
             for (var i=0; i<whichPlateArray.length;i++) {
                 var plate = whichPlateArray[i];
                 if (!plate.barcode && !firstFound && !plate.unused) {
@@ -766,8 +785,21 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
                 carrier.barcode = null;
+                carrier.scanSkipped = null;
                 $scope.findNextCarrierForScan();
             }
+        }
+
+        $scope.skipCurrentCarrierScan = function () {
+            $scope.highlightedCarrier.scanSkipped = true;
+            for (var j=0; j<$scope.highlightedCarrier.plates.length; j++) {
+                var thisPlate = $scope.highlightedCarrier.plates[j];
+                if (thisPlate.plateFor == 'source') {
+                    thisPlate.unused = true;
+                } 
+                
+            }
+            $scope.findNextCarrierForScan();
         }
     }]
 )

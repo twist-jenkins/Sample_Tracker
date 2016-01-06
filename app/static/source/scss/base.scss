@@ -2069,7 +2069,7 @@ strong {
             margin-top: 0.2em;
         }
 
-        .twst-hamilton-source-scan-complete-button {
+        .twst-hamilton-source-scan-complete-button, .twst-hamilton-carrier-scan-complete-button {
             position: absolute;
             top: 0.75em;
             margin-left: 3em;
@@ -2159,6 +2159,7 @@ strong {
                 top: 40%;
                 width: 80%;
                 left: 10%;
+                z-index: 3;
 
                 .twst-message {
                     box-shadow: 0 0 5em orange;
@@ -2198,11 +2199,20 @@ strong {
                 cursor: pointer;
                 background: rgba(255, 0, 0, 0.1);
 
-                &.twst-hamilton-wizard-carrier-5x96 {
+                &.twst-hamilton-wizard-carrier-L5AC {
                     height: 22em;
 
                     .twst-hamilton-wizard-carrier-inner {
                         height: 22em;
+                    }
+                }
+
+                &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                    height: 10em;
+                    top: 12em;
+
+                    .twst-hamilton-wizard-carrier-inner {
+                        height: 6em;
                     }
                 }
 
@@ -2291,6 +2301,10 @@ strong {
                         margin-bottom: 0.2em;
                         background: rgba(200, 200, 200, 0.1);
 
+                        &.twst-hamilton-wizard-plate-SHIPPING_TUBES_PLATE {
+                            height: 6em;
+                        }
+
                         .twst-hamilton-wizard-plate-input {
                             position: absolute;
                             left: -10000px;
@@ -2316,6 +2330,12 @@ strong {
                             .twst-hamilton-wizard-plate-empty {
                                 color: #fff;
                                 line-height: 4em;
+                            }
+
+                            &.twst-optional-plate {
+                                .twst-hamilton-wizard-plate-optional-label {
+                                    display: none;
+                                }
                             }
                         }
 
