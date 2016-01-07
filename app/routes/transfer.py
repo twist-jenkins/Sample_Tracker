@@ -146,12 +146,14 @@ def filter_transform( transfer_template_id, sources, dests ):
                           'source_sample_id':               well.sample_id,
                           'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
                           'destination_well_name':          dest_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   dest_type.number_clusters,
+                          'destination_plate_well_count':   dest_type.number_clusters
             })
     return rows
 
 def sample_data_determined_transform(transfer_template_id, sources, dests):
     assert transfer_template_id == 25
+
+    dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
 
     by_marker = defaultdict(list)
     for src in sources:
@@ -173,9 +175,9 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
             rows.append( {'source_plate_barcode':           barcode,
                           'source_well_name':               well.well_name,
                           'source_sample_id':               well.sample_id,
-                          'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
+                          'destination_plate_barcode':      "",
                           'destination_well_name':          dest_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   dest_type.number_clusters,
+                          'destination_plate_well_count':   dest_type.number_clusters
             })
 
     return rows
