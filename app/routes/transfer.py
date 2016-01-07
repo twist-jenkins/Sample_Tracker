@@ -151,10 +151,33 @@ def filter_transform( transfer_template_id, sources, dests ):
     return rows
 
 def sample_data_determined_transform(transfer_template_id, sources, dests):
-    rows = []
-    # TO DO: return rows based on transfer_template_id
-    if transfer_template_id == 25:
-        rows = []
+    assert transfer_template_id == 25
+
+    by_marker = defaultdict(list)
+    for src in sources:
+        barcode = src['details']['id']
+
+        for plate, well, cs in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
+                                                    .filter( SamplePlate.external_barcode == barcode ) \
+                                                    .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+                                                    .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ):
+            try:
+                marker = cs.parent_process.vector.resistance_marker
+            except:
+                marker = None
+            by_marker[ marker ].append( well )
+
+    # FIXME: dest_X is undefined and needs work
+    for marker in sorted( by_marker ):
+        for well in by_marker[ marker ]:
+            rows.append( {'source_plate_barcode':           barcode,
+                          'source_well_name':               well.well_name,
+                          'source_sample_id':               well.sample_id,
+                          'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
+                          'destination_well_name':          dest_type.get_well_name( dest_well ),
+                          'destination_plate_well_count':   dest_type.number_clusters,
+            })
+
     return rows
 
 def preview():
@@ -194,7 +217,10 @@ def preview():
             # rebatching for transformation
             rows = sample_data_determined_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
             # TO DO: Analyze plates to create resistance grouped destination plates
-            response_commands.append({"type": "SET_DESTINATIONS", "data": [{"type": "SPTT_0006", "title": "title"},{"type": "SPTT_0006", "title": "title"},{"type": "SPTT_0006", "title": "title"},{"type": "SPTT_0006", "title": "title"}]});
+            response_commands.append( {"type": "SET_DESTINATIONS", "data": [{"type": "SPTT_0006", "title": "title"},
+                                                                            {"type": "SPTT_0006", "title": "title"},
+                                                                            {"type": "SPTT_0006", "title": "title"},
+                                                                            {"type": "SPTT_0006", "title": "title"}]});
 
         else:
             if request.json['transfer_template_id'] in (1,2):
