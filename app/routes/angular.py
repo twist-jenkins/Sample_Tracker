@@ -1026,9 +1026,45 @@ def process_hamilton_sources(transform_type_id):
     data = request.json
     plateBarcodes = data["plateBarcodes"]
 
+    transform_type_id = int(transform_type_id);
+
     respData = {
-        "required_destination_plate_count": 3
+        "responseCommands": []
     }
+
+    if transform_type_id == 39: # hitpicking of miniprep
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+    elif transform_type_id == 48: # hitpicking of shipping into plates
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+    elif transform_type_id == 51: # hitpicking of shipping into tubes
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SHIPPING_TUBE_PLATE", "tube_barcode": "SHIPPING_TUBE_01"}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tube_barcode": "SHIPPING_TUBE_02"}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tube_barcode": "SHIPPING_TUBE_03"}
+                ]
+            }
+        );
 
     resp = Response(response=json.dumps(respData),
             status=200, \

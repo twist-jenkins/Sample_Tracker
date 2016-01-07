@@ -1,4 +1,4 @@
-div(class="twst-hamilton-wizard-main")
+div(class="twst-hamilton-wizard-main" ng-class="{'twst-hamilton-wizard-tube-destination-scan-mode': tubeDestinationsMode}")
     div(ng-if="selectedHamilton")
         div(class="twst-hamilton-wizard-visualizer-header")
             div(class="twst-hamilton-wizard-visualizer-header-left")
@@ -10,7 +10,7 @@ div(class="twst-hamilton-wizard-main")
                         div(class="twst-hamilton-wizard-deck-column-inner")
                             span(class="twst-hamilton-wizard-deck-column-hover-label") Track {{::(column.id + 1)}}
                             span(class="twst-hamilton-wizard-deck-column-number" ng-if="::((column.id + 1)%5 == 0 || (column.id + 1) == 1)") {{::(column.id + 1)}}
-                div(class="twst-hamilton-wizard-deck-region" ng-repeat="(key, value) in selectedHamilton.deckRegions" style="left: {{(value.startTrack - 1)}}em")
+                div(class="twst-hamilton-wizard-deck-region" ng-repeat="(key, value) in selectedHamilton.deckRegions" style="left: {{(value.startTrack - 1)}}em" ng-class="{'twst-hamilton-wizard-carrier-active-contents': highlightedPlate.carrier.selectedHamiltonDeckRegion === value}")
                     div(class="twst-hamilton-wizard-deck-region-inner" style="width: {{value.trackWidth}}em;")
                         div(class="twst-hamilton-wizard-carrier twst-hamilton-wizard-carrier-{{carrier.type}} twst-hamilton-wizard-carrier-{{carrier.index}}" ng-repeat="carrier in hamiltonDataObj.deckRegions[key].carriers" style="width: {{carriers[carrier.type].trackWidth}}em; left: {{carrier.startTrack - value.startTrack}}em;" ng-class="{'twst-highlighted-carrier': carrier.index == highlightedCarrier.index, 'twst-scanned-carrier': carrier.barcode}")
                             div(class="twst-hamilton-wizard-carrier-hover-label") {{carrier.barcode || 'Carrier ' + carrier.index}}
