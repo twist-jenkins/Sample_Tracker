@@ -8,3 +8,4 @@ div(class="twst-hamilton-step")
             div(class="twst-hamilton-step-direction-heading") SCAN CARRIERS:
                 div(class="twst-spinner" ng-if="loadingCarrier")
             strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
+            button(class="twst-button twst-blue-button twst-hamilton-carrier-scan-complete-button" ng-click="skipCurrentCarrierScan()") Skip Carrier {{highlightedCarrier.index}} Scan
