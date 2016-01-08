@@ -177,22 +177,23 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     for marker in sorted( by_marker ):
         new_group = {"id": marker_group_index, "marker_value" : marker, "rows": []}
         for well in by_marker[ marker ]:
-            new_group["rows"].append( {'source_plate_barcode':           barcode,
-                          'source_well_name':               well.well_name,
-                          'source_sample_id':               well.sample_id,
-                          'destination_plate_barcode':      "DEST_" + marker_group_index,
-                          'destination_well_name':          dest_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   dest_type.number_clusters
+            new_group["rows"].append( {
+                'source_plate_barcode': barcode,
+                'source_well_name': well.well_name,
+                'source_sample_id': well.sample_id
             })
         groups.append(new_group);
         marker_group_index += 1
 
-    return {"groups": groups}
+    return groups
 
 def preview():
     assert request.method == 'POST'
 
     print '@@ template_id:', request.json['transfer_template_id']
+
+    responseCommands = []
+    rows = []
 
     try:
         if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
@@ -218,14 +219,20 @@ def preview():
             rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
         elif request.json['transfer_template_id'] == 25:
-            rowsAndGroups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+            groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+
+            # to do: create the dest 
+
+            for group in groups:
+                logger.info("[[[[[[[[[[[[[[[[[[[[[[[[[ %s" % group["marker_value"]);
+                logger.info("+++++++++++++++++++++++++ %s" % len(group["rows"]));
+
+            '''
 
             rows = {
                 "rows": rowsAndGroups.rows
                 ,"responseCommands": []
             }
-
-
 
             rows["responseCommands"].append(
                 {
@@ -238,6 +245,7 @@ def preview():
                 }
             );
 
+            '''
         elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 
@@ -267,8 +275,6 @@ def preview():
 
             if not dest_plate_type:
                 raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
-
-            rows = []
 
             for src_idx, src in enumerate(request.json['sources']):
                 barcode = src['details']['id']
@@ -301,7 +307,8 @@ def preview():
     else:
         return Response( response=json.dumps({'success': True,
                                               'message': '',
-                                              'data': rows}),
+                                              'data': rows,
+                                              'responseCommands': responseCommands}),
                          status=200,
                          mimetype="application/json")
 
