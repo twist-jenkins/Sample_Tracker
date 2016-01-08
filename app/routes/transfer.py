@@ -170,17 +170,24 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
             by_marker[ marker ].append( well )
 
     # FIXME: dest_X is undefined and needs work
+    marker_group_index = 1
+
+    groups = []
+
     for marker in sorted( by_marker ):
+        new_group = {"id": marker_group_index, "marker_value" : marker, "rows": []}
         for well in by_marker[ marker ]:
-            rows.append( {'source_plate_barcode':           barcode,
+            new_group["rows"].append( {'source_plate_barcode':           barcode,
                           'source_well_name':               well.well_name,
                           'source_sample_id':               well.sample_id,
-                          'destination_plate_barcode':      "",
+                          'destination_plate_barcode':      "DEST_" + marker_group_index,
                           'destination_well_name':          dest_type.get_well_name( dest_well ),
                           'destination_plate_well_count':   dest_type.number_clusters
             })
+        groups.append(new_group);
+        marker_group_index += 1
 
-    return rows
+    return {"groups": groups}
 
 def preview():
     assert request.method == 'POST'
@@ -211,7 +218,25 @@ def preview():
             rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
         elif request.json['transfer_template_id'] == 25:
-            rows = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+            rowsAndGroups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+
+            rows = {
+                "rows": rowsAndGroups.rows
+                ,"responseCommands": []
+            }
+
+
+
+            rows["responseCommands"].append(
+                {
+                    "type": "SET_DESTINATIONS"
+                    ,"plates": [
+                        {"type": "SPTT_0006", "details": {"title": "GRP1"}}
+                        ,{"type": "SPTT_0006", "details": {"title": "GRP2"}}
+                        ,{"type": "SPTT_0006", "details": {"title": "GRP3"}}
+                    ]
+                }
+            );
 
         elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
