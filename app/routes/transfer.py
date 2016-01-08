@@ -193,8 +193,6 @@ def preview():
 
         xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
         
-        response_commands = []
-
         if request.json['transfer_template_id'] == 2:
             # identity function
             dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
@@ -212,17 +210,11 @@ def preview():
             # merge source plate(s) into single destination plate
             rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
+        elif request.json['transfer_template_id'] == 25:
+            rows = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+
         elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
-
-        elif request.json['transfer_template_id'] == 25:
-            # rebatching for transformation
-            rows = sample_data_determined_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
-            # TO DO: Analyze plates to create resistance grouped destination plates
-            response_commands.append( {"type": "SET_DESTINATIONS", "data": [{"type": "SPTT_0006", "title": "title"},
-                                                                            {"type": "SPTT_0006", "title": "title"},
-                                                                            {"type": "SPTT_0006", "title": "title"},
-                                                                            {"type": "SPTT_0006", "title": "title"}]});
 
         else:
             if request.json['transfer_template_id'] in (1,2):
@@ -284,8 +276,7 @@ def preview():
     else:
         return Response( response=json.dumps({'success': True,
                                               'message': '',
-                                              'data': rows,
-                                              'responseCommands': response_commands}),
+                                              'data': rows}),
                          status=200,
                          mimetype="application/json")
 

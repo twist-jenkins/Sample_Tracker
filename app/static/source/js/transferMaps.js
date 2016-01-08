@@ -1,7 +1,7 @@
 app = angular.module('twist.app')
 
-.factory('Maps', [
-    function () {
+.factory('Maps', ['Constants', 
+    function (Constants) {
         return {
             transferTemplates: {
                 1: {  // keyed to sample_transfer_template_id in the database
@@ -1342,7 +1342,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 10
+                        plateCount: 96
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
@@ -1364,9 +1364,104 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 22
                                         ,index: 2
-                                        ,type: 'SHIPPING_TUBES_CARRIER'
+                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
                                         ,plates: [
-                                            {plateFor: 'destination', type: 'SHIPPING_TUBES_PLATE', localIndex: 1, dataIndex: 1}
+                                            {plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 1, dataIndex: 1}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 2, dataIndex: 2}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 3, dataIndex: 3}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 4, dataIndex: 4}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 5, dataIndex: 5}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 6, dataIndex: 6}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 7, dataIndex: 7}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 8, dataIndex: 8}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 9, dataIndex: 9}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 10, dataIndex: 10}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 11, dataIndex: 11}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 12, dataIndex: 12}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 13, dataIndex: 13}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 14, dataIndex: 14}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 15, dataIndex: 15}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 16, dataIndex: 16}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 17, dataIndex: 17}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 18, dataIndex: 18}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 19, dataIndex: 19}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 20, dataIndex: 20}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 21, dataIndex: 21}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 22, dataIndex: 22}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 23, dataIndex: 23}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 24, dataIndex: 24}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 25, dataIndex: 25}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 26, dataIndex: 26}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 27, dataIndex: 27}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 28, dataIndex: 28}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 29, dataIndex: 29}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 30, dataIndex: 30}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 31, dataIndex: 31}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 32, dataIndex: 32}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 33, dataIndex: 33}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 34, dataIndex: 34}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 35, dataIndex: 35}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 36, dataIndex: 36}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 37, dataIndex: 37}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 38, dataIndex: 38}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 39, dataIndex: 39}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 40, dataIndex: 40}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 41, dataIndex: 41}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 42, dataIndex: 42}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 43, dataIndex: 43}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 44, dataIndex: 44}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 45, dataIndex: 45}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 46, dataIndex: 46}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 47, dataIndex: 47}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 48, dataIndex: 48}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 49, dataIndex: 49}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 50, dataIndex: 50}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 51, dataIndex: 51}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 52, dataIndex: 52}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 53, dataIndex: 53}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 54, dataIndex: 54}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 55, dataIndex: 55}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 56, dataIndex: 56}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 57, dataIndex: 57}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 58, dataIndex: 58}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 59, dataIndex: 59}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 60, dataIndex: 60}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 61, dataIndex: 61}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 62, dataIndex: 62}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 63, dataIndex: 63}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 64, dataIndex: 64}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 65, dataIndex: 65}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 66, dataIndex: 66}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 67, dataIndex: 67}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 68, dataIndex: 68}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 69, dataIndex: 69}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 70, dataIndex: 70}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 71, dataIndex: 71}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 72, dataIndex: 72}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 73, dataIndex: 73}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 74, dataIndex: 74}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 75, dataIndex: 75}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 76, dataIndex: 76}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 77, dataIndex: 77}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 78, dataIndex: 78}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 79, dataIndex: 79}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 80, dataIndex: 80}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 81, dataIndex: 81}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 82, dataIndex: 82}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 83, dataIndex: 83}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 84, dataIndex: 84}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 85, dataIndex: 85}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 86, dataIndex: 86}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 87, dataIndex: 87}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 88, dataIndex: 88}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 89, dataIndex: 89}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 90, dataIndex: 90}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 91, dataIndex: 91}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 92, dataIndex: 92}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 93, dataIndex: 93}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 94, dataIndex: 94}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 95, dataIndex: 95}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 96, dataIndex: 96}
                                         ]
                                     }
                                 ]
@@ -1390,9 +1485,104 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 39
                                         ,index: 2
-                                        ,type: 'SHIPPING_TUBES_CARRIER'
+                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
                                         ,plates: [
-                                            {plateFor: 'destination', type: 'SHIPPING_TUBES_PLATE', localIndex: 1, dataIndex: 1}
+                                            {plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 1, dataIndex: 1}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 2, dataIndex: 2}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 3, dataIndex: 3}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 4, dataIndex: 4}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 5, dataIndex: 5}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 6, dataIndex: 6}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 7, dataIndex: 7}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 8, dataIndex: 8}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 9, dataIndex: 9}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 10, dataIndex: 10}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 11, dataIndex: 11}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 12, dataIndex: 12}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 13, dataIndex: 13}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 14, dataIndex: 14}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 15, dataIndex: 15}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 16, dataIndex: 16}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 17, dataIndex: 17}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 18, dataIndex: 18}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 19, dataIndex: 19}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 20, dataIndex: 20}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 21, dataIndex: 21}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 22, dataIndex: 22}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 23, dataIndex: 23}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 24, dataIndex: 24}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 25, dataIndex: 25}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 26, dataIndex: 26}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 27, dataIndex: 27}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 28, dataIndex: 28}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 29, dataIndex: 29}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 30, dataIndex: 30}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 31, dataIndex: 31}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 32, dataIndex: 32}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 33, dataIndex: 33}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 34, dataIndex: 34}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 35, dataIndex: 35}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 36, dataIndex: 36}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 37, dataIndex: 37}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 38, dataIndex: 38}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 39, dataIndex: 39}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 40, dataIndex: 40}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 41, dataIndex: 41}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 42, dataIndex: 42}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 43, dataIndex: 43}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 44, dataIndex: 44}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 45, dataIndex: 45}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 46, dataIndex: 46}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 47, dataIndex: 47}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 48, dataIndex: 48}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 49, dataIndex: 49}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 50, dataIndex: 50}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 51, dataIndex: 51}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 52, dataIndex: 52}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 53, dataIndex: 53}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 54, dataIndex: 54}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 55, dataIndex: 55}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 56, dataIndex: 56}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 57, dataIndex: 57}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 58, dataIndex: 58}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 59, dataIndex: 59}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 60, dataIndex: 60}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 61, dataIndex: 61}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 62, dataIndex: 62}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 63, dataIndex: 63}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 64, dataIndex: 64}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 65, dataIndex: 65}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 66, dataIndex: 66}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 67, dataIndex: 67}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 68, dataIndex: 68}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 69, dataIndex: 69}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 70, dataIndex: 70}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 71, dataIndex: 71}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 72, dataIndex: 72}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 73, dataIndex: 73}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 74, dataIndex: 74}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 75, dataIndex: 75}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 76, dataIndex: 76}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 77, dataIndex: 77}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 78, dataIndex: 78}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 79, dataIndex: 79}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 80, dataIndex: 80}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 81, dataIndex: 81}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 82, dataIndex: 82}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 83, dataIndex: 83}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 84, dataIndex: 84}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 85, dataIndex: 85}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 86, dataIndex: 86}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 87, dataIndex: 87}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 88, dataIndex: 88}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 89, dataIndex: 89}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 90, dataIndex: 90}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 91, dataIndex: 91}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 92, dataIndex: 92}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 93, dataIndex: 93}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 94, dataIndex: 94}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 95, dataIndex: 95}
+                                            ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 96, dataIndex: 96}
                                         ]
                                     }
                                 ]
