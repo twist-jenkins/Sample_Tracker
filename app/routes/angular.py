@@ -1059,9 +1059,9 @@ def process_hamilton_sources(transform_type_id):
             {
                 "type": "SET_DESTINATIONS"
                 ,"plates": [
-                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellId": 1}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellId": 2}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellId": 3}
+                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellNumber": 1}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellNumber": 2}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellNumber": 3}
                 ]
             }
         );
@@ -1071,9 +1071,9 @@ def process_hamilton_sources(transform_type_id):
                 ,"detail": {
                     "key": "shippingTubeBarcodeData"
                     ,"value": [
-                        {"id": 1, "COI": "XXXXXXXXXXXXXXXXX", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
-                        ,{"id": 2, "COI": "XXXXXXXXXXXXXXXXX", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
-                        ,{"id": 3, "COI": "XXXXXXXXXXXXXXXXX", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                        {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
+                        ,{"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
+                        ,{"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
                     ]
                 }
             }

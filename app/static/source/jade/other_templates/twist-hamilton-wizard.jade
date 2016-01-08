@@ -37,4 +37,5 @@ div(class="twst-hamilton-wizard-main" ng-class="{'twst-hamilton-wizard-tube-dest
             p Selected Hamilton:
                 strong &nbsp;{{selectedHamilton.label}}
                 button(class="twst-button twst-change-hamilton-btn" ng-click="changeHamilton()") change
+                input(class="twst-hamilton-shipping-tube-scan-input twst-offscreen" type="text" ng-model="shippingTubeScanInput.barcode" ng-change="shippingTubeScanned()" ng-keydown="ignoreTab($event)")
         div(ui-view="hamiltonFinish" )

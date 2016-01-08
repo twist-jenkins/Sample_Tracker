@@ -685,8 +685,90 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.activeDeckRegion = region;
         }
 
+        $scope.setScannedTubeCount = function (val) {
+            $scope.scannedTubeCount = val;
+        };
+
+        $scope.setScannedTubeCount(0);
+        
+        $scope.shippingTubeScanInput = {barcode: ''};
+
         $scope.promptForDestinationTubeScan = function () {
-            $scope.currentStepInstruction = 'Scan a barcoded tube to retrieve its placement location.'; 
+            $scope.shippingTubeScanInput = {barcode: ''};
+            $scope.currentStepInstruction = 'Scan a barcoded tube for placement.';
+            $timeout(function () {
+                jQuery('.twst-hamilton-shipping-tube-scan-input').focus();
+            }, 0);
+        };
+
+        $scope.tubePlaced = function () {
+            $scope.highlightedPlate.barcode = $scope.shippingTubeScanInput.barcode;
+            $scope.highlightedPlate['tubeRackRowColumn'] = $scope.tubeTargetWell;
+            $scope.clearScannedItemErrorMessage();
+            $scope.flashHamiltonThumbsUp();
+            $scope.scannedTubeCount++;
+            $scope.highlightedPlate = null;
+            if ($scope.scannedTubeCount != $scope.destinationPlatesNeedingScanCount) {
+                $scope.promptForDestinationTubeScan();
+            } else {
+                jQuery('input:focus').trigger('blur');
+                $scope.currentStepInstruction = 'You have finished placing tubes';
+            }
+        }
+
+        $scope.tubeTargetWell = null;
+
+        $scope.checkAlreadyScannedTube = function (tubeBarcode) {
+            var whichPlateArray = $scope.hamiltonDataObj.allDestinationPlates;
+
+            for (var i=0; i<whichPlateArray.length;i++) {
+                var thisPlate = whichPlateArray[i];
+                if (thisPlate.barcode == tubeBarcode) {
+                    return true;                   
+                } 
+            } 
+            return false;   
+        }
+
+        $scope.shippingTubeScanned = function () {
+            var tubeBarcode = $scope.shippingTubeScanInput.barcode;
+
+            if (tubeBarcode && tubeBarcode.length) {
+                $timeout.cancel(barcodeFinishedTimeout);
+                if ($scope.checkAlreadyScannedTube(tubeBarcode)) {
+                    $scope.clearScannedItemErrorMessage();
+                    $scope.showScannedItemErrorMessage('You have already scanned and placed a tube with this barcode.');
+                    $scope.promptForDestinationTubeScan();
+                } else {
+                    barcodeFinishedTimeout = $timeout(function () {
+                        var shippingTubeBarcodeData = $scope.transformSpec.details.shippingTubeBarcodeData;
+
+                        var found = false;
+
+                        for(var i = 0; i < shippingTubeBarcodeData.length; i++) {
+                            tube = shippingTubeBarcodeData[i];
+                            if (tube["COI"] == tubeBarcode) {
+                                found = tube;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            $scope.clearScannedItemErrorMessage();
+                            $scope.showScannedItemErrorMessage('The scanned barcode does not match this batch. Please rescan.');
+                            $scope.shippingTubeScanInput.barcode = '';
+                        } else {
+                            $scope.tubeTargetWell = Maps.rowColumnMaps['SPTT_0005'][found["forWellNumber"]].row + Maps.rowColumnMaps['SPTT_0005'][found["forWellNumber"]].column;
+                            $scope.clearScannedItemErrorMessage();
+                            $scope.flashHamiltonThumbsUp();
+                            $scope.setHighlightedPlate($scope.hamiltonDataObj.allDestinationPlates[found["forWellNumber"] - 1]);
+                            jQuery('input:focus').trigger('blur');
+                            $scope.currentStepInstruction = 'Place the tube in rack position ' + $scope.tubeTargetWell;
+                        }
+
+                    }, 200);
+                }
+            }
         };
 
         $scope.plateBarcodeScanned = function () {
@@ -812,8 +894,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
                 carrier.barcode = null;
                 carrier.scanSkipped = null;
-                $scope.findNextCarrierForScan();
             }
+            $scope.findNextCarrierForScan();
         }
 
         $scope.skipCurrentCarrierScan = function () {
@@ -872,8 +954,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var plate = $scope.hamiltonDataObj.allSourcePlates[i];
                 plate.barcode = null;
                 plate.positionScanned = null;
-                $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
             }
+            $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
         };
 
         $scope.sourcePlateScanComplete = function () {
@@ -943,7 +1025,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                                     $scope.hamiltonDataObj.allDestinationPlates = newAllDestinationPlates;
                                     break;
                                 case Constants.RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL:
-                                    console.log(command);
                                     $scope.transformSpec.details[command.detail.key] = command.detail.value;
                                     break;
                                 default :
@@ -987,13 +1068,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
                 plate.barcode = null;
                 plate.positionScanned = null;
-                $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
             }
+            $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
         };
 
         $scope.destinationPlateScanComplete = function () {
             /* TODO save transform spec show worklist download link */
-            if ($scope.scannedDestinationPlateCount == $scope.hamiltonDataObj.allDestinationPlates.length && !$scope.savingSourcesAndDestinations) {
+            if ($scope.scannedDestinationPlateCount == destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
                 $scope.transformSpec.sources = [];
                 $scope.transformSpec.destinations = [];
 
@@ -1023,8 +1104,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     }
                 }
 
-                $scope.transformSpec.details.source_plate_count = $scope.transformSpec.sources.length;
-                $scope.transformSpec.details.destination_plate_count = $scope.transformSpec.destinations.length;
+                $scope.transformSpec.details.source_plate_count = $scope.sourcePlatesNeedingScanCount;
+                $scope.transformSpec.details.destination_plate_count = $scope.destinationPlatesNeedingScanCount;
                 $scope.transformSpec.details.hamilton = $scope.selectedHamilton;
 
                 $scope.savingSourcesAndDestinations = true;
@@ -1101,12 +1182,61 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
                 var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
                 plate.barcode = null;
-                plate.positionScanned = null;
-                $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
             }
+            $scope.setScannedTubeCount(0);
+            $scope.promptForDestinationTubeScan();
         };
 
-        $scope.destinationPlateScanComplete = function () {
+        $scope.tubePlacementComplete = function () {
+            /* TODO save transform spec show worklist download link */
+            if ($scope.scannedTubeCount == $scope.destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
+                $scope.transformSpec.sources = [];
+                $scope.transformSpec.destinations = [];
+
+                for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length; i++) {
+                    var thisPlate = $scope.hamiltonDataObj.allSourcePlates[i];
+                    if (thisPlate.barcode) {
+                        $scope.transformSpec.sources.push({
+                            details: {
+                                id: thisPlate.barcode
+                                ,dataIndex: thisPlate.dataIndex
+                                ,position: 'C' + thisPlate.carrier.index + 'P' + thisPlate.localIndex
+                            }
+                        });
+                    }
+                }
+                for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length; i++) {
+                    var thisPlate = $scope.hamiltonDataObj.allDestinationPlates[i];
+                    if (thisPlate.barcode) {
+                        $scope.transformSpec.destinations.push({
+                            details: {
+                                id: thisPlate.barcode
+                                ,dataIndex: thisPlate.dataIndex
+                                ,position: thisPlate.tubeRackRowColumn
+                            }
+                        });
+                    }
+                }
+
+                $scope.transformSpec.details.source_plate_count = $scope.sourcePlatesNeedingScanCount;
+                $scope.transformSpec.details.destination_plate_count = $scope.destinationPlatesNeedingScanCount;
+                $scope.transformSpec.details.hamilton = $scope.selectedHamilton;
+
+                $scope.savingSourcesAndDestinations = true;
+
+                Api.saveAndConditionallyExecuteTransformSpec($scope.transformSpec.serialize(), false).success(function (data) {
+                    $scope.savingSourcesAndDestinations = false;
+                    var savedSpecId = data.data.spec_id;
+                    $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.finish_run', {
+                        saved_spec_id: savedSpecId
+                    });
+
+                }).error(function (data) {
+                    $scope.savingSourcesAndDestinations = false;
+                    console.log(data);
+                });;
+            }
+            
         };
 
         $scope.$on('$destroy', function () {
