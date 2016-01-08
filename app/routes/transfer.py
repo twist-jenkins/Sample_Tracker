@@ -159,7 +159,7 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     for src in sources:
         barcode = src['details']['id']
 
-        for plate, well, cs in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
+        for plate, well, cs in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample ) \
                                                     .filter( SamplePlate.external_barcode == barcode ) \
                                                     .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
                                                     .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ):
