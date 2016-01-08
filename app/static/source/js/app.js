@@ -2035,7 +2035,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete', {
             url: '/run-complete/:saved_spec_id'
             ,views: {
-                "hamiltonFinish@root.record_transform.step_type_selected.tab_nnnselected.hamilton_wizard": {
+                "hamiltonFinish@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-run-complete.html'
                     ,controller: 'hamiltonWizardRunCompleteController'
                 }
