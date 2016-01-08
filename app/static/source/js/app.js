@@ -1074,7 +1074,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.destinationPlateScanComplete = function () {
             /* TODO save transform spec show worklist download link */
-            if ($scope.scannedDestinationPlateCount == destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
+            if ($scope.scannedDestinationPlateCount == $scope.destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
                 $scope.transformSpec.sources = [];
                 $scope.transformSpec.destinations = [];
 
@@ -2035,7 +2035,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete', {
             url: '/run-complete/:saved_spec_id'
             ,views: {
-                "hamiltonFinish@root.record_transform.step_type_selected.tab_nnnselected.hamilton_wizard": {
+                "hamiltonFinish@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-run-complete.html'
                     ,controller: 'hamiltonWizardRunCompleteController'
                 }
