@@ -1059,10 +1059,23 @@ def process_hamilton_sources(transform_type_id):
             {
                 "type": "SET_DESTINATIONS"
                 ,"plates": [
-                    {"type": "SHIPPING_TUBE_PLATE", "tube_barcode": "SHIPPING_TUBE_01"}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tube_barcode": "SHIPPING_TUBE_02"}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tube_barcode": "SHIPPING_TUBE_03"}
+                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellId": 1}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellId": 2}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellId": 3}
                 ]
+            }
+        );
+        respData["responseCommands"].append(
+            {
+                "type": "ADD_TRANSFORM_SPEC_DETAIL"
+                ,"detail": {
+                    "key": "shippingTubeBarcodeData"
+                    ,"value": [
+                        {"id": 1, "COI": "XXXXXXXXXXXXXXXXX", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
+                        ,{"id": 2, "COI": "XXXXXXXXXXXXXXXXX", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
+                        ,{"id": 3, "COI": "XXXXXXXXXXXXXXXXX", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                    ]
+                }
             }
         );
 

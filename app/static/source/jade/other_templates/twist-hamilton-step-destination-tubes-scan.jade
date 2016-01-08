@@ -8,4 +8,4 @@ div(class="twst-hamilton-step")
             div(class="twst-hamilton-step-direction-heading") SCAN AND PLACE DESTINATION TUBES:
                 div(class="twst-spinner" ng-if="confirmingPlate || savingSourcesAndDestinations")
             strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
-            button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-class="{'twst-disabled-button':scannedDestinationPlateCount != destinationPlatesNeedingScanCount}" ng-click="destinationPlateScanComplete()") Destination Scan Complete
+            button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="scannedDestinationPlateCount != destinationPlatesNeedingScanCount" ng-click="destinationPlateScanComplete()") Destination Scan Complete

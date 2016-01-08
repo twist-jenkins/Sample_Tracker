@@ -554,15 +554,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 jQuery('.twst-hamilton-wizard-carrier-' + carrier.index + ' .twst-hamilton-wizard-carrier-input').focus();
             }, 0);
         }
-        $scope.setHighlightedPlate = function (plate, which) {
+        $scope.setHighlightedPlate = function (plate, which, skipInstructionSet, skipFocus) {
             if (!which) {
                 which = Constants.HAMILTON_ELEMENT_PLATE;
             }
             $scope.highlightedPlate = plate;
-            $scope.setCurrentStepInstruction(which, plate);
-            $timeout(function () {
-                jQuery('.twst-hamilton-wizard-plate-' + plate.dataIndex + ' .twst-hamilton-wizard-plate-input').focus();
-            }, 0);
+            if (!skipInstructionSet) {
+                $scope.setCurrentStepInstruction(which, plate);
+            }
+            if (!skipFocus) {
+                $timeout(function () {
+                    jQuery('.twst-hamilton-wizard-plate-' + plate.dataIndex + ' .twst-hamilton-wizard-plate-input').focus();
+                }, 0);
+            }
         }
         $scope.scannedCarrierCount = 0;
         $scope.findNextCarrierForScan = function () {
@@ -673,8 +677,18 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.highlightedPlate = null;
                     jQuery('input:focus').trigger('blur');
                 }
+
             }
         };
+
+        $scope.setActiveDeckRegion = function (region) {
+            $scope.activeDeckRegion = region;
+        }
+
+        $scope.promptForDestinationTubeScan = function () {
+            $scope.currentStepInstruction = 'Scan a barcoded tube to retrieve its placement location.'; 
+        };
+
         $scope.plateBarcodeScanned = function () {
             if ($scope.highlightedPlate.barcode && $scope.highlightedPlate.barcode.length) {
                 $timeout.cancel(barcodeFinishedTimeout);
@@ -892,7 +906,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                         for (var i=0; i< responseCommands.length; i++) {
                             var command = responseCommands[i];
 
-                             switch (command.type) {
+                            var commandType = command.type
+
+                            switch (commandType) {
                                 case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
                                     var destinationPlateCount = command.plates.length;
 
@@ -904,8 +920,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                                     var destinationPlatesNeedingScanCount = 0;
 
-                                    for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
-                                        var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
+                                    for (var j=0; j<$scope.hamiltonDataObj.allDestinationPlates.length;j++) {
+                                        var plate = $scope.hamiltonDataObj.allDestinationPlates[j];
 
                                         if (plate.carrier.scanSkipped) {
                                             skippedCarrierPlatesCount += plate.carrier.plates.length;
@@ -926,7 +942,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
                                     $scope.hamiltonDataObj.allDestinationPlates = newAllDestinationPlates;
                                     break;
-                                
+                                case Constants.RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL:
+                                    console.log(command);
+                                    $scope.transformSpec.details[command.detail.key] = command.detail.value;
+                                    break;
                                 default :
                                     console.log('Error: Unrecognized command type = [' + command.type + ']');
                                     break;
@@ -939,7 +958,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
                                 break;
                             case 51:
-                                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan_tubes');
+                                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.label_destination_tubes');
                                 break;
                             default:
                                 console.log('Unexpected transfer_type_id = [' + $scope.transformSpec.details.transfer_type_id + ']');
@@ -1027,12 +1046,57 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('hamiltonWizardDestinationScanTubesController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
+.controller('hamiltonWizardLabelDestinationTubesController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
+    function ($scope, $state, $http, Api, $timeout, Constants) {
+        $scope.currentStepInstruction = 'Print and apply barcodes';
+        $scope.setHighlightedPlate(null, null, true, true);
+        jQuery('input:focus').trigger('blur');
+
+        $scope.setTubeBarcodesFileDownloaded = function (val) {
+
+            var columnTitles = [
+                'COI'
+                ,'itemName'
+                ,'partNumber'
+                ,'labelMass'
+            ]
+
+            var csvContents = columnTitles.join(',') + '\n';
+
+            var shippingTubeBarcodeData = $scope.transformSpec.details.shippingTubeBarcodeData;
+
+            for(var i = 0; i < shippingTubeBarcodeData.length; i++) {
+                row = shippingTubeBarcodeData[i];
+                var line = '';
+                for (var j=0; j<columnTitles.length; j++) {
+                    line += (j ? ',' : '') + row[columnTitles[j]]
+                }
+                csvContents += line + '\n';
+            }
+
+            var csvBlob = new Blob([csvContents], {type: "text/csv"});
+
+            saveAs(csvBlob, "tube_barcodes.csv");
+
+            $scope.tubeBarcodesFileDownloaded = val;
+        }
+
+        $scope.tubesLabeled = function () {
+            if ($scope.tubeBarcodesFileDownloaded) {
+                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_tubes_scan');
+            }
+        }
+    }]
+)
+
+.controller('hamiltonWizardDestinationTubesScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
     function ($scope, $state, $http, Api, $timeout, Constants) {
         $scope.setTubeDestinationsMode(true);
 
-        $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
-        console.log($scope.hamiltonDataObj);
+        $scope.promptForDestinationTubeScan();
+
+        $scope.setActiveDeckRegion($scope.hamiltonDataObj.allDestinationPlates[0].carrier.selectedHamiltonDeckRegion);
+
         $scope.restartDestinationPlateScan = function () {
             for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
                 var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
@@ -1814,12 +1878,20 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     ,controller: 'hamiltonWizardDestinationScanController'
                 }
             }
-        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan_tubes', {
-            url: '/destination-scan-tubes'
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.label_destination_tubes', {
+            url: '/label-destination-tubes'
             ,views: {
                 "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
-                    templateUrl: 'twist-hamilton-step-destination-scan-tubes.html'
-                    ,controller: 'hamiltonWizardDestinationScanTubesController'
+                    templateUrl: 'twist-hamilton-step-label-destination-tubes.html'
+                    ,controller: 'hamiltonWizardLabelDestinationTubesController'
+                }
+            }
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_tubes_scan', {
+            url: '/destination-tubes-scan'
+            ,views: {
+                "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                    templateUrl: 'twist-hamilton-step-destination-tubes-scan.html'
+                    ,controller: 'hamiltonWizardDestinationTubesScanController'
                 }
             }
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.finish_run', {
@@ -1833,7 +1905,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete', {
             url: '/run-complete/:saved_spec_id'
             ,views: {
-                "hamiltonFinish@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                "hamiltonFinish@root.record_transform.step_type_selected.tab_nnnselected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-run-complete.html'
                     ,controller: 'hamiltonWizardRunCompleteController'
                 }

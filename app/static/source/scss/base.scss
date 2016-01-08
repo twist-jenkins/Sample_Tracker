@@ -2018,6 +2018,74 @@ strong {
             margin: 0.3em 0 0 0.3em;
         }
 
+        .twst-hamilton-step-direction-label-destination-tubes {
+                position: absolute;
+                z-index: 10;
+                left: 11em;
+                box-shadow: 0 0 2em orange;
+                width: 45em;
+                top: 6em;
+                background: #fff;
+                border-radius: 1em;
+                padding: 1em;
+                background: #FFF6E1;
+
+                .twst-hamilton-label-destination-tube-icon {
+                    width: 15em;
+                    position: relative;
+                    float: right;
+                    border-radius: 1em;
+                    background: $twst-minty-green-bg;
+                    padding: 0.5em;
+                    border: 1px solid $twst-medium-green;
+                    margin-left: 1em;
+                }
+
+                h3 {
+                    font-size: 1.6em;
+                    color: $twst-darker-green;
+                    line-height: 1.3em;
+                    margin-bottom: 0.75em;
+                }
+
+                .twst-tubes-labeled-button, .twst-download-tube-barcodes-button{
+                     @include transition(font-size .3s ease);
+                }
+
+                .twst-tubes-labeled-button {
+                    margin: 1em auto 0 0;
+                    font-size: 1.3em;
+
+                    &.twst-disabled-button {
+                        font-size: 0.8em;
+                    }
+                }
+
+                .twst-download-tube-barcodes-button {
+                    font-size: 0.8em;
+
+                    &.twst-blue-button {
+                        font-size: 1.3em;
+
+                        svg {
+                            path {
+                                fill: #fff;
+                            }
+                        }
+                    }
+
+                    .twst-button-icon {
+                        width: 1em;
+                        height: 1em;
+
+                        svg {
+                            width: 1em;
+                            height: 1em;
+                        }
+                    }
+                }
+        }
+
     }
 }
 
@@ -2049,35 +2117,17 @@ strong {
                             left: -2.5em;
                             background: #fff;
                             position: absolute;
-                            box-shadow: 0 0 3em #000;
+                            box-shadow: 0 0 2em #000;
 
                             .twst-hamilton-wizard-plate {
 
                                 &.twst-hamilton-wizard-plate-SHIPPING_TUBE_PLATE {
-                                    width: 1em;
-                                    height: 1em;
-                                    position: relative;
-                                    float: left;
-                                    border-radius: 50%;
-                                    background: rgba(170, 170, 170, 0.5);
-                                    border: 1px solid #999;
-                                    font-size: 1em;
-                                    margin: 0.2em 0 0.2em 0.25em;
-                                    padding: 0;
 
                                     .twst-hamilton-wizard-plate-data-index-label {
-                                        opacity: 0;
-                                        display: none;
-                                    }
-
-                                    &:hover {
-                                        background: rgba(170, 170, 170, 1);
                                     }
                                 }
 
                                 &.twst-highlighted-plate {
-                                    background: rgba(255, 248, 206, 0.7);
-                                    box-shadow: 0 0 1.5em #FF8D00;
                                 }
                             }
                         }
@@ -2266,7 +2316,6 @@ strong {
                     top: 10em;
 
                     .twst-hamilton-wizard-carrier-inner {
-
                         border: 1px solid #777;
                         margin-top: 1.7em;
                         font-size: 0.5em;
@@ -2274,7 +2323,42 @@ strong {
                         &:after {
                             @include after-clear;
                         }
+
+                        .twst-hamilton-wizard-plate {
+
+                            &.twst-hamilton-wizard-plate-SHIPPING_TUBE_PLATE {
+                                width: 1em;
+                                height: 1em;
+                                position: relative;
+                                float: left;
+                                border-radius: 50%;
+                                background: rgba(170, 170, 170, 0.5);
+                                border: 1px solid #999;
+                                font-size: 1em;
+                                margin: 0.2em 0 0.2em 0.25em;
+                                padding: 0;
+
+                                .twst-hamilton-wizard-plate-data-index-label {
+                                    opacity: 0;
+                                    display: none;
+                                }
+
+                                &:hover {
+                                    background: rgba(170, 170, 170, 1);
+                                }
+                            }
+
+                            &.twst-highlighted-plate {
+                                background: rgba(255, 248, 206, 0.7);
+                                box-shadow: 0 0 1.5em #FF8D00;
+                            }
+
+                            .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label, .twst-hamilton-wizard-plate-empty {
+                                display: none;
+                            }
+                        }
                     }
+
                 }
 
                 &:first-child {
