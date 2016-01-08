@@ -1,0 +1,19 @@
+div(class="twst-hamilton-step")      
+    div(class="twst-hamilton-step-direction")
+        div(class="twst-bullet-number") 4
+        div(class="twst-hamilton-step-direction-text")
+            div(class="twst-hamilton-step-direction-heading") LABEL DESTINATION TUBES:
+            strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
+            div(class="twst-hamilton-step-direction-label-destination-tubes")
+                div(class="twst-hamilton-label-destination-tube-icon")
+                    ng-include(src="'static/images/label-tube.svg'")
+                h3 Print the tube barcodes and
+                    br
+                    span apply them to the destination tubes
+                p(class="twst-text-center")
+                    button(class="twst-button twst-download-tube-barcodes-button" ng-class="{'twst-blue-button': !tubeBarcodesFileDownloaded}" ng-click="setTubeBarcodesFileDownloaded(true)")
+                        span(class="twst-button-icon")
+                            ng-include(src="'static/images/download.svg'") 
+                            span &nbsp;Tube Barcodes
+                p(class="twst-text-center")
+                    button(class="twst-button twst-blue-button twst-tubes-labeled-button" ng-class="{'twst-disabled-button': !tubeBarcodesFileDownloaded}" ng-click="tubesLabeled()") Tube Labeling Complete

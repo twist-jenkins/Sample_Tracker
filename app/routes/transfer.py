@@ -150,35 +150,6 @@ def filter_transform( transfer_template_id, sources, dests ):
             })
     return rows
 
-def sample_data_determined_transform(transfer_template_id, sources, dests):
-    assert transfer_template_id == 25
-
-    by_marker = defaultdict(list)
-    for src in sources:
-        barcode = src['details']['id']
-
-        for plate, well, cs in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
-                                                    .filter( SamplePlate.external_barcode == barcode ) \
-                                                    .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
-                                                    .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ):
-            try:
-                marker = cs.parent_process.vector.resistance_marker
-            except:
-                marker = None
-            by_marker[ marker ].append( well )
-
-    # FIXME: dest_X is undefined and needs work
-    for marker in sorted( by_marker ):
-        for well in by_marker[ marker ]:
-            rows.append( {'source_plate_barcode':           barcode,
-                          'source_well_name':               well.well_name,
-                          'source_sample_id':               well.sample_id,
-                          'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
-                          'destination_well_name':          dest_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   dest_type.number_clusters,
-            })
-
-    return rows
 
 def preview():
     assert request.method == 'POST'
@@ -191,8 +162,6 @@ def preview():
 
         xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
         
-        response_commands = []
-
         if request.json['transfer_template_id'] == 2:
             # identity function
             dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
@@ -212,15 +181,6 @@ def preview():
 
         elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
-
-        elif request.json['transfer_template_id'] == 25:
-            # rebatching for transformation
-            rows = sample_data_determined_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
-            # TO DO: Analyze plates to create resistance grouped destination plates
-            response_commands.append( {"type": "SET_DESTINATIONS", "data": [{"type": "SPTT_0006", "title": "title"},
-                                                                            {"type": "SPTT_0006", "title": "title"},
-                                                                            {"type": "SPTT_0006", "title": "title"},
-                                                                            {"type": "SPTT_0006", "title": "title"}]});
 
         else:
             if request.json['transfer_template_id'] in (1,2):
@@ -282,8 +242,7 @@ def preview():
     else:
         return Response( response=json.dumps({'success': True,
                                               'message': '',
-                                              'data': rows,
-                                              'responseCommands': response_commands}),
+                                              'data': rows}),
                          status=200,
                          mimetype="application/json")
 
