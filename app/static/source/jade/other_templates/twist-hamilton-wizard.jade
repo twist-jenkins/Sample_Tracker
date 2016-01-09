@@ -32,6 +32,7 @@ div(class="twst-hamilton-wizard-main" ng-class="{'twst-hamilton-wizard-tube-dest
                                     span(class="twst-hamilton-wizard-plate-data-index-label" ng-if="!plate.unused") 
                                         span(class="twst-hamilton-wizard-plate-data-index-label-letter") {{(plate.plateFor == 'source' ? 'S' : 'D')}}
                                         span {{Formatter.addLeadingZero(plate.dataIndex)}}
+                                    span(class="twst-hamilton-wizard-plate-tube-position-label" ng-if="tubeDestinationsMode && plate.plateFor == 'destination'") {{tubeRowColumnMap[$index + 1].row + tubeRowColumnMap[$index + 1].column}}
                 div(class="twst-hamilton-wizard-error-message" ng-if="scannedItemErrorMessage")
                     twst-message(message="scannedItemErrorMessage" visible-and-valid="scannedItemErrorMessageVisible" clear-parent-data="clearScannedItemErrorMessage")
             p Selected Hamilton:

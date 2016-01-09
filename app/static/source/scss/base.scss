@@ -2138,6 +2138,17 @@ strong {
                                     .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label {
                                         display: none;
                                     }
+
+                                    .twst-hamilton-wizard-plate-tube-position-label {
+                                        font-size: 0.6em;
+                                        display: block;
+                                        width: 100%;
+                                        text-align: center;
+                                        color: rgba(255, 255, 255, 0.5);
+                                        top: 0.3em;
+                                        position: absolute;
+                                        font-weight: bold;
+                                    }
                                 }
 
                                 &.twst-scanned-plate {
@@ -2636,6 +2647,10 @@ strong {
                             font-size: 0.7em;
                             padding-bottom: 0.2em;
                             color: #337251;
+                        }
+
+                        .twst-hamilton-wizard-plate-tube-position-label {
+                            display: none;
                         }
 
                         .twst-hamilton-wizard-plate-scan-label {

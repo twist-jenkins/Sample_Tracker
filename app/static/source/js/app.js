@@ -390,6 +390,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.carriers = Maps.carriers;
 
+        $scope.tubeRowColumnMap = Maps.rowColumnMaps['SPTT_0005'];
+
+        console.log('**********');
+        console.log($scope.tubeRowColumnMap);
+
+
         $scope.setSelectedHamilton = function (hamilton) {
             $scope.selectedHamilton = hamilton;
             $scope.hamiltonDataObj = {
