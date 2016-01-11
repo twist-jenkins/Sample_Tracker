@@ -25,7 +25,10 @@ app = angular.module('twist.app')
             ,HAMILTON_ELEMENT_CARRIER: 'carrier'
             ,HAMILTON_ELEMENT_CARRIER_POSITION: 'carrier-position'
             ,HAMILTON_ELEMENT_PLATE: 'plate'
-
+            ,SHIPPING_TUBES_CARRIER_TYPE: 'SHIPPING_TUBES_CARRIER'
+            ,SHIPPING_TUBE_PLATE_TYPE: 'SHIPPING_TUBE_PLATE'
+            ,RESPONSE_COMMANDS_SET_DESTINATIONS: 'SET_DESTINATIONS'
+            ,RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL: 'ADD_TRANSFORM_SPEC_DETAIL'
         };
     }]
 )
@@ -385,7 +388,7 @@ app = angular.module('twist.app')
                 if (base.autoUpdateSpec) {
 
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
-                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 26 && base.details.transfer_template_id <=29) ) {
+                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
                             // kieran
                             Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id )
@@ -393,11 +396,17 @@ app = angular.module('twist.app')
                                     if( result.success ) {
                                         base.error_message = '';
                                         base.operations = result.data;
+
+                                        if (result.responseCommands) {
+                                            /* this transform requires additional actions or input data */
+                                            base.handleResponseCommands(result.responseCommands);
+                                        }
+
                                     } else {
                                         base.error_message = result.message;
                                     }
                                 }).error(function(data) {
-                                    // FIXME: do something here?
+                                    console.log('Error retrieving transform preview.');
                                 });
                         
                         } else {
@@ -411,6 +420,9 @@ app = angular.module('twist.app')
                             var templateId = base.details.transfer_template_id;
 
                             switch (templateId) {
+                                /*** 
+                                * moved to backend
+
                                 case 25:
                                     //Rebatching for trannsformation
                                     //first, we'll group source wells based on resistance_marker values
@@ -546,6 +558,7 @@ app = angular.module('twist.app')
                                     }
 
                                 break;
+                                */
 
                             case 30:
                                     /* for NGS, the destination plate is the same as the source plate (as entered)
@@ -1008,6 +1021,45 @@ app = angular.module('twist.app')
                 base.setTitle('New Transform Spec');
                 base.setType(Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING);
                 base.autoUpdateSpec = false;
+            };
+
+            base.handleResponseCommands = function (commands) {
+                for (var i=0; i<commands.length; i++) {
+                    var command = commands[i];
+                    switch (command.type) {
+                        case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
+                            var plates = command.data;
+                            for (var j=0; j<plates.length;j++) {
+                                var plate = plates[i];
+                                var dest = returnEmptyPlate();
+                                dest.details.type = plate.type;
+                                dest.details.title = plate.title;
+                                dest.first_in_group = plate.first_in_group;
+                                
+                                if (base.destinations[j]) {
+                                    if (base.destinations[j].loaded || base.destinations[j].updating) {
+                                        //do nothing - this destination was already entered
+                                    } else {
+                                        dest.details.id = base.destinations[j].details.id; 
+                                        base.destinations[j] = dest;
+                                        base.addDestination(j);
+                                    }
+                                } else {
+                                    base.destinations[j] = dest;
+                                    base.addDestination(j);
+                                }
+                            }
+                            if (base.destinations.length > plates.length) {
+                                base.destinations.splice(plates.length - base.destinations.length);
+                            }
+                            break;
+                        
+                        default :
+                            console.log('Error: Unrecognized response command type = [' + command.type + ']');
+                            break;
+                    }
+
+                }
             };
 
             base.serialize = function () {

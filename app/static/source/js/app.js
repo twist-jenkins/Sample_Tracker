@@ -198,15 +198,17 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.Constants = Constants;
 
-        $scope.selectTransferTemplateType = function (which) {
+        $scope.selectTransferTemplateType = function (which, skipGo) {
             if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep()) {
                 return false;
             } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
                 return false;
             } 
-            $state.go('root.record_transform.step_type_selected.tab_selected', {
-                selected_tab: which
-            });
+            if (!skipGo) {
+                $state.go('root.record_transform.step_type_selected.tab_selected', {
+                    selected_tab: which
+                });
+            }
         };
 
         $scope.setTransferTemplate = function (which) {
@@ -214,7 +216,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTranferTypeId == 39 || selectedTranferTypeId == 48) {
+            if (selectedTranferTypeId == 39 || selectedTranferTypeId == 48 || selectedTranferTypeId == 51) {
                 return true; 
             }
             return false;
@@ -232,8 +234,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
     }]
 )
 
-.controller('tabSelectedController', ['$scope', '$state', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
-    function ($scope, $state, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
+.controller('tabSelectedController', ['$scope', '$state', '$stateParams', '$element', '$sce', '$timeout', 'Formatter', 'TypeAhead', 'Maps', 'Constants', 'TransformBuilder', 'FileParser', 
+    function ($scope, $state, $stateParams, $element, $sce, $timeout, Formatter, TypeAhead, Maps, Constants, TransformBuilder, FileParser) {
 
         $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
 
@@ -334,6 +336,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.hamiltonThumbsUp.splice(thumbsUp.index, 1);
         }
 
+        $scope.selected_tab = $stateParams.selected_tab;
+        $scope.setTransferTemplate($scope.selected_tab);
     }]
 )
 
@@ -392,8 +396,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 deckRegions: angular.copy($scope.transformSpec.map.hamiltonDetails[$scope.selectedHamilton.barcode])
             };
             $scope.decorateHamiltonDataObj($scope.hamiltonDataObj);
+            $scope.hamiltonColumns = $scope.hamiltonColumns.slice(0, $scope.selectedHamilton.trackCount);
             $timeout(function () {
                 if (!$scope.showFinishRunControls) {
+                    $scope.highlightedPlate = null;
                     $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.carrier_scan');
                 }
             }, 0);
@@ -441,6 +447,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         /* this function adds ordered arrays that reference the carriers and plates in their position in the deckRegions
+         * It also adds back refs from a plate to its carrier and from a carrier to the hamiltonDeckRegion matching its deckRegion in the transform map
          * We'll use the ordered arrays for the guidance when scanning barcodes for carrier, carrier position & plate.
          * By looping through these arrays, we're actually moving through the deckRegions object's carriers and plates that back the UI
          */
@@ -449,9 +456,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             hamObj.allSourcePlates = [];
             hamObj.allDestinationPlates = [];
             for (region in hamObj.deckRegions) {
-                var theseCarriers = hamObj.deckRegions[region].carriers;
+                var thisDeckRegion = hamObj.deckRegions[region];
+                var theseCarriers = thisDeckRegion.carriers;
                 for (var i=0; i<theseCarriers.length;i++) {
-                    hamObj.allCarriers.push(theseCarriers[i]);
+                    var thisCarrier = theseCarriers[i];
+                    thisCarrier["selectedHamiltonDeckRegion"] = $scope.selectedHamilton.deckRegions[region];
+                    hamObj.allCarriers.push(thisCarrier);
                 }
             }
             for (var i=0; i<hamObj.allCarriers.length;i++) {
@@ -544,15 +554,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 jQuery('.twst-hamilton-wizard-carrier-' + carrier.index + ' .twst-hamilton-wizard-carrier-input').focus();
             }, 0);
         }
-        $scope.setHighlightedPlate = function (plate, which) {
+        $scope.setHighlightedPlate = function (plate, which, skipInstructionSet, skipFocus) {
             if (!which) {
                 which = Constants.HAMILTON_ELEMENT_PLATE;
             }
             $scope.highlightedPlate = plate;
-            $scope.setCurrentStepInstruction(which, plate);
-            $timeout(function () {
-                jQuery('.twst-hamilton-wizard-plate-' + plate.dataIndex + ' .twst-hamilton-wizard-plate-input').focus();
-            }, 0);
+            if (!skipInstructionSet) {
+                $scope.setCurrentStepInstruction(which, plate);
+            }
+            if (!skipFocus) {
+                $timeout(function () {
+                    jQuery('.twst-hamilton-wizard-plate-' + plate.dataIndex + ' .twst-hamilton-wizard-plate-input').focus();
+                }, 0);
+            }
         }
         $scope.scannedCarrierCount = 0;
         $scope.findNextCarrierForScan = function () {
@@ -560,13 +574,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var scannedCarrierCount = 0;
             for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
-                if (!carrier.barcode && !firstFound) {
+                if (!carrier.scanSkipped && !carrier.barcode && !firstFound) {
                     $scope.setHighlightedCarrier(carrier);
                     carrier.nextToScan = true;
                     firstFound = true;
                 } else {
                     carrier.nextToScan = false;
-                    if (carrier.barcode) {
+                    if (carrier.barcode || carrier.scanSkipped) {
                         scannedCarrierCount++;
                     }
                 }
@@ -574,10 +588,30 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.scannedCarrierCount = scannedCarrierCount;
             
             if ($scope.scannedCarrierCount == $scope.hamiltonDataObj.allCarriers.length) {
-                $scope.highlightedCarrier = null;
-                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.source_scan');
+                $scope.finishCarrierScan();
             }
         };
+
+        $scope.sourcePlatesNeedingScanCount = 0;
+        $scope.destinationPlatesNeedingScanCount = 0;
+
+        $scope.setDestinationPlatesNeedingScanCount = function (val) {
+            $scope.destinationPlatesNeedingScanCount = val;
+        }
+
+        $scope.finishCarrierScan = function () {
+            $scope.highlightedCarrier = null;
+
+            for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length;i++) {
+                var thisPlate = $scope.hamiltonDataObj.allSourcePlates[i];
+                if (!thisPlate.unused) {
+                    $scope.sourcePlatesNeedingScanCount++;
+                }
+            }
+
+            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.source_scan');
+        }
+
         $scope.scannedCarrierBarcode;
         var barcodeFinishedTimeout = null;
         $scope.carrierBarcodeScanned = function () {
@@ -621,7 +655,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.findNextPlateForScan = function (plateFor, positionOrPlate) {
             var firstFound = false;
             var scannedPlateCount = 0;
-            var whichPlateArray = (plateFor == 'source' ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
+            var whichPlateArray = (plateFor == Constants.PLATE_SOURCE ? $scope.hamiltonDataObj.allSourcePlates : $scope.hamiltonDataObj.allDestinationPlates);
             for (var i=0; i<whichPlateArray.length;i++) {
                 var plate = whichPlateArray[i];
                 if (!plate.barcode && !firstFound && !plate.unused) {
@@ -630,7 +664,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     firstFound = true;
                 } else {
                     plate.nextToScan = false;
-                    if (plate.barcode) {
+                    if (plate.barcode && plateFor == plate.plateFor) {
                         scannedPlateCount++;
                     }
                 }
@@ -643,8 +677,100 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.highlightedPlate = null;
                     jQuery('input:focus').trigger('blur');
                 }
+
             }
         };
+
+        $scope.setActiveDeckRegion = function (region) {
+            $scope.activeDeckRegion = region;
+        }
+
+        $scope.setScannedTubeCount = function (val) {
+            $scope.scannedTubeCount = val;
+        };
+
+        $scope.setScannedTubeCount(0);
+        
+        $scope.shippingTubeScanInput = {barcode: ''};
+
+        $scope.promptForDestinationTubeScan = function () {
+            $scope.shippingTubeScanInput = {barcode: ''};
+            $scope.currentStepInstruction = 'Scan a barcoded tube for placement.';
+            $timeout(function () {
+                jQuery('.twst-hamilton-shipping-tube-scan-input').focus();
+            }, 0);
+        };
+
+        $scope.tubePlaced = function () {
+            $scope.highlightedPlate.barcode = $scope.shippingTubeScanInput.barcode;
+            $scope.highlightedPlate['tubeRackRowColumn'] = $scope.tubeTargetWell;
+            $scope.clearScannedItemErrorMessage();
+            $scope.flashHamiltonThumbsUp();
+            $scope.scannedTubeCount++;
+            $scope.highlightedPlate = null;
+            if ($scope.scannedTubeCount != $scope.destinationPlatesNeedingScanCount) {
+                $scope.promptForDestinationTubeScan();
+            } else {
+                jQuery('input:focus').trigger('blur');
+                $scope.currentStepInstruction = 'You have finished placing tubes';
+            }
+        }
+
+        $scope.tubeTargetWell = null;
+
+        $scope.checkAlreadyScannedTube = function (tubeBarcode) {
+            var whichPlateArray = $scope.hamiltonDataObj.allDestinationPlates;
+
+            for (var i=0; i<whichPlateArray.length;i++) {
+                var thisPlate = whichPlateArray[i];
+                if (thisPlate.barcode == tubeBarcode) {
+                    return true;                   
+                } 
+            } 
+            return false;   
+        }
+
+        $scope.shippingTubeScanned = function () {
+            var tubeBarcode = $scope.shippingTubeScanInput.barcode;
+
+            if (tubeBarcode && tubeBarcode.length) {
+                $timeout.cancel(barcodeFinishedTimeout);
+                if ($scope.checkAlreadyScannedTube(tubeBarcode)) {
+                    $scope.clearScannedItemErrorMessage();
+                    $scope.showScannedItemErrorMessage('You have already scanned and placed a tube with this barcode.');
+                    $scope.promptForDestinationTubeScan();
+                } else {
+                    barcodeFinishedTimeout = $timeout(function () {
+                        var shippingTubeBarcodeData = $scope.transformSpec.details.shippingTubeBarcodeData;
+
+                        var found = false;
+
+                        for(var i = 0; i < shippingTubeBarcodeData.length; i++) {
+                            tube = shippingTubeBarcodeData[i];
+                            if (tube["COI"] == tubeBarcode) {
+                                found = tube;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            $scope.clearScannedItemErrorMessage();
+                            $scope.showScannedItemErrorMessage('The scanned barcode does not match this batch. Please rescan.');
+                            $scope.shippingTubeScanInput.barcode = '';
+                        } else {
+                            $scope.tubeTargetWell = Maps.rowColumnMaps['SPTT_0005'][found["forWellNumber"]].row + Maps.rowColumnMaps['SPTT_0005'][found["forWellNumber"]].column;
+                            $scope.clearScannedItemErrorMessage();
+                            $scope.flashHamiltonThumbsUp();
+                            $scope.setHighlightedPlate($scope.hamiltonDataObj.allDestinationPlates[found["forWellNumber"] - 1]);
+                            jQuery('input:focus').trigger('blur');
+                            $scope.currentStepInstruction = 'Place the tube in rack position ' + $scope.tubeTargetWell;
+                        }
+
+                    }, 200);
+                }
+            }
+        };
+
         $scope.plateBarcodeScanned = function () {
             if ($scope.highlightedPlate.barcode && $scope.highlightedPlate.barcode.length) {
                 $timeout.cancel(barcodeFinishedTimeout);
@@ -741,6 +867,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         };
 
+        $scope.tubeDestinationsMode = false;
+
+        $scope.setTubeDestinationsMode = function (mode) {
+            $scope.tubeDestinationsMode = mode;
+        };
+
         if ($scope.selectedHamiltonInfo) {
             if ($scope.selectedHamilton) {
                 $scope.setSelectedHamilton($scope.selectedHamilton);
@@ -761,7 +893,53 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
                 carrier.barcode = null;
-                $scope.findNextCarrierForScan();
+                carrier.scanSkipped = null;
+            }
+            $scope.findNextCarrierForScan();
+        }
+
+        $scope.skipCurrentCarrierScan = function () {
+
+            var whichKind = '';
+
+            for (var j=0; j<$scope.highlightedCarrier.plates.length; j++) {
+                if (whichKind = $scope.highlightedCarrier.plates[j].plateFor) {
+                    break;
+                }
+            }
+
+            if (whichKind != '') {
+
+                var scannedCarrierOfWhichKindCount = 0;
+                var carriersLeftOfWhichKindCount = 0;
+                /* we have to have at least 1 source and 1 destination carrier */
+                for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
+                    var carrier = $scope.hamiltonDataObj.allCarriers[i];
+                    // skip the current carrier
+                    if ($scope.highlightedCarrier.index != carrier.index) {
+                        if (carrier.plates[0].plateFor == whichKind) {
+                            if (carrier.barcode) {
+                                scannedCarrierOfWhichKindCount++;
+                            } else if (carrier.index > $scope.highlightedCarrier.index) {
+                                carriersLeftOfWhichKindCount++;
+                            }
+                        }
+                    }
+                }
+
+                if (!scannedCarrierOfWhichKindCount && !carriersLeftOfWhichKindCount) {
+                    $scope.showScannedItemErrorMessage('You must scan <strong>at least one ' + whichKind + ' carrier</strong>.');
+                    $scope.setHighlightedCarrier($scope.highlightedCarrier);
+                } else {
+                    $scope.highlightedCarrier.scanSkipped = true;
+                    for (var j=0; j<$scope.highlightedCarrier.plates.length; j++) {
+                        $scope.highlightedCarrier.plates[j].unused = true;
+                    }
+                    $scope.findNextCarrierForScan();
+                }
+
+            } else {
+                console.log('Highlighted carrier has no used plates.');
             }
         }
     }]
@@ -776,8 +954,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var plate = $scope.hamiltonDataObj.allSourcePlates[i];
                 plate.barcode = null;
                 plate.positionScanned = null;
-                $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
             }
+            $scope.findNextPlateForScan(Constants.PLATE_SOURCE, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
         };
 
         $scope.sourcePlateScanComplete = function () {
@@ -791,6 +969,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     var plate = $scope.hamiltonDataObj.allSourcePlates[i];
                     if (plate.barcode) {
                         scannedPlateBarcodes.push(plate.barcode);
+                    } else {
+                        plate.unused = true;
                     }
                 }
 
@@ -799,23 +979,76 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 Api.processHamiltonSources(scannedPlateBarcodes, $scope.transformSpec.details.transfer_type_id).success(function (data) {
                     console.log(data);
                     $scope.processingSources = false;
-                    var destinationPlateCount = data.required_destination_plate_count;
+                    var responseCommands =  data.responseCommands;
 
-                    var newAllDestinationPlates = [];
+                    if (!responseCommands.length) {
+                        $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
+                    } else {
 
-                    for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
-                        var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
-                        plate.optional = false;
-                        if (plate.dataIndex > destinationPlateCount) {
-                            plate.unused = true;
-                        } else {
-                            newAllDestinationPlates.push(plate);
+                        for (var i=0; i< responseCommands.length; i++) {
+                            var command = responseCommands[i];
+
+                            var commandType = command.type
+
+                            switch (commandType) {
+                                case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
+                                    var destinationPlateCount = command.plates.length;
+
+                                    var newAllDestinationPlates = [];
+
+                                    var skippedCarrierPlatesCount = 0;
+
+                                    $scope.setDestinationPlatesNeedingScanCount(0);
+
+                                    var destinationPlatesNeedingScanCount = 0;
+
+                                    for (var j=0; j<$scope.hamiltonDataObj.allDestinationPlates.length;j++) {
+                                        var plate = $scope.hamiltonDataObj.allDestinationPlates[j];
+
+                                        if (plate.carrier.scanSkipped) {
+                                            skippedCarrierPlatesCount += plate.carrier.plates.length;
+                                        } else {
+                                            plate.optional = false;
+                                            if (plate.dataIndex - skippedCarrierPlatesCount > destinationPlateCount) {
+                                                plate.unused = true;
+                                            } else {
+                                                newAllDestinationPlates.push(plate);
+                                            }
+                                        }
+
+                                        if (!plate.unused) {
+                                            destinationPlatesNeedingScanCount++;
+                                        }
+                                    }
+                                    $scope.setDestinationPlatesNeedingScanCount(destinationPlatesNeedingScanCount);
+
+                                    $scope.hamiltonDataObj.allDestinationPlates = newAllDestinationPlates;
+                                    break;
+                                case Constants.RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL:
+                                    $scope.transformSpec.details[command.detail.key] = command.detail.value;
+                                    break;
+                                default :
+                                    console.log('Error: Unrecognized command type = [' + command.type + ']');
+                                    break;
+                            }
                         }
+
+                        switch ($scope.transformSpec.details.transfer_type_id) {
+                            case 39:
+                            case 48:
+                                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
+                                break;
+                            case 51:
+                                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.label_destination_tubes');
+                                break;
+                            default:
+                                console.log('Unexpected transfer_type_id = [' + $scope.transformSpec.details.transfer_type_id + ']');
+                                break;
+
+                        }
+
                     }
 
-                    $scope.hamiltonDataObj.allDestinationPlates = newAllDestinationPlates;
-
-                    $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
                 }).error(function (error) {
                     $scope.processingSources = false;
                     $scope.clearScannedItemErrorMessage();
@@ -835,13 +1068,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
                 plate.barcode = null;
                 plate.positionScanned = null;
-                $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
             }
+            $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
         };
 
         $scope.destinationPlateScanComplete = function () {
             /* TODO save transform spec show worklist download link */
-            if ($scope.scannedDestinationPlateCount == $scope.hamiltonDataObj.allDestinationPlates.length && !$scope.savingSourcesAndDestinations) {
+            if ($scope.scannedDestinationPlateCount == destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
                 $scope.transformSpec.sources = [];
                 $scope.transformSpec.destinations = [];
 
@@ -871,8 +1104,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     }
                 }
 
-                $scope.transformSpec.details.source_plate_count = $scope.transformSpec.sources.length;
-                $scope.transformSpec.details.destination_plate_count = $scope.transformSpec.destinations.length;
+                $scope.transformSpec.details.source_plate_count = $scope.sourcePlatesNeedingScanCount;
+                $scope.transformSpec.details.destination_plate_count = $scope.destinationPlatesNeedingScanCount;
                 $scope.transformSpec.details.hamilton = $scope.selectedHamilton;
 
                 $scope.savingSourcesAndDestinations = true;
@@ -891,6 +1124,124 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
             
         };
+    }]
+)
+
+.controller('hamiltonWizardLabelDestinationTubesController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
+    function ($scope, $state, $http, Api, $timeout, Constants) {
+        $scope.currentStepInstruction = 'Print and apply barcodes';
+        $scope.setHighlightedPlate(null, null, true, true);
+        jQuery('input:focus').trigger('blur');
+
+        $scope.setTubeBarcodesFileDownloaded = function (val) {
+
+            var columnTitles = [
+                'COI'
+                ,'itemName'
+                ,'partNumber'
+                ,'labelMass'
+            ]
+
+            var csvContents = columnTitles.join(',') + '\n';
+
+            var shippingTubeBarcodeData = $scope.transformSpec.details.shippingTubeBarcodeData;
+
+            for(var i = 0; i < shippingTubeBarcodeData.length; i++) {
+                row = shippingTubeBarcodeData[i];
+                var line = '';
+                for (var j=0; j<columnTitles.length; j++) {
+                    line += (j ? ',' : '') + row[columnTitles[j]]
+                }
+                csvContents += line + '\n';
+            }
+
+            var csvBlob = new Blob([csvContents], {type: "text/csv"});
+
+            saveAs(csvBlob, "tube_barcodes.csv");
+
+            $scope.tubeBarcodesFileDownloaded = val;
+        }
+
+        $scope.tubesLabeled = function () {
+            if ($scope.tubeBarcodesFileDownloaded) {
+                $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_tubes_scan');
+            }
+        }
+    }]
+)
+
+.controller('hamiltonWizardDestinationTubesScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
+    function ($scope, $state, $http, Api, $timeout, Constants) {
+        $scope.setTubeDestinationsMode(true);
+
+        $scope.promptForDestinationTubeScan();
+
+        $scope.setActiveDeckRegion($scope.hamiltonDataObj.allDestinationPlates[0].carrier.selectedHamiltonDeckRegion);
+
+        $scope.restartDestinationPlateScan = function () {
+            for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
+                var plate = $scope.hamiltonDataObj.allDestinationPlates[i];
+                plate.barcode = null;
+            }
+            $scope.setScannedTubeCount(0);
+            $scope.promptForDestinationTubeScan();
+        };
+
+        $scope.tubePlacementComplete = function () {
+            /* TODO save transform spec show worklist download link */
+            if ($scope.scannedTubeCount == $scope.destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
+                $scope.transformSpec.sources = [];
+                $scope.transformSpec.destinations = [];
+
+                for (var i=0; i<$scope.hamiltonDataObj.allSourcePlates.length; i++) {
+                    var thisPlate = $scope.hamiltonDataObj.allSourcePlates[i];
+                    if (thisPlate.barcode) {
+                        $scope.transformSpec.sources.push({
+                            details: {
+                                id: thisPlate.barcode
+                                ,dataIndex: thisPlate.dataIndex
+                                ,position: 'C' + thisPlate.carrier.index + 'P' + thisPlate.localIndex
+                            }
+                        });
+                    }
+                }
+                for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length; i++) {
+                    var thisPlate = $scope.hamiltonDataObj.allDestinationPlates[i];
+                    if (thisPlate.barcode) {
+                        $scope.transformSpec.destinations.push({
+                            details: {
+                                id: thisPlate.barcode
+                                ,dataIndex: thisPlate.dataIndex
+                                ,position: thisPlate.tubeRackRowColumn
+                            }
+                        });
+                    }
+                }
+
+                $scope.transformSpec.details.source_plate_count = $scope.sourcePlatesNeedingScanCount;
+                $scope.transformSpec.details.destination_plate_count = $scope.destinationPlatesNeedingScanCount;
+                $scope.transformSpec.details.hamilton = $scope.selectedHamilton;
+
+                $scope.savingSourcesAndDestinations = true;
+
+                Api.saveAndConditionallyExecuteTransformSpec($scope.transformSpec.serialize(), false).success(function (data) {
+                    $scope.savingSourcesAndDestinations = false;
+                    var savedSpecId = data.data.spec_id;
+                    $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.finish_run', {
+                        saved_spec_id: savedSpecId
+                    });
+
+                }).error(function (data) {
+                    $scope.savingSourcesAndDestinations = false;
+                    console.log(data);
+                });;
+            }
+            
+        };
+
+        $scope.$on('$destroy', function () {
+            $scope.setTubeDestinationsMode(false);
+        });
     }]
 )
 
@@ -1657,6 +2008,22 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     ,controller: 'hamiltonWizardDestinationScanController'
                 }
             }
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.label_destination_tubes', {
+            url: '/label-destination-tubes'
+            ,views: {
+                "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                    templateUrl: 'twist-hamilton-step-label-destination-tubes.html'
+                    ,controller: 'hamiltonWizardLabelDestinationTubesController'
+                }
+            }
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_tubes_scan', {
+            url: '/destination-tubes-scan'
+            ,views: {
+                "hamiltonStep@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                    templateUrl: 'twist-hamilton-step-destination-tubes-scan.html'
+                    ,controller: 'hamiltonWizardDestinationTubesScanController'
+                }
+            }
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.finish_run', {
             url: '/finish-run/:saved_spec_id'
             ,views: {
@@ -1668,7 +2035,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.run_complete', {
             url: '/run-complete/:saved_spec_id'
             ,views: {
-                "hamiltonFinish@root.record_transform.step_type_selected.tab_selected.hamilton_wizard": {
+                "hamiltonFinish@root.record_transform.step_type_selected.tab_nnnselected.hamilton_wizard": {
                     templateUrl: 'twist-hamilton-step-run-complete.html'
                     ,controller: 'hamiltonWizardRunCompleteController'
                 }

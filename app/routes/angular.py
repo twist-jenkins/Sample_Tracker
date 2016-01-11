@@ -782,6 +782,7 @@ hamiltons = {
         "label": "Galactica - STAR"
         ,"type": "Star Plus"
         ,"barcode": "HAM01"
+        ,"trackCount": 54
         ,"deckRegions": {
             "main": {
                 "trackWidth": 54
@@ -789,10 +790,11 @@ hamiltons = {
             }
         }
     }
-    ,"HAM0Z": {
+    ,"HAM0X": {
         "label": "Enterprise - STAR"
         ,"type": "Star"
         ,"barcode": "HAM0X"
+        ,"trackCount": 54
         ,"deckRegions": {
             "main": {
                 "trackWidth": 54
@@ -804,6 +806,7 @@ hamiltons = {
         "label": "Millenium Falcon - STAR"
         ,"type": "Star"
         ,"barcode": "HAM0Y"
+        ,"trackCount": 54
         ,"deckRegions": {
             "main": {
                 "trackWidth": 54
@@ -1023,9 +1026,58 @@ def process_hamilton_sources(transform_type_id):
     data = request.json
     plateBarcodes = data["plateBarcodes"]
 
+    transform_type_id = int(transform_type_id);
+
     respData = {
-        "required_destination_plate_count": 3
+        "responseCommands": []
     }
+
+    if transform_type_id == 39: # hitpicking of miniprep
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+    elif transform_type_id == 48: # hitpicking of shipping into plates
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+    elif transform_type_id == 51: # hitpicking of shipping into tubes
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellNumber": 1}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellNumber": 2}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellNumber": 3}
+                ]
+            }
+        );
+        respData["responseCommands"].append(
+            {
+                "type": "ADD_TRANSFORM_SPEC_DETAIL"
+                ,"detail": {
+                    "key": "shippingTubeBarcodeData"
+                    ,"value": [
+                        {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
+                        ,{"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
+                        ,{"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                    ]
+                }
+            }
+        );
 
     resp = Response(response=json.dumps(respData),
             status=200, \

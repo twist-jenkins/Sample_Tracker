@@ -1,0 +1,12 @@
+div(class="twst-hamilton-step")      
+    div(class="twst-hamilton-step-direction")
+        div(class="twst-bullet-number") 4
+        div(class="twst-hamilton-step-direction-text")
+            div(class="twst-hamilton-step-stats")
+                p(class="twst-hamilton-source-plates-remaining" ng-if="scannedTubeCount < destinationPlatesNeedingScanCount") {{destinationPlatesNeedingScanCount - scannedTubeCount}} remaining
+                button(class="twst-button twst-red-button twst-source-plates-start-over-button" ng-click="restartDestinationPlateScan()") restart tubes scan
+            div(class="twst-hamilton-step-direction-heading") SCAN AND PLACE DESTINATION TUBES:
+                div(class="twst-spinner" ng-if="confirmingPlate || savingSourcesAndDestinations")
+            strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
+            button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="scannedTubeCount == destinationPlatesNeedingScanCount" ng-click="tubePlacementComplete()") Tube Scan & Placement Complete
+            button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="highlightedPlate" ng-click="tubePlaced()") Tube Placed in {{tubeTargetWell}}
