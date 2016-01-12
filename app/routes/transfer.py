@@ -124,6 +124,15 @@ def filter_transform( transfer_template_id, sources, dests ):
                     well_to_passfail[ well.well_id ] = well
 
             return well_to_passfail
+    
+    elif transfer_template_id == 34:
+        #
+        #
+        # HERE YA GO CHARLIE
+        #
+        #
+        return []
+
     else:
         raise WebError("What transform id is %s??" % transfer_template_id)
 
@@ -179,7 +188,7 @@ def preview():
             # merge source plate(s) into single destination plate
             rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
-        elif request.json['transfer_template_id'] in (26, 27):
+        elif request.json['transfer_template_id'] in (26, 27, 34):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 
         else:
