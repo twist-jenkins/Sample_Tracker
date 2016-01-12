@@ -7,9 +7,12 @@ import twistdb.ngs
 from collections import defaultdict
 from app import app, db
 
+from app.plate_to_plate_maps import maps_json
+
 from flask import g, make_response, request, Response, session, jsonify
 import json
 from json_tricks.nonp import loads # json w/ support for comments
+import math
 
 import logging
 logger = logging.getLogger()
@@ -175,13 +178,19 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     groups = []
 
     for marker in sorted( by_marker ):
-        new_group = {"id": marker_group_index, "marker_value" : marker, "rows": []}
+        new_group = {"id": marker_group_index, "marker_value" : marker, "quadrants": [[]]}
+        quadIndex = 0
+        wellIndex = 0;
         for well in by_marker[ marker ]:
-            new_group["rows"].append( {
+            if (wellIndex and wellIndex%96 == 0):
+                quadIndex+=1
+                new_group["quadrants"].append([])
+            new_group["quadrants"][quadIndex].append( {
                 'source_plate_barcode': barcode,
                 'source_well_name': well.well_name,
                 'source_sample_id': well.sample_id
             })
+            wellIndex+=1
         groups.append(new_group);
         marker_group_index += 1
 
@@ -208,7 +217,7 @@ def preview():
             dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
             # FIXME: 26 and 27 demand 0 destination plates
-            if request.json['transfer_template_id'] not in (26, 27) \
+            if request.json['transfer_template_id'] not in (25, 26, 27) \
                and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
 
                 raise WebError('Expected %d distinct destination plate barcodes; got %d'
@@ -223,29 +232,51 @@ def preview():
 
             # to do: create the dest 
 
+            destination_plates = [];
+            dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
+            fourToOneMap = maps_json()["transfer_maps"][18]["plate_well_to_well_maps"];
+            dest_plate_index = 0;
+
             for group in groups:
-                logger.info("[[[[[[[[[[[[[[[[[[[[[[[[[ %s" % group["marker_value"]);
-                logger.info("+++++++++++++++++++++++++ %s" % len(group["rows"]));
+                how_many_for_group = math.ceil(float(len(group["quadrants"]))/4)
+                plateIndex = 0;
+                while plateIndex < how_many_for_group:
+                    thisPlate = {"type": "SPTT_0006", "first_in_group" : plateIndex==0, "details":{"title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" % (group["marker_value"], (plateIndex + 1), int(how_many_for_group))}}
+                    destination_plates.append(thisPlate)
+                    plateIndex+=1
+                quadrantIndex = 0
 
-            '''
+                if (len(dest_barcodes)):
+                    dest_barcode = dest_barcodes[dest_plate_index];
+                else:
+                    dest_barcode = "DEST_" + str(dest_plate_index);
 
-            rows = {
-                "rows": rowsAndGroups.rows
-                ,"responseCommands": []
-            }
+                for quadrant in group["quadrants"]:
+                    rowIndex = 0;
+                    for row in quadrant:
+                        rows.append({
+                            'source_plate_barcode':           row["source_plate_barcode"],
+                            'source_well_name':               row["source_well_name"],
+                            'source_sample_id':               row["source_sample_id"],
+                            'destination_plate_barcode':      dest_barcode,
+                            'destination_well_name':          dest_type.get_well_name(fourToOneMap[quadrantIndex%4][rowIndex + 1]["destination_well_id"]),
+                            'destination_plate_well_count':   384
+                        });
+                        rowIndex+=1
+                    quadrantIndex+=1
+                    if (quadrantIndex and quadrantIndex%4 == 0):
+                        dest_plate_index+=1
+                        if (len(dest_barcodes)):
+                            dest_barcode = dest_barcodes[dest_plate_index];
+                        else:
+                            dest_barcode = "DEST_" + str(dest_plate_index);
 
-            rows["responseCommands"].append(
-                {
-                    "type": "SET_DESTINATIONS"
-                    ,"plates": [
-                        {"type": "SPTT_0006", "details": {"title": "GRP1"}}
-                        ,{"type": "SPTT_0006", "details": {"title": "GRP2"}}
-                        ,{"type": "SPTT_0006", "details": {"title": "GRP3"}}
-                    ]
-                }
-            );
 
-            '''
+            responseCommands.append({
+                "type": "SET_DESTINATIONS"
+                ,"plates": destination_plates
+            });
+
         elif request.json['transfer_template_id'] in (26, 27):
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 

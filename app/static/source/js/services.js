@@ -1024,16 +1024,17 @@ app = angular.module('twist.app')
             };
 
             base.handleResponseCommands = function (commands) {
+                console.log(commands);
                 for (var i=0; i<commands.length; i++) {
                     var command = commands[i];
                     switch (command.type) {
                         case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
-                            var plates = command.data;
+                            var plates = command.plates;
                             for (var j=0; j<plates.length;j++) {
                                 var plate = plates[i];
                                 var dest = returnEmptyPlate();
                                 dest.details.type = plate.type;
-                                dest.details.title = plate.title;
+                                dest.details.title = plate.details.title;
                                 dest.first_in_group = plate.first_in_group;
                                 
                                 if (base.destinations[j]) {
