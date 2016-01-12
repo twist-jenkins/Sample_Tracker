@@ -1591,6 +1591,38 @@ app = angular.module('twist.app')
                         
                     }
                 }
+                ,34: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Titin Extraction'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0009'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 16
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
+                        ,plateTitles: [
+                            'Plate 01&nbsp;'
+                            ,'Plate 02&nbsp;'
+                            ,'Plate 03&nbsp;'
+                            ,'Plate 04&nbsp;'
+                            ,'Plate 05&nbsp;'
+                            ,'Plate 06&nbsp;'
+                            ,'Plate 07&nbsp;'
+                            ,'Plate 08&nbsp;'
+                            ,'Plate 09&nbsp;'
+                            ,'Plate 10&nbsp;'
+                            ,'Plate 11&nbsp;'
+                            ,'Plate 12&nbsp;'
+                            ,'Plate 13&nbsp;'
+                            ,'Plate 14&nbsp;'
+                            ,'Plate 15&nbsp;'
+                            ,'Plate 16&nbsp;'
+                        ]
+                    }
+                }
 
             }
             ,rowColumnMaps: {
