@@ -15,8 +15,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    pass
+    op.add_column('sample_transfer_type', sa.Column('menu_ordering', sa.INTEGER))
 
 
 def downgrade():
-    pass
+    op.drop_column('sample_transfer_type', 'menu_ordering')
