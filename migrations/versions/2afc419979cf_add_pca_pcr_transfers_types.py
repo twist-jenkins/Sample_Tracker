@@ -66,12 +66,12 @@ def upgradeTransferTypes():
 
     desired_values = [
         [53, "PCA Pre-Planning", 35, 1, 4, None]
-        ,[54, "Primer Hitpicking - Create Source", 1, 1, 0, None]
-        ,[55, "PCA master mix addition", 1, 1, 0, None]
-        ,[56, "PCA Thermocycling", 1, 1, 0, None]
+        ,[54, "Primer Hitpicking - Create Source", 2, 1, 0, None]
+        ,[55, "PCA master mix addition", 2, 1, 0, None]
+        ,[56, "PCA Thermocycling", 2, 1, 0, None]
         ,[57, "PCR Primer Hitpicking", 36, 1, 4, None]
         ,[58, "PCA/PCR Master Mix Addition", 37, 1, 4, None]
-        ,[59, "PCA/PCR Thermocycling", 1, 1, 0, None]
+        ,[59, "PCA/PCR Thermocycling", 2, 1, 0, None]
     ]
 
     for row_values in desired_values:
