@@ -7,9 +7,12 @@ import twistdb.ngs
 from collections import defaultdict
 from app import app, db
 
+from app.plate_to_plate_maps import maps_json
+
 from flask import g, make_response, request, Response, session, jsonify
 import json
 from json_tricks.nonp import loads # json w/ support for comments
+import math
 
 import logging
 logger = logging.getLogger()
@@ -155,15 +158,52 @@ def filter_transform( transfer_template_id, sources, dests ):
                           'source_sample_id':               well.sample_id,
                           'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
                           'destination_well_name':          dest_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   dest_type.number_clusters,
+                          'destination_plate_well_count':   dest_type.number_clusters
             })
     return rows
 
+def sample_data_determined_transform(transfer_template_id, sources, dests):
+    assert transfer_template_id == 25
+
+    dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
+
+    by_marker = defaultdict(list)
+    for src in sources:
+        barcode = src['details']['id']
+
+        for plate, well, cs in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample ) \
+                                                    .filter( SamplePlate.external_barcode == barcode ) \
+                                                    .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+                                                    .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ):
+            try:
+                marker = cs.parent_process.vector.resistance_marker
+            except:
+                marker = None
+            by_marker[ marker ].append( well )
+
+    groups = []
+
+    for marker_group_index, marker in enumerate( sorted( by_marker ) ):
+        new_group = {"id": marker_group_index, "marker_value" : marker, "quadrants": []}
+        for wellIndex, well in enumerate( by_marker[ marker ] ):
+            if wellIndex % 96 == 0:
+                new_group["quadrants"].append([])
+            new_group["quadrants"][-1].append( {
+                'source_plate_barcode': barcode,
+                'source_well_name': well.well_name,
+                'source_sample_id': well.sample_id
+            })
+        groups.append(new_group);
+
+    return groups
 
 def preview():
     assert request.method == 'POST'
 
     print '@@ template_id:', request.json['transfer_template_id']
+
+    responseCommands = []
+    rows = []
 
     try:
         if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
@@ -178,7 +218,7 @@ def preview():
             dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
             # FIXME: 26 and 27 demand 0 destination plates
-            if request.json['transfer_template_id'] not in (26, 27) \
+            if request.json['transfer_template_id'] not in (25, 26, 27) \
                and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
 
                 raise WebError('Expected %d distinct destination plate barcodes; got %d'
@@ -188,7 +228,58 @@ def preview():
             # merge source plate(s) into single destination plate
             rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
+        elif request.json['transfer_template_id'] == 25:
+            groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+
+            # to do: create the dest 
+
+            destination_plates = [];
+            dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
+            fourToOneMap = maps_json()["transfer_maps"][18]["plate_well_to_well_maps"]
+            dest_plate_index = 0
+
+            for group in groups:
+                how_many_for_group = math.ceil(float(len(group["quadrants"]))/4)
+                plateIndex = 0;
+                while plateIndex < how_many_for_group:
+                    thisPlate = {"type": "SPTT_0006",
+                                 "first_in_group" : plateIndex==0,
+                                 "details": {
+                                     "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" % (group["marker_value"], (plateIndex + 1), int(how_many_for_group))
+                                 }}
+                    destination_plates.append(thisPlate)
+                    plateIndex+=1
+                quadrantIndex = 0
+
+                dest_barcode = dest_barcodes[dest_plate_index] \
+                               if dest_barcodes \
+                                  else "DEST_" + str(dest_plate_index)
+
+                for quadrant in group["quadrants"]:
+                    for rowIndex, row in enumerate( quadrant ):
+                        rows.append({
+                            'source_plate_barcode':           row["source_plate_barcode"],
+                            'source_well_name':               row["source_well_name"],
+                            'source_sample_id':               row["source_sample_id"],
+                            'destination_plate_barcode':      dest_barcode,
+                            'destination_well_name':          dest_type.get_well_name(fourToOneMap[quadrantIndex%4][rowIndex + 1]["destination_well_id"]),
+                            'destination_plate_well_count':   384
+                        });
+                    quadrantIndex += 1
+                    if (quadrantIndex and quadrantIndex%4 == 0):
+                        dest_plate_index+=1
+                        dest_barcode = dest_barcodes[dest_plate_index] \
+                                       if dest_barcodes \
+                                          else "DEST_" + str(dest_plate_index)
+
+
+            responseCommands.append({
+                "type": "SET_DESTINATIONS"
+                ,"plates": destination_plates
+            })
+
         elif request.json['transfer_template_id'] in (26, 27, 34):
+
             rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 
         else:
@@ -217,8 +308,6 @@ def preview():
 
             if not dest_plate_type:
                 raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
-
-            rows = []
 
             for src_idx, src in enumerate(request.json['sources']):
                 barcode = src['details']['id']
@@ -251,7 +340,8 @@ def preview():
     else:
         return Response( response=json.dumps({'success': True,
                                               'message': '',
-                                              'data': rows}),
+                                              'data': rows,
+                                              'responseCommands': responseCommands}),
                          status=200,
                          mimetype="application/json")
 
