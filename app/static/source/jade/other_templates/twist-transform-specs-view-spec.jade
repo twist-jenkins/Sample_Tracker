@@ -1,10 +1,12 @@
 div(class="twst-view-transform-spec-main")
     div(class="twst-spinner" ng-if="specLoading")
     div(ng-if="!specLoading")
-        button(class="twst-button twst-return-spec-list-btn" ng-click="backToSpecList()")&#171; return to spec list
-        h2 Viewing Spec:&nbsp;
-        div(class="twst-view-transform-spec-download-options" ng-if="selectedSpec.plan.details.transfer_type_id == 50 || selectedSpec.plan.details.transfer_type_id == 26")
-            div(class="twst-view-transform-spec-download-options-worklists")
+        button(class="twst-button twst-return-spec-list-btn" ng-click="backToSpecList()") &#171; return to spec list
+        h2 Viewing Spec: 
+        div(class="twst-view-transform-spec-download-options")
+            button(class="twst-button twst-red-button" ng-click="trashSamples(selectedSpec.spec_id)") Trash Samples
+            button(class="twst-button twst-blue-button twst-continue-hamilton-btn" ng-click="continueHamilton()" ng-if="selectedSpec.plan.details.transfer_type_id == 39 && !selectedSpec.date_executed") Continue Hamilton
+            div(class="twst-view-transform-spec-download-options-worklists" ng-if="selectedSpec.plan.details.transfer_type_id == 50 || selectedSpec.plan.details.transfer_type_id == 26")
                 div Download Worklist
                 a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.echo.csv" ng-if="selectedSpec.plan.details.transfer_type_id == 26")
                     button Echo

@@ -1,0 +1,4 @@
+dropdb orders_dev && createdb orders_dev && env ORDERS_ENV=local python manage.py createdb && env ORDERS_ENV=local python manage.py seed
+env WEBSITE_ENV=warp1local python manage.py seed
+env WEBSITE_ENV=warp1local PYTHONPATH=../twistdb:. python manage.py db stamp 2508b1c64724
+env WEBSITE_ENV=warp1local PYTHONPATH=../twistdb:. python manage.py db upgrade +1

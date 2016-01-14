@@ -18,8 +18,9 @@ from app.routes.spreadsheet import create_step_record_adhoc
 
 from app import app, db, googlelogin
 
-from app.dbmodels import (SampleTransfer, SampleView,
-                          SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail, SampleTransferType)
+from twistdb.sampletrack import *
+from twistdb.public import *
+
 from app.models import create_destination_plate
 
 from well_mappings import (get_col_and_row_for_well_id_48,
@@ -311,9 +312,8 @@ def create_step_record():
         with scoped_session(db.engine) as db_session:
 
             # Create a "sample_transfer" row representing this entire transfer.
-            sample_transfer = SampleTransfer(sample_transfer_type_id,
-                                             None,
-                                             operator.operator_id)
+            sample_transfer = SampleTransfer(sample_transfer_type_id=sample_transfer_type_id,
+                                             operator_id=operator.operator_id)
             db_session.add(sample_transfer)
 
             for barcode in source_barcodes:
@@ -446,27 +446,24 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         raise IndexError(err)
 
     # create a row representing a well in the destination plate.
-    destination_plate_well = SamplePlateLayout(
-        destination_plate.sample_plate_id,
-        source_plate_well.sample_id,
-        destination_plate_well_id,
-        operator.operator_id,
-        row,
-        column)
+    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                sample_id=source_plate_well.sample_id,
+                                                well_id=destination_plate_well_id,
+                                                operator_id=operator.operator_id,
+                                                row=row, column=column)
 
     db_session.add(destination_plate_well)
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = SampleTransferDetail(
-        sample_transfer.id,
-        order_number,
-        source_plate.sample_plate_id,
-        source_plate_well.well_id,
-        source_plate_well.sample_id,
-        destination_plate.sample_plate_id,
-        destination_plate_well.well_id,
-        destination_plate_well.sample_id)
+    source_to_dest_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+                                                         item_order_number=order_number,
+                                                         source_sample_plate_id=source_plate.sample_plate_id,
+                                                         source_well_id=source_plate_well.well_id,
+                                                         source_sample_id=source_plate_well.sample_id,
+                                                         destination_sample_plate_id=destination_plate.sample_plate_id,
+                                                         destination_well_id=destination_plate_well.well_id,
+                                                         destination_sample_id=destination_plate_well.sample_id)
     db_session.add(source_to_dest_well_transfer)
 
 
@@ -566,7 +563,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             db.session.query(
                 SamplePlateLayout,
                 SampleView
-            ).filter(SamplePlateLayout.sample_id == SampleView.sample_id)
+            ).filter(SamplePlateLayout.sample_id == SampleView.c.sample_id)
         )
         qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
         rows = qry.all()
@@ -755,3 +752,349 @@ def check_plates_are_new():
             status=200, \
             mimetype="application/json")
     return(resp)
+
+##################
+#### Hamailton operation endpoints
+##################
+
+hamiltons = {
+    "HAM04": {
+        "label": "Jupiter 2 - STAR Plus"
+        ,"type": "Star Plus"
+        ,"barcode": "HAM04"
+        ,"trackCount": 68
+        ,"deckRegions": {
+            "left side": {
+                "trackWidth": 30
+                ,"startTrack": 1
+            }
+            ,"middle partition": {
+                "trackWidth": 12
+                ,"startTrack": 31
+            }
+            ,"right side": {
+                "trackWidth": 24
+                ,"startTrack": 43
+            }
+        }
+    }
+    ,"HAM01": {
+        "label": "Galactica - STAR"
+        ,"type": "Star Plus"
+        ,"barcode": "HAM01"
+        ,"trackCount": 54
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+    ,"HAM0X": {
+        "label": "Enterprise - STAR"
+        ,"type": "Star"
+        ,"barcode": "HAM0X"
+        ,"trackCount": 54
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+    ,"HAM0Y": {
+        "label": "Millenium Falcon - STAR"
+        ,"type": "Star"
+        ,"barcode": "HAM0Y"
+        ,"trackCount": 54
+        ,"deckRegions": {
+            "main": {
+                "trackWidth": 54
+                ,"startTrack": 1
+            }
+        }
+    }
+}
+
+carriers = {
+    "CARR0001" : {
+        "positions": {
+            "CARR0001-01" : {
+                "index": 1
+            }
+            ,"CARR0001-02" : {
+                "index": 2
+            }
+            ,"CARR0001-03" : {
+                "index": 3
+            }
+            ,"CARR0001-04" : {
+                "index": 4
+            }
+            ,"CARR0001-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0002" : {
+        "positions": {
+            "CARR0002-01" : {
+                "index": 1
+            }
+            ,"CARR0002-02" : {
+                "index": 2
+            }
+            ,"CARR0002-03" : {
+                "index": 3
+            }
+            ,"CARR0002-04" : {
+                "index": 4
+            }
+            ,"CARR0002-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0003" : {
+        "positions": {
+            "CARR0003-01" : {
+                "index": 1
+            }
+            ,"CARR0003-02" : {
+                "index": 2
+            }
+            ,"CARR0003-03" : {
+                "index": 3
+            }
+            ,"CARR0003-04" : {
+                "index": 4
+            }
+            ,"CARR0003-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0004" : {
+        "positions": {
+            "CARR0004-01" : {
+                "index": 1
+            }
+            ,"CARR0004-02" : {
+                "index": 2
+            }
+            ,"CARR0004-03" : {
+                "index": 3
+            }
+            ,"CARR0004-04" : {
+                "index": 4
+            }
+            ,"CARR0004-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0005" : {
+        "positions": {
+            "CARR0005-01" : {
+                "index": 1
+            }
+            ,"CARR0005-02" : {
+                "index": 2
+            }
+            ,"CARR0005-03" : {
+                "index": 3
+            }
+            ,"CARR0005-04" : {
+                "index": 4
+            }
+            ,"CARR0005-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0006" : {
+        "positions": {
+            "CARR0006-01" : {
+                "index": 1
+            }
+            ,"CARR0006-02" : {
+                "index": 2
+            }
+            ,"CARR0006-03" : {
+                "index": 3
+            }
+            ,"CARR0006-04" : {
+                "index": 4
+            }
+            ,"CARR0006-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0007" : {
+        "positions": {
+            "CARR0007-01" : {
+                "index": 1
+            }
+            ,"CARR0007-02" : {
+                "index": 2
+            }
+            ,"CARR0007-03" : {
+                "index": 3
+            }
+            ,"CARR0007-04" : {
+                "index": 4
+            }
+            ,"CARR0007-05" : {
+                "index": 5
+            }
+
+        }
+    }
+    ,"CARR0008" : {
+        "positions": {
+            "CARR0008-01" : {
+                "index": 1
+            }
+            ,"CARR0008-02" : {
+                "index": 2
+            }
+            ,"CARR0008-03" : {
+                "index": 3
+            }
+            ,"CARR0008-04" : {
+                "index": 4
+            }
+            ,"CARR0008-05" : {
+                "index": 5
+            }
+
+        }
+    }   
+}
+
+
+
+def get_hamilton_by_barcode(hamilton_barcode):
+    
+    if hamilton_barcode in hamiltons:
+        respData = hamiltons[hamilton_barcode] 
+    else:
+        errmsg = "There is no Hamilton with the barcode: [%s]"
+        return error_response(404, errmsg % hamilton_barcode)
+
+    
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp) 
+
+def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
+
+    if carrier_barcode in carriers:
+        respData = carriers[carrier_barcode] 
+    else:
+        errmsg = "There is no carrier with the barcode: [%s]"
+        return error_response(404, errmsg % carrier_barcode)
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
+def get_plate_ready_for_step(plate_barcode, transform_type_id):
+
+    if plate_barcode:
+        respData = True
+    else:
+        errmsg = "This plate is not ready for transform type [%s]"
+        return error_response(404, errmsg % transform_type_id)
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
+def process_hamilton_sources(transform_type_id):
+
+    data = request.json
+    plateBarcodes = data["plateBarcodes"]
+
+    transform_type_id = int(transform_type_id);
+
+    respData = {
+        "responseCommands": []
+    }
+
+    if transform_type_id == 39: # hitpicking of miniprep
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+    elif transform_type_id == 48: # hitpicking of shipping into plates
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+    elif transform_type_id == 51: # hitpicking of shipping into tubes
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellNumber": 1}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellNumber": 2}
+                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellNumber": 3}
+                ]
+            }
+        );
+        respData["responseCommands"].append(
+            {
+                "type": "ADD_TRANSFORM_SPEC_DETAIL"
+                ,"detail": {
+                    "key": "shippingTubeBarcodeData"
+                    ,"value": [
+                        {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
+                        ,{"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
+                        ,{"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                    ]
+                }
+            }
+        );
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+
+def trash_samples():
+
+    data = request.json
+    sampleIds = data["sampleIds"]
+
+    respData = {
+        "all_trashed": True
+    }
+
+    resp = Response(response=json.dumps(respData),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
+

@@ -30,7 +30,14 @@ def create_barcode_table():
     #
     # First the barcode database, which becomes a regular table.
     #
-    ngs_barcode_pair_table = op.create_table(
+
+    method = 'USE_EXISTING'
+    if method == 'CREATE_NEW':
+        create_or_define_fn = op.create_table
+    elif method == 'USE_EXISTING':
+        create_or_define_fn = table
+
+    ngs_barcode_pair_table = create_or_define_fn(
         'ngs_barcode_pair',
         db.Column('pk',
                   db.Integer,

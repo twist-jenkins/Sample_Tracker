@@ -1,0 +1,42 @@
+div(class="twst-hamilton-wizard-main twst-hamilton-wizard-{{selectedHamilton.barcode}}" ng-class="{'twst-hamilton-wizard-tube-destination-scan-mode': tubeDestinationsMode}")
+    div(ng-if="selectedHamilton")
+        div(class="twst-hamilton-wizard-visualizer-header")
+            div(class="twst-hamilton-wizard-visualizer-header-left")
+                div(class="twst-hamilton-step-guidance-element" ui-view="hamiltonStep")   
+        div(class="twst-hamilton-wizard-deck-visualizer" ng-if="selectedHamilton && !showFinishRunControls")
+            div(class="twst-hamilton-wizard-deck-contents" style="width: {{selectedHamilton.trackCount}}em;")
+                div(class="twst-hamilton-wizard-deck-columns" style="width: {{selectedHamilton.trackCount}}em;")
+                    div(class="twst-hamilton-wizard-deck-column twst-hamilton-wizard-deck-column-{{::(column.id + 1)}}" ng-repeat="column in hamiltonColumns")
+                        div(class="twst-hamilton-wizard-deck-column-inner")
+                            span(class="twst-hamilton-wizard-deck-column-hover-label") Track {{::(column.id + 1)}}
+                            span(class="twst-hamilton-wizard-deck-column-number" ng-if="::((column.id + 1)%5 == 0 || (column.id + 1) == 1)") {{::(column.id + 1)}}
+                div(class="twst-hamilton-wizard-deck-region" ng-repeat="(key, value) in selectedHamilton.deckRegions" style="left: {{(value.startTrack - 1)}}em" ng-class="{'twst-hamilton-wizard-carrier-active-contents': activeDeckRegion === value}")
+                    div(class="twst-hamilton-wizard-deck-region-inner" style="width: {{value.trackWidth}}em;")
+                        div(class="twst-hamilton-wizard-carrier twst-hamilton-wizard-carrier-{{carrier.type}} twst-hamilton-wizard-carrier-{{carrier.index}}" ng-repeat="carrier in hamiltonDataObj.deckRegions[key].carriers" style="width: {{carriers[carrier.type].trackWidth}}em; left: {{carrier.startTrack - value.startTrack}}em;" ng-class="{'twst-highlighted-carrier': carrier.index == highlightedCarrier.index, 'twst-scanned-carrier': carrier.barcode}")
+                            div(class="twst-hamilton-wizard-carrier-hover-label") {{carrier.barcode || 'Carrier ' + carrier.index}}
+                            input(class="twst-hamilton-wizard-carrier-input" type="text" ng-model="highlightedCarrier.barcode" ng-change="carrierBarcodeScanned()" ng-keydown="ignoreTab($event)")
+                            div(class="twst-hamilton-wizard-carrier-scan-label") Ready to scan
+                            div(class="twst-hamilton-wizard-carrier-scanned-label") 
+                                span(class="twst-hamilton-wizard-carrier-scanned-label-checkmark") &#10003;
+                                span carrier scanned
+                            div(class="twst-hamilton-wizard-carrier-inner")
+                                div(class="twst-hamilton-wizard-plate twst-hamilton-wizard-plate-{{plate.dataIndex}} twst-hamilton-wizard-plate-for-{{plate.plateFor}} twst-hamilton-wizard-plate-{{plate.type}}" ng-class="{'twst-hamilton-unused-plate': plate.unused, 'twst-highlighted-plate': plate.dataIndex && plate.dataIndex == highlightedPlate.dataIndex && plate.plateFor == highlightedPlate.plateFor, 'twst-scanned-plate': plate.barcode, 'twst-optional-plate': plate.optional}" ng-repeat="plate in carrier.plates")
+                                    div(class="twst-hamilton-wizard-plate-scan-label") Ready to scan
+                                        span(class="twst-hamilton-wizard-plate-scan-label-position-scanned-{{plate.positionScanned == true}}") {{plate.positionScanned ? 'PLATE' : 'POSITION'}}
+                                    div(class="twst-hamilton-wizard-plate-scanned-label") 
+                                        span(class="twst-hamilton-wizard-plate-scanned-label-checkmark") &#10003;
+                                        span plate scanned
+                                    input(class="twst-hamilton-wizard-plate-input" type="text" ng-model="highlightedPlate.barcode" ng-change="plateBarcodeScanned()" ng-keydown="ignoreTab($event)")
+                                    span(class="twst-hamilton-wizard-plate-empty" ng-if="plate.unused") UNUSED
+                                    span(class="twst-hamilton-wizard-plate-optional-label" ng-if="plate.optional") (optional)
+                                    span(class="twst-hamilton-wizard-plate-data-index-label" ng-if="!plate.unused") 
+                                        span(class="twst-hamilton-wizard-plate-data-index-label-letter") {{(plate.plateFor == 'source' ? 'S' : 'D')}}
+                                        span {{Formatter.addLeadingZero(plate.dataIndex)}}
+                                    span(class="twst-hamilton-wizard-plate-tube-position-label" ng-if="tubeDestinationsMode && plate.plateFor == 'destination'") {{tubeRowColumnMap[$index + 1].row + tubeRowColumnMap[$index + 1].column}}
+                div(class="twst-hamilton-wizard-error-message" ng-if="scannedItemErrorMessage")
+                    twst-message(message="scannedItemErrorMessage" visible-and-valid="scannedItemErrorMessageVisible" clear-parent-data="clearScannedItemErrorMessage")
+            p Selected Hamilton:
+                strong &nbsp;{{selectedHamilton.label}}
+                button(class="twst-button twst-change-hamilton-btn" ng-click="changeHamilton()") change
+                input(class="twst-hamilton-shipping-tube-scan-input twst-offscreen" type="text" ng-model="shippingTubeScanInput.barcode" ng-change="shippingTubeScanned()" ng-keydown="ignoreTab($event)")
+        div(ui-view="hamiltonFinish" )

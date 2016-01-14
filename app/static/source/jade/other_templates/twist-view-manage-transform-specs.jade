@@ -23,8 +23,7 @@ div(class="twst-view-manage-transform-specs-main" ui-view)
                         span {{::$index < spec.destinations.length-1 ? ', ': ''}}
                 td {{::getPrettyDateString(spec.date_created)}}
                 td 
-                    strong
-                        {{spec.date_executed ? 'executed' : 'saved'}}
+                    strong {{spec.date_executed ? 'executed' : 'saved'}}
                     span(ng-if="spec.date_executed")
                         br
                         span on {{getPrettyDateString(spec.date_executed)}}

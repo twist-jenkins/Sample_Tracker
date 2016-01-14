@@ -1,0 +1,4 @@
+init test db:
+  insert into operator (operator_id,jira_username,email,user_id,first_name,middle_initial,last_name,role,initials) values ('KH','khervold','khervold@twistbioscience.com','khervold','Kieran','','Hervold','12','KH');
+
+

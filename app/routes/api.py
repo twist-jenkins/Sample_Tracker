@@ -22,9 +22,9 @@ from werkzeug import secure_filename
 
 from app import app, db
 
-from app.models import create_unique_object_id
-from app.dbmodels import (Sample, SampleTransfer,
-                          SamplePlate, SamplePlateLayout, SamplePlateType, SampleTransferDetail)
+from twistdb import create_unique_id
+from twistdb.public import *
+from twistdb.sampletrack import *
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_well_id_for_col_and_row_48,
@@ -382,8 +382,8 @@ def get_samples_list():
 def create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
     raise DeprecationWarning
 
-    destination_plate_name = create_unique_object_id("PLATE_")
-    destination_plate_description = create_unique_object_id("PLATEDESC_")
+    destination_plate_name = create_unique_id("PLATE_")()
+    destination_plate_description = create_unique_id("PLATEDESC_")()
     destination_plates.append(SamplePlate(source_plate_type_id,operator.operator_id,storage_location_id,
         destination_plate_name, destination_plate_description, destination_barcode))
     db.session.add(destination_plates[len(destination_plates) - 1])
@@ -416,7 +416,8 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
         #
         # 1. Create a "sample_transfer" row representing this entire transfer.
         #
-        sample_transfer = SampleTransfer(sample_transfer_type_id, operator.operator_id)
+        sample_transfer = SampleTransfer( sample_transfer_type_id=sample_transfer_type_id,
+                                          operator_id=operator.operator_id )
         db.session.add(sample_transfer)
 
         # create destination plate(s)
@@ -508,18 +509,26 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
             #
             # 3a. Create a row representing a well in the desination plate.
             #
-            destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-                source_plate_well.sample_id,destination_plate_well_id,operator.operator_id,source_plate_well.row,source_plate_well.column)
-
+            destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                        well_id=destination_plate_well_id,
+                                                        sample_id=source_plate_well.sample_id,
+                                                        operator_id=operator.operator_id,
+                                                        row=source_plate_well.row,
+                                                        column=source_plate_well.column )
             db.session.add(destination_plate_well)
 
             #
             # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
             # in the "desination" plate.
             #
-            source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
-               source_plate.sample_plate_id, source_plate_well.well_id, source_plate_well.sample_id,
-               destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
+            source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+                                                                        item_order_number=order_number,
+                                                                        source_sample_plate_id=source_plate_well.sample_plate_id,
+                                                                        source_well_id=source_plate_well.well_id, 
+                                                                        source_sample_id=source_plate_well.sample_id,
+                                                                        destination_sample_plate_id=destination_plate_well.sample_plate_id, 
+                                                                        destination_well_id=destination_plate_well.well_id,
+                                                                        destination_sample_id=destination_plate_well.sample_id)
             db.session.add(source_to_destination_well_transfer)
 
             order_number += 1
@@ -544,7 +553,8 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                 #
                 # 1. Create a "sample_transfer" row representing this entire transfer.
                 #
-                sample_transfer = SampleTransfer(sample_transfer_type_id, operator.operator_id)
+                sample_transfer = SampleTransfer( sample_transfer_type_id=sample_transfer_type_id,
+                                                  operator_id=operator.operator_id )
                 db.session.add(sample_transfer)
 
                 # create destination plate
@@ -598,18 +608,26 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                     #
                     # 3a. Create a row representing a well in the desination plate.
                     #
-                    destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
-                        source_plate.wells[source_plate_well_id].sample_id,order_number,operator.operator_id,source_plate.wells[source_plate_well_id].row,source_plate.wells[source_plate_well_id].column)
-
+                    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                                                                well_id=order_number, # ?? could this be right?
+                                                                sample_id=source_plate.wells[source_plate_well_id].sample_id,
+                                                                operator_id=operator.operator_id,
+                                                                row=source_plate.wells[source_plate_well_id].row,
+                                                                column=source_plate.wells[source_plate_well_id].column )
                     db.session.add(destination_plate_well)
 
                     #
                     # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
                     # in the "desination" plate.
                     #
-                    source_to_destination_well_transfer = SampleTransferDetail(sample_transfer.id, order_number,
-                       source_plate.sample_plate_id, source_plate_well_id, source_plate.wells[source_plate_well_id].sample_id,
-                       destination_plate.sample_plate_id, destination_plate_well.well_id, destination_plate_well.sample_id)
+                    source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+                                                                                item_order_number=order_number,
+                                                                                source_sample_plate_id=source_plate.sample_plate_id,
+                                                                                source_well_id=source_plate_well_id,
+                                                                                source_sample_id=source_plate.wells[source_plate_well_id].sample_id,
+                                                                                destination_sample_plate_id=destination_plate.sample_plate_id,
+                                                                                destination_well_id=destination_plate_well.well_id,
+                                                                                destination_sample_id=destination_plate_well.sample_id)
                     db.session.add(source_to_destination_well_transfer)
 
                     order_number += 1

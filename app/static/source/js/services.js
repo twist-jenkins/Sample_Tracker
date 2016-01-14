@@ -17,6 +17,18 @@ app = angular.module('twist.app')
             ,TRANSFORM_SPEC_TYPE_PLATE_PLANNING: 'PLATE_PLANNING'
             ,TRANSFORM_SPEC_TYPE_PLATE_STEP: 'plate_step'
             ,SOURCE_TYPE_PLATE: 'plate'
+            ,HAMILTON_OPERATION: 'hamilton_operation'
+            ,HAMILTON_TRANSFER_TYPE: 'hamilton'
+            ,HAMILTON_CARRIER_BARCODE_PREFIX: 'CARR'
+            ,HAMILTON_CARRIER_POSITION_BARCODE_PREFIX: 'CARP'
+            ,HAMILTON_PLATE_BARCODE_PREFIX: 'PLT'
+            ,HAMILTON_ELEMENT_CARRIER: 'carrier'
+            ,HAMILTON_ELEMENT_CARRIER_POSITION: 'carrier-position'
+            ,HAMILTON_ELEMENT_PLATE: 'plate'
+            ,SHIPPING_TUBES_CARRIER_TYPE: 'SHIPPING_TUBES_CARRIER'
+            ,SHIPPING_TUBE_PLATE_TYPE: 'SHIPPING_TUBE_PLATE'
+            ,RESPONSE_COMMANDS_SET_DESTINATIONS: 'SET_DESTINATIONS'
+            ,RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL: 'ADD_TRANSFORM_SPEC_DETAIL'
         };
     }]
 )
@@ -180,6 +192,46 @@ app = angular.module('twist.app')
                 }
                 return $http(saveAndExReq);
             }
+            ,previewTransformation: function(sources, destinations, transfer_type_id, transfer_template_id ) {
+                // kieran
+                var preview = ApiRequestObj.getPost('transfer-preview');
+                preview.data = {
+                    sources: sources,
+                    destinations: destinations,
+                    transfer_type_id: transfer_type_id,
+                    transfer_template_id: transfer_template_id
+                }
+                return $http(preview);
+            }
+
+            //hamilton calls
+            ,getHamiltonByBarcode: function (hamBarcode) {
+                var hamReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode);
+                return $http(hamReq);
+            }
+            ,getCarrierByBarcode: function (carrierBarcode, hamBarcode) {
+                var carrierReq = ApiRequestObj.getGet('rest-ham/hamiltons/' + hamBarcode + '/carriers/' + carrierBarcode);
+                return $http(carrierReq);
+            }
+            ,confirmPlateReadyForTransform: function (plateBarcode, transformTypeId) {
+                var plateReq = ApiRequestObj.getGet('rest-ham/hamilton-plates/' + plateBarcode + '/transform/' + transformTypeId);
+                return $http(plateReq);
+            }
+            ,processHamiltonSources: function (plateBarcodes, transformTypeId) {
+                var processReq = ApiRequestObj.getPost('rest-ham/hamilton-plates/transform/' + transformTypeId);
+                processReq.data = {
+                    plateBarcodes: plateBarcodes
+                }
+                return $http(processReq);
+            }
+            ,trashSamples: function (sampleIds) {
+                var trashReq = ApiRequestObj.getPost('rest-ham/trash-samples');
+                trashReq.data = {
+                    sampleIds: sampleIds
+                }
+                return $http(trashReq);
+            }
+
         };
     }]
 )
@@ -230,6 +282,18 @@ app = angular.module('twist.app')
                 var d = new Date(dateString);
                 return d.toLocaleString();
             }
+            ,addLeadingZero: function (number, finalLength) {
+
+                if (finalLength == null) {
+                    finalLength = 2;
+                }
+
+                numberString = number + '';
+                while (numberString.length < finalLength) {
+                    numberString = '0' + number;
+                }
+                return numberString;
+            }
         }
     }]
 )
@@ -266,6 +330,22 @@ app = angular.module('twist.app')
                     return goodData;
                 });
             }
+            ,getTransformSpecIds: function (queryText) {
+                return Api.getTransformSpecs(queryText).then(function (resp) {
+                    queryText = queryText.toLowerCase();
+
+                    var goodData = [];
+                    console.log(queryText)
+                    console.log(resp);
+                    for (var i=0; i< resp.data.data.length ;i++) {
+                        var specId = resp.data.data[i].spec_id + '';
+                        if (specId.toLowerCase().indexOf(queryText) != -1) {
+                            goodData.push(specId);
+                        }
+                    }
+                    return goodData;
+                });
+            }
         };
     }]
 )
@@ -290,6 +370,8 @@ app = angular.module('twist.app')
             base.planFromFile = false;
             base.autoUpdateSpec = true;
 
+            base.error_message = '';
+
             var updating = function () {
                 base.updating = true;
             }
@@ -303,92 +385,44 @@ app = angular.module('twist.app')
             };
 
             var updateOperationsList = function () {
-
                 if (base.autoUpdateSpec) {
 
-                    if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP) {
-
+                    if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
+                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
-                            var operations = [];
-                            
-                            if (base.details.transfer_template_id == 1 || base.details.transfer_template_id == 2) {
-                                /* sopurce and destination plate are same size and layout */
-                                var plate = base.sources[0];
-                                for (var j=0; j<plate.items.length;j++) {
-                                    var sourceWell = plate.items[j];
-                                    var operationRow = {
-                                        source_plate_barcode: plate.details.id
-                                        ,source_well_name: sourceWell.column_and_row
-                                        ,source_sample_id: sourceWell.sample_id
-                                        ,destination_plate_barcode: (base.details.transfer_template_id == 2 ? plate.details.id : base.destinations[0].details.id)
-                                        ,destination_well_name: sourceWell.column_and_row
-                                        ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                    };
-                                    operations.push(operationRow);
-                                }
-                            } else {
-                                /* source and destination are different size and/or layout*/
-                                if (base.details.transfer_template_id == 23) {
-                                    /* merge source plate(s) into single destination plate */
-                                    var overlapCheckMap = {};
-                                    for (var i=0;i< base.sources.length;i++) {
-                                        var plate = base.sources[i];
+                            // kieran
+                            Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id )
+                                .success( function(result) {
+                                    if( result.success ) {
+                                        base.error_message = '';
+                                        base.operations = result.data;
 
-                                        for (var j=0; j<plate.items.length;j++) {
-                                            var sourceWell = plate.items[j];
-
-                                            if (overlapCheckMap[sourceWell.column_and_row]) {
-                                                base.errors.push('Error: Well ' + sourceWell.column_and_row + ' in plate ' + plate.details.id + ' has a well that is also occupied in plate ' + overlapCheckMap[sourceWell.column_and_row]);
-                                                return;
-                                            } else {
-                                                overlapCheckMap[sourceWell.column_and_row] = plate.details.id;
-                                            }
-
-                                            var operationRow = {
-                                                source_plate_barcode: plate.details.id
-                                                ,source_well_name: sourceWell.column_and_row
-                                                ,source_sample_id: sourceWell.sample_id
-                                                ,destination_plate_barcode: base.destinations[0].details.id
-                                                ,destination_well_name: sourceWell.column_and_row
-                                                ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                            };
-                                            operations.push(operationRow);
+                                        if (result.responseCommands) {
+                                            /* this transform requires additional actions or input data */
+                                            base.handleResponseCommands(result.responseCommands);
                                         }
-                                    }
-                                } else {
-                                    /* all others */
-                                    for (var i=0;i< base.sources.length;i++) {
-                                        var plate = base.sources[i];
-                                        var wellsMap = base.map.plateWellToWellMaps[i];
 
-                                        for (var j=0; j<plate.items.length;j++) {
-                                            var sourceWell = plate.items[j];
-                                            var destWell = wellsMap[sourceWell.well_id];
-                                            var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId]
-                                            var operationRow = {
-                                                source_plate_barcode: plate.details.id
-                                                ,source_well_name: sourceWell.column_and_row
-                                                ,source_sample_id: sourceWell.sample_id
-                                                ,destination_plate_barcode: base.destinations[destWell.destination_plate_number - 1].details.id
-                                                ,destination_well_name: destWellRowColumnMap[destWell.destination_well_id].row + destWellRowColumnMap[destWell.destination_well_id].column
-                                                ,destination_plate_well_count: Maps.plateTypeInfo[base.map.destination.plateTypeId].wellCount
-                                            };
-                                            operations.push(operationRow);
-                                        }
+                                    } else {
+                                        base.error_message = result.message;
                                     }
-                                }
-                            }
-
-                            base.operations = operations;
+                                }).error(function(data) {
+                                    console.log('Error retrieving transform preview.');
+                                });
+                        
                         } else {
                             base.clearOperationsList();
                         }
                     } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
+                        // "rebatching for transformation"
+
                         if (base.sourcesReady) {
                             
                             var templateId = base.details.transfer_template_id;
 
                             switch (templateId) {
+                                /*** 
+                                * moved to backend
+
                                 case 25:
                                     //Rebatching for trannsformation
                                     //first, we'll group source wells based on resistance_marker values
@@ -523,31 +557,10 @@ app = angular.module('twist.app')
                                         base.clearOperationsList();
                                     }
 
-                                    break;
-                                
-                                case 26:
-                                case 27:
-                                case 28:
-                                case 29:
-                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
-                                    var operations = [];
+                                break;
+                                */
 
-                                    for (var i=0; i<base.sources.length;i++) {
-                                        var source = base.sources[i];
-                                        var operationRow = {
-                                            source_plate_barcode: source.details.id
-                                            ,source_well_name: 'Z0'
-                                            ,source_sample_id: '0000000'
-                                            ,destination_plate_barcode: '0000000-1'
-                                            ,destination_well_name: 'Z0'
-                                            ,destination_plate_well_count: 0
-                                        };
-                                        operations.push(operationRow);
-                                    }
-
-                                    base.operations = operations;
-                                    break;
-                                case 30:
+                            case 30:
                                     /* for NGS, the destination plate is the same as the source plate (as entered)
                                     * BUT the source plate we record is a placeholder for the dna barcodes plate
                                     * so we need to adjust the generated operations to reflect this */
@@ -596,7 +609,7 @@ app = angular.module('twist.app')
                                     base.operations = operations;
                                     break;
 
-                                default :
+                            default :
                                     console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
                                     break;
                             }
@@ -1010,6 +1023,46 @@ app = angular.module('twist.app')
                 base.autoUpdateSpec = false;
             };
 
+            base.handleResponseCommands = function (commands) {
+                console.log(commands);
+                for (var i=0; i<commands.length; i++) {
+                    var command = commands[i];
+                    switch (command.type) {
+                        case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
+                            var plates = command.plates;
+                            for (var j=0; j<plates.length;j++) {
+                                var plate = plates[i];
+                                var dest = returnEmptyPlate();
+                                dest.details.type = plate.type;
+                                dest.details.title = plate.details.title;
+                                dest.first_in_group = plate.first_in_group;
+                                
+                                if (base.destinations[j]) {
+                                    if (base.destinations[j].loaded || base.destinations[j].updating) {
+                                        //do nothing - this destination was already entered
+                                    } else {
+                                        dest.details.id = base.destinations[j].details.id; 
+                                        base.destinations[j] = dest;
+                                        base.addDestination(j);
+                                    }
+                                } else {
+                                    base.destinations[j] = dest;
+                                    base.addDestination(j);
+                                }
+                            }
+                            if (base.destinations.length > plates.length) {
+                                base.destinations.splice(plates.length - base.destinations.length);
+                            }
+                            break;
+                        
+                        default :
+                            console.log('Error: Unrecognized response command type = [' + command.type + ']');
+                            break;
+                    }
+
+                }
+            };
+
             base.serialize = function () {
                 var sharedProps = ['type', 'title', 'description', 'notes'];
                 var obj = {};
@@ -1026,7 +1079,9 @@ app = angular.module('twist.app')
                     delete plate.details.parentPlates;
                     delete plate.details.parentToThisTaskName;
                     delete plate.details.thisToChildTaskName
-                    delete plate.details.plateDetails.dateCreatedFormatted;;
+                    if (plate.details.plateDetails) {
+                        delete plate.details.plateDetails.dateCreatedFormatted;
+                    }
                     delete plate.details.success;
                     delete plate.items;
                     delete plate.updating;
