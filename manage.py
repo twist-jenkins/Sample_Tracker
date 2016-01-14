@@ -55,10 +55,10 @@ def seed():
     seed_data_file_name = "app/seed_data/smt_seed_data.xlsx"
     tables_to_seed = ['sampletrack.sample_transfer_template',
                       'sampletrack.sample_transfer_type',
-                      'public.sample_plate_type',
-                      'public.sample_plate',
-                      'public.barcode_sequence',
-                      'public.sample_type'
+                      'sampletrack.sample_plate_type',
+                      'sampletrack.sample_plate',
+                      'ngs.barcode_sequence',
+                      'backend.sample_type'
                       ]
     seed.seed_data(db.engine, seed_data_file_name, tables_to_seed)
 
