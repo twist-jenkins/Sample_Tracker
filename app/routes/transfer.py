@@ -206,130 +206,173 @@ def preview():
     rows = []
 
     try:
-        if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
-            raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
 
-        xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
-        
-        if request.json['transfer_template_id'] == 2:
-            # identity function
-            dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
-        else:
-            dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
+        if request.json['transfer_type_id'] in (54, 55, 56, 57, 59):
 
-            # FIXME: 26 and 27 demand 0 destination plates
-            if request.json['transfer_template_id'] not in (25, 26, 27) \
-               and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+            if request.json['transfer_type_id'] == 54: # Primer Hitpicking - Create Source
 
-                raise WebError('Expected %d distinct destination plate barcodes; got %d'
-                               % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
-    
-        if request.json['transfer_template_id'] == 23:
-            # merge source plate(s) into single destination plate
-            rows = merge_transform( request.json['sources'], request.json['destinations'] )
-
-        elif request.json['transfer_template_id'] == 25:
-            groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
-
-            # to do: create the dest 
-
-            destination_plates = [];
-            dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
-            fourToOneMap = maps_json()["transfer_maps"][18]["plate_well_to_well_maps"]
-            dest_plate_index = 0
-
-            for group in groups:
-                how_many_for_group = math.ceil(float(len(group["quadrants"]))/4)
-                plateIndex = 0;
-                while plateIndex < how_many_for_group:
-                    thisPlate = {"type": "SPTT_0006",
-                                 "first_in_group" : plateIndex==0,
-                                 "details": {
-                                     "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" % (group["marker_value"], (plateIndex + 1), int(how_many_for_group))
-                                 }}
-                    destination_plates.append(thisPlate)
-                    plateIndex+=1
-                quadrantIndex = 0
-
-                dest_barcode = dest_barcodes[dest_plate_index] \
-                               if dest_barcodes \
-                                  else "DEST_" + str(dest_plate_index)
-
-                for quadrant in group["quadrants"]:
-                    for rowIndex, row in enumerate( quadrant ):
-                        rows.append({
-                            'source_plate_barcode':           row["source_plate_barcode"],
-                            'source_well_name':               row["source_well_name"],
-                            'source_sample_id':               row["source_sample_id"],
-                            'destination_plate_barcode':      dest_barcode,
-                            'destination_well_name':          dest_type.get_well_name(fourToOneMap[quadrantIndex%4][rowIndex + 1]["destination_well_id"]),
-                            'destination_plate_well_count':   384
-                        });
-                    quadrantIndex += 1
-                    if (quadrantIndex and quadrantIndex%4 == 0):
-                        dest_plate_index+=1
-                        dest_barcode = dest_barcodes[dest_plate_index] \
-                                       if dest_barcodes \
-                                          else "DEST_" + str(dest_plate_index)
-
-
-            responseCommands.append({
-                "type": "SET_DESTINATIONS"
-                ,"plates": destination_plates
-            })
-
-        elif request.json['transfer_template_id'] in (26, 27, 34):
-
-            rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
-
-        else:
-            if request.json['transfer_template_id'] in (1,2):
                 src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
                 dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
 
-                dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
+                for src_idx, src in enumerate(request.json['sources']):
+                    barcode = src['details']['id']
+                    try:
+                        plate = db.session.query(SamplePlate) \
+                                          .filter(SamplePlate.external_barcode == barcode) \
+                                          .one()
+                    except MultipleResultsFound:
+                        raise WebError('multiple plates found with barcode %s' % barcode)
 
+                    for well in db.session.query(SamplePlateLayout) \
+                                  .filter( SamplePlateLayout.sample_plate == plate ) \
+                                  .order_by( SamplePlateLayout.well_id ):
+
+                        rows.append( {'source_plate_barcode':           barcode,
+                                      'source_well_name':               well.well_name,
+                                      'source_sample_id':               well.sample_id,
+                                      'destination_plate_barcode':      barcode,
+                                      'destination_well_name':          well.well_name,
+                                      'destination_plate_well_count':   dest_plate_type.number_clusters
+                                      })
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA"
+                    ,"data": [
+                        {
+                            "type": "text"
+                            ,"": "The source plate map should go here"
+                        }
+                    ]
+                })
             else:
-                if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                rows = []
+
+        else:
+
+            if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
+                raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
+
+            xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
+            
+            if request.json['transfer_template_id'] == 2:
+                # identity function
+                dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
+            else:
+                dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
+
+                # FIXME: 26 and 27 demand 0 destination plates
+                if request.json['transfer_template_id'] not in (25, 26, 27) \
+                   and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
+        
+            if request.json['transfer_template_id'] == 23:
+                # merge source plate(s) into single destination plate
+                rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
-                if xfer['source']['plateCount'] != len(request.json['sources']):
-                    raise WebError('Expected %d source plates; got %d'
-                                   % (xfer['source']['plateCount'], len(request.json['sources'])))
+            elif request.json['transfer_template_id'] == 25:
+                groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
 
-                dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
+                # to do: create the dest 
 
-                def dest_lookup( src_idx, well_id ):
-                    dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well_id) ]
-                    dest_barcode = dest_barcodes[ dest['destination_plate_number'] - 1]
-                    dest_well = dest['destination_well_id']
-                    return dest_barcode, dest_well
+                destination_plates = [];
+                dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
+                fourToOneMap = maps_json()["transfer_maps"][18]["plate_well_to_well_maps"]
+                dest_plate_index = 0
 
-            if not dest_plate_type:
-                raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
+                for group in groups:
+                    how_many_for_group = math.ceil(float(len(group["quadrants"]))/4)
+                    plateIndex = 0;
+                    while plateIndex < how_many_for_group:
+                        thisPlate = {"type": "SPTT_0006",
+                                     "first_in_group" : plateIndex==0,
+                                     "details": {
+                                         "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" % (group["marker_value"], (plateIndex + 1), int(how_many_for_group))
+                                     }}
+                        destination_plates.append(thisPlate)
+                        plateIndex+=1
+                    quadrantIndex = 0
 
-            for src_idx, src in enumerate(request.json['sources']):
-                barcode = src['details']['id']
-                try:
-                    plate = db.session.query(SamplePlate) \
-                                      .filter(SamplePlate.external_barcode == barcode) \
-                                      .one()
-                except MultipleResultsFound:
-                    raise WebError('multiple plates found with barcode %s' % barcode)
+                    dest_barcode = dest_barcodes[dest_plate_index] \
+                                   if dest_barcodes \
+                                      else "DEST_" + str(dest_plate_index)
 
-                for well in db.session.query(SamplePlateLayout) \
-                              .filter( SamplePlateLayout.sample_plate == plate ) \
-                              .order_by( SamplePlateLayout.well_id ):
-                    dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
+                    for quadrant in group["quadrants"]:
+                        for rowIndex, row in enumerate( quadrant ):
+                            rows.append({
+                                'source_plate_barcode':           row["source_plate_barcode"],
+                                'source_well_name':               row["source_well_name"],
+                                'source_sample_id':               row["source_sample_id"],
+                                'destination_plate_barcode':      dest_barcode,
+                                'destination_well_name':          dest_type.get_well_name(fourToOneMap[quadrantIndex%4][rowIndex + 1]["destination_well_id"]),
+                                'destination_plate_well_count':   dest_type.number_clusters
+                            });
+                        quadrantIndex += 1
+                        if (quadrantIndex and quadrantIndex%4 == 0):
+                            dest_plate_index+=1
+                            dest_barcode = dest_barcodes[dest_plate_index] \
+                                           if dest_barcodes \
+                                              else "DEST_" + str(dest_plate_index)
 
-                    rows.append( {'source_plate_barcode':           barcode,
-                                  'source_well_name':               well.well_name,
-                                  'source_sample_id':               well.sample_id,
-                                  'destination_plate_barcode':      dest_barcode,
-                                  'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
-                                  'destination_plate_well_count':   dest_plate_type.number_clusters,
-                                  })
+
+                responseCommands.append({
+                    "type": "SET_DESTINATIONS"
+                    ,"plates": destination_plates
+                })
+
+            elif request.json['transfer_template_id'] in (26, 27, 34):
+
+                rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+
+            else:
+                if request.json['transfer_template_id'] in (1,2):
+                    src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+                    dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+
+                    dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
+
+                else:
+                    if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                        raise WebError('Expected %d distinct destination plate barcodes; got %d'
+                                       % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
+
+                    if xfer['source']['plateCount'] != len(request.json['sources']):
+                        raise WebError('Expected %d source plates; got %d'
+                                       % (xfer['source']['plateCount'], len(request.json['sources'])))
+
+                    dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
+
+                    def dest_lookup( src_idx, well_id ):
+                        dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well_id) ]
+                        dest_barcode = dest_barcodes[ dest['destination_plate_number'] - 1]
+                        dest_well = dest['destination_well_id']
+                        return dest_barcode, dest_well
+
+                if not dest_plate_type:
+                    raise WebError('Unknown destination plate type: '+xfer['destination']['plateTypeId'])
+
+                for src_idx, src in enumerate(request.json['sources']):
+                    barcode = src['details']['id']
+                    try:
+                        plate = db.session.query(SamplePlate) \
+                                          .filter(SamplePlate.external_barcode == barcode) \
+                                          .one()
+                    except MultipleResultsFound:
+                        raise WebError('multiple plates found with barcode %s' % barcode)
+
+                    for well in db.session.query(SamplePlateLayout) \
+                                  .filter( SamplePlateLayout.sample_plate == plate ) \
+                                  .order_by( SamplePlateLayout.well_id ):
+                        dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
+
+                        rows.append( {'source_plate_barcode':           barcode,
+                                      'source_well_name':               well.well_name,
+                                      'source_sample_id':               well.sample_id,
+                                      'destination_plate_barcode':      dest_barcode,
+                                      'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
+                                      'destination_plate_well_count':   dest_plate_type.number_clusters,
+                                      })
 
     except WebError as e:
         return Response( response=json.dumps({'success': False,
