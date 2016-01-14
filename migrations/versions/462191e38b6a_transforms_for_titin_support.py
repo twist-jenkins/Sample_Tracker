@@ -1,14 +1,14 @@
-"""More Hamilton transform types.
+"""Transforms for Titin support.
 
-Revision ID: 41fd137c0b35
-Revises: 29c899083825
-Create Date: 2016-01-05 13:54:12.114773
+Revision ID: 462191e38b6a
+Revises: 430e2caa4545
+Create Date: 2016-01-11 14:28:38.583640
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '41fd137c0b35'
-down_revision = '29c899083825'
+revision = '462191e38b6a'
+down_revision = '430e2caa4545'
 
 from alembic import op
 import sqlalchemy as sa
@@ -32,8 +32,7 @@ def upgradeTransferTemplates():
     sql_param_names = ("id", "name", "ioto", "spwc", "dpwc")
 
     desired_values = [
-        [28, "Hitpicking for Shipping in Plates", "F", None, None],
-        [33, "Hitpicking for Shipping in Tubes", "F", None, None]
+        [34, "Extraction - Titin", "F", None, None]
     ]
 
     for row_values in desired_values:
@@ -63,8 +62,7 @@ def upgradeTransferTypes():
     sql_param_names = ("id", "name", "stti", "spc", "dpc")
 
     desired_values = [
-        [48, "Hitpicking for Shipping in Plates", 28, 1, 1, 47],
-        [51, "Hitpicking for Shipping in Tubes", 33, 0, 0, 47]
+        [52, "Extraction - Titin", 34, 1, 16, None]
     ]
 
     for row_values in desired_values:

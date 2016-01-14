@@ -2107,14 +2107,43 @@ strong {
     }
 
     &.twst-hamilton-wizard-tube-destination-scan-mode {
+
+        &.twst-hamilton-wizard-HAM01 {
+            .twst-hamilton-wizard-deck-visualizer {
+                .twst-hamilton-wizard-deck-contents {
+                    .twst-hamilton-wizard-carrier {
+                        &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                            .twst-hamilton-wizard-carrier-inner {
+                                top: -5em;
+                                left: -12em;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        &.twst-hamilton-wizard-HAM04 {
+            .twst-hamilton-wizard-deck-visualizer {
+                .twst-hamilton-wizard-deck-contents {
+                    .twst-hamilton-wizard-carrier {
+                        &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                            .twst-hamilton-wizard-carrier-inner {
+                                top: -5em;
+                                left: -2.5em;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         .twst-hamilton-wizard-deck-visualizer {
             .twst-hamilton-wizard-deck-contents {
                 .twst-hamilton-wizard-carrier {
                     &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
                         .twst-hamilton-wizard-carrier-inner {
                             font-size: 2.5em;
-                            top: -5em;
-                            left: -2.5em;
                             background: #fff;
                             position: absolute;
                             box-shadow: 0 0 2em #000;
@@ -2137,6 +2166,17 @@ strong {
 
                                     .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label {
                                         display: none;
+                                    }
+
+                                    .twst-hamilton-wizard-plate-tube-position-label {
+                                        font-size: 0.6em;
+                                        display: block;
+                                        width: 100%;
+                                        text-align: center;
+                                        color: rgba(255, 255, 255, 0.5);
+                                        top: 0.3em;
+                                        position: absolute;
+                                        font-weight: bold;
                                     }
                                 }
 
@@ -2636,6 +2676,10 @@ strong {
                             font-size: 0.7em;
                             padding-bottom: 0.2em;
                             color: #337251;
+                        }
+
+                        .twst-hamilton-wizard-plate-tube-position-label {
+                            display: none;
                         }
 
                         .twst-hamilton-wizard-plate-scan-label {

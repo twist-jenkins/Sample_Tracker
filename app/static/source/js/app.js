@@ -390,6 +390,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.carriers = Maps.carriers;
 
+        $scope.tubeRowColumnMap = Maps.rowColumnMaps['SPTT_0005'];
+        
         $scope.setSelectedHamilton = function (hamilton) {
             $scope.selectedHamilton = hamilton;
             $scope.hamiltonDataObj = {
@@ -888,7 +890,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 .controller('hamiltonWizardCarrierScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 
     function ($scope, $state, $http, Api, $timeout) {
         $scope.findNextCarrierForScan();
-        console.log($scope.hamiltonDataObj);
         $scope.restartCarrierScan = function () {
             for (var i=0; i<$scope.hamiltonDataObj.allCarriers.length;i++) {
                 var carrier = $scope.hamiltonDataObj.allCarriers[i];
@@ -1074,7 +1075,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         $scope.destinationPlateScanComplete = function () {
             /* TODO save transform spec show worklist download link */
-            if ($scope.scannedDestinationPlateCount == destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
+            if ($scope.scannedDestinationPlateCount == $scope.destinationPlatesNeedingScanCount && !$scope.savingSourcesAndDestinations) {
                 $scope.transformSpec.sources = [];
                 $scope.transformSpec.destinations = [];
 

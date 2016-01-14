@@ -1,14 +1,14 @@
-"""More Hamilton transform types.
+"""add pca pcr transfers types
 
-Revision ID: 41fd137c0b35
-Revises: 29c899083825
-Create Date: 2016-01-05 13:54:12.114773
+Revision ID: 2afc419979cf
+Revises: 462191e38b6a
+Create Date: 2016-01-12 15:20:07.554481
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '41fd137c0b35'
-down_revision = '29c899083825'
+revision = '2afc419979cf'
+down_revision = '462191e38b6a'
 
 from alembic import op
 import sqlalchemy as sa
@@ -32,8 +32,10 @@ def upgradeTransferTemplates():
     sql_param_names = ("id", "name", "ioto", "spwc", "dpwc")
 
     desired_values = [
-        [28, "Hitpicking for Shipping in Plates", "F", None, None],
-        [33, "Hitpicking for Shipping in Tubes", "F", None, None]
+        [35, "PCA Pre-Planning", "F", None, None]
+        ,[36, "PCR Primer Hitpicking", "F", None, None]
+        ,[37, "PCA/PCR Master Mix Addition", "F", None, None]
+
     ]
 
     for row_values in desired_values:
@@ -63,8 +65,13 @@ def upgradeTransferTypes():
     sql_param_names = ("id", "name", "stti", "spc", "dpc")
 
     desired_values = [
-        [48, "Hitpicking for Shipping in Plates", 28, 1, 1, 47],
-        [51, "Hitpicking for Shipping in Tubes", 33, 0, 0, 47]
+        [53, "PCA Pre-Planning", 35, 1, 4, None]
+        ,[54, "Primer Hitpicking - Create Source", 2, 1, 0, None]
+        ,[55, "PCA master mix addition", 2, 1, 0, None]
+        ,[56, "PCA Thermocycling", 2, 1, 0, None]
+        ,[57, "PCR Primer Hitpicking", 36, 1, 4, None]
+        ,[58, "PCA/PCR Master Mix Addition", 37, 1, 4, None]
+        ,[59, "PCA/PCR Thermocycling", 2, 1, 0, None]
     ]
 
     for row_values in desired_values:
