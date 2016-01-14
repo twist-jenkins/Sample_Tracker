@@ -9,7 +9,8 @@ from app import db
 from sqlalchemy import or_, and_
 from twistdb.sampletrack import SampleTransfer, SampleTransferType, SampleTransferDetail, \
     SamplePlate, SamplePlateLayout, SamplePlateType
-from twistdb.public import Operator, SampleType, Sample, SampleType
+from twistdb.public import Operator
+from twistdb.backend import SampleType, Sample, SampleType
 
 """
 
