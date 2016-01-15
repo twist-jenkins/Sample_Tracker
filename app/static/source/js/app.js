@@ -280,6 +280,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
         });
 
+        /* not necessarily the most elegant code but it works for updating the UI when
+        *  the responseCommand data items are changed */
+        
         $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
                 if (!oldVal || oldVal.length != newVal.length) {

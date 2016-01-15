@@ -412,7 +412,7 @@ app = angular.module('twist.app')
                                             //if we got operations, then that means sources AND destinations were ready
                                             //we should force validation on any requested data that exists since
                                             //otherwise this transform spec should be ready to save
-                                            if (base.requestedDataItems.length) {
+                                            if (base.requestedDataItems && base.requestedDataItems.length) {
                                                 for (var i=0; i < base.requestedDataItems.length; i++) {
                                                     base.requestedDataItems[i].validateNow = true;
                                                 }
@@ -1047,31 +1047,6 @@ app = angular.module('twist.app')
                 base.autoUpdateSpec = false;
             };
 
-            var buildDataPresentationItem = function (dataObj) {
-                var markup = '';
-
-                switch (dataObj.type) {
-                    case Constants.DATA_TYPE_TEXT:
-                        if (dataObj.title) {
-                            markup += '<h3>' + dataObj.title + '</h3>';
-                        }
-                        break;
-                    case Constants.DATA_TYPE_FILE:
-                        // assemble the presented data
-                        break;
-                    case Constants.DATA_TYPE_LINK:
-                        // assemble the presented data
-                        break;
-                    
-                    default :
-                        console.log('Error: Unrecognized response command type = [' + command.type + ']');
-                        break;
-                }
-
-
-                return markup;
-            }
-
             base.handleResponseCommands = function (commands) {
 
                 var presentedDataItems = [];
@@ -1087,6 +1062,7 @@ app = angular.module('twist.app')
                                 var dest = returnEmptyPlate();
                                 dest.details.type = plate.type;
                                 dest.details.title = plate.details.title;
+                                dest.details.id = plate.details.id;
                                 dest.first_in_group = plate.first_in_group;
                                 
                                 if (base.destinations[j]) {

@@ -1637,6 +1637,20 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
+                ,36: {  // keyed to sample_transfer_template_id in the database
+                    description: 'PCR Primer Hitpicking'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
+                    }
+                }
 
             }
             ,rowColumnMaps: {
