@@ -317,6 +317,16 @@ strong {
     }
 }
 
+.twst-button-icon {
+    width: 1em;
+    height: 1em;
+
+    svg {
+        width: 1em;
+        height: 1em;
+    }
+}
+
 .twst-barcode-input {
     font-family: consolas, 'andale mono', monospace;
     background: url("../images/barcode.svg");
@@ -1144,6 +1154,114 @@ strong {
                         top: 0.75em;
                     }
                 }
+            }
+        }
+    }
+
+    .twst-record-step-present-request-data-pane {
+        margin: 1em 0;
+        border: 1px solid $twst-minty-green-bg;
+        border-radius: 0.5em;
+        height: 0;
+        overflow: hidden;
+        opacity: 0;
+        @include transition(opacity .3s ease);
+
+        &.twst-record-step-present-request-data-pane-visible {
+            height: auto;
+            opacity: 1;
+        }
+
+        h1 {
+            background-color: $twst-minty-green-bg;
+            padding: 0.75em;
+            border: 0;
+            border-radius: 0.4em 0.4em 0 0;
+            font-size: 1em;
+            color: $twst-darker-green;
+        }
+
+        .twst-record-step-present-request-data-pane-content {
+            display: table;
+            width: 100%;
+            padding: 0 0.75em 0.75em 0.75em;
+
+            .twst-present-request-data-pane-content-left, .twst-present-request-data-pane-content-right {
+                display: table-cell;
+                minimum-width: 50%;
+
+                h3 {
+                    color: #000;
+                }
+
+                ul {
+                    margin-left: 0.5em;
+
+                    li {
+                        margin-top: 0.5em;
+                        margin-left: 1em;
+                        list-style-type: disc;
+                        line-height: 2em;
+
+                        h4 {
+                            color: $twst-medium-green;
+                        }
+
+                        .twst-download-button {
+                            text-align: center;
+                            padding: 0.5em;
+
+                            .twst-button-icon {
+                                margin: 0 auto;
+                                text-align: center;
+                                height: auto;
+                                width: auto;
+                                line-height: 0.2em;
+
+                                svg {
+                                    width: 3em;
+                                    height: 3em;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            .twst-present-request-data-pane-content-right {
+                padding-left: 1em;
+
+                &:first-child {
+                    padding-left: 0;
+                }
+
+                .twst-record-step-requested-item {
+                    input {
+                        width: 10em;
+                        display: inline-block;
+                    }
+
+                    .twst-thumbs-validation-icon {
+                        margin-left: 0.3em;
+                        position: relative;
+                        top: 0.3em;
+                        font-size: 2em;
+
+                        .twst-thumbs-validation-error {
+                            right: auto;
+                            left: 2.7em;
+                            top: -0.3em;
+                        }
+                    }
+                }
+            }
+
+            .twst-present-request-data-pane-content-divider {
+                display: table-cell;
+                min-width: 1px;
+                max-width: 1px;
+                width: 1px;
+                background: $twst-minty-green-bg;
             }
         }
     }
@@ -2071,16 +2189,6 @@ strong {
                             path {
                                 fill: #fff;
                             }
-                        }
-                    }
-
-                    .twst-button-icon {
-                        width: 1em;
-                        height: 1em;
-
-                        svg {
-                            width: 1em;
-                            height: 1em;
                         }
                     }
                 }

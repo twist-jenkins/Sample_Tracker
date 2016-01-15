@@ -136,6 +136,9 @@ def filter_transform( transfer_template_id, sources, dests ):
         #
         return []
 
+    elif transfer_template_id == 35:
+        return [{}];
+
     else:
         raise WebError("What transform id is %s??" % transfer_template_id)
 
@@ -237,12 +240,32 @@ def preview():
 
                 responseCommands.append({
                     "type": "PRESENT_DATA"
-                    ,"data": [
-                        {
-                            "type": "text"
-                            ,"": "The source plate map should go here"
-                        }
-                    ]
+                    ,"item": {
+                        "type": "file-data"
+                        ,"title": "Source Plate Map"
+                        ,"data": "this is some file data"
+                        ,"mimeType": "text"
+                        ,"fileName": "source_plate_map.txt"
+                    }
+                    
+                })
+                responseCommands.append({
+                    "type": "PRESENT_DATA"
+                    ,"item": {
+                        "type": "text"
+                        ,"title": "Source Plate Map"
+                        ,"data": "this is some text"
+                    }
+                    
+                })
+                responseCommands.append({
+                    "type": "PRESENT_DATA"
+                    ,"item": {
+                        "type": "link"
+                        ,"title": "Source Plate Map"
+                        ,"data": "http://www.sfgate.com"
+                    }
+                    
                 })
             else:
                 rows = []
@@ -261,7 +284,7 @@ def preview():
                 dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
                 # FIXME: 26 and 27 demand 0 destination plates
-                if request.json['transfer_template_id'] not in (25, 26, 27) \
+                if request.json['transfer_template_id'] not in (25, 26, 27, 35) \
                    and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
 
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
@@ -320,6 +343,54 @@ def preview():
                     "type": "SET_DESTINATIONS"
                     ,"plates": destination_plates
                 })
+
+            elif request.json['transfer_template_id'] == 35:
+
+                destinations_ready = True
+
+                if ("destinations" not in request.json or not len(request.json['destinations'])):
+                    destinations_ready = False
+
+                for dest_index, destination in enumerate(request.json['destinations']):
+                    if "id" not in destination["details"] or destination["details"]["id"] == "":
+                        destinations_ready = False
+
+                print("*************************** %s" % destinations_ready)
+
+                if (destinations_ready):
+                    rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+                else:
+                    responseCommands.append({
+                        "type": "REQUEST_DATA"
+                        ,"item": {
+                            "type": "array.4"
+                            ,"dataType": "barcode"
+                            ,"title": "Associated PCA Plate Barcodes"
+                            ,"forProperty": "associatedPcaPlates"
+                        } 
+                    })
+
+                    responseCommands.append({
+                        "type": "SET_DESTINATIONS"
+                        ,"plates": [
+                            {
+                                "type": "SPTT_0006",
+                                "details": {}
+                            }
+                            ,{
+                                "type": "SPTT_0006",
+                                "details": {}
+                            }
+                            ,{
+                                "type": "SPTT_0006",
+                                "details": {}
+                            }
+                            ,{
+                                "type": "SPTT_0006",
+                                "details": {}
+                            }
+                        ]
+                    })
 
             elif request.json['transfer_template_id'] in (26, 27, 34):
 
@@ -1494,6 +1565,20 @@ TRANSFER_MAP = loads("""
                     ,"destination": {
                         "plateCount": 0
                         ,"variablePlateCount": true
+                    }
+                }
+                ,"35": {  // keyed to sample_transfer_template_id in the database
+                    "description": "PCA Pre-Planning"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": true
+                        ,"plateTypeId": "SPTT_0006"
                     }
                 }
             }

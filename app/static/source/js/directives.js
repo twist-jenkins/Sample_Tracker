@@ -333,4 +333,161 @@ app = angular.module("twist.app")
     }
 ])
 
+.directive('twstTransformSpecDataPresentationItem', ['$compile', 'Constants',   
+    function($compile, Constants) {
+        return {
+            scope: {
+                transformSpec: '='
+                ,item: '='
+            }
+            ,restrict: 'E'
+            ,link: function($scope, element, attrs) {
+
+                var ml = '';
+
+                $scope.itemData = $scope.item.item;
+
+                if ($scope.itemData.title) {
+                    ml += '<h4>{{itemData.title}}</h4>';
+                }
+
+                switch ($scope.itemData.type) {
+                    case Constants.DATA_TYPE_TEXT:
+                        ml += '<p>{{itemData.data}}</p>';
+                        break;
+                    case Constants.DATA_TYPE_FILE_DATA:
+                        // assemble the presented data
+                        ml += '<button class="twst-button twst-download-button" ng-click="sendFile(itemData.data)"><div class="twst-button-icon"><ng-include src="\'static/images/download.svg\'"></ng-include></div>&nbsp;Download</button>';
+                        break;
+                    case Constants.DATA_TYPE_LINK:
+                        // assemble the presented data
+                        break;
+                    
+                    default :
+                        console.log('Error: Unrecognized response command type = [' + $scope.item.type + ']');
+                        break;
+                }
+
+                $scope.sendFile = function (fileData) {
+                    var fileBlob = new Blob([fileData], {type: $scope.itemData.mimeType});
+                    saveAs(fileBlob, $scope.itemData.fileName);
+                }
+
+                var el = angular.element(ml);
+                compiler = $compile(el);
+                element.append(el);
+                compiler($scope);
+            }
+        };
+    }
+])
+
+.directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout',   
+    function($compile, Constants, $timeout) {
+        return {
+            scope: {
+                transformSpec: '='
+                ,item: '='
+            }
+            ,restrict: 'E'
+            ,link: function($scope, element, attrs) {
+
+                console.log($scope.transformSpec);
+
+                var ml = '';
+
+                $scope.itemData = $scope.item.item;
+
+                if ($scope.itemData.title) {
+                    ml += '<h4>{{itemData.title}}</h4>';
+                }
+
+                if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_ARRAY) == 0) {
+
+                    var arrayCount = $scope.itemData.type.split('.')[1];
+
+                    if (! $scope.transformSpec.details.requestedData) {
+                         $scope.transformSpec.details.requestedData = {};
+                    }
+                    $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = new Array(4);
+
+                    $scope.validations = new Array(4);
+                    $scope.errors = new Array(4);
+
+                    for (var i=0; i < arrayCount; i++) {
+                        ml +=   '<p>' +
+                                    '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\'][' + i + ']" ng-change="validate(' + i + ');"/>' +
+                                    '<twst-thumb-validation-icon validation="validations[' + i + ']" error="errors[' + i + ']"></twst-thumb-validation-icon>' +
+                                '</p>';
+                    }
+
+                    $scope.validate = function (arrayIndex, errorOnEmpty) {
+
+                        var returnValidate = function (arrInd) {
+
+                            if ($scope.itemData.dataType = Constants.DATA_TYPE_BARCODE) {
+
+                                var val = $scope.transformSpec.details.requestedData[$scope.itemData.forProperty][arrInd];
+
+                                return function () {
+                                    $scope.item.validData = 0;
+                                    if (!val) {
+                                        if (errorOnEmpty) {
+                                            $scope.validations[arrInd] = false;
+                                            $scope.errors[arrInd] = 'This item is required.';
+                                        } else {
+                                            $scope.validations[arrInd] = null;
+                                            $scope.errors[arrInd] = null;
+                                        }
+                                    } else if (val.indexOf(Constants.BARCODE_PREFIX_PLATE) != 0) {
+                                        $scope.validations[arrInd] = false;
+                                        $scope.errors[arrInd] = 'Value is not a recognized plate barcode';
+                                    } else if (val && val.length) {
+                                        $scope.validations[arrInd] = 1;
+                                        $scope.errors[arrInd] = null;
+                                    }
+
+                                    /* ugly way to test if all validations for this array passed*/
+                                    if ($scope.validations.join('').length == arrayCount) {
+                                        $scope.item.validData = true;
+                                    } else {
+                                        $scope.item.validData = 0;
+                                    }
+                                }
+                            }
+
+                            return function () {
+                                console.log('handle other requested item dataTypes!');
+                                return false;
+                            }
+
+                            
+                        }
+
+                        $timeout.cancel($scope['validationTimeout' + arrayIndex]);
+                        $scope['validationTimeout' + arrayIndex] = $timeout(returnValidate(arrayIndex), 200);
+                    }
+
+                    $scope.$watch('item.validateNow', function (newVal, oldVal) {
+                        if (newVal) {
+                            var array = $scope.transformSpec.details.requestedData[$scope.itemData.forProperty];
+                            for (var i=0; i< array.length; i++) {
+                                $scope.validate(i, true); 
+                            }  
+                        }
+                    });
+
+                } else {
+                    console.log('What? ' + $scope.itemData.type);
+                }
+
+                var el = angular.element(ml);
+                compiler = $compile(el);
+                element.append(el);
+                compiler($scope);
+            }
+        };
+    }
+])
+
 ;
