@@ -214,6 +214,7 @@ def insert_barcode_plate_record():
         column('name', String),
         column('status', Enum('disposed', 'in_use', 'new'))
     )
+    sp_migration_table.schema = 'sampletrack'
     barcode_plate = {
         'sample_plate_id': bc_plate_id,
         'type_id': NGS_BARCODE_PLATE_TYPE,
@@ -248,6 +249,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
         column('operator_id', String),
         column('status', Enum('active',))
     )
+    splt_migration_table.schema = 'sampletrack'
     rows = [{'sample_plate_id': bc_plate_id,
              'sample_id': barcode_sequence_to_barcode_sample(wells[well_id]),
              'well_id': well_id,
