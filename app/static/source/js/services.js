@@ -29,6 +29,14 @@ app = angular.module('twist.app')
             ,SHIPPING_TUBE_PLATE_TYPE: 'SHIPPING_TUBE_PLATE'
             ,RESPONSE_COMMANDS_SET_DESTINATIONS: 'SET_DESTINATIONS'
             ,RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL: 'ADD_TRANSFORM_SPEC_DETAIL'
+            ,RESPONSE_COMMANDS_PRESENT_DATA: 'PRESENT_DATA'
+            ,RESPONSE_COMMANDS_REQUEST_DATA: 'REQUEST_DATA'
+            ,DATA_TYPE_TEXT: 'text'
+            ,DATA_TYPE_FILE_DATA: 'file-data'
+            ,DATA_TYPE_LINK: 'link'
+            ,DATA_TYPE_ARRAY: 'array'
+            ,DATA_TYPE_BARCODE: 'barcode'
+            ,BARCODE_PREFIX_PLATE: 'PLT'
         };
     }]
 )
@@ -335,8 +343,6 @@ app = angular.module('twist.app')
                     queryText = queryText.toLowerCase();
 
                     var goodData = [];
-                    console.log(queryText)
-                    console.log(resp);
                     for (var i=0; i< resp.data.data.length ;i++) {
                         var specId = resp.data.data[i].spec_id + '';
                         if (specId.toLowerCase().indexOf(queryText) != -1) {
@@ -400,6 +406,17 @@ app = angular.module('twist.app')
                                         if (result.responseCommands) {
                                             /* this transform requires additional actions or input data */
                                             base.handleResponseCommands(result.responseCommands);
+                                        }
+
+                                        if (base.operations.length) {
+                                            //if we got operations, then that means sources AND destinations were ready
+                                            //we should force validation on any requested data that exists since
+                                            //otherwise this transform spec should be ready to save
+                                            if (base.requestedDataItems && base.requestedDataItems.length) {
+                                                for (var i=0; i < base.requestedDataItems.length; i++) {
+                                                    base.requestedDataItems[i].validateNow = true;
+                                                }
+                                            }
                                         }
 
                                     } else {
@@ -660,6 +677,11 @@ app = angular.module('twist.app')
                 return header;
             };
 
+            base.addRequestedDataItems = function (items) {
+                base.requestedDataItems = items;
+                base.validateRequestedData = true;
+            }
+
             base.getDestinationsHeader = function () {
                 var header = '';
 
@@ -870,6 +892,9 @@ app = angular.module('twist.app')
                                 if (base.destinations[i].details.id && base.destinations[i].details.id.length < 6) {
                                     onError(destItem);
                                     return;
+                                } else if (!base.destinations[i].details.id) {
+                                    base.destinationsReady = false;
+                                    return;
                                 }
                             }
                             base.destinationsReady = true;
@@ -881,7 +906,6 @@ app = angular.module('twist.app')
                     });
 
                 } else {
-                    console.log();
                     onError(destItem, destItem.loaded ? 'Error: A barcode is required for this destination.' : false);
                 }
             };
@@ -1024,7 +1048,10 @@ app = angular.module('twist.app')
             };
 
             base.handleResponseCommands = function (commands) {
-                console.log(commands);
+
+                var presentedDataItems = [];
+                var requestedDataItems = [];
+
                 for (var i=0; i<commands.length; i++) {
                     var command = commands[i];
                     switch (command.type) {
@@ -1035,6 +1062,7 @@ app = angular.module('twist.app')
                                 var dest = returnEmptyPlate();
                                 dest.details.type = plate.type;
                                 dest.details.title = plate.details.title;
+                                dest.details.id = plate.details.id;
                                 dest.first_in_group = plate.first_in_group;
                                 
                                 if (base.destinations[j]) {
@@ -1053,6 +1081,15 @@ app = angular.module('twist.app')
                             if (base.destinations.length > plates.length) {
                                 base.destinations.splice(plates.length - base.destinations.length);
                             }
+                            base.map.destination.plateCount = base.destinations.length;
+                            break;
+                        case Constants.RESPONSE_COMMANDS_PRESENT_DATA:
+                            // assemble the presented data
+                            presentedDataItems.push(command);
+                            break;
+                        case Constants.RESPONSE_COMMANDS_REQUEST_DATA:
+                            // assemble the presented data
+                            requestedDataItems.push(command);
                             break;
                         
                         default :
@@ -1060,7 +1097,18 @@ app = angular.module('twist.app')
                             break;
                     }
 
+                    
                 }
+
+                // present and request data after all other commands (such as SET_DESTINATIONS) are complete
+                if (requestedDataItems.length) {
+                    base.addRequestedDataItems(requestedDataItems);
+                }
+
+                if (presentedDataItems.length) {
+                    base.presentedDataItems = presentedDataItems;
+                }
+                
             };
 
             base.serialize = function () {
