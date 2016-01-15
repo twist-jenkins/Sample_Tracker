@@ -15,6 +15,7 @@ from app.utils import scoped_session
 
 from twistdb.sampletrack import *
 from twistdb.ngs import *
+from twistdb.backend import NGSPreppedSample
 from twistdb import create_unique_id
 from dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 
@@ -336,9 +337,12 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
         if not next_index_sql:
             raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
         ngs_barcode_pair_index = db_session.execute(next_index_sql)
-        ngs_pair = (db.session.query(NGSBarcodePair)
-                    .filter_by(pk=ngs_barcode_pair_index)
-                    .first())
+        print '@@ fetching ngs_barcode_pair_index:', ngs_barcode_pair_index
+        ngs_pair = db_session.query(NGSBarcodePair).get(ngs_barcode_pair_index)
+        print '@@ got:', ngs_pair, 'from', NGSBarcodePair, db_session.query(NGSBarcodePair).count()
+
+    from twistdb.db.utils import engine
+    print '@@ @@', engine
     if not ngs_pair:
         raise KeyError("ngs_barcode_pair_index %s not found"
                        % ngs_barcode_pair_index)
@@ -362,11 +366,7 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
                                    notes=notes,
                                    insert_size_expected=insert_size_expected,
                                    operator_id=operator.operator_id,
-                                   parent_process_id=parent_process_id,
-                                   external_barcode=external_barcode,
-                                   #reagent_type_set_lot_id=reagent_type_set_lot_id,
-                                   status=status,
-                                   parent_transfer_process_id=parent_transfer_process_id)
+                                   external_barcode=external_barcode )
 
     logging.debug('NPS_ID %s for %s assigned [%s, %s]',
                   nps_id, source_sample_id,

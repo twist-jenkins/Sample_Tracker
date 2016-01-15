@@ -64,6 +64,7 @@ def create_barcode_table():
                   db.Integer,
                   nullable=False)
     )
+    ngs_barcode_pair_table.schema = 'ngs'
     return ngs_barcode_pair_table
 
 

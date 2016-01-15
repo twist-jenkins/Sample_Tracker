@@ -355,12 +355,14 @@ def create_adhoc_sample_movement(db_session,
 
         #print "DEST WELL ID: ", destination_well_id
 
-        existing_sample_plate_layout = db_session.query(SamplePlateLayout).filter(and_(
-            SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
-            # relax for ngs
-            # SamplePlateLayout.sample_id==source_plate_well.sample_id,
-            SamplePlateLayout.well_id==destination_well_id
-            )).first()
+        print '@@ querying SamplePlateLayout sample_plate_id: %s, SamplePlateLayout.well_id: %s' \
+            % (destination_plate.sample_plate_id, destination_well_id)
+        existing_sample_plate_layout = db_session.query(SamplePlateLayout) \
+                                                 .filter( SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                                                          # SamplePlateLayout.sample_id==source_plate_well.sample_id,
+                                                          SamplePlateLayout.well_id==destination_well_id ) \
+                                                 .first()
+        print '@@ got:', existing_sample_plate_layout
 
         #existing_sample_plate_layout = True
 
@@ -515,7 +517,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
                                    insert_size_expected=insert_size_expected, date_created=datetime.utcnow(),
                                    operator_id=operator.operator_id, parent_process_id=parent_process_id,
                                    external_barcode=external_barcode, 
-                                   reagent_type_set_lot_id=reagent_type_set_lot_id, status=status,
+                                   reagent_type_set_lot_id=reagent_type_set_lot_id,
                                    parent_transfer_process_id=parent_transfer_process_id)
 
     logging.info('NPS_ID %s for %s assigned [%s, %s]',
