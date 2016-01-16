@@ -57,8 +57,11 @@ def seed():
                       'sampletrack.sample_transfer_type',
                       'sampletrack.sample_plate_type',
                       'sampletrack.sample_plate',
+                      'sampletrack.sample_plate_layout',
                       'ngs.barcode_sequence',
-                      'backend.sample_type'
+                      'backend.sample_type',
+                      'backend.sample',
+                      'backend.gene_assembly_sample',
                       ]
     seed.seed_data(db.engine, seed_data_file_name, tables_to_seed)
 
