@@ -21,7 +21,7 @@ from app.models import create_destination_plate
 from twistdb.public import *
 from twistdb.sampletrack import *
 from twistdb.ngs import *
-from twistdb.backend import ClonedSample
+from twistdb.backend import GeneAssemblySample, ClonedSample
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
@@ -475,22 +475,29 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     # Create CS
     cs_id = create_unique_id("CS_")()
 
-    cloned_sample = ClonedSample( sample_id=cs_id, parent_sample_id=source_sample_id, source_id=source_id,
-                                  colony_name=colony_name, operator_id=operator.operator_id )
+    cloned_sample = ClonedSample(sample_id=cs_id,
+                                 parent_sample_id=source_sample_id,
+                                 source_id=source_id,
+                                 colony_name=colony_name,
+                                 operator_id=operator.operator_id)
 
     # Add CLO
     clo = None
+    name = 'cs_' + source_id
     qry = (
-        db.session.query(SampleView)
+        db.session.query(GeneAssemblySample)
         .filter_by(sample_id=source_sample_id)
     )
     result = qry.first()
-    if result:
-        ga_view = result
-        clo = ga_view.cloning_process_id_plan
+    if not result:
+        # ga_view = result
+        # clo = ga_view.cloning_process_id_plan
+        clo = 'CLO_564c1af300bc150fa632c63d'   # hardcoded Amp for warp 1
+        name = result.name + ' CS'
     cloned_sample.parent_process_id = clo
     logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
                  cs_id, source_sample_id, clo)
+    cloned_sample.name = name
 
     db_session.add(cloned_sample)
     db_session.flush()
