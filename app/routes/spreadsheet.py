@@ -483,17 +483,26 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
 
     # Add CLO
     clo = None
-    name = 'cs_' + source_id
+
+    # TODO: determine how to fetch the desired production cloning
+    # process for this sample / cluster_design / order item.
+    # For now, just look up the sample, and use a hardcoded
+    # cloning process of Twist31 / Amp / 'CLO_564c1af300bc150fa632c63d'
+
+    name = 'cs_' + source_id  # FIXME: determine some more meaningful name
     qry = (
         db.session.query(GeneAssemblySample)
         .filter_by(sample_id=source_sample_id)
     )
     result = qry.first()
     if not result:
+        # The alpha code looked up the "cloning plan" from a database view
         # ga_view = result
         # clo = ga_view.cloning_process_id_plan
-        clo = 'CLO_564c1af300bc150fa632c63d'   # hardcoded Amp for warp 1
+
+        clo = 'CLO_564c1af300bc150fa632c63d'  # FIXME: hardcoded Amp for warp 1
         name = result.name + ' CS'
+
     cloned_sample.parent_process_id = clo
     logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
                  cs_id, source_sample_id, clo)
