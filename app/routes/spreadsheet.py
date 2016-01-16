@@ -21,6 +21,7 @@ from app.models import create_destination_plate
 from twistdb.public import *
 from twistdb.sampletrack import *
 from twistdb.ngs import *
+from twistdb.backend import ClonedSample
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
@@ -248,7 +249,7 @@ def create_adhoc_sample_movement(db_session,
                     }
 
             elif in_place_transform_flag:
-                # BUGFIX 11/17/2015: for in-place transforms, 
+                # BUGFIX 11/17/2015: for in-place transforms,
                 # don't create a new plate!
                 # TODO: clarify same-same transfer destination plate.
                 destination_plate = source_plate
@@ -416,11 +417,11 @@ def create_adhoc_sample_movement(db_session,
             destination_plate_well.operator_id = operator.operator_id  # unfortunately this will wipe out the old operator_id
             #if destination_sample_id != source_plate_well.sample_id:
                 #source_plate_well.sample_id = destination_sample_id # ???? WRONG! ??
-                #db_session.flush()                
+                #db_session.flush()
         else:
             destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
-                                                        sample_id=destination_sample_id, well_id=destination_well_id, 
-                                                        operator_id=operator.operator_id, row=source_plate_well.row, 
+                                                        sample_id=destination_sample_id, well_id=destination_well_id,
+                                                        operator_id=operator.operator_id, row=source_plate_well.row,
                                                         column=source_plate_well.column)
             db_session.add(destination_plate_well)
 
@@ -431,12 +432,12 @@ def create_adhoc_sample_movement(db_session,
         logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
         # in the "desination" plate.
         #
-        source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+        source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id,
                                                                     item_order_number=order_number,
                                                                     source_sample_plate_id=source_plate_well.sample_plate_id,
-                                                                    source_well_id=source_plate_well.well_id, 
+                                                                    source_well_id=source_plate_well.well_id,
                                                                     source_sample_id=source_plate_well.sample_id,
-                                                                    destination_sample_plate_id=destination_plate_well.sample_plate_id, 
+                                                                    destination_sample_plate_id=destination_plate_well.sample_plate_id,
                                                                     destination_well_id=destination_plate_well.well_id,
                                                                     destination_sample_id=destination_plate_well.sample_id)
         db_session.add(source_to_destination_well_transfer)
@@ -473,7 +474,7 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
 
     # Create CS
     cs_id = create_unique_id("CS_")()
-              
+
     cloned_sample = ClonedSample( sample_id=cs_id, parent_sample_id=source_sample_id, source_id=source_id,
                                   colony_name=colony_name, operator_id=operator.operator_id )
 
@@ -516,7 +517,7 @@ def make_ngs_prepped_sample(db_session, source_plate_well,
                                    i7_sequence_id=i7_sequence_id, notes="temp nps notes",
                                    insert_size_expected=insert_size_expected, date_created=datetime.utcnow(),
                                    operator_id=operator.operator_id, parent_process_id=parent_process_id,
-                                   external_barcode=external_barcode, 
+                                   external_barcode=external_barcode,
                                    reagent_type_set_lot_id=reagent_type_set_lot_id,
                                    parent_transfer_process_id=parent_transfer_process_id)
 
