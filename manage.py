@@ -56,14 +56,25 @@ def seed():
     tables_to_seed = ['sampletrack.sample_transfer_template',
                       'sampletrack.sample_transfer_type',
                       'sampletrack.sample_plate_type',
-                      'sampletrack.sample_plate',
-                      'sampletrack.sample_plate_layout',
                       'ngs.barcode_sequence',
                       'backend.sample_type',
-                      'backend.sample',
-                      'backend.gene_assembly_sample',
                       ]
     seed.seed_data(db.engine, seed_data_file_name, tables_to_seed)
 
+    # for now, go ahead and add the fixtures too.
+    # TODO: populate fixtures more intelligently, as part of testing, not setup
+    add_fixtures()
+
+@manager.command
+def add_fixtures():
+    """ Add database fixtures with test data values."""
+    from twistdb.util import seed
+    fixtures_data_file_name = "app/seed_data/smt_fixture_data.xlsx"
+    tables = ['sampletrack.sample_plate',
+              'sampletrack.sample_plate_layout',
+              'backend.sample',
+              'backend.gene_assembly_sample',
+              ]
+    seed.seed_data(db.engine, fixtures_data_file_name, tables)
 
 manager.run()
