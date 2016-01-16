@@ -56,6 +56,25 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
                 p The Hamilton Wizard will guide you through recording the plate data to create a worklist for this Hamilton run.
                 button(class="twst-button twst-blue-button twst-record-step-start-hamilton-button" ng-click="startHamiltonSteps()") Start Hamilton Wizard
 
+    div(class="twst-record-step-present-request-data-pane" ng-class="{'twst-record-step-present-request-data-pane-visible': showPresentedRequestedData}")
+        h1 Additional Items for this Transform
+        div(class="twst-record-step-present-request-data-pane-content")
+            div(class="twst-present-request-data-pane-content-left" ng-if="transformSpec.requestedDataItems.length")
+                h3
+                    strong Requested 
+                    span Items:
+                ul(class="twst-record-step-requested-items")
+                    li(class="twst-record-step-requested-item" ng-repeat="item in transformSpec.requestedDataItems")
+                        twst-transform-spec-data-request-item(transform-spec="transformSpec" item="item")
+            div(class="twst-present-request-data-pane-content-divider" ng-if="transformSpec.presentedDataItems.length && transformSpec.requestedDataItems.length") 
+            div(class="twst-present-request-data-pane-content-right" ng-if="transformSpec.presentedDataItems.length")
+                h3 
+                    strong Available 
+                    span Items:
+                ul(class="twst-record-step-presented-items")
+                    li(class="twst-record-step-presented-item" ng-repeat="item in transformSpec.presentedDataItems") 
+                        twst-transform-spec-data-presentation-item(transform-spec="transformSpec" item="item")
+
     div(class="twst-transform-spec" ng-show="templateTypeSelection != Constants.HAMILTON_OPERATION")
         div(class="twst-transform-spec-show-btn" ng-click="showTransferPlan = !showTransferPlan")
             div(class="twst-custom-radio twst-selected-{{showTransferPlan}} twst-custom-radio-as-checkbox" val="show")
