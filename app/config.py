@@ -31,7 +31,8 @@ class ProdConfig(Config):
 
 
 class StagingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp1smt"
+    # SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack:Of2dAd8cir5Y@10.10.120.94/synapp_test"
     """
     synapp_test=#
         create user sampletrack with password 'Of2dAd8cir5Y';
