@@ -16,6 +16,7 @@ import sqlalchemy as sa
 
 def upgrade():
 
+    '''
     op.create_table('sample_transfer_type',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=True),
@@ -48,7 +49,7 @@ def upgrade():
 
     sa.PrimaryKeyConstraint('sample_transfer_id', 'item_order_number')
     )
-
+    '''
 
 
 def downgrade():

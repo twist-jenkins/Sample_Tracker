@@ -1,6 +1,6 @@
 app = angular.module('twist.app')
 
-.factory('Maps', ['Constants', 
+.factory('Maps', ['Constants',
     function (Constants) {
         return {
             transferTemplates: {
@@ -1174,7 +1174,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
                 ,29: {  // keyed to sample_transfer_template_id in the database
@@ -1331,7 +1331,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
                 ,33: {  // keyed to sample_transfer_template_id in the database
@@ -1588,7 +1588,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
                 ,34: {  // keyed to sample_transfer_template_id in the database
@@ -1596,7 +1596,7 @@ app = angular.module('twist.app')
                     ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
-                        ,plateTypeId: 'SPTT_0009'
+                        ,plateTypeId: 'SPTT_1009'
                         ,variablePlateCount: false
                     }
                     ,destination: {
@@ -1621,6 +1621,34 @@ app = angular.module('twist.app')
                             ,'Plate&nbsp;15&nbsp;'
                             ,'Plate&nbsp;16&nbsp;'
                         ]
+                    }
+                }
+                ,35: {  // keyed to sample_transfer_template_id in the database
+                    description: 'PCA Pre-Planning'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
+                    }
+                }
+                ,36: {  // keyed to sample_transfer_template_id in the database
+                    description: 'PCR Primer Hitpicking'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
                     }
                 }
 
@@ -5185,4 +5213,4 @@ app = angular.module('twist.app')
         }
     }
 ]);
-    
+

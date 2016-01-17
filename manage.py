@@ -6,14 +6,14 @@
 #
 # This is where we define "scripts" that can be run to do things like load data, run a shell,
 # run the web application, etc.
-# 
+#
 ######################################################################################
 
 from flask.ext.script import Manager, Shell, Server
 
 from flask.ext.migrate import Migrate, MigrateCommand
 
-from scripts import (CreateAllTables, LoadLookupTables, DropAllTables, 
+from scripts import (CreateAllTables, LoadLookupTables, DropAllTables,
     DeleteSampleTransfer, ImportSampleTransferTemplate)
 
 from app import app, db
@@ -48,5 +48,33 @@ manager.add_command('deletesampletransfer', DeleteSampleTransfer())
 manager.add_command('importtemplate', ImportSampleTransferTemplate())
 
 
+@manager.command
+def seed():
+    """ Seed a database with starting default table values for CVs."""
+    from twistdb.util import seed
+    seed_data_file_name = "app/seed_data/smt_seed_data.xlsx"
+    tables_to_seed = ['sampletrack.sample_transfer_template',
+                      'sampletrack.sample_transfer_type',
+                      'sampletrack.sample_plate_type',
+                      'ngs.barcode_sequence',
+                      'backend.sample_type',
+                      ]
+    seed.seed_data(db.engine, seed_data_file_name, tables_to_seed)
+
+    # for now, go ahead and add the fixtures too.
+    # TODO: populate fixtures more intelligently, as part of testing, not setup
+    add_fixtures()
+
+@manager.command
+def add_fixtures():
+    """ Add database fixtures with test data values."""
+    from twistdb.util import seed
+    fixtures_data_file_name = "app/seed_data/smt_fixture_data.xlsx"
+    tables = ['sampletrack.sample_plate',
+              'sampletrack.sample_plate_layout',
+              'backend.sample',
+              'backend.gene_assembly_sample',
+              ]
+    seed.seed_data(db.engine, fixtures_data_file_name, tables)
 
 manager.run()

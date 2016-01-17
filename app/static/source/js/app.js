@@ -109,6 +109,15 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 return false
             }
 
+            if ($scope.transformSpec.validateRequestedData) {
+                var reqDataItems =  $scope.transformSpec.requestedDataItems;
+                for (datum in reqDataItems) {
+                    if (!reqDataItems[datum].validData) {
+                        return false;
+                    }
+                }   
+            }
+
             return true;
         }
 
@@ -268,6 +277,29 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.catchFile();
             } else if (newVal == Constants.STANDARD_TEMPLATE) {
                 $scope.transformSpec.transferFromFile(false);
+            }
+        });
+
+        /* not necessarily the most elegant code but it works for updating the UI when
+        *  the responseCommand data items are changed */
+        
+        $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
+            if (newVal && newVal.length) {
+                if (!oldVal || oldVal.length != newVal.length) {
+                    if (newVal.length) {
+                        $scope.showPresentedRequestedData = true;
+                    }
+                }
+            }
+        });
+
+        $scope.$watch('transformSpec.requestedDataItems', function (newVal, oldVal) {
+            if (newVal && newVal.length) {
+                if (!oldVal || oldVal.length != newVal.length) {
+                    if (newVal.length) {
+                        $scope.showPresentedRequestedData = true;
+                    }
+                }
             }
         });
 

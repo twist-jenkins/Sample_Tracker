@@ -62,5 +62,13 @@ class LocalConfig(Config):
     TESTING = True
     DEBUG = True
     # WTF_CSRF_ENABLED = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://test:test@dev01.twistbioscience.com/test"
-    #SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
+    # SQLALCHEMY_DATABASE_URI = "postgresql://test:test@dev01.twistbioscience.com/test"
+    SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/orders_dev'
+
+
+class Warp1localConfig(Config):
+    TESTING = True
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = \
+        'postgresql://:@localhost/orders_dev'
+

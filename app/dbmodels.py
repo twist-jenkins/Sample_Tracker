@@ -51,7 +51,7 @@ class SampleView(db.Model):
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
-        from twistdb.public import GeneAssemblySample
+        from twistdb.backend import GeneAssemblySample
         __table__ = GeneAssemblySample.__table__
 
 

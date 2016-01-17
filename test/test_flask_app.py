@@ -83,6 +83,8 @@ class TestCase(unittest.TestCase):
         # assert "Unittest" in os.environ["WEBSITE_ENV"]
         assert 'localhost' in app.config['SQLALCHEMY_DATABASE_URI']
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
+        print '@@\n' * 5
+        print '@@', app.config['SQLALCHEMY_DATABASE_URI']
         # db.create_all()
         cls.root_plate_barcode = 'SRN 000577 SM-30'  # qtray
         # cls.root_plate_barcode = RootPlate().create_in_db("ROOT1", db.engine)

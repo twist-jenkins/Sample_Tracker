@@ -24,13 +24,21 @@ from app.dbmodels import barcode_sequence_to_barcode_sample
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 from app.plate_to_plate_maps import maps_json
 
+
 logging.basicConfig(level=logging.INFO)
 
 def create_barcode_table():
     #
     # First the barcode database, which becomes a regular table.
     #
-    ngs_barcode_pair_table = op.create_table(
+
+    method = 'USE_EXISTING'
+    if method == 'CREATE_NEW':
+        create_or_define_fn = op.create_table
+    elif method == 'USE_EXISTING':
+        create_or_define_fn = table
+
+    ngs_barcode_pair_table = create_or_define_fn(
         'ngs_barcode_pair',
         db.Column('pk',
                   db.Integer,
@@ -56,6 +64,7 @@ def create_barcode_table():
                   db.Integer,
                   nullable=False)
     )
+    ngs_barcode_pair_table.schema = 'ngs'
     return ngs_barcode_pair_table
 
 
@@ -163,23 +172,26 @@ def insert_barcode_sample_records(barcode_sequences):
     #
 
     unq_srtd_barcode_seqs = sorted(list(set(barcode_sequences)))
-    sample_migration_table = table(
-        'sample',
+    sample_migration_table = table('sample',
         column('sample_id', String),
-        column('date_created', DateTime),
-        column('operator_id', String),
         column('type_id', Integer),
+        column('order_item_id', String),
+        column('date_created', DateTime),
         column('name', String),
         column('description', String),
-        column('status', String)
+        column('external_barcode', String),
+        column('operator_id', String),
     )
+    sample_migration_table.schema = 'backend'
+
     rows = [{'sample_id': barcode_sequence_to_barcode_sample(seq_name),
-             'date_created': datetime.now(),
-             'operator_id': 'AH',
              'type_id': 'blended_sample',
+             'order_item_id': 'WOI_566f649100bc152ceec0c357',
+             'date_created': datetime.now(),
              'name': seq_name,
              'description': 'Barcode sample for %s' % seq_name,
-             'status': 'active'
+             'external_barcode': None,
+             'operator_id': 'CL',
              }
             for seq_name in unq_srtd_barcode_seqs
             ]
@@ -203,6 +215,7 @@ def insert_barcode_plate_record():
         column('name', String),
         column('status', Enum('disposed', 'in_use', 'new'))
     )
+    sp_migration_table.schema = 'sampletrack'
     barcode_plate = {
         'sample_plate_id': bc_plate_id,
         'type_id': NGS_BARCODE_PLATE_TYPE,
@@ -237,6 +250,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
         column('operator_id', String),
         column('status', Enum('active',))
     )
+    splt_migration_table.schema = 'sampletrack'
     rows = [{'sample_plate_id': bc_plate_id,
              'sample_id': barcode_sequence_to_barcode_sample(wells[well_id]),
              'well_id': well_id,
