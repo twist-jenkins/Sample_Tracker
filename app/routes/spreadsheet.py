@@ -175,7 +175,11 @@ def create_adhoc_sample_movement(db_session,
                 "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
             }
         else:
-            source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
+            logging.info("source_col_and_row: %s", source_col_and_row)
+            try:
+                source_well_id = int(source_col_and_row)
+            except ValueError:
+                source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
             logging.info("calculated source well id: %s from "
                          "plate size: %s and column/row: %s",
                          source_well_id, plate_size, source_col_and_row)
