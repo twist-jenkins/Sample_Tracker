@@ -31,7 +31,8 @@ from well_mappings import (get_col_and_row_for_well_id_48,
                            get_col_and_row_for_well_id_96,
                            get_well_id_for_col_and_row_96,
                            get_col_and_row_for_well_id_384,
-                           get_well_id_for_col_and_row_384)
+                           get_well_id_for_col_and_row_384,
+                           get_well_id_for_col_and_row_6144)
 from well_count_to_plate_type_name import well_count_to_plate_type_name
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
@@ -96,7 +97,8 @@ def create_adhoc_sample_movement(db_session,
     well_from_col_and_row_methods = {
         "48": get_well_id_for_col_and_row_48,
         "96": get_well_id_for_col_and_row_96,
-        "384": get_well_id_for_col_and_row_384
+        "384": get_well_id_for_col_and_row_384,
+        "6144": get_well_id_for_col_and_row_6144
     }
 
     for ix, well in enumerate(wells):
@@ -155,6 +157,8 @@ def create_adhoc_sample_movement(db_session,
             plate_size = "96"
         elif sample_plate_type.name == "384 well, plastic":
             plate_size = "384"
+        elif sample_plate_type.name == "6144 well, silicon, Titin":
+            plate_size = "6144"
         else:
             plate_size = None
 
