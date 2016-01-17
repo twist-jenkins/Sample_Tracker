@@ -128,14 +128,14 @@ def filter_transform( transfer_template_id, sources, dests ):
 
             return well_to_passfail
 
-    elif transfer_template_id == 34:
-        #
-        #
-        # HERE YA GO CHARLIE
-        #
-        #
-        logging.warn("transfer_template_id == 34")
-        return []
+    # elif transfer_template_id == 34:
+    #     #
+    #     #
+    #     # HERE YA GO CHARLIE
+    #     #
+    #     #
+    #     logging.warn("transfer_template_id == 34")
+    #     return []
 
     elif transfer_template_id == 35:
         return [{}];
@@ -490,32 +490,6 @@ def preview():
 
                 rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 
-            elif request.json['transfer_template_id'] == 34:
-
-                # titin 1x6144 -> 16x384
-                src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-                dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
-
-                for src_idx, src in enumerate(request.json['sources']):
-                    barcode = src['details']['id']
-                    try:
-                        plate = db.session.query(SamplePlate) \
-                                          .filter(SamplePlate.external_barcode == barcode) \
-                                          .one()
-                    except MultipleResultsFound:
-                        raise WebError('multiple plates found with barcode %s' % barcode)
-
-                    for well in db.session.query(SamplePlateLayout) \
-                                  .filter( SamplePlateLayout.sample_plate == plate ) \
-                                  .order_by( SamplePlateLayout.well_id ):
-
-                        rows.append( {'source_plate_barcode': barcode,
-                                      'source_well_name': well.well_name,
-                                      'source_sample_id': well.sample_id,
-                                      'destination_plate_barcode': barcode,
-                                      'destination_well_name': well.well_name,
-                                      'destination_plate_well_count': dest_plate_type.number_clusters
-                                      })
             else:
                 if request.json['transfer_template_id'] in (1,2):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
@@ -557,12 +531,12 @@ def preview():
                                   .order_by( SamplePlateLayout.well_id ):
                         dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
 
-                        rows.append( {'source_plate_barcode':           barcode,
-                                      'source_well_name':               well.well_name,
-                                      'source_sample_id':               well.sample_id,
-                                      'destination_plate_barcode':      dest_barcode,
-                                      'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
-                                      'destination_plate_well_count':   dest_plate_type.number_clusters,
+                        rows.append( {'source_plate_barcode': barcode,
+                                      'source_well_name': str(well.well_id),
+                                      'source_sample_id': well.sample_id,
+                                      'destination_plate_barcode': dest_barcode,
+                                      'destination_well_name': dest_plate_type.get_well_name(dest_well),
+                                      'destination_plate_well_count': dest_plate_type.number_clusters,
                                       })
 
     except WebError as e:
@@ -1687,7 +1661,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"34": {  // keyed to sample_transfer_template_id in the database   // FIXME: REMOVE THIS
+                ,"34": {  // keyed to sample_transfer_template_id in the database
                     "description": "1x6144 to 16x384"
                     ,"type": "standard"
                     ,"source": {
@@ -1703,14 +1677,6 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                         ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;","Quadrant&nbsp;5:&nbsp;","Quadrant&nbsp;6:&nbsp;","Quadrant&nbsp;7:&nbsp;","Quadrant&nbsp;8:&nbsp;","Quadrant&nbsp;9:&nbsp;","Quadrant&nbsp;10:&nbsp;","Quadrant&nbsp;11:&nbsp;","Quadrant&nbsp;12:&nbsp;","Quadrant&nbsp;13:&nbsp;","Quadrant&nbsp;14:&nbsp;","Quadrant&nbsp;15:&nbsp;","Quadrant&nbsp;16:&nbsp;"]
                     }
-                    ,"plateWellToWellMaps": [
-                        {
-                            "1":{"destination_plate_number":1,"destination_well_id":1}
-                            ,"2":{"destination_plate_number":1,"destination_well_id":3}
-                            ,"95":{"destination_plate_number":1,"destination_well_id":357}
-                            ,"96":{"destination_plate_number":1,"destination_well_id":359}
-                        }
-                    ]
                 }
                 ,"35": {  // keyed to sample_transfer_template_id in the database
                     "description": "PCA Pre-Planning"
@@ -1742,3 +1708,21 @@ TRANSFER_MAP = loads("""
                 }
             }
 """)
+
+
+def transfer_map_step_34_titin_6144():
+    result = {}
+    for dest_plate_number_0based in range(16):
+        for dest_well_id_0based in range(384):
+            src_well_id_0based = sum([4 * (dest_well_id_0based % 24),
+                                      384 * (15 - (dest_well_id_0based / 24)),
+                                      1 * dest_plate_number_0based % 4,
+                                      96 * (dest_plate_number_0based / 4)
+                                      ])
+            result[str(src_well_id_0based + 1)] = {
+                "destination_plate_number": dest_plate_number_0based + 1,
+                "destination_well_id": dest_well_id_0based + 1
+            }
+    return [result]
+
+TRANSFER_MAP["34"]["plateWellToWellMaps"] = transfer_map_step_34_titin_6144()
