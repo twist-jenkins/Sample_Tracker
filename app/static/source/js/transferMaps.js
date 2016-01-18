@@ -1,6 +1,6 @@
 app = angular.module('twist.app')
 
-.factory('Maps', ['Constants', 
+.factory('Maps', ['Constants',
     function (Constants) {
         return {
             transferTemplates: {
@@ -1174,7 +1174,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
                 ,29: {  // keyed to sample_transfer_template_id in the database
@@ -1331,7 +1331,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
                 ,33: {  // keyed to sample_transfer_template_id in the database
@@ -1588,7 +1588,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
                 ,34: {  // keyed to sample_transfer_template_id in the database
@@ -1596,7 +1596,7 @@ app = angular.module('twist.app')
                     ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
-                        ,plateTypeId: 'SPTT_0009'
+                        ,plateTypeId: 'SPTT_1009'
                         ,variablePlateCount: false
                     }
                     ,destination: {
@@ -5258,4 +5258,4 @@ app = angular.module('twist.app')
         }
     }
 ]);
-    
+

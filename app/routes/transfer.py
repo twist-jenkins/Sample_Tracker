@@ -127,14 +127,15 @@ def filter_transform( transfer_template_id, sources, dests ):
                     well_to_passfail[ well.well_id ] = well
 
             return well_to_passfail
-    
-    elif transfer_template_id == 34:
-        #
-        #
-        # HERE YA GO CHARLIE
-        #
-        #
-        return []
+
+    # elif transfer_template_id == 34:
+    #     #
+    #     #
+    #     # HERE YA GO CHARLIE
+    #     #
+    #     #
+    #     logging.warn("transfer_template_id == 34")
+    #     return []
 
     elif transfer_template_id == 35:
         return [{}];
@@ -149,7 +150,7 @@ def filter_transform( transfer_template_id, sources, dests ):
     for src in sources:
         barcode = src['details']['id']
         well_to_passfail = filter_wells( barcode )
-                                                     
+
         for well_id in sorted( well_to_passfail ):
             well = well_to_passfail[well_id]
             dest_plate_idx = dest_ctr / 96
@@ -249,7 +250,7 @@ def preview():
                         ,"mimeType": "text"
                         ,"fileName": "source_plate_map.txt"
                     }
-                    
+
                 })
                 '''
                 responseCommands.append({
@@ -259,7 +260,7 @@ def preview():
                         ,"title": "Source Plate Map"
                         ,"data": "this is some text"
                     }
-                    
+
                 })
                 responseCommands.append({
                     "type": "PRESENT_DATA"
@@ -268,7 +269,7 @@ def preview():
                         ,"title": "Source Plate Map"
                         ,"data": "http://www.sfgate.com"
                     }
-                    
+
                 })
                 '''
 
@@ -280,7 +281,7 @@ def preview():
                         ,"title": "PCA Master Mix"
                         ,"data": "Master mix data here... maybe CSV format to render a table?"
                     }
-                    
+
                 })
 
             elif request.json['transfer_type_id'] in (56, 59):
@@ -291,7 +292,7 @@ def preview():
                         ,"title": "Thermocycling conditions"
                         ,"data": "Thermocycling conditions here... maybe CSV format to render a table?"
                     }
-                    
+
                 })
 
                 responseCommands.append({
@@ -300,7 +301,7 @@ def preview():
                         "type": "barcode"
                         ,"title": "Thermocycler barcode"
                         ,"forProperty": "thermocyclerBarcode"
-                    } 
+                    }
                 })
 
             else:
@@ -312,7 +313,7 @@ def preview():
                 raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
 
             xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
-            
+
             if request.json['transfer_template_id'] == 2:
                 # identity function
                 dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
@@ -325,7 +326,7 @@ def preview():
 
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
-        
+
             if request.json['transfer_template_id'] == 23:
                 # merge source plate(s) into single destination plate
                 rows = merge_transform( request.json['sources'], request.json['destinations'] )
@@ -333,7 +334,7 @@ def preview():
             elif request.json['transfer_template_id'] == 25:
                 groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
 
-                # to do: create the dest 
+                # to do: create the dest
 
                 destination_plates = [];
                 dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
@@ -403,7 +404,7 @@ def preview():
                             ,"dataType": "barcode"
                             ,"title": "Associated PCA Plate Barcodes"
                             ,"forProperty": "associatedPcaPlates"
-                        } 
+                        }
                     })
 
                     responseCommands.append({
@@ -442,7 +443,7 @@ def preview():
                 if (destinations_ready):
                     rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
                 else:
-                    
+
                     responseCommands.append({
                         "type": "PRESENT_DATA"
                         ,"item": {
@@ -452,7 +453,7 @@ def preview():
                             ,"mimeType": "text/csv"
                             ,"fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
                         }
-                        
+
                     })
 
                     responseCommands.append({
@@ -485,7 +486,7 @@ def preview():
                         ]
                     })
 
-            elif request.json['transfer_template_id'] in (26, 27, 34):
+            elif request.json['transfer_template_id'] in (26, 27): # , 34):
 
                 rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 
@@ -530,12 +531,12 @@ def preview():
                                   .order_by( SamplePlateLayout.well_id ):
                         dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
 
-                        rows.append( {'source_plate_barcode':           barcode,
-                                      'source_well_name':               well.well_name,
-                                      'source_sample_id':               well.sample_id,
-                                      'destination_plate_barcode':      dest_barcode,
-                                      'destination_well_name':          dest_plate_type.get_well_name( dest_well ),
-                                      'destination_plate_well_count':   dest_plate_type.number_clusters,
+                        rows.append( {'source_plate_barcode': barcode,
+                                      'source_well_name': str(well.well_id),
+                                      'source_sample_id': well.sample_id,
+                                      'destination_plate_barcode': dest_barcode,
+                                      'destination_well_name': dest_plate_type.get_well_name(dest_well),
+                                      'destination_plate_well_count': dest_plate_type.number_clusters,
                                       })
 
     except WebError as e:
@@ -1660,6 +1661,23 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
+                ,"34": {  // keyed to sample_transfer_template_id in the database
+                    "description": "1x6144 to 16x384"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"wellCount": 6144
+                        ,"plateTypeId": "SPTT_1009"
+                        ,"variablePlateCount": false
+                    }
+                    ,"destination":{
+                        "plateCount": 16
+                        ,"wellCount": 384
+                        ,"plateTypeId": "SPTT_0006"
+                        ,"variablePlateCount": false
+                        ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;","Quadrant&nbsp;5:&nbsp;","Quadrant&nbsp;6:&nbsp;","Quadrant&nbsp;7:&nbsp;","Quadrant&nbsp;8:&nbsp;","Quadrant&nbsp;9:&nbsp;","Quadrant&nbsp;10:&nbsp;","Quadrant&nbsp;11:&nbsp;","Quadrant&nbsp;12:&nbsp;","Quadrant&nbsp;13:&nbsp;","Quadrant&nbsp;14:&nbsp;","Quadrant&nbsp;15:&nbsp;","Quadrant&nbsp;16:&nbsp;"]
+                    }
+                }
                 ,"35": {  // keyed to sample_transfer_template_id in the database
                     "description": "PCA Pre-Planning"
                     ,"type": "standard"
@@ -1690,3 +1708,21 @@ TRANSFER_MAP = loads("""
                 }
             }
 """)
+
+
+def transfer_map_step_34_titin_6144():
+    result = {}
+    for dest_plate_number_0based in range(16):
+        for dest_well_id_0based in range(384):
+            src_well_id_0based = sum([4 * (dest_well_id_0based % 24),
+                                      384 * (15 - (dest_well_id_0based / 24)),
+                                      1 * dest_plate_number_0based % 4,
+                                      96 * (dest_plate_number_0based / 4)
+                                      ])
+            result[str(src_well_id_0based + 1)] = {
+                "destination_plate_number": dest_plate_number_0based + 1,
+                "destination_well_id": dest_well_id_0based + 1
+            }
+    return [result]
+
+TRANSFER_MAP["34"]["plateWellToWellMaps"] = transfer_map_step_34_titin_6144()

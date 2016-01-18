@@ -6413,7 +6413,7 @@ col_and_row_to_cell_map_48 = {
 def get_col_and_row_for_well_id_48(well_id):
     cell = well_id_to_cell_map_48[well_id]
     return cell["col_and_row"]
-    
+
 def get_well_id_for_col_and_row_48(col_and_row):
     cell = col_and_row_to_cell_map_48[col_and_row]
     return cell["well_id"]
@@ -6422,7 +6422,7 @@ def get_well_id_for_col_and_row_48(col_and_row):
 def get_col_and_row_for_well_id_96(well_id):
     cell = well_id_to_cell_map_96[well_id]
     return cell["col_and_row"]
-    
+
 def get_well_id_for_col_and_row_96(col_and_row):
     cell = col_and_row_to_cell_map_96[col_and_row]
     return cell["well_id"]
@@ -6430,8 +6430,15 @@ def get_well_id_for_col_and_row_96(col_and_row):
 def get_col_and_row_for_well_id_384(well_id):
     cell = well_id_to_cell_map_384[well_id]
     return cell["col_and_row"]
-    
+
 def get_well_id_for_col_and_row_384(col_and_row):
     cell = col_and_row_to_cell_map_384[col_and_row]
     return cell["well_id"]
 
+def get_well_id_for_col_and_row_6144(col_and_row):
+    # FIXME: the frontend and backend are using a 1 - 6144 integer
+    # in a variable named "col_and_row".  Maybe change the varname?
+    well_id = int(col_and_row)
+    assert well_id > 0
+    assert well_id <= 6144
+    return well_id
