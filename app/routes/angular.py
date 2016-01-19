@@ -1058,10 +1058,10 @@ def process_hamilton_sources(transform_type_id):
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
-                ,"plates": [
-                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellNumber": 1}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellNumber": 2}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellNumber": 3}
+                ,"plates": [ # front end just uses length of plates array
+                    {"type": "SHIPPING_TUBE_PLATE"}
+                    ,{"type": "SHIPPING_TUBE_PLATE"}
+                    ,{"type": "SHIPPING_TUBE_PLATE"}
                 ]
             }
         );
@@ -1074,6 +1074,33 @@ def process_hamilton_sources(transform_type_id):
                         {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
                         ,{"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
                         ,{"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                    ]
+                }
+            }
+        );
+
+    elif transform_type_id == 58: # PCR/PCA Master Mix addition:
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+        respData["responseCommands"].append(
+            {
+                "type": "ADD_TRANSFORM_SPEC_DETAIL"
+                ,"detail": {
+                    "key": "guidedDestinationPlacementData"
+                    ,"value": [
+                        {"forPosition": 1, "barcode": "TUBE01"}
+                        ,{"forPosition": 2, "barcode": "TUBE02"}
+                        ,{"forPosition": 3, "barcode": "TUBE03"}
+                        ,{"forPosition": 4, "barcode": "TUBE04"}
                     ]
                 }
             }
