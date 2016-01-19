@@ -1439,8 +1439,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         var scannedValFinishedTimeout = null;
 
         $scope.placementConfirmationScanned = function () {
-            console.log('PCS: ' + $scope.placementConfirmation.value);
-
             var scannedVal = $scope.placementConfirmation.value;
 
             if (scannedVal && scannedVal.length) {
