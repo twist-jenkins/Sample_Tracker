@@ -1286,8 +1286,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('hamiltonWizardDestinationPlacementAndScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
     function ($scope, $state, $http, Api, $timeout, Constants) {
-        console.log($scope.transformSpec);
-        console.log($scope.hamiltonDataObj);
 
         $scope.setGuidedPlacementMode(true);
         $scope.setHighlightedPlate(null, null, true, true);
