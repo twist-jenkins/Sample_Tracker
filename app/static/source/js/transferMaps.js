@@ -1664,7 +1664,7 @@ app = angular.module('twist.app')
                     }
                     ,hamiltonDetails: {
                         'HAM0Y': { // Millenium Falcon
-                            'left side': {
+                            'main': {
                                 carriers: [
                                     {
                                         startTrack: 25
@@ -2307,6 +2307,10 @@ app = angular.module('twist.app')
             ,carriers: {
                 'L5AC': {
                     label: 'Five 96-well plates'
+                    ,trackWidth: 6
+                }
+                ,'384wPCR': {
+                    label: 'Fice 384-well plates'
                     ,trackWidth: 6
                 }
                 ,'SHIPPING_TUBES_CARRIER': {
