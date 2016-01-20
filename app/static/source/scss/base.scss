@@ -413,6 +413,18 @@ strong {
     }
 }
 
+.twst-drag-n-drop-upload-area {
+    padding: 3em;
+    text-align: center;
+    border: 5px dotted $twst-medium-green; 
+
+    .twst-thumbs-validation-icon {
+        display: block;
+        margin: 0 auto;
+    }   
+}
+
+
 /******************************/
 /*** SPINNER ***/
 /******************************/
