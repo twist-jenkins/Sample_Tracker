@@ -81,7 +81,8 @@ Please merge your stable changes to twistdb@develop early & often, for others to
 ### Add TwistDB + SMT seed data
 
 ```
-python manage.py seed
+EXPORT WEBSITE_ENV=local # or whatever
+dropdb orders_dev && createdb orders_dev && python manage.py createdb && python manage.py seed && python manage.py fixtures
 ```
 
 ### Run tests
