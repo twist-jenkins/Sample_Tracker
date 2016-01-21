@@ -20,8 +20,6 @@ from app import app, db
 
 
 
-
-
 manager = Manager(app)
 
 migrate = Migrate(app, db)
@@ -49,32 +47,41 @@ manager.add_command('importtemplate', ImportSampleTransferTemplate())
 
 
 @manager.command
+def createdb():
+    """ Creates a database with all of the tables defined in
+        your SQLAlchemy models
+    """
+    from twistdb.db import initdb
+    print '@@ config:', app.config['SQLALCHEMY_DATABASE_URI']
+    initdb(engine=db.engine, create_tables=True)
+    # Base.metadata.create_all(bind=db.engine)
+
+
+@manager.command
+def dropdb():
+    """Remove database schema and tables."""
+    with app.app_context():
+        from twistdb.util import seed
+        seed.drop_data(db.engine)
+
+
+@manager.command
 def seed():
     """ Seed a database with starting default table values for CVs."""
     from twistdb.util import seed
-    seed_data_file_name = "app/seed_data/smt_seed_data.xlsx"
-    tables_to_seed = ['sampletrack.sample_transfer_template',
-                      'sampletrack.sample_transfer_type',
-                      'sampletrack.sample_plate_type',
-                      'ngs.barcode_sequence',
-                      'backend.sample_type',
-                      ]
-    seed.seed_data(db.engine, seed_data_file_name, tables_to_seed)
+    seed.seed_data(db.engine)
 
     # for now, go ahead and add the fixtures too.
     # TODO: populate fixtures more intelligently, as part of testing, not setup
-    add_fixtures()
+    # add_fixtures()
+
 
 @manager.command
-def add_fixtures():
+def fixtures():
     """ Add database fixtures with test data values."""
     from twistdb.util import seed
-    fixtures_data_file_name = "app/seed_data/smt_fixture_data.xlsx"
-    tables = ['sampletrack.sample_plate',
-              'sampletrack.sample_plate_layout',
-              'backend.sample',
-              'backend.gene_assembly_sample',
-              ]
-    seed.seed_data(db.engine, fixtures_data_file_name, tables)
+    fixture_root = "test/fixture_data"
+    seed.seed_data(db.engine, fixture_root)
+
 
 manager.run()
