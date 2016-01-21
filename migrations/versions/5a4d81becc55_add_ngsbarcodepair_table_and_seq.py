@@ -45,11 +45,11 @@ def create_barcode_table():
                   primary_key=True),
         db.Column('i7_sequence_id',
                   db.String(40),
-                  db.ForeignKey('barcode_sequence.sequence_id'),
+                  db.ForeignKey('backend.barcode_sequence.sequence_id'),
                   nullable=False),
         db.Column('i5_sequence_id',
                   db.String(40),
-                  db.ForeignKey('barcode_sequence.sequence_id'),
+                  db.ForeignKey('backend.barcode_sequence.sequence_id'),
                   nullable=False),
         db.Column('reverse_primer_i7_well_row',
                   db.String(10),
@@ -284,20 +284,20 @@ def insert_barcode_well_records(bc_plate_id, wells):
 
 def upgrade():
     """spammy since monitoring high latency connection"""
-    print("1. create_barcode_table")
-    ngs_barcode_pair_table = create_barcode_table()
-    print("2. populate_values")
-    ngs_barcode_pairs, max_value = populate_values(ngs_barcode_pair_table)
+    # print("1. create_barcode_table")
+    # ngs_barcode_pair_table = create_barcode_table()
+    # print("2. populate_values")
+    # ngs_barcode_pairs, max_value = populate_values(ngs_barcode_pair_table)
     print("3. create_cycle_sequence")
-    create_cycle_sequence(max_value)
-    print("4. build_plate_wells")
-    wells, barcode_sequences = build_plate_wells(ngs_barcode_pairs)
-    print("5. insert_barcode_sample_records")
-    insert_barcode_sample_records(barcode_sequences)
-    print("6. insert_barcode_plate_record")
-    bc_plate_id = insert_barcode_plate_record()
-    print("7. insert_barcode_well_records")
-    insert_barcode_well_records(bc_plate_id, wells)
+    create_cycle_sequence(8741)  # max_value)
+    # print("4. build_plate_wells")
+    # wells, barcode_sequences = build_plate_wells(ngs_barcode_pairs)
+    # print("5. insert_barcode_sample_records")
+    # insert_barcode_sample_records(barcode_sequences)
+    # print("6. insert_barcode_plate_record")
+    # bc_plate_id = insert_barcode_plate_record()
+    # print("7. insert_barcode_well_records")
+    # insert_barcode_well_records(bc_plate_id, wells)
 
 
 def downgrade():
