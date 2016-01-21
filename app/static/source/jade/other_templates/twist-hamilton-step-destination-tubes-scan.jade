@@ -10,3 +10,4 @@ div(class="twst-hamilton-step")
             strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
             button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="scannedTubeCount == destinationPlatesNeedingScanCount" ng-click="tubePlacementComplete()") Tube Scan & Placement Complete
             button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="highlightedPlate" ng-click="tubePlaced()") Tube Placed in {{tubeTargetWell}}
+            input(class="twst-hamilton-guided-scan-input twst-offscreen" type="text" ng-model="guidedScanInput.barcode" ng-change="tubeScanned()" ng-keydown="ignoreTab($event)")
