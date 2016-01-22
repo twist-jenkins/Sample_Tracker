@@ -232,12 +232,46 @@ app = angular.module("twist.app")
                             reader.readAsBinaryString(f);
                         } else if (f.type.indexOf('csv') != -1) {
                             reader.readAsText(f);
+                        } else if (f.type.indexOf('text/plain') != -1) {
+                            reader.readAsText(f);
                         } else {
                             $scope.twstDropTarget({}, 'Unrecognized upload file type: ' + f.type);
                             $scope.$apply(); // must call manually since the onload event is not angularized
                         }
                         
                     });
+                }
+            ]
+        };
+    }
+])
+
+.directive('twstDragOutLink', [ 
+    /* adds a drop event listener to an element and returns the read file data to the onDrop method */
+    function () {
+        return {
+            restrict: 'AC'
+            ,scope: {
+                twstDragOutLink: '='
+                ,onDrag: '=?'
+            }
+            ,controller: ['$scope', '$element', 
+                function ($scope, $element) {
+                    $element[0].draggable = true;
+
+                    $element[0].addEventListener('dragstart', function ($event) {
+                        $event.dataTransfer.setData("DownloadURL", $scope.twstDragOutLink.split('|').join(':'));
+                        if ($scope.onDrag) {
+                            $scope.onDrag();
+                        }
+                    }, false);
+
+                    /* 
+
+                    TO DO: add an click event listener to trigger a saveAs blob file download from the Hamilton worklist in the transform spec
+
+                    */
+
                 }
             ]
         };
@@ -405,6 +439,10 @@ app = angular.module("twist.app")
                 *  if the submit transform button should be enabled
                 */
 
+                if (! $scope.transformSpec.details.requestedData) {
+                    $scope.transformSpec.details.requestedData = {};
+                }
+
                 if ($scope.itemData.title) {
                     ml += '<h4>{{itemData.title}}</h4>';
                 }
@@ -413,9 +451,6 @@ app = angular.module("twist.app")
 
                     var arrayCount = $scope.itemData.type.split('.')[1];
 
-                    if (! $scope.transformSpec.details.requestedData) {
-                         $scope.transformSpec.details.requestedData = {};
-                    }
                     $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = new Array(4);
 
                     $scope.validations = new Array(4);
@@ -524,6 +559,39 @@ app = angular.module("twist.app")
 
                         $timeout.cancel($scope.validationTimeout);
                         $scope.validationTimeout = $timeout(returnValidate(), 200);
+                    }
+
+                } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_FILE_DATA) == 0) {
+                    $scope.validation = null;
+                    $scope.error = null;
+                    ml +=   '<div class="twst-drag-n-drop-upload-area" twst-drop-target="catchFileUpload"> Drop a file here to upload ' +
+                            '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon></div>';
+                    
+                    $scope.catchFileUpload = function (data, error) {
+                        if (error) {
+                            $scope.validation = false;
+                            $scope.error = error;
+                            $scope.item.validData = 0;
+                        } else {
+                            if ($scope.itemData.fileType == 'quantification') {
+                                /* check that filewriting was complete */
+                                if (data.indexOf('##BLOCKS= 4' == 0)) {
+                                    if (data.indexOf('Original Filename: ' + $scope.transformSpec.sources[0].details.id + ';') == -1) {
+                                        $scope.validation = 0;
+                                        $scope.error = 'The uploaded file is not quant data for plate #' + $scope.transformSpec.sources[0].details.id + '.';
+                                    } else {
+                                        $scope.validation = 1;
+                                        $scope.error = null;
+                                        $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = data;
+                                        $scope.item.validData = true;
+                                    }
+                                } else {
+                                    $scope.validation = 0;
+                                    $scope.error = 'This uploaded file is incomplete or of an invalid type.';
+                                }
+                            }
+                            
+                        }
                     }
 
                 } else {

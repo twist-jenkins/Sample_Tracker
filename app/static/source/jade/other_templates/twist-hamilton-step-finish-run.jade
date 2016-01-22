@@ -9,7 +9,13 @@ div(class="twst-hamilton-step")
         div(ng-if="!savedSpecToFinish")
             p ERROR: A transform spec with an id of {{savedSpecIdToFinish}} was not found
         div(class="twst-hamilton-wizard-finish-run-details" ng-if="savedSpecToFinish")
-            button(class="twst-button twst-blue-button twst-hamilton-wizard-finish-run-button" ng-class="{'twst-disabled-button': !savedSpecToFinish}" ng-click="runFinished()") Run Finished
+            div(class="twst-hamilton-step-finish-run-buttons")
+                a(class="twst-button twst-blue-button twst-download-button twst-hamilton-step-worklist-button" twst-drag-out-link="'image/png|tester00.png|http://localhost/static/images/twist.png'")
+                    ng-include(src="'static/images/download.svg'") 
+                    span Download
+                        br
+                        span Worklist
+                button(class="twst-button twst-blue-button twst-hamilton-wizard-finish-run-button" ng-class="{'twst-disabled-button': !savedSpecToFinish || !worklistFetched}" ng-click="runFinished()") Run Finished
             p Hamilton: 
                 strong {{savedSpecToFinish.data_json.details.hamilton.label}}
             p Worklist generated on: 

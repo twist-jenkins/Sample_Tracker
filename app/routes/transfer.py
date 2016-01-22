@@ -214,7 +214,7 @@ def preview():
 
     try:
 
-        if request.json['transfer_type_id'] in (54, 55, 56, 59): # these are same to same transfers
+        if request.json['transfer_type_id'] in (54, 55, 56, 59, 60, 61): # these are same to same transfers
 
             src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
             dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
@@ -301,6 +301,17 @@ def preview():
                         "type": "barcode"
                         ,"title": "Thermocycler barcode"
                         ,"forProperty": "thermocyclerBarcode"
+                    }
+                })
+
+            elif request.json['transfer_type_id'] == 60:
+                responseCommands.append({
+                    "type": "REQUEST_DATA"
+                    ,"item": {
+                        "type": "file-data"
+                        ,"title": "Quantification Results"
+                        ,"forProperty": "instrument_data"
+                        ,"fileType": "quantification"
                     }
                 })
 
