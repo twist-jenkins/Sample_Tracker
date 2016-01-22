@@ -52,8 +52,9 @@ def createdb():
         your SQLAlchemy models
     """
     from twistdb.db import initdb
-    print '@@ config:', app.config['SQLALCHEMY_DATABASE_URI']
-    initdb(engine=db.engine, create_tables=True)
+    db_url = app.config['SQLALCHEMY_DATABASE_URI']
+    print '@@ config:', db_url
+    initdb(engine_url=db_url, create_tables=True)
     # Base.metadata.create_all(bind=db.engine)
 
 

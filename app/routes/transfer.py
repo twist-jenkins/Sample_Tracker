@@ -312,6 +312,17 @@ def preview():
                     }
                 })
 
+            elif request.json['transfer_type_id'] == 60:
+                responseCommands.append({
+                    "type": "REQUEST_DATA"
+                    ,"item": {
+                        "type": "file-data"
+                        ,"title": "Quantification Results"
+                        ,"forProperty": "instrument_data"
+                        ,"fileType": "quantification"
+                    }
+                })
+
             else:
                 rows = []
 
