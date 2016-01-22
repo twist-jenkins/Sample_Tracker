@@ -9,14 +9,14 @@ import json
 import logging
 import StringIO
 
-from flask import g, make_response, request, Response, jsonify, abort
+from flask import g, make_response, request, Response, jsonify
 
 from sqlalchemy import and_
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlalchemy.orm import subqueryload
 from app.utils import scoped_session
 from app.routes.spreadsheet import create_step_record_adhoc
 
-from app import app, db, googlelogin
+from app import app, db, googlelogin, constants
 
 from twistdb.sampletrack import *
 from twistdb.public import *
@@ -85,10 +85,11 @@ SAMPLE_VIEW_ATTRS = (
     'gs_description'
 )
 
-#
-# This is the "home" page, which is actually the "enter a sample movement" page.
-#
+
 def new_home():
+    """
+    This is the "home" page which is actually the "enter a sample movement" page.
+    """
     return app.send_static_file('index.html')
 
 
@@ -100,7 +101,6 @@ def error_response(status_code, message):
 
 def user_data():
     user = None
-
     if hasattr(g, 'user') and hasattr(g.user, 'first_and_last_name'):
         user = {
             "name": g.user.first_and_last_name,
@@ -108,55 +108,57 @@ def user_data():
         }
 
     returnData = {
-        "success": True
-        ,"user": user
+        "success": True, "user": user
     }
     resp = Response(response=json.dumps(returnData),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def google_login():
     returnData = {
-        "login_url": googlelogin.login_url(scopes=['https://www.googleapis.com/auth/userinfo.email'])
+        "login_url": googlelogin.login_url(
+            scopes=['https://www.googleapis.com/auth/userinfo.email'])
     }
     resp = Response(response=json.dumps(returnData),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def sample_transfer_types():
-    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.id);
+    """Return a list of all transfer types in the DB."""
+    sample_transfer_types2 = db.session.query(SampleTransferType).\
+        order_by(SampleTransferType.id)
     simplified_results = []
     for row in sample_transfer_types2:
-        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
+        simplified_results.append({"text": row.name, "id": row.id,
+                                   "source_plate_count": row.source_plate_count,
+                                   "destination_plate_count": row.destination_plate_count,
+                                   "transfer_template_id": row.sample_transfer_template_id})
     returnData = {
-        "success": True
-        ,"results": simplified_results
+        "success": True, "results": simplified_results
     }
 
     resp = Response(response=json.dumps(returnData),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
-#
-# Returns barcodes for all current sample plates
-#
+
 def sample_plate_barcodes():
+    """Returns barcodes for all current sample plates."""
     plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
 
-    plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
+    plate_barcodes = [plate.external_barcode for plate in
+                      plates if plate.external_barcode is not None]
 
     resp = Response(response=json.dumps(plate_barcodes),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
+
 def update_plate_barcode():
-
+    """Update the barcode on a plate."""
     data = request.json
-
     sample_plate_id = data["plateId"]
     external_barcode = data["barcode"]
 
@@ -169,27 +171,31 @@ def update_plate_barcode():
     #
     # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
     #
-    sample_plate_with_this_barcode = db.session.query(SamplePlate).filter_by(external_barcode=external_barcode).first()
-    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
+    sample_plate_with_this_barcode = db.session.query(SamplePlate).\
+        filter_by(external_barcode=external_barcode).first()
+    if sample_plate_with_this_barcode and \
+            sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
         logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
-            (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
+                    (g.user.first_and_last_name, sample_plate_id,
+                     external_barcode,sample_plate_with_this_barcode.sample_plate_id))
         errmsg = "The barcode [%s] is already assigned to the plate with id: [%s]"
         return error_response(400, errmsg % (external_barcode, sample_plate_with_this_barcode.sample_plate_id))
-
 
     sample_plate.external_barcode = external_barcode
     db.session.commit()
     logging.info("external_barcode: %s", external_barcode)
     response = {
-        "success":True
+        "success": True
     }
 
-    logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
+    logger.info(" %s set the barcode [%s] for plate with id [%s]" %
+                (g.user.first_and_last_name, external_barcode, sample_plate_id))
 
     return jsonify(response)
 
-def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
+def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
+    """Return all sample transfers in the database (up to limit)."""
     qry = (
         db.session.query(
             SampleTransfer,
@@ -210,7 +216,6 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
     sample_transfer_details = []
 
     seen = []
-
     for transfer, details in rows:
         key = (transfer.id,
                details.source_sample_plate_id,
@@ -225,12 +230,12 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
     for sample_transfer, details in sample_transfer_details:
         if (sample_transfer.id not in transfers_data):
             transfers_data[sample_transfer.id] = {
-                "id": sample_transfer.id
-                ,"name": sample_transfer.sample_transfer_type.name
-                ,"date": sample_transfer.date_transfer.strftime("%A, %B %d %Y, %I:%M%p")
-                ,"operator": sample_transfer.operator.first_and_last_name
-                ,"source_barcodes": [details.source_plate.external_barcode]
-                ,"destination_barcodes": [details.destination_plate.external_barcode]
+                "id": sample_transfer.id,
+                "name": sample_transfer.sample_transfer_type.name,
+                "date": sample_transfer.date_transfer.strftime("%A, %B %d %Y, %I:%M%p"),
+                "operator": sample_transfer.operator.first_and_last_name,
+                "source_barcodes": [details.source_plate.external_barcode],
+                "destination_barcodes": [details.destination_plate.external_barcode]
             }
         else:
             already = False
@@ -239,19 +244,22 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
                     already = True
                     break
             if not already:
-                transfers_data[sample_transfer.id]["source_barcodes"].append(details.source_plate.external_barcode)
+                transfers_data[sample_transfer.id]["source_barcodes"].\
+                    append(details.source_plate.external_barcode)
             already = False
             for barcode in transfers_data[sample_transfer.id]["destination_barcodes"]:
                 if barcode == details.destination_plate.external_barcode:
                     already = True
                     break
             if not already:
-                transfers_data[sample_transfer.id]["destination_barcodes"].append(details.destination_plate.external_barcode)
+                transfers_data[sample_transfer.id]["destination_barcodes"].\
+                    append(details.destination_plate.external_barcode)
 
     # ugliness here to turn the map created above into an ordered array
     transfersDataArray = []
     for item in transfers_data:
-        transfersDataArray.insert(transfers_data[item]['id'], transfers_data[item])
+        transfersDataArray.insert(transfers_data[item]['id'],
+                                  transfers_data[item])
 
     fullDataArray = []
     for item in transfersDataArray:
@@ -261,12 +269,12 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
     fullDataArray.reverse()
 
     resp = Response(response=json.dumps(fullDataArray),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
 
 def create_step_record():
+    """Create a plate and plate layout as the result of a transform."""
     data = request.json
     operator = g.user
 
@@ -456,7 +464,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+    source_to_dest_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id,
                                                          item_order_number=order_number,
                                                          source_sample_plate_id=source_plate.sample_plate_id,
                                                          source_well_id=source_plate_well.well_id,
@@ -976,29 +984,29 @@ carriers = {
             }
 
         }
-    }   
+    }
 }
 
 
 
 def get_hamilton_by_barcode(hamilton_barcode):
-    
+
     if hamilton_barcode in hamiltons:
-        respData = hamiltons[hamilton_barcode] 
+        respData = hamiltons[hamilton_barcode]
     else:
         errmsg = "There is no Hamilton with the barcode: [%s]"
         return error_response(404, errmsg % hamilton_barcode)
 
-    
+
     resp = Response(response=json.dumps(respData),
             status=200, \
             mimetype="application/json")
-    return(resp) 
+    return(resp)
 
 def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
 
     if carrier_barcode in carriers:
-        respData = carriers[carrier_barcode] 
+        respData = carriers[carrier_barcode]
     else:
         errmsg = "There is no carrier with the barcode: [%s]"
         return error_response(404, errmsg % carrier_barcode)
@@ -1032,96 +1040,97 @@ def process_hamilton_sources(transform_type_id):
         "responseCommands": []
     }
 
-    if transform_type_id == 39: # hitpicking of miniprep
+    if transform_type_id == constants.TRANS_TYPE_HITPICK_MINIPREP:
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
                     {"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
                 ]
             }
-        );
-    elif transform_type_id == 48: # hitpicking of shipping into plates
+        )
+    elif transform_type_id == constants.TRANS_TYPE_HITPICK_SHIP_PLATES:
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
                     {"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
                 ]
             }
-        );
-    elif transform_type_id == 51: # hitpicking of shipping into tubes
+        )
+    elif transform_type_id == constants.TRANS_TYPE_HITPICK_SHIP_TUBES:
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [ # front end just uses length of plates array
+                "type": "SET_DESTINATIONS",
+                "plates": [  # front end just uses length of plates array
+                    {"type": "SHIPPING_TUBE_PLATE"},
+                    {"type": "SHIPPING_TUBE_PLATE"},
                     {"type": "SHIPPING_TUBE_PLATE"}
-                    ,{"type": "SHIPPING_TUBE_PLATE"}
-                    ,{"type": "SHIPPING_TUBE_PLATE"}
                 ]
             }
-        );
+        )
         respData["responseCommands"].append(
             {
-                "type": "ADD_TRANSFORM_SPEC_DETAIL"
-                ,"detail": {
-                    "key": "shippingTubeBarcodeData"
-                    ,"value": [
-                        {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
-                        ,{"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
-                        ,{"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                "type": "ADD_TRANSFORM_SPEC_DETAIL",
+                "detail": {
+                    "key": "shippingTubeBarcodeData",
+                    "value": [
+                        {"forWellNumber": 1, "COI": "TUBE01",
+                         "itemName": "ordered tube item",
+                         "partNumber": "12345ABCD", "labelMass": "1 ug"},
+                        {"forWellNumber": 2, "COI": "TUBE02",
+                         "itemName": "ordered tube item",
+                         "partNumber": "6789GHIJ", "labelMass": "1 ug"},
+                        {"forWellNumber": 3, "COI": "TUBE03",
+                         "itemName": "ordered tube item",
+                         "partNumber": "3456MNOP", "labelMass": "1 ug"}
                     ]
                 }
             }
-        );
+        )
 
-    elif transform_type_id == 58: # PCR/PCA Master Mix addition:
+    elif transform_type_id == constants.TRANS_TYPE_PCA_PCR_ADD_MMIX:
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
                     {"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
                 ]
             }
-        );
+        )
         respData["responseCommands"].append(
             {
-                "type": "ADD_TRANSFORM_SPEC_DETAIL"
-                ,"detail": {
-                    "key": "guidedDestinationPlacementData"
-                    ,"value": [
-                        {"forPosition": 1, "barcode": "TUBE01"}
-                        ,{"forPosition": 2, "barcode": "TUBE02"}
-                        ,{"forPosition": 3, "barcode": "TUBE03"}
-                        ,{"forPosition": 4, "barcode": "TUBE04"}
+                "type": "ADD_TRANSFORM_SPEC_DETAIL",
+                "detail": {
+                    "key": "guidedDestinationPlacementData",
+                    "value": [
+                        {"forPosition": 1, "barcode": "TUBE01"},
+                        {"forPosition": 2, "barcode": "TUBE02"},
+                        {"forPosition": 3, "barcode": "TUBE03"},
+                        {"forPosition": 4, "barcode": "TUBE04"}
                     ]
                 }
             }
-        );
+        )
 
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+            status=200, mimetype="application/json")
     return(resp)
 
+
 def trash_samples():
-
-    data = request.json
-    sampleIds = data["sampleIds"]
-
+    # data = request.json
+    # sampleIds = data["sampleIds"]
     respData = {
         "all_trashed": True
     }
-
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
-
