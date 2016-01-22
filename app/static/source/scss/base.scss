@@ -2877,11 +2877,37 @@ strong {
 
                 &.twst-hamilton-step-worklist-fetched {
                     .twst-hamilton-step-worklist-button {
+                        font-size: 1em;
+                        top: 2.8em;
 
+                        > span {
+                            display: inline;
+                            text-align: left;
+                            float: none;
+
+                            span {
+                                display: inline;
+                                text-align: left;
+                                float: none;
+                                font-size: 1em;
+                            }
+                        }
+
+                        svg {
+                            width: 1em;
+                            height: 1em;
+
+                            path {
+                                fill: #000;
+                            }
+                        }
                     }
 
                     .twst-hamilton-wizard-finish-run-button {
-
+                        top: -2.2em;
+                        font-size: 1.5em;
+                        padding-top: 0.35em;
+                        padding-bottom: 0.35em;
                     }
                 }
 
@@ -2890,6 +2916,8 @@ strong {
                     display: block;
                     font-size: 1.5em;
                     margin: 0.25em 0;
+                    @include transition(top .3s ease);
+                    top:0;
 
                     > span {
                         display: block;
@@ -2900,6 +2928,11 @@ strong {
                         top: -0.2em;
                         position: relative;
                         text-align: center;
+
+                        span {
+                            display: block;
+                            text-align: center;
+                        }
                     }
 
                     svg {
@@ -2919,6 +2952,9 @@ strong {
                     margin: 0.25em 0;
                     padding-top: 0.2em;
                     padding-bottom: 0.2em;
+                    width: 100%;
+                    @include transition(top .3s ease);
+                    top: 0;
                 }
             }
         }

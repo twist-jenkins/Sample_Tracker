@@ -1158,3 +1158,10 @@ def trash_samples():
             mimetype="application/json")
     return(resp)
 
+def get_worklist(spec_id):
+    response = make_response("****** worklist data for transform spec %s ******" % spec_id)
+    # This is the key: Set the right header for the response
+    # to be downloaded, instead of just printed on the browser
+    response.headers["Content-Disposition"] = "attachment;"
+    return response
+
