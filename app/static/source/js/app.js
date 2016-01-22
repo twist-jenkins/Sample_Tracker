@@ -705,9 +705,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
             if (plateFor == Constants.PLATE_SOURCE) {
                 $scope.scannedSourcePlateCount = scannedPlateCount;
+                if ($scope.scannedSourcePlateCount == $scope.sourcePlatesNeedingScanCount) {
+                    $scope.highlightedPlate = null;
+                    jQuery('input:focus').trigger('blur');
+                }
             } else if (plateFor == Constants.PLATE_DESTINATION) {
                 $scope.scannedDestinationPlateCount = scannedPlateCount;
-                if ($scope.scannedDestinationPlateCount == $scope.hamiltonDataObj.allDestinationPlates.length) {
+                if ($scope.scannedDestinationPlateCount == $scope.destinationPlatesNeedingScanCount) {
                     $scope.highlightedPlate = null;
                     jQuery('input:focus').trigger('blur');
                 }
@@ -1019,7 +1023,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
 .controller('hamiltonWizardDestinationScanController', ['$scope', '$state',  '$http', 'Api', '$timeout', 'Constants', 
     function ($scope, $state, $http, Api, $timeout, Constants) {
-        $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
         console.log($scope.hamiltonDataObj);
         $scope.restartDestinationPlateScan = function () {
             for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
@@ -1082,6 +1085,12 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             }
             
         };
+
+        if ($scope.hamiltonDataObj.allSourcePlates.length && !$scope.hamiltonDataObj.allDestinationPlates.length) {
+            $scope.destinationPlateScanComplete();
+        } else {
+            $scope.findNextPlateForScan(Constants.PLATE_DESTINATION, Constants.HAMILTON_ELEMENT_CARRIER_POSITION);
+        }
     }]
 )
 

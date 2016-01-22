@@ -1696,6 +1696,39 @@ app = angular.module('twist.app')
                         
                     }
                 }
+                ,38: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Normalization'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        'HAM0Y': { // Millenium Falcon
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 49
+                                        ,index: 1
+                                        ,type: 'L5AC'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, unused: true}
+                                            ,{plateFor: 'source', localIndex: 4, unused: true}
+                                            ,{plateFor: 'source', localIndex: 3, unused: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 1}
+                                            ,{plateFor: 'source', localIndex: 1, unused: true}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                        
+                    }
+                }
 
             }
             ,rowColumnMaps: {

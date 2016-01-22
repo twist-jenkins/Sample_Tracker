@@ -1033,6 +1033,12 @@ def process_hamilton_sources(transform_type_id):
     }
 
     if transform_type_id == 39: # hitpicking of miniprep
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a Hamilton worklist to hitpick into necessary # of destination plates.
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
@@ -1044,6 +1050,12 @@ def process_hamilton_sources(transform_type_id):
             }
         );
     elif transform_type_id == 48: # hitpicking of shipping into plates
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a shipping worklist to hitpick into necessary # of destination plates.
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
@@ -1055,6 +1067,12 @@ def process_hamilton_sources(transform_type_id):
             }
         );
     elif transform_type_id == 51: # hitpicking of shipping into tubes
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a shipping worklist to hitpick into necessary # of destination tubes.
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
@@ -1080,6 +1098,14 @@ def process_hamilton_sources(transform_type_id):
         );
 
     elif transform_type_id == 58: # PCR/PCA Master Mix addition:
+        
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a master mix addition worklist AND needs to determine where the 4 destination plates should be placed.
+            It will return the SET_DESTINATIONS command as-is below.
+            The ADD_TRANSFORM_SPEC_DETAIL should be the array of 4 destination plates with their forPosition and barcode properties set accordingly
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
@@ -1105,6 +1131,13 @@ def process_hamilton_sources(transform_type_id):
                 }
             }
         );
+
+    elif transform_type_id == 61: # Normalization:
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build nornalization worklist for the source plate.
+        '''
 
     resp = Response(response=json.dumps(respData),
             status=200, \

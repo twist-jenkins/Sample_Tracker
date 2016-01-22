@@ -2870,13 +2870,57 @@ strong {
                     list-style-type: disc;
                 }
             }
-        }
 
-        .twst-hamilton-wizard-finish-run-button {
-            position: relative;
-            display: block;
-            float: right;
-            font-size: 1.5em;
+            .twst-hamilton-step-finish-run-buttons {
+                position: relative;
+                float: right;
+
+                &.twst-hamilton-step-worklist-fetched {
+                    .twst-hamilton-step-worklist-button {
+
+                    }
+
+                    .twst-hamilton-wizard-finish-run-button {
+
+                    }
+                }
+
+                .twst-hamilton-step-worklist-button {
+                    position: relative;
+                    display: block;
+                    font-size: 1.5em;
+                    margin: 0.25em 0;
+
+                    > span {
+                        display: block;
+                        float: right;
+                        padding-left: 0.5em;
+                        font-size: 0.8em;
+                        line-height: 1.2em;
+                        top: -0.2em;
+                        position: relative;
+                        text-align: center;
+                    }
+
+                    svg {
+                        width: 1.5em;
+                        height: 1.5em;
+
+                        path {
+                            fill: #fff;
+                        }
+                    }
+                }
+
+                .twst-hamilton-wizard-finish-run-button {
+                    position: relative;
+                    display: block;
+                    font-size: 1em;
+                    margin: 0.25em 0;
+                    padding-top: 0.2em;
+                    padding-bottom: 0.2em;
+                }
+            }
         }
 
         .twst-hamilton-wizard-error-message {
