@@ -435,8 +435,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                          source_plate, source_plate_well,
                          destination_plate, destination_plate_well_id,
                          row, column):
-    """helper function for create_step_record"""
-
+    """Helper function for create_step_record to create per-well transfers."""
     spl = SamplePlateLayout
     existing_sample_plate_layout = db_session.query(spl).filter(and_(
         spl.sample_plate_id == destination_plate.sample_plate_id,
@@ -476,8 +475,9 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
 
 def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
-
-    sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
+    """Query plate details by barcode."""
+    sample_plate = db.session.query(SamplePlate).\
+        filter_by(external_barcode=sample_plate_barcode).first()
 
     if not sample_plate:
         errmsg = "There is no plate with the barcode: [%s]"
@@ -499,13 +499,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     number_clusters = sample_plate.sample_plate_type.number_clusters
 
-    #print "number_clusters: ", number_clusters
-
     well_to_col_and_row_mapping_fn = {
         48:get_col_and_row_for_well_id_48,
         96:get_col_and_row_for_well_id_96,
         384:get_col_and_row_for_well_id_384
-    }.get(number_clusters,lambda well_id:"missing map")
+    }.get(number_clusters, lambda well_id: "missing map")
 
     rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
         SampleTransferDetail.destination_sample_plate_id==sample_plate_id,
@@ -606,12 +604,10 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     if fmt == "json":
         resp = Response(response=json.dumps(report),
-            status=200, \
-            mimetype="application/json")
+                        status=200, mimetype="application/json")
         return(resp)
 
     elif fmt=="csv":
-
 
         si = StringIO.StringIO()
         cw = csv.writer(si)
@@ -627,10 +623,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         #csv += """,PLATE BARCODE, CREATION DATE/TIME,CREATED BY\n """
         #csv += "," + sample_plate_barcode + "," + "\"" + report["plateDetails"]["dateCreatedFormatted"] + "\" ," + report["plateDetails"]["createdBy"]
 
-        #
-        # dt.strftime("%A, %d. %B %Y %I:%M%p")
-        #
-
         if len(parent_plates) > 0:
             cw.writerow("")
             cw.writerow("")
@@ -640,7 +632,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             cw.writerow(["","BAR CODE", "CREATION DATE/TIME"])
             for plate in parent_plates:
                 cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
-
 
         if len(child_plates) > 0:
             cw.writerow("")
@@ -652,7 +643,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             for plate in child_plates:
                 cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
 
-
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
@@ -660,7 +650,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         for attr_name in SAMPLE_VIEW_ATTRS:
             col_header_names.append(attr_name)
         cw.writerow(col_header_names)
-
 
         for well in wells:
             cols = ["",
@@ -684,11 +673,13 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         response.headers["Content-Disposition"] = "attachment; filename=Plate_" + sample_plate_barcode + "_Report.csv"
         return response
 
+
 def source_plate_well_data():
+    """Query for well metadata for the source plate in a transform."""
     data = request.json
     plateBarcodes = data["plateBarcodes"]
-    plateWellData = {}
 
+    plateWellData = {}
     for barcode in plateBarcodes:
 
         sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
@@ -700,7 +691,8 @@ def source_plate_well_data():
             }
             return jsonify(response)
 
-        rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
+        rows = db.session.query(SamplePlateLayout).\
+            filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
@@ -725,26 +717,25 @@ def source_plate_well_data():
         }
 
     respData = {
-        "success": True
-        ,"plateWellData": plateWellData
+        "success": True,
+        "plateWellData": plateWellData
     }
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
+
 def check_plates_are_new():
+    """Confirm in the database that a set of destination plates don't exist."""
     data = request.json
     plateBarcodes = data["plateBarcodes"]
 
     existPlates = [];
-
     for barcode in plateBarcodes:
         sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
 
         if sample_plate:
             existPlates.append(barcode)
-
 
     if len(existPlates):
         response = {
@@ -757,12 +748,11 @@ def check_plates_are_new():
         "success": True
     }
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
 ##################
-#### Hamailton operation endpoints
+# Hamilton operation endpoints
 ##################
 
 hamiltons = {
@@ -988,23 +978,21 @@ carriers = {
 }
 
 
-
 def get_hamilton_by_barcode(hamilton_barcode):
-
+    """Get metadata on a Hamilton robot by its barcode."""
     if hamilton_barcode in hamiltons:
         respData = hamiltons[hamilton_barcode]
     else:
         errmsg = "There is no Hamilton with the barcode: [%s]"
         return error_response(404, errmsg % hamilton_barcode)
 
-
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
-def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
 
+def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
+    """Get carrier metadata by barcode."""
     if carrier_barcode in carriers:
         respData = carriers[carrier_barcode]
     else:
@@ -1012,12 +1000,12 @@ def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
         return error_response(404, errmsg % carrier_barcode)
 
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+            status=200, mimetype="application/json")
     return(resp)
 
-def get_plate_ready_for_step(plate_barcode, transform_type_id):
 
+def get_plate_ready_for_step(plate_barcode, transform_type_id):
+    """Check that a given plate is ready for a particular step."""
     if plate_barcode:
         respData = True
     else:
@@ -1025,16 +1013,15 @@ def get_plate_ready_for_step(plate_barcode, transform_type_id):
         return error_response(404, errmsg % transform_type_id)
 
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
+
 def process_hamilton_sources(transform_type_id):
-
-    data = request.json
-    plateBarcodes = data["plateBarcodes"]
-
-    transform_type_id = int(transform_type_id);
+    """Process sources for a Hamilton-driven transform type."""
+    # data = request.json  # unused
+    # plateBarcodes = data["plateBarcodes"]  # unused
+    transform_type_id = int(transform_type_id)
 
     respData = {
         "responseCommands": []
@@ -1121,13 +1108,15 @@ def process_hamilton_sources(transform_type_id):
         )
 
     resp = Response(response=json.dumps(respData),
-            status=200, mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
 
 def trash_samples():
-    # data = request.json
-    # sampleIds = data["sampleIds"]
+    """Placeholder for trashing samples."""
+    # data = request.json  # unused
+    # sampleIds = data["sampleIds"]  # unused
+    # FIXME this doesn't actually do anything yet?
     respData = {
         "all_trashed": True
     }
