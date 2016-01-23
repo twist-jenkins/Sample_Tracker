@@ -1581,11 +1581,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
         Api.getTransformSpec($scope.savedSpecIdToFinish).success(function (data) {
             $scope.clearScannedItemErrorMessage();
-            $scope.savedSpecToFinish = data.data;
+            var savedSpecToFinish = data.data;
 
             /* create the data for the Hamilton Worklist dragout functionality */
             var now = (new Date()).toLocaleDateString().split('/').join('-');
-            var filename = 'worklist-' + now + '-' + $scope.savedSpecToFinish.data_json.sources[0].details.id + '.txt';
+            var filename = 'worklist-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.txt';
             var afterProtocol = document.location.href.substring(document.location.href.indexOf('://') + 3);
             var server = afterProtocol.substring(0, afterProtocol.indexOf('/'));
 
@@ -1594,6 +1594,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.dragOutData = 'text/plain|' + filename + '|' + worklistUrl; //'text/plain|worklist.png|http://localhost/static/images/twist.png';
 
             console.log($scope.dragOutData);
+
+            // TO DO: Generate barcode svg - directive!!!!
+
+            $scope.savedSpecToFinish = savedSpecToFinish;
 
         }).error(function (data) {
             $scope.savedSpecToFinish = null;

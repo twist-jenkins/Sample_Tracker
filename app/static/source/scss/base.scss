@@ -2849,6 +2849,16 @@ strong {
             font-size: 1.2em;
             line-height: 1.6em;
 
+            .twst-hamilton-step-worklist-barcode-container {
+                svg {
+                    position: relative;
+                    float: right;
+                    height: 1em;
+                    font-size: 5em;
+                    margin-right: 0.5em;
+                }
+            }
+
             .twst-hamilton-wizard-finish-run-plates {
                 display: table;
                 width: 100%;
