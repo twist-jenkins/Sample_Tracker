@@ -312,14 +312,14 @@ def preview():
                     }
                 })
 
-            elif request.json['transfer_type_id'] == 60:
+            elif request.json['transfer_type_id'] == constants.TRANS_TYPE_UPLOAD_QUANT:
                 responseCommands.append({
-                    "type": "REQUEST_DATA"
-                    ,"item": {
-                        "type": "file-data"
-                        ,"title": "Quantification Results"
-                        ,"forProperty": "instrument_data"
-                        ,"fileType": "quantification"
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "file-data",
+                        "title": "Quantification Results",
+                        "forProperty": "instrument_data",
+                        "fileType": "quantification"
                     }
                 })
 
@@ -518,7 +518,7 @@ def preview():
 
             else:
                 if request.json['transfer_template_id'] in (
-                        constant.TRANS_TPL_SAME_TO_SAME, constants.TRANS_TPL_SAME_PLATE):
+                        constants.TRANS_TPL_SAME_TO_SAME, constants.TRANS_TPL_SAME_PLATE):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
                     dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
 

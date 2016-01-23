@@ -1123,11 +1123,13 @@ def process_hamilton_sources(transform_type_id):
                 }
             }
         )
-    elif transform_type_id == 61: # Normalization:
+    elif transform_type_id == constants.TRANS_TYPE_POST_PCA_NORM:
         '''
             this code needs to actually analyze the wells in the plates of plateBarcodes
             and build nornalization worklist for the source plate.
         '''
+        pass
+
     resp = Response(response=json.dumps(respData),
                     status=200, mimetype="application/json")
     return(resp)
