@@ -1,3 +1,0 @@
-#!/bin/bash
-
-sudo supervisord -c ../../operations_configs/supervisord/supervisord.conf

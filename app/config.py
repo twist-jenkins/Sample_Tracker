@@ -16,6 +16,8 @@ class Config(object):
 
     SQLALCHEMY_ECHO = False
 
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # to turn off annoying warnings
+
     GOOGLE_LOGIN_CLIENT_ID = "751130267692-eed3irkpojv6euceh41bkopk3v9q9e97.apps.googleusercontent.com"
     GOOGLE_LOGIN_CLIENT_SECRET = "BejdwirP4k6g0l8WDZyMBTwL"
     GOOGLE_LOGIN_CLIENT_SCOPES = "email"
@@ -69,4 +71,3 @@ class Warp1localConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = \
         'postgresql://:@localhost/orders_dev'
-
