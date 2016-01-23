@@ -148,6 +148,7 @@ module.exports = function(grunt) {
                     ,'js-xlsx/dist/xlsx.full.min.map'
                     ,'file-saver/FileSaver.min.js'
                     ,'angular-local-storage/dist/angular-local-storage.min.js'
+                    ,'../source/js/lib/jquery-barcode.min.js'
                 ]
                 ,dest: 'app/static/js'
                 ,flatten: true
