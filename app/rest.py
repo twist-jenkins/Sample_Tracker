@@ -333,7 +333,7 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
     tries_remaining = 1000
     while not ngs_pair and tries_remaining > 0:
         tries_remaining -= 1
-        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq') # , schema='sampletrack')
+        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq', schema='ngs')
         if not next_index_sql:
             raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
         ngs_barcode_pair_index = db_session.execute(next_index_sql)
