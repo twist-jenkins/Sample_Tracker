@@ -279,7 +279,7 @@ def modify_before_insert(db_session, spec):
         """ assumes oper looks like {
                 "source_plate_barcode":"SRN 000577 SM-37",
                 "source_well_name":"K13",
-                "source_sample_id":"CS_563fd11f785b1a7dd06dc817",
+                "source_sample_id":"CS_563bff9150a77622447fc8f5",
                 "destination_plate_barcode":"SRN 000577 SM-37",
                 "destination_well_name":"K13",
                 "destination_plate_well_count":384
