@@ -279,7 +279,7 @@ def modify_before_insert(db_session, spec):
         """ assumes oper looks like {
                 "source_plate_barcode":"SRN 000577 SM-37",
                 "source_well_name":"K13",
-                "source_sample_id":"CS_563fd11f785b1a7dd06dc817",
+                "source_sample_id":"CS_563bff9150a77622447fc8f5",
                 "destination_plate_barcode":"SRN 000577 SM-37",
                 "destination_well_name":"K13",
                 "destination_plate_well_count":384
@@ -333,7 +333,7 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
     tries_remaining = 1000
     while not ngs_pair and tries_remaining > 0:
         tries_remaining -= 1
-        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq') # , schema='sampletrack')
+        next_index_sql = db.Sequence('ngs_barcode_pair_index_seq', schema='ngs')
         if not next_index_sql:
             raise KeyError("sequence ngs_barcode_pair_index_seq is missing")
         ngs_barcode_pair_index = db_session.execute(next_index_sql)
