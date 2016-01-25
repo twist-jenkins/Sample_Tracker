@@ -435,7 +435,7 @@ app = angular.module('twist.app')
                 }
                 ,14: {  // keyed to sample_transfer_template_id in the database
                     description: '96 to 2x48'
-                    ,type: 'hamilton'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,wellCount: 96
