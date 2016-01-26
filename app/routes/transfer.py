@@ -525,11 +525,11 @@ def preview():
                     dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
 
                 else:
-                    if xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                    if xfer['destination']['plateCount'] != len(set(dest_barcodes)) and not xfer['destination']['variablePlateCount']:
                         raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                        % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-                    if xfer['source']['plateCount'] != len(request.json['sources']):
+                    if xfer['source']['plateCount'] != len(request.json['sources']) and not xfer['source']['variablePlateCount']:
                         raise WebError('Expected %d source plates; got %d'
                                        % (xfer['source']['plateCount'], len(request.json['sources'])))
 
