@@ -1164,7 +1164,7 @@ def get_worklist(spec_id):
     return response
 
 def get_date_time():
-    resp = Response(response=json.dumps({"date": datetime.date.today().strftime()}),
+    resp = Response(response=json.dumps({"date": str(datetime.datetime.utcnow())}),
             status=200, \
             mimetype="application/json")
     return(resp)

@@ -239,7 +239,10 @@ app = angular.module('twist.app')
                 }
                 return $http(trashReq);
             }
-
+            ,getServerDateTime: function () {
+                var trashReq = ApiRequestObj.getPost('get-date-time');
+                return $http(trashReq);
+            }
         };
     }]
 )
