@@ -8,7 +8,7 @@ import csv
 import json
 import logging
 import StringIO
-from datetime import datetime, timezone
+import datetime
 
 from flask import g, make_response, request, Response, jsonify, abort
 
@@ -1164,7 +1164,7 @@ def get_worklist(spec_id):
     return response
 
 def get_date_time():
-    return resp = Response(response=json.dumps({date: datetime.date.today().strftime()}),
+    resp = Response(response=json.dumps({"date": datetime.date.today().strftime()}),
             status=200, \
             mimetype="application/json")
     return(resp)

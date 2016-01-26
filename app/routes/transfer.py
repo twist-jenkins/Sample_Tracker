@@ -347,7 +347,7 @@ def preview():
                         constants.TRANS_TPL_NGS_QC_PASSING,
                         constants.TRANS_TPL_PCA_PREPLANNING,
                         constants.TRANS_TPL_PCR_PRIMER_HITPICK) \
-                   and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                   and xfer['destination']['plateCount'] != len(set(dest_barcodes)) and not xfer['destination']['variablePlateCount']:
 
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
