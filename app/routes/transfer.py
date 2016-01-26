@@ -208,6 +208,106 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     return groups
 
 
+def same_to_same( transfer_template_id, sources, dests ):
+    src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+    dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+    responseCommands, rows = [], []
+
+    for src_idx, src in enumerate(sources):
+        barcode = src['details']['id']
+        try:
+            plate = db.session.query(SamplePlate) \
+                              .filter(SamplePlate.external_barcode == barcode) \
+                              .one()
+        except MultipleResultsFound:
+            raise WebError('multiple plates found with barcode %s' % barcode)
+
+        for well in db.session.query(SamplePlateLayout) \
+                      .filter( SamplePlateLayout.sample_plate == plate ) \
+                      .order_by( SamplePlateLayout.well_id ):
+
+            rows.append( {'source_plate_barcode':           barcode,
+                          'source_well_name':               well.well_name,
+                          'source_sample_id':               well.sample_id,
+                          'destination_plate_barcode':      barcode,
+                          'destination_well_name':          well.well_name,
+                          'destination_plate_well_count':   dest_plate_type.number_clusters
+                          })
+
+    if transfer_type_id ==  constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
+        responseCommands.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "file-data",
+                "title": "Source Plate Map",
+                "data": "this is some file data",
+                "mimeType": "text",
+                "fileName": "source_plate_map.txt"
+            }
+        })
+        # responseCommands.append({
+        #     "type": "PRESENT_DATA"
+        #     ,"item": {
+        #         "type": "text"
+        #         ,"title": "Source Plate Map"
+        #         ,"data": "this is some text"
+        #     }
+        #
+        # })
+        # responseCommands.append({
+        #     "type": "PRESENT_DATA"
+        #     ,"item": {
+        #         "type": "link"
+        #         ,"title": "Source Plate Map"
+        #         ,"data": "http://www.sfgate.com"
+        #     }
+        #
+        # })
+
+    elif transfer_type_id == constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+        responseCommands.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "PCA Master Mix",
+                "data": "Master mix data here... maybe CSV format to render a table?"
+            }
+        })
+
+    elif transfer_type_id in (constants.TRANS_TYPE_PCA_THERMOCYCLE,
+                              constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
+        responseCommands.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "Thermocycling conditions",
+                "data": "Thermocycling conditions here... maybe CSV format to render a table?"
+            }
+        })
+
+        responseCommands.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": "barcode",
+                "title": "Thermocycler barcode",
+                "forProperty": "thermocyclerBarcode"
+            }
+        })
+
+    elif transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+        responseCommands.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": "file-data",
+                "title": "Quantification Results",
+                "forProperty": "instrument_data",
+                "fileType": "quantification"
+            }
+        })
+
+    return responseCommands, rows
+
+
 def preview():
     assert request.method == 'POST'
 
@@ -225,106 +325,8 @@ def preview():
                 constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
                 # these are same to same transfers
 
-            src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-            dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+            responseCommands, rows = same_to_same(request.json['transfer_template_id'], request.json['sources'], request.json['destinations'])
 
-            for src_idx, src in enumerate(request.json['sources']):
-                barcode = src['details']['id']
-                try:
-                    plate = db.session.query(SamplePlate) \
-                                      .filter(SamplePlate.external_barcode == barcode) \
-                                      .one()
-                except MultipleResultsFound:
-                    raise WebError('multiple plates found with barcode %s' % barcode)
-
-                for well in db.session.query(SamplePlateLayout) \
-                              .filter( SamplePlateLayout.sample_plate == plate ) \
-                              .order_by( SamplePlateLayout.well_id ):
-
-                    rows.append( {'source_plate_barcode':           barcode,
-                                  'source_well_name':               well.well_name,
-                                  'source_sample_id':               well.sample_id,
-                                  'destination_plate_barcode':      barcode,
-                                  'destination_well_name':          well.well_name,
-                                  'destination_plate_well_count':   dest_plate_type.number_clusters
-                                  })
-
-            if request.json['transfer_type_id'] == \
-                    constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "file-data",
-                        "title": "Source Plate Map",
-                        "data": "this is some file data",
-                        "mimeType": "text",
-                        "fileName": "source_plate_map.txt"
-                    }
-                })
-                # responseCommands.append({
-                #     "type": "PRESENT_DATA"
-                #     ,"item": {
-                #         "type": "text"
-                #         ,"title": "Source Plate Map"
-                #         ,"data": "this is some text"
-                #     }
-                #
-                # })
-                # responseCommands.append({
-                #     "type": "PRESENT_DATA"
-                #     ,"item": {
-                #         "type": "link"
-                #         ,"title": "Source Plate Map"
-                #         ,"data": "http://www.sfgate.com"
-                #     }
-                #
-                # })
-
-            elif request.json['transfer_type_id'] == \
-                    constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "PCA Master Mix",
-                        "data": "Master mix data here... maybe CSV format to render a table?"
-                    }
-                })
-
-            elif request.json['transfer_type_id'] in (
-                    constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "Thermocycling conditions",
-                        "data": "Thermocycling conditions here... maybe CSV format to render a table?"
-                    }
-                })
-
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode",
-                        "title": "Thermocycler barcode",
-                        "forProperty": "thermocyclerBarcode"
-                    }
-                })
-
-            elif request.json['transfer_type_id'] == constants.TRANS_TYPE_UPLOAD_QUANT:
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "file-data",
-                        "title": "Quantification Results",
-                        "forProperty": "instrument_data",
-                        "fileType": "quantification"
-                    }
-                })
-
-            else:
-                rows = []
 
         else:
 
