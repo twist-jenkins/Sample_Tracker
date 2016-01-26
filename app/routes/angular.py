@@ -8,6 +8,7 @@ import csv
 import json
 import logging
 import StringIO
+from datetime import datetime, timezone
 
 from flask import g, make_response, request, Response, jsonify, abort
 
@@ -1153,10 +1154,7 @@ def trash_samples():
         "all_trashed": True
     }
 
-    resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
-    return(resp)
+    
 
 def get_worklist(spec_id):
     response = make_response("****** worklist data for transform spec %s ******" % spec_id)
@@ -1164,4 +1162,10 @@ def get_worklist(spec_id):
     # to be downloaded, instead of just printed on the browser
     response.headers["Content-Disposition"] = "attachment;"
     return response
+
+def get_date_time():
+    return resp = Response(response=json.dumps({date: datetime.date.today().strftime()}),
+            status=200, \
+            mimetype="application/json")
+    return(resp)
 

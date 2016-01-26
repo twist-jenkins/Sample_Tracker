@@ -440,3 +440,6 @@ def trash_samples():
 def get_worklist(spec_id):
     return routes.get_worklist(spec_id)
 
+@app.route('/api/v1/get-date-time', methods=['GET'])
+def get_date_time():
+    return routes.get_date_time()
