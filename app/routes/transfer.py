@@ -1157,7 +1157,7 @@ TRANSFER_MAP = loads("""
                         "plateCount": 4
                         ,"wellCount": 96
                         ,"plateTypeId": "SPTT_0005"
-                        ,"variablePlateCount": false
+                        ,"variablePlateCount": true
                         ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;"]
                     }
                     ,"destination":{
