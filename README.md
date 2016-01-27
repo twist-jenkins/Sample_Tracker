@@ -11,89 +11,149 @@ A sample tracking webapp based on Flask, Angular, and Python 2.7.
 ## Frontend Setup
 
 ```
+
 # Install javascript/css/font/bower dependencies - managed by bower
 
 bower install
 
 # Install node dependencies
 
+npm install grunt-bower-install-simple --save-dev
+
 npm install
+
+npm install -g grunt-cli
 
 # run grunt 
 
 grunt
+
+# attempt 2:
+git clone https://github.com/Twistbioscience/sample_movement_tracker.git
+cd sample_movement_tracker
+npm install -g bower
+npm install -g grunt-cli
+npm install -g grunt-bower-install-simple --save-dev
+npm install -g
+bower install   # ERROR SyntaxError: Unexpected token i
+grunt
+...
+
+
+# attempt 3:
+git clone https://github.com/Twistbioscience/sample_movement_tracker.git
+cd sample_movement_tracker
+virtualenv venv
+source venv/bin/activate
+pip install -U setuptools pip
+bower install
+brew upgrade
+
+...
+
+
 ```
 
 If you run 
 ```grunt watch```
-instead of ```grunt``` you'll pick up changes.
+instead of ```grunt``` you'll pick up other peoples' upstream changes.
 
 ## Backend Setup
+
+### Switch to Develop branch
+```
+git checkout develop
+```
+
 
 ### Initial Setup -- one-time:
 
 ```
-# Create a Python virtual environment
+git clone https://github.com/Twistbioscience/sample_movement_tracker.git
 
-virtualenv venv
-source venv/bin/activate
-pip install -U setuptools pip
+cd sample_movement_tracker
 
-# Install python dependencies
+git checkout develop  # Coding is gitflow style, against the develop branch
 
-pip install -r requirements.txt
+virtualenv venv  # Places the virtual environment files alongside the code
 
-```
+source venv/bin/activate  # Activates the virtual environment
 
-### Set your dev database target:
+pip install -U setuptools pip  # Update the various updaters
 
-Choose "local" for locally installed postgres (faster) or "dev" to hit the dev database (easier).
-
-```
-export WEBSITE_ENV=local  # or
-export WEBSITE_ENV=dev  # or
-export WEBSITE_ENV=warp1staging
+pip install -r requirements.txt  # Install python dependencies
 
 ```
 
-### TwistDB Setup -- Option 1:
+### TwistDB Setup
 
-Rerun this as needed to pick up others' changes to twistdb develop branch:
+#### -- DB Option 1: 
+Choose this if you don't plan to modify twistdb itself:
 
 ```
 pip install -e git+ssh://git@github.com/Twistbioscience/twistdb.git@develop#egg=twistdb
 ```
 
-### TwistDB Setup -- Option 2:
-
-Choose this alternative if you need to make iterative changes to twistdb:
+#### -- DB Option 2: 
+Switch to this approach once you start needing to make frequent / iterative changes to twistdb:
 
 ```
-pip uninstall twistdb
 cd ..
-git clone twistdb
-cd -
-export PYTHONPATH=../twistdb
+
+git clone https://github.com/Twistbioscience/twistdb.git
+
+cd twistdb
+
+git checkout develop
+
+cd ../sample_movement_tracker
+
+pip install -e ../twistdb
+
 ```
 
-Please merge your stable changes to twistdb@develop early & often, for others to pick up.
+Please merge your stable changes to twistdb@develop frequently, for others to pick up.
 
 ### Add TwistDB + SMT seed data
 
 ```
-EXPORT WEBSITE_ENV=local # or whatever
-dropdb orders_dev && createdb orders_dev && python manage.py createdb && python manage.py seed && python manage.py fixtures
+export WEBSITE_ENV=local
+
+createdb orders_dev         # you might need to 'dropdb orders_dev' first
+
+# ALSO: you might need to set up some postgres permissions here, TBD
+
+python manage.py createdb   # initializes the new postgres database
+
+python manage.py seed       # populates it with seed data e.g. plate types
+
+python manage.py fixtures   # adds fixtures data e.g. test plates
 ```
 
 ### Run tests
 
 ```
-python run_tests # FIXME
+run_tests  # ideally python manage.py test
 ```
 
 
+## Run
 
-# open http://localhost:8000
+```
+python manage.py runserver
+```
+
+## Re-run after local / remote changes:
+
+```
+git pull # TODO: how best to pull remote twistdb changes
+
+grunt watch &  # to avoid having to run "grunt" after some git pulls
+
+dropdb orders_dev && createdb orders_dev && python manage.py createdb && python manage.py seed && python manage.py fixtures
+
+./run_tests
+```
 
 
 # Run headless tests
