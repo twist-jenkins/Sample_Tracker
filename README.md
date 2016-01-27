@@ -12,49 +12,20 @@ A sample tracking webapp based on Flask, Angular, and Python 2.7.
 
 ```
 
+TBD!  This doesn't seem to work right now:
+
 # Install javascript/css/font/bower dependencies - managed by bower
-
 bower install
-
 # Install node dependencies
-
 npm install grunt-bower-install-simple --save-dev
-
 npm install
-
 npm install -g grunt-cli
-
 # run grunt 
-
 grunt
-
-# attempt 2:
-git clone https://github.com/Twistbioscience/sample_movement_tracker.git
-cd sample_movement_tracker
-npm install -g bower
-npm install -g grunt-cli
-npm install -g grunt-bower-install-simple --save-dev
-npm install -g
-bower install   # ERROR SyntaxError: Unexpected token i
-grunt
-...
-
-
-# attempt 3:
-git clone https://github.com/Twistbioscience/sample_movement_tracker.git
-cd sample_movement_tracker
-virtualenv venv
-source venv/bin/activate
-pip install -U setuptools pip
-bower install
-brew upgrade
-
-...
-
 
 ```
 
-If you run 
+Note: If you run 
 ```grunt watch```
 instead of ```grunt``` you'll pick up other peoples' upstream changes.
 
