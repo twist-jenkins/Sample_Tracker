@@ -8,7 +8,7 @@ A sample tracking webapp based on Flask, Angular, and Python 2.7.
 
 
 
-## Frontend Setup
+# 1. Frontend Setup
 
 ```
 
@@ -29,28 +29,38 @@ Note: If you run
 ```grunt watch```
 instead of ```grunt``` you'll pick up other peoples' upstream changes.
 
-## Backend Setup
+# 2. Backend Setup
 
-### Switch to Develop branch
+### Dev environment -- one-time:
+
+(This assumes you are running OS-X 10.11 / El Capitan)
+
+1. Install XCode
+2. Install XCode Command-line Tools (167MB .dmg)
+3. Install Postgres.app: http://postgresapp.com/
+4. Install Homebrew: http://brew.sh/
+5. Install Python:  
+
 ```
-git checkout develop
+brew install python
+
+pip install virtualenv
 ```
 
-
-### Initial Setup -- one-time:
+### Initial App Setup -- one-time:
 
 ```
 git clone https://github.com/Twistbioscience/sample_movement_tracker.git
 
 cd sample_movement_tracker
 
-git checkout develop  # Coding is gitflow style, against the develop branch
+git checkout develop  # Gitflow convention: work against the "develop" branch
 
 virtualenv venv  # Places the virtual environment files alongside the code
 
-source venv/bin/activate  # Activates the virtual environment
+source venv/bin/activate  # Changes your $PATH to use the virtual environment
 
-pip install -U setuptools pip  # Update the various updaters
+pip install -U setuptools pip  # Update the python setup tools
 
 pip install -r requirements.txt  # Install python dependencies
 
@@ -85,6 +95,8 @@ pip install -e ../twistdb
 
 Please merge your stable changes to twistdb@develop frequently, for others to pick up.
 
+NOTE: keeping the various application codebases in sync with the central TwistDB codebase will likely be a challenge.
+
 ### Add TwistDB + SMT seed data
 
 ```
@@ -101,14 +113,16 @@ python manage.py seed       # populates it with seed data e.g. plate types
 python manage.py fixtures   # adds fixtures data e.g. test plates
 ```
 
+At the current phase of development, you might need to re-seed your database multiple times per day.  See below for a one-liner script.
+
 ### Run tests
 
 ```
-run_tests  # ideally python manage.py test
+run_tests  # TODO: replace this with "python manage.py test"
 ```
 
 
-## Run
+# 3. Run local webserver
 
 ```
 python manage.py runserver
@@ -128,14 +142,17 @@ dropdb orders_dev && createdb orders_dev && python manage.py createdb && python 
 
 
 # Run headless tests
+```
 npm install -g phantomjs
 grunt test
 ```
 
-# This is a starting Flask app. 
+# Older docs
+
+### This is a starting Flask app. 
 You should be able to copy all this into a new project and get started.
 
-# After copying, do these steps:
+### After copying, do these steps:
 
 
 
