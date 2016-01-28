@@ -1595,6 +1595,60 @@ strong {
 
     }
 
+    .dropdown-menu {
+        padding: 0;
+
+        > li { 
+
+            &.twst-record-step-option-group-1, &.twst-record-step-option-group-5, &.twst-record-step-option-group-9 {
+                background-color: rgba(239, 201, 239, 0.6);
+
+                > a {
+                    &:hover {
+                        background-color: rgba(239, 201, 239, 1);
+                    }
+                }
+            }
+
+            &.twst-record-step-option-group-2, &.twst-record-step-option-group-6, &.twst-record-step-option-group-10 {
+                background-color: rgba(203, 229, 242, 0.6);
+
+                > a {
+                    &:hover {
+                        background-color: rgba(203, 229, 242, 1);
+                    }
+                }
+            }
+
+            &.twst-record-step-option-group-3, &.twst-record-step-option-group-7, &.twst-record-step-option-group-11 {
+                background-color: rgba(244, 223, 203, 0.6);
+
+                > a {
+                    &:hover {
+                        background-color: rgba(244, 223, 203, 1);
+                    }
+                }
+            }
+
+            &.twst-record-step-option-group-4, &.twst-record-step-option-group-8, &.twst-record-step-option-group-12 {
+                background-color: rgba(205, 247, 205, 0.6);
+
+                > a {
+                    &:hover {
+                        background-color: rgba(205, 247, 205, 1);
+                    }
+                }
+            }
+
+            > a {
+                &:hover {
+                    background-color: transparent;
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+
     .twst-transform-spec-barcodes-mode .twst-record-step-plate-barcodes,
     .twst-transform-spec-file-mode .twst-record-step-main-excel-upload {
         display: table;

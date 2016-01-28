@@ -127,7 +127,7 @@ def google_login():
     return(resp)
 
 def sample_transfer_types():
-    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.id);
+    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.menu_ordering);
     simplified_results = []
     for row in sample_transfer_types2:
         simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
