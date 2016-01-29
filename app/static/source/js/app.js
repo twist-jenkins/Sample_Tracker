@@ -402,11 +402,19 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.loadingHamilton = true;
                     var apiCall = Api.getHamiltonByBarcode(barcode).success(function (data) {
                         $scope.loadingHamilton = false;
-                        $scope.flashHamiltonThumbsUp();
-                        $scope.setSelectedHamilton(data);
-                        $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
-                            hamilton_info: $scope.selectedHamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedHamilton.label))
-                        });
+
+                        //check to see if the scanned Hamilton is configured to run this step
+                        if (!$scope.transformSpec.map.hamiltonDetails[data.barcode]) {
+                            $scope.hamiltonBarcode = null;
+                            $scope.hamiltonBarcodeErrorMessage = 'This step is not configured for Hamilton ' + data.label + '.';
+                            $scope.hamiltonBarcodeErrorMessageVisible = -1;
+                        } else {
+                            $scope.flashHamiltonThumbsUp();
+                            $scope.setSelectedHamilton(data);
+                            $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
+                                hamilton_info: $scope.selectedHamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedHamilton.label))
+                            });
+                        }
                     }).error(function (error) {
                         $scope.loadingHamilton = false;
                         $scope.hamiltonBarcode = null;
@@ -469,7 +477,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 Api.getHamiltonByBarcode(barcode).success(function (data) {
                     $scope.clearHamiltonBarcodeErrorMessage();
                     $scope.loadingHamilton = false;
-                    $scope.setSelectedHamilton(data)
+                    $scope.setSelectedHamilton(data);
                 }).error(function (error) {
                     $scope.loadingHamilton = false;
                     $scope.hamiltonBarcode = null;
