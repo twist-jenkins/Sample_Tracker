@@ -1998,7 +1998,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         }
 
         $scope.continueHamilton = function () {
-            $location.path('/record-transform/' + $scope.selectedSpec.plan.details.transfer_type_id + '-' + Formatter.lowerCaseAndSpaceToDash($scope.selectedSpec.plan.title) + '/hamilton_operation/' + $scope.selectedSpec.plan.details.hamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedSpec.plan.details.hamilton.label)) + '/finish-run/' + $scope.selectedSpec.spec_id)
+            $location.path('/record-transform/' + $scope.selectedSpec.plan.details.transfer_type_id + '-' + Formatter.lowerCaseAndSpaceToDash($scope.selectedSpec.plan.title) + '/hamilton/wizard/' + $scope.selectedSpec.plan.details.hamilton.barcode.toLowerCase() + '-' + Formatter.lowerCaseAndSpaceToDash(Formatter.dashToSpace($scope.selectedSpec.plan.details.hamilton.label)) + '/finish-run/' + $scope.selectedSpec.spec_id)
         };
 
         $scope.trashSamples = function (spec_id) {
@@ -2295,7 +2295,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             }
         }).state('root.record_transform.step_type_selected.tab_selected.hamilton_wizard', {
-            url: '/:hamilton_info'
+            url: '/wizard/:hamilton_info'
             ,views: {
                 "hamiltonWizard@root.record_transform.step_type_selected.tab_selected": {
                     templateUrl: 'twist-hamilton-wizard.html'

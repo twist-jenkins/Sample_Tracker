@@ -17,7 +17,7 @@ app = angular.module('twist.app')
             ,TRANSFORM_SPEC_TYPE_PLATE_PLANNING: 'PLATE_PLANNING'
             ,TRANSFORM_SPEC_TYPE_PLATE_STEP: 'plate_step'
             ,SOURCE_TYPE_PLATE: 'plate'
-            ,HAMILTON_OPERATION: 'hamilton_operation'
+            ,HAMILTON_OPERATION: 'hamilton'
             ,HAMILTON_TRANSFER_TYPE: 'hamilton'
             ,HAMILTON_CARRIER_BARCODE_PREFIX: 'CARR'
             ,HAMILTON_CARRIER_POSITION_BARCODE_PREFIX: 'CARP'
