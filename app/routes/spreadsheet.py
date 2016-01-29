@@ -509,7 +509,7 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
         # clo = ga_view.cloning_process_id_plan
 
         clo = 'CLO_564c1af300bc150fa632c63d'  # FIXME: hardcoded Amp for warp 1
-        name = 'CS for ' + str(source_sample_id)
+        # name = 'CS for ' + str(source_sample_id)  # for warp 1, just keep same name
 
     cloned_sample.parent_process_id = clo
     logging.info('CS_ID %s for %s assigned cloning_process_id [%s]',
