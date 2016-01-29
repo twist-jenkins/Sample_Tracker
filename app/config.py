@@ -70,5 +70,4 @@ class LocalConfig(Config):
 class Warp1localConfig(Config):
     TESTING = True
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = \
-        'postgresql://:@localhost/orders_dev'
+    SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/orders_dev'
