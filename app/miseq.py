@@ -101,10 +101,10 @@ def miseq_csv_template(rows, run_id):
                  'I7_Index_ID', 'index', 'I5_Index_ID', 'index2',
                  'GenomeFolder', 'Sample_Project', 'Description'])
 
-    for row in rows:
+    for ix, row in enumerate(rows):
         # make data row
         data = [
-            row.sample_id,  # Sample_ID
+            "%s.%d" % (row.sample_id, ix + 1),  # Sample_ID.rownum
             row.parent_sample_id,  # Sample_Name
             "",  # Sample_Plate
             row.notes,  # Sample_Well
