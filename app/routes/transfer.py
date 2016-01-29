@@ -10,6 +10,7 @@ from app import app, db
 from app import constants
 
 from app.plate_to_plate_maps import maps_json
+from app.utils import PrimerSourcePlate
 
 from flask import g, make_response, request, Response, session, jsonify
 import json
@@ -208,30 +209,11 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     return groups
 
 
-def hitpick_create_src(sources, dests):
-    ALIQ_PER_WELL = 10
-    def populate_row( starting_row, target_ct, primer_name ):
-        """
-        @starting_row -- int representing row, eg, ord('A')
-
-        returns [ ['A1','A2', ...], ['B1','B2', ...]]
-        """
-        container_ct = lambda tot, per: int( math.ceil( float(tot) / per ))
-        wells = container_ct( target_ct, ALIQ_PER_WELL )
-        grid = [[] for _ in range(container_ct( wells, 24 ))]  # in case be need multiple rows
-        for i in range( wells ):
-            row = chr( starting_row + (i/24) )
-            col = 1 + i % 24
-            grid[ i/24 ].append( "%s%d" % (row,col) )
-        return grid
 
 
-    MASTER_MIX_TEMPLATE = {'A1': 'Uni7-F',
-                           'B1': 'Uni7-R',}
 
-    primers = defaultdict(int)
-    missing = set()
-
+def pca_create_src(sources, dests):
+    primers, missing = {}, set()
     for src_idx, src in enumerate(sources):
         barcode = src['details']['id']
         try:
@@ -241,27 +223,18 @@ def hitpick_create_src(sources, dests):
         except MultipleResultsFound:
             raise WebError('multiple plates found with barcode %s' % barcode)
 
-        for well in db.session.query(SamplePlateLayout) \
-                      .filter( SamplePlateLayout.sample_plate == plate ) \
-                      .order_by( SamplePlateLayout.well_id ):
-            try:
-                primers[ well.sample.order_item.primer_pair ] += 1
-            except AttributeError as e:
-                print e
-                missing.add( well )
+        else:
+            p, m = PrimerSourcePlate.plate_to_custom_primers(db, plate)
+            primers.update(p)
+            missing.update(m)
 
-    starting_row = ord(max(MASTER_MIX_TEMPLATE)[0]) + 1
     txt = []
-    for pp in sorted(primers):
-        lines = populate_row( starting_row, primers[pp], pp.fwd_primer.name )
+    primer_counts = [ (primer.name, primers[pp])
+                      for pp in sorted(primers)
+                      for primer in (pp.fwd_primer, pp.rev_primer) ]
+    for primer_name, lines in PrimerSourcePlate.rows_for_custom_primers( primer_counts ):
         for wells in lines:
-            txt.append('Add %s to wells: %s' % (pp.fwd_primer.name, wells))
-        starting_row += len(lines)
-        
-        lines = populate_row( starting_row, primers[pp], pp.fwd_primer.name )
-        for wells in lines:
-            txt.append('Add %s to wells: %s' % (pp.fwd_primer.name, wells))
-        starting_row += len(lines)
+            txt.append( 'Add %s to wells: %s' % (primer_name, ','.join(wells)))
 
     print '@@ plate:', plate
     print '@@ primers:', sorted( primers.items() )
@@ -285,24 +258,35 @@ def hitpick_create_src(sources, dests):
     # return: responseCommands, rows
     return [{"type": "PRESENT_DATA",
                  "item": {
-                     "type": "file-data",
-                     "title": "Source Plate Map",
-                     "data": "this is some file data",
-                     "mimeType": "text",
-                     "fileName": "source_plate_map.txt"
+                     "type":  'text',
+                     "title": 'Custom primer aliquoting',
+                     "data":  ';\n'.join(txt),
                  }}], []
+
+
+def pca_master_mix( sources, dests ):
+    "generate Echo worklist for PCA Primer addition"
+
+    return [{"type": "PRESENT_DATA",
+             "item": {
+                 "type": "text",
+                 "title": "Custom vector aliquoting",
+                 "data": '  \n'.join(txt),
+             }}], []
 
             
 def same_to_same( transfer_template_id, transfer_type_id, sources, dests ):
 
     if transfer_type_id ==  constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
-        return hitpick_create_src( sources, dests )
+        return pca_create_src( sources, dests )
 
     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
     dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
     responseCommands, rows = [], []
 
     if transfer_type_id == constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+        return pca_master_mix( sources, dests )
+    
         responseCommands.append({
             "type": "PRESENT_DATA",
             "item": {
