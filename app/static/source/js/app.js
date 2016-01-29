@@ -196,7 +196,24 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.initTransferTypes = Api.getSampleTransferTypes();
         $scope.initTransferTypes.success(function (data) {
             if (data.success) {
-                $scope.stepTypeOptions = data.results;
+
+                var stepTypeOptions = data.results;
+                var decoratedStepTypeOptions = [];
+                /* lets add some spacers and data the UI can use to decorate the pulldown */
+                var lastPrefix = '';
+                var group = 0;
+                for (var i=0, stoLength = stepTypeOptions.length; i< stoLength;i++) {
+                    var thisItem = stepTypeOptions[i];
+                    var thisPrefix = thisItem.text.substring(0, thisItem.text.indexOf(' '));
+
+                    if (thisPrefix != lastPrefix) {
+                        group++;  
+                    }
+                    thisItem['uid_group'] = group;
+                    decoratedStepTypeOptions.push(thisItem);
+                    lastPrefix = thisPrefix;
+                }
+                $scope.stepTypeOptions = decoratedStepTypeOptions;
             }
         });
     }]
@@ -238,7 +255,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         });
 
         $scope.$on('$destroy', function () {
-            $scope.clearForm(true);
+            if ($state.current.url == 'record-transform') {
+                $scope.clearForm(true);
+            }
         });
     }]
 )
@@ -2267,33 +2286,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             url: '/:selected_tab'
             ,templateUrl: 'twist-record-transform-tab-selected.html'
             ,controller: 'tabSelectedController'
-        })
-        /*.state('root.record_transform.step_type_selected.file_upload', {
-            url: '/custom-file-upload'
-            ,views: {
-                "transformTypePlaceholderView@root.record_transform.step_type_selected": {
-                    template: ''
-                    ,controller: 'customExcelUploadController'
-                }
-            }
-        }).state('root.record_transform.step_type_selected.standard_template', {
-            url: '/standard-template'
-            ,views: {
-                "transformTypePlaceholderView@root.record_transform.step_type_selected": {
-                    template: ''
-                    ,controller: 'standardTemplateController'
-                }
-            }
-        }).state('root.record_transform.step_type_selected.hamilton_operation', {
-            url: '/hamilton-wizard'
-            ,views: {
-                "transformTypePlaceholderView@root.record_transform.step_type_selected": {
-                    template: ''
-                    ,controller: 'hamiltonOperationController'
-                }
-            }
-        })*/
-        .state('root.record_transform.step_type_selected.tab_selected.hamilton_select', {
+        }).state('root.record_transform.step_type_selected.tab_selected.hamilton_select', {
             url: '/select'
             ,views: {
                 "hamiltonWizard@root.record_transform.step_type_selected.tab_selected": {

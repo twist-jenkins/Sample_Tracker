@@ -11,8 +11,8 @@ div(class="twst-record-step-main twst-child-page")
             button(id="single-button" type="button" class="btn btn-primary" dropdown-toggle) {{stepTypeDropdownValue}}&nbsp;
                 span(class="caret")
             ul(class="dropdown-menu" role="menu" aria-labelledby="single-button")
-                li(role="menuitem" ng-repeat="option in stepTypeOptions")
-                    a(ng-click="selectStepType(option)") {{option.text}}
+                li(role="menuitem" ng-repeat="option in stepTypeOptions" class="twst-record-step-option-group-{{option['uid_group']}}")
+                    a(ng-click="selectStepType(option)" ng-bind-html="option.text")
         div(ui-view ng-show="stepTypeOptions && templateTypeSelection")
         div(class="twst-record-step-main-buttons" ng-show="templateTypeSelection && templateTypeSelection != Constants.HAMILTON_OPERATION")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
