@@ -2330,81 +2330,81 @@ strong {
                                 }
                             }
                         }
+                    }
 
-                        &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
-                            .twst-hamilton-wizard-carrier-inner {
-                                font-size: 2.5em;
-                                background: #fff;
-                                position: absolute;
-                                box-shadow: 0 0 2em #000;
+                    &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                        .twst-hamilton-wizard-carrier-inner {
+                            font-size: 2.5em;
+                            background: #fff;
+                            position: absolute;
+                            box-shadow: 0 0 2em #000;
 
-                                .twst-hamilton-wizard-plate {
+                            .twst-hamilton-wizard-plate {
 
-                                    &.twst-hamilton-wizard-plate-SHIPPING_TUBE_PLATE {
-                                        background: rgba(255, 239, 150, 0.6);
+                                &.twst-hamilton-wizard-plate-SHIPPING_TUBE_PLATE {
+                                    background: rgba(255, 239, 150, 0.6);
 
-                                        .twst-hamilton-wizard-plate-data-index-label {
-                                        }
+                                    .twst-hamilton-wizard-plate-data-index-label {
                                     }
+                                }
 
-                                    &.twst-highlighted-plate {
-                                        background: #F370FF;
+                                &.twst-highlighted-plate {
+                                    background: #F370FF;
 
-                                        &:hover {
-                                            background: $twst-minty-green;
-                                        }
-
-                                        .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label {
-                                            display: none;
-                                        }
-
-                                        .twst-hamilton-wizard-plate-tube-position-label {
-                                            font-size: 0.6em;
-                                            display: block;
-                                            width: 100%;
-                                            text-align: center;
-                                            color: rgba(255, 255, 255, 0.5);
-                                            top: 0.3em;
-                                            position: absolute;
-                                            font-weight: bold;
-                                        }
-                                    }
-
-                                    &.twst-scanned-plate {
+                                    &:hover {
                                         background: $twst-minty-green;
+                                    }
 
-                                        &:hover {
-                                            background: $twst-minty-green;
-                                        }
+                                    .twst-hamilton-wizard-plate-scan-label, .twst-hamilton-wizard-plate-scanned-label {
+                                        display: none;
+                                    }
 
-                                        .twst-hamilton-wizard-plate-scanned-label {
-                                            text-align: center;
+                                    .twst-hamilton-wizard-plate-tube-position-label {
+                                        font-size: 0.6em;
+                                        display: block;
+                                        width: 100%;
+                                        text-align: center;
+                                        color: rgba(255, 255, 255, 0.5);
+                                        top: 0.3em;
+                                        position: absolute;
+                                        font-weight: bold;
+                                    }
+                                }
 
-                                            span {
-                                                display: none;
+                                &.twst-scanned-plate {
+                                    background: $twst-minty-green;
 
-                                                &.twst-hamilton-wizard-plate-scanned-label-checkmark {
-                                                    display: inline-block;
-                                                    margin-top: 0.2em;
-                                                }
+                                    &:hover {
+                                        background: $twst-minty-green;
+                                    }
+
+                                    .twst-hamilton-wizard-plate-scanned-label {
+                                        text-align: center;
+
+                                        span {
+                                            display: none;
+
+                                            &.twst-hamilton-wizard-plate-scanned-label-checkmark {
+                                                display: inline-block;
+                                                margin-top: 0.2em;
                                             }
                                         }
                                     }
+                                }
 
-                                    &.twst-hamilton-unused-plate {
+                                &.twst-hamilton-unused-plate {
+                                    background: #d5d5d5;
+
+                                    &:hover {
                                         background: #d5d5d5;
+                                    }
 
-                                        &:hover {
-                                            background: #d5d5d5;
-                                        }
-
-                                        .twst-hamilton-wizard-plate-empty {
-                                            color: #a5a5a5;
-                                            font-size: 7px;
-                                            line-height: 0.01em;
-                                            top: -1.5em;
-                                            position: relative;
-                                        }
+                                    .twst-hamilton-wizard-plate-empty {
+                                        color: #a5a5a5;
+                                        font-size: 7px;
+                                        line-height: 0.01em;
+                                        top: -1.5em;
+                                        position: relative;
                                     }
                                 }
                             }
@@ -2540,6 +2540,37 @@ strong {
 
                 .twst-message {
                     box-shadow: 0 0 5em orange;
+                }
+            }
+
+            .twst-hamilton-wizard-barcode-scan-pause {
+                    position: absolute;
+                    top: 10%;
+                    z-index: 4;
+                    width: 60%;
+                    background: #f4c59f;
+                    left: 20%;
+                    border-radius: 0.7em;
+                    border: 1px solid #d66c1b;
+                    padding: 1em;
+                    box-shadow: 0 0 2em #000;
+
+                h3 {
+                    font-size: 1.5em;
+                    margin-bottom: 1em;
+                    margin-top: 1em;
+                }
+
+                button {
+                    margin-left: 1.7em;
+                    font-size: 1.2em;
+                }
+
+                svg {
+                    position: relative;
+                    float: right;
+                    width: 12em;
+                    height: 12em;
                 }
             }
 
