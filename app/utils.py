@@ -8,7 +8,7 @@ __module_name__ = 'hitpicking-utils-' + __version__
 from collections import defaultdict
 import math
 from collections import defaultdict
-
+from app.miseq import echo_csv
 
 def char2num(val):
     """
@@ -130,6 +130,7 @@ class PrimerSourcePlate:
     ALIQ_PER_WELL = 60
     MASTER_MIX_TEMPLATE = {'A1': 'Uni7-F',
                            'B1': 'Uni7-R',}
+    XFER_VOL = 200
 
     @staticmethod
     def populate_row( starting_row, target_ct ):
@@ -167,7 +168,8 @@ class PrimerSourcePlate:
                               .filter( SamplePlateLayout.sample_plate == plate ) \
                               .order_by( SamplePlateLayout.well_id ):
             try:
-                primers[ well.sample.order_item.primer_pair ] += 1
+                if well.sample.order_item.cloning_process.vector.vector_type == 'custom':
+                    primers[ well.sample.order_item.primer_pair ] += 1
             except AttributeError as e:
                 print e
                 missing.add( well )
@@ -204,12 +206,18 @@ class PrimerSourcePlate:
             for well in db.session.query(SamplePlateLayout) \
                                   .filter( SamplePlateLayout.sample_plate == plate ) \
                                   .order_by( SamplePlateLayout.well_id ):
-                for primer_name in (well.sample.order_item.primer_pair.fwd_primer.name,
-                                    well.sample.order_item.primer_pair.rev_primer.name):
-                    loc = primer_dict[ primer_name ][ primer_ct[ primer_name ] / PrimerSourcePlate.ALIQ_PER_WELL ]
+                for primer in (well.sample.order_item.primer_pair.fwd_primer,
+                                    well.sample.order_item.primer_pair.rev_primer):
+                    loc = primer_dict[ primer.name ][ primer_ct[ primer.name ] // PrimerSourcePlate.ALIQ_PER_WELL ]
                     primer_ct[ primer_name ] += 1
-                    
-                    worklist.append( {'from': (primer_plate_barcode, primer_well),
-                                      'to': (plate.external_barcode, plate.get_well_name( well.well_id ))
-                    } )
-        return worklist
+                    worklist.append( {
+                        'source_plate_barcode':          primer_plate_barcode,
+                        'source_well_name':              loc,
+                        'source_sample_id':              primer.name,  # ??
+                        'source_plate_well_count':       384,
+                        'destination_plate_barcode':     plate.external_barcode,
+                        'destination_well_name':         plate.get_well_name( well.well_id ),
+                        'destination_plate_well_count':  384,
+                        'destination_sample_id':         well.sample.sample_id,
+                    })
+        return echo_csv( echo_worklist, transfer_volume=PrimerSourcePlate.XFER_VOL )

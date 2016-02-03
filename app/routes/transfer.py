@@ -266,12 +266,20 @@ def pca_create_src(sources, dests):
 
 def pca_master_mix( sources, dests ):
     "generate Echo worklist for PCA Primer addition"
+    assert len(sources) == 1
+    primer_barcode = sources['details']['id']
+    src_plate = db.session.query(SamplePlate).filter(SamplePlate.external_barcode == primer_barcode).one()
+    dest_plates = [ (db.session.query(SamplePlate)
+                     .filter(SamplePlate.external_barcode == dest['details']['id'])
+                     .one()) for dest in dests ]
+
+    echo_worklist = PrimerSourcePlate( db, primer_barcode, dest_plates )
 
     return [{"type": "PRESENT_DATA",
              "item": {
                  "type": "text",
                  "title": "Custom vector aliquoting",
-                 "data": '  \n'.join(txt),
+                 "data":  echo_worklist,
              }}], []
 
             
