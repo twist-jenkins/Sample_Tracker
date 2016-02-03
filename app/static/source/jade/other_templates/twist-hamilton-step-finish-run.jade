@@ -9,10 +9,18 @@ div(class="twst-hamilton-step")
         div(ng-if="!savedSpecToFinish")
             p ERROR: A transform spec with an id of {{savedSpecIdToFinish}} was not found
         div(class="twst-hamilton-wizard-finish-run-details" ng-if="savedSpecToFinish")
-            button(class="twst-button twst-blue-button twst-hamilton-wizard-finish-run-button" ng-class="{'twst-disabled-button': !savedSpecToFinish}" ng-click="runFinished()") Run Finished
+            div(class="twst-hamilton-step-finish-run-buttons" ng-class="{'twst-hamilton-step-worklist-fetched': worklistFetched}")
+                a(class="twst-button twst-download-button twst-hamilton-step-worklist-button" twst-drag-out-link="dragOutData" on-drag="setWorklistFetched" ng-class="{'twst-blue-button': !worklistFetched}")
+                    ng-include(src="'static/images/download.svg'") 
+                    span Download 
+                        span Worklist
+                button(class="twst-button twst-blue-button twst-hamilton-wizard-finish-run-button" ng-class="{'twst-disabled-button': !savedSpecToFinish || !worklistFetched}" ng-click="runFinished()") Run Finished
+            div(class="twst-hamilton-step-worklist-barcode-container")
+                barcode-svg(barcode="savedSpecToFinish.data_json.details.worklist.filename")
             p Hamilton: 
                 strong {{savedSpecToFinish.data_json.details.hamilton.label}}
             p Worklist generated on: 
+            p
                 strong {{getPrettySpecDate(savedSpecToFinish.date_created)}}
             div(class="twst-hamilton-wizard-finish-run-plates")
                 div

@@ -7,6 +7,8 @@ import twistdb.ngs
 from collections import defaultdict
 from app import app, db
 
+from app import constants
+
 from app.plate_to_plate_maps import maps_json
 
 from flask import g, make_response, request, Response, session, jsonify
@@ -73,7 +75,7 @@ def filter_transform( transfer_template_id, sources, dests ):
     dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
     dest_ctr = 1
 
-    if transfer_template_id == 26:
+    if transfer_template_id == constants.TRANS_TEMPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells( barcode ):
             well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
@@ -102,7 +104,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                     well_to_passfail[ well_id ] = d['well']
             return well_to_passfail
 
-    elif transfer_template_id == 27:
+    elif transfer_template_id == constants.TRANS_TEMPL_NGS_QC_PASSING:
         # NGS pass/fail
         def filter_wells( barcode ):
             well_to_passfail = {}
@@ -137,11 +139,11 @@ def filter_transform( transfer_template_id, sources, dests ):
     #     logging.warn("transfer_template_id == 34")
     #     return []
 
-    elif transfer_template_id == 35:
-        return [{}];
+    elif transfer_template_id == constants.TRANS_TEMPL_PCA_PREPLANNING:
+        return [{}]
 
-    elif transfer_template_id == 36:
-        return [{}];
+    elif transfer_template_id == constants.TRANS_TEMPL_PCR_PRIMER_HITPICK:
+        return [{}]
 
     else:
         raise WebError("What transform id is %s??" % transfer_template_id)
@@ -169,8 +171,9 @@ def filter_transform( transfer_template_id, sources, dests ):
             })
     return rows
 
+
 def sample_data_determined_transform(transfer_template_id, sources, dests):
-    assert transfer_template_id == 25
+    assert transfer_template_id == constants.TRANS_TEMPL_REBATCH_FOR_TRANSFORM
 
     dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
 
@@ -204,6 +207,7 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
 
     return groups
 
+
 def preview():
     assert request.method == 'POST'
 
@@ -214,7 +218,12 @@ def preview():
 
     try:
 
-        if request.json['transfer_type_id'] in (54, 55, 56, 59): # these are same to same transfers
+        if request.json['transfer_type_id'] in (
+                constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
+                constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
+                constants.TRANS_TYPE_PCA_THERMOCYCLE,
+                constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
+                # these are same to same transfers
 
             src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
             dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
@@ -240,67 +249,77 @@ def preview():
                                   'destination_plate_well_count':   dest_plate_type.number_clusters
                                   })
 
-            if request.json['transfer_type_id'] == 54: # Primer Hitpicking - Create Source
+            if request.json['transfer_type_id'] == \
+                    constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
                 responseCommands.append({
-                    "type": "PRESENT_DATA"
-                    ,"item": {
-                        "type": "file-data"
-                        ,"title": "Source Plate Map"
-                        ,"data": "this is some file data"
-                        ,"mimeType": "text"
-                        ,"fileName": "source_plate_map.txt"
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "file-data",
+                        "title": "Source Plate Map",
+                        "data": "this is some file data",
+                        "mimeType": "text",
+                        "fileName": "source_plate_map.txt"
                     }
-
                 })
-                '''
+                # responseCommands.append({
+                #     "type": "PRESENT_DATA"
+                #     ,"item": {
+                #         "type": "text"
+                #         ,"title": "Source Plate Map"
+                #         ,"data": "this is some text"
+                #     }
+                #
+                # })
+                # responseCommands.append({
+                #     "type": "PRESENT_DATA"
+                #     ,"item": {
+                #         "type": "link"
+                #         ,"title": "Source Plate Map"
+                #         ,"data": "http://www.sfgate.com"
+                #     }
+                #
+                # })
+
+            elif request.json['transfer_type_id'] == \
+                    constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
                 responseCommands.append({
-                    "type": "PRESENT_DATA"
-                    ,"item": {
-                        "type": "text"
-                        ,"title": "Source Plate Map"
-                        ,"data": "this is some text"
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "PCA Master Mix",
+                        "data": "Master mix data here... maybe CSV format to render a table?"
                     }
-
-                })
-                responseCommands.append({
-                    "type": "PRESENT_DATA"
-                    ,"item": {
-                        "type": "link"
-                        ,"title": "Source Plate Map"
-                        ,"data": "http://www.sfgate.com"
-                    }
-
-                })
-                '''
-
-            elif request.json['transfer_type_id'] == 55:
-                responseCommands.append({
-                    "type": "PRESENT_DATA"
-                    ,"item": {
-                        "type": "text"
-                        ,"title": "PCA Master Mix"
-                        ,"data": "Master mix data here... maybe CSV format to render a table?"
-                    }
-
                 })
 
-            elif request.json['transfer_type_id'] in (56, 59):
+            elif request.json['transfer_type_id'] in (
+                    constants.TRANS_TYPE_PCA_THERMOCYCLE,
+                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
                 responseCommands.append({
-                    "type": "PRESENT_DATA"
-                    ,"item": {
-                        "type": "text"
-                        ,"title": "Thermocycling conditions"
-                        ,"data": "Thermocycling conditions here... maybe CSV format to render a table?"
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "Thermocycling conditions",
+                        "data": "Thermocycling conditions here... maybe CSV format to render a table?"
                     }
-
                 })
 
                 responseCommands.append({
-                    "type": "REQUEST_DATA"
-                    ,"item": {
-                        "type": "barcode"
-                        ,"title": "Thermocycler barcode"
-                        ,"forProperty": "thermocyclerBarcode"
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Thermocycler barcode",
+                        "forProperty": "thermocyclerBarcode"
+                    }
+                })
+
+            elif request.json['transfer_type_id'] == constants.TRANS_TYPE_UPLOAD_QUANT:
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "file-data",
+                        "title": "Quantification Results",
+                        "forProperty": "instrument_data",
+                        "fileType": "quantification"
                     }
                 })
 
@@ -314,24 +333,32 @@ def preview():
 
             xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
 
-            if request.json['transfer_template_id'] == 2:
+            if request.json['transfer_template_id'] == \
+                    constants.TRANS_TPL_SAME_PLATE:
                 # identity function
                 dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
             else:
                 dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
                 # FIXME: 26 and 27 demand 0 destination plates
-                if request.json['transfer_template_id'] not in (25, 26, 27, 35, 36) \
-                   and xfer['destination']['plateCount'] != len(set(dest_barcodes)):
+                if request.json['transfer_template_id'] not in (
+                        constants.TRANS_TPL_REBATCH_FOR_TRANSFORM,
+                        constants.TRANS_TPL_FRAG_ANALYZER,
+                        constants.TRANS_TPL_NGS_QC_PASSING,
+                        constants.TRANS_TPL_PCA_PREPLANNING,
+                        constants.TRANS_TPL_PCR_PRIMER_HITPICK) \
+                   and xfer['destination']['plateCount'] != len(set(dest_barcodes)) and not xfer['destination']['variablePlateCount']:
 
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-            if request.json['transfer_template_id'] == 23:
+            if request.json['transfer_template_id'] == \
+                    constants.TRANS_TPL_PLATE_MERGE:
                 # merge source plate(s) into single destination plate
                 rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
-            elif request.json['transfer_template_id'] == 25:
+            elif request.json['transfer_template_id'] == \
+                    constants.TRANS_TPL_REBATCH_FOR_TRANSFORM:
                 groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
 
                 # to do: create the dest
@@ -351,12 +378,11 @@ def preview():
                                          "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" % (group["marker_value"], (plateIndex + 1), int(how_many_for_group))
                                      }}
                         destination_plates.append(thisPlate)
-                        plateIndex+=1
+                        plateIndex += 1
                     quadrantIndex = 0
 
                     dest_barcode = dest_barcodes[dest_plate_index] \
-                                   if dest_barcodes \
-                                      else "DEST_" + str(dest_plate_index)
+                        if dest_barcodes else "DEST_" + str(dest_plate_index)
 
                     for quadrant in group["quadrants"]:
                         for rowIndex, row in enumerate( quadrant ):
@@ -372,19 +398,17 @@ def preview():
                         if (quadrantIndex and quadrantIndex%4 == 0):
                             dest_plate_index+=1
                             dest_barcode = dest_barcodes[dest_plate_index] \
-                                           if dest_barcodes \
-                                              else "DEST_" + str(dest_plate_index)
-
+                                if dest_barcodes else "DEST_" + str(dest_plate_index)
 
                 responseCommands.append({
-                    "type": "SET_DESTINATIONS"
-                    ,"plates": destination_plates
+                    "type": "SET_DESTINATIONS",
+                    "plates": destination_plates
                 })
 
-            elif request.json['transfer_template_id'] == 35:
+            elif request.json['transfer_template_id'] == \
+                    constants.TRANS_TPL_PCA_PREPLANNING:
 
                 destinations_ready = True
-
                 if ("destinations" not in request.json or not len(request.json['destinations'])):
                     destinations_ready = False
 
@@ -398,41 +422,41 @@ def preview():
                     rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
                 else:
                     responseCommands.append({
-                        "type": "REQUEST_DATA"
-                        ,"item": {
-                            "type": "array.4"
-                            ,"dataType": "barcode"
-                            ,"title": "Associated PCA Plate Barcodes"
-                            ,"forProperty": "associatedPcaPlates"
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": "array.4",
+                            "dataType": "barcode",
+                            "title": "Associated PCA Plate Barcodes",
+                            "forProperty": "associatedPcaPlates"
                         }
                     })
 
                     responseCommands.append({
-                        "type": "SET_DESTINATIONS"
-                        ,"plates": [
+                        "type": "SET_DESTINATIONS",
+                        "plates": [
                             {
                                 "type": "SPTT_0006",
                                 "details": {}
-                            }
-                            ,{
+                            },
+                            {
                                 "type": "SPTT_0006",
                                 "details": {}
-                            }
-                            ,{
+                            },
+                            {
                                 "type": "SPTT_0006",
                                 "details": {}
-                            }
-                            ,{
+                            },
+                            {
                                 "type": "SPTT_0006",
                                 "details": {}
                             }
                         ]
                     })
 
-            elif request.json['transfer_template_id'] == 36:
+            elif request.json['transfer_template_id'] == \
+                    constants.TRANS_TPL_PCR_PRIMER_HITPICK:
 
                 destinations_ready = True
-
                 if ("destinations" not in request.json or not len(request.json['destinations'])):
                     destinations_ready = False
 
@@ -445,39 +469,39 @@ def preview():
                 else:
 
                     responseCommands.append({
-                        "type": "PRESENT_DATA"
-                        ,"item": {
-                            "type": "file-data"
-                            ,"title": "Echo worklist"
-                            ,"data": "echo worklist file contents..."
-                            ,"mimeType": "text/csv"
-                            ,"fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "file-data",
+                            "title": "Echo worklist",
+                            "data": "echo worklist file contents...",
+                            "mimeType": "text/csv",
+                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
                         }
 
                     })
 
                     responseCommands.append({
-                        "type": "SET_DESTINATIONS"
-                        ,"plates": [
+                        "type": "SET_DESTINATIONS",
+                        "plates": [
                             {
                                 "type": "SPTT_0006",
                                 "details": {
                                     "id": "ASSOCIATED BARCODEC1"
                                 }
-                            }
-                            ,{
+                            },
+                            {
                                 "type": "SPTT_0006",
                                 "details": {
                                     "id": "ASSOCIATED BARCODEC2"
                                 }
-                            }
-                            ,{
+                            },
+                            {
                                 "type": "SPTT_0006",
                                 "details": {
                                     "id": "ASSOCIATED BARCODEC3"
                                 }
-                            }
-                            ,{
+                            },
+                            {
                                 "type": "SPTT_0006",
                                 "details": {
                                     "id": "ASSOCIATED BARCODEC4"
@@ -486,12 +510,15 @@ def preview():
                         ]
                     })
 
-            elif request.json['transfer_template_id'] in (26, 27): # , 34):
+            elif request.json['transfer_template_id'] in (
+                    constants.TRANS_TPL_FRAG_ANALYZER,
+                    constants.TRANS_TPL_NGS_QC_PASSING):  # , constants.TRANS_TPL_EXTRACTION_TITIN):
 
                 rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
 
             else:
-                if request.json['transfer_template_id'] in (1,2):
+                if request.json['transfer_template_id'] in (
+                        constants.TRANS_TPL_SAME_TO_SAME, constants.TRANS_TPL_SAME_PLATE):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
                     dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
 
@@ -553,13 +580,13 @@ def preview():
                          status=200,
                          mimetype="application/json")
 
+
 def save():
     pass
 
+
 def execute():
     pass
-
-
 
 TRANSFER_MAP = loads("""
 {

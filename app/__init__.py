@@ -435,3 +435,11 @@ def process_hamilton_sources(transform_type_id):
 @app.route('/api/v1/rest-ham/trash-samples', methods=['POST'])
 def trash_samples():
     return routes.trash_samples()
+
+@app.route('/api/v1/rest-ham/hamilton_worklist/<spec_id>', methods=['GET'])
+def get_worklist(spec_id):
+    return routes.get_worklist(spec_id)
+
+@app.route('/api/v1/get-date-time', methods=['GET'])
+def get_date_time():
+    return routes.get_date_time()

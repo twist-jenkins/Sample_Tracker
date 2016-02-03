@@ -43,7 +43,7 @@ class AutomatedTestingUser(AnonymousUserMixin):
 
     @property
     def operator_id(self):
-        return "CL"
+        return "cledogar"
 
     @property
     def first_and_last_name(self):

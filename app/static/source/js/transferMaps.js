@@ -1651,6 +1651,84 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
+                ,37: {  // keyed to sample_transfer_template_id in the database
+                    description: 'PCA/PCR Master Mix Addition'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        'HAM0Y': { // Millenium Falcon
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 25
+                                        ,index: 1
+                                        ,type: '384wPCR'
+                                        ,plates: [
+                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 31
+                                        ,index: 2
+                                        ,type: '384wPCR'
+                                        ,plates: [
+                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                        
+                    }
+                }
+                ,38: {  // keyed to sample_transfer_template_id in the database
+                    description: 'Normalization'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        'HAM0Y': { // Millenium Falcon
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 49
+                                        ,index: 1
+                                        ,type: 'L5AC'
+                                        ,plates: [
+                                            {plateFor: 'source', localIndex: 5, unused: true}
+                                            ,{plateFor: 'source', localIndex: 4, unused: true}
+                                            ,{plateFor: 'source', localIndex: 3, unused: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 1}
+                                            ,{plateFor: 'source', localIndex: 1, unused: true}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                        
+                    }
+                }
 
             }
             ,rowColumnMaps: {
@@ -2262,6 +2340,10 @@ app = angular.module('twist.app')
             ,carriers: {
                 'L5AC': {
                     label: 'Five 96-well plates'
+                    ,trackWidth: 6
+                }
+                ,'384wPCR': {
+                    label: 'Fice 384-well plates'
                     ,trackWidth: 6
                 }
                 ,'SHIPPING_TUBES_CARRIER': {

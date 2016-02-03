@@ -3,11 +3,13 @@ html(lang="en" ng-app="twist.app")
     head
         base(href="{{ url_for('new_home', _external=True) }}")
         meta(charset="utf-8")
+        meta(http-equiv="Cache-Control" content="no-store")
         meta(http-equiv="X-UA-Compatible" content="IE=edge")
         meta(content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0" name="viewport")
         meta(name="title" content="Twist Bioscience: Sample Movement Tracker")
         meta(name="description" content="Helping you change the world by providing synthetic DNA for health and sustainability")
         meta(name="keywords" content="synthetic dna, biodetection, functional genomics, genome engineering, drugs, biodefense, data storage, mission bay, san francisco")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
 
         meta(name="google-signin-client_id" content="1093207984325-qhls4ec361elichdn0vfno05u0r7r256.apps.googleusercontent.com")
         link(rel="shortcut icon" href="/static/images/favicon.ico")
@@ -29,6 +31,7 @@ html(lang="en" ng-app="twist.app")
         script(src='/static/js/angular-local-storage.min.js')
         script(src="/static/js/xlsx.full.min.js")
         script(src="/static/js/FileSaver.min.js")
+        script(src='/static/js/jquery-barcode.min.js')
         script(src='/static/js/twist-app' + githash + '.js')
 
     body

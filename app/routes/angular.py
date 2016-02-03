@@ -8,6 +8,7 @@ import csv
 import json
 import logging
 import StringIO
+import datetime
 
 from flask import g, make_response, request, Response, jsonify, abort
 
@@ -126,7 +127,7 @@ def google_login():
     return(resp)
 
 def sample_transfer_types():
-    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.id);
+    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.menu_ordering);
     simplified_results = []
     for row in sample_transfer_types2:
         simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
@@ -1033,6 +1034,12 @@ def process_hamilton_sources(transform_type_id):
     }
 
     if transform_type_id == 39: # hitpicking of miniprep
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a Hamilton worklist to hitpick into necessary # of destination plates.
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
@@ -1044,6 +1051,12 @@ def process_hamilton_sources(transform_type_id):
             }
         );
     elif transform_type_id == 48: # hitpicking of shipping into plates
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a shipping worklist to hitpick into necessary # of destination plates.
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
@@ -1055,13 +1068,19 @@ def process_hamilton_sources(transform_type_id):
             }
         );
     elif transform_type_id == 51: # hitpicking of shipping into tubes
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a shipping worklist to hitpick into necessary # of destination tubes.
+        '''
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS"
-                ,"plates": [
-                    {"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 1, "wellNumber": 1}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 2, "wellNumber": 2}
-                    ,{"type": "SHIPPING_TUBE_PLATE", "tubeBarcodeId": 3, "wellNumber": 3}
+                ,"plates": [ # front end just uses length of plates array
+                    {"type": "SHIPPING_TUBE_PLATE"}
+                    ,{"type": "SHIPPING_TUBE_PLATE"}
+                    ,{"type": "SHIPPING_TUBE_PLATE"}
                 ]
             }
         );
@@ -1079,6 +1098,48 @@ def process_hamilton_sources(transform_type_id):
             }
         );
 
+    elif transform_type_id == 58: # PCR/PCA Master Mix addition:
+        
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build a master mix addition worklist AND needs to determine where the 4 destination plates should be placed.
+            It will return the SET_DESTINATIONS command as-is below.
+            The ADD_TRANSFORM_SPEC_DETAIL should be the array of 4 destination plates with their forPosition and barcode properties set accordingly
+        '''
+
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS"
+                ,"plates": [
+                    {"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                    ,{"type": "SPTT_0006"}
+                ]
+            }
+        );
+        respData["responseCommands"].append(
+            {
+                "type": "ADD_TRANSFORM_SPEC_DETAIL"
+                ,"detail": {
+                    "key": "guidedDestinationPlacementData"
+                    ,"value": [
+                        {"forPosition": 1, "barcode": "TUBE01"}
+                        ,{"forPosition": 2, "barcode": "TUBE02"}
+                        ,{"forPosition": 3, "barcode": "TUBE03"}
+                        ,{"forPosition": 4, "barcode": "TUBE04"}
+                    ]
+                }
+            }
+        );
+
+    elif transform_type_id == 61: # Normalization:
+
+        '''
+            this code needs to actually analyze the wells in the plates of plateBarcodes
+            and build nornalization worklist for the source plate.
+        '''
+
     resp = Response(response=json.dumps(respData),
             status=200, \
             mimetype="application/json")
@@ -1093,7 +1154,17 @@ def trash_samples():
         "all_trashed": True
     }
 
-    resp = Response(response=json.dumps(respData),
+    
+
+def get_worklist(spec_id):
+    response = make_response("****** worklist data for transform spec %s ******" % spec_id)
+    # This is the key: Set the right header for the response
+    # to be downloaded, instead of just printed on the browser
+    response.headers["Content-Disposition"] = "attachment;"
+    return response
+
+def get_date_time():
+    resp = Response(response=json.dumps({"date": str(datetime.datetime.utcnow())}),
             status=200, \
             mimetype="application/json")
     return(resp)

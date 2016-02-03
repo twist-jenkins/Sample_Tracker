@@ -16,6 +16,8 @@ class Config(object):
 
     SQLALCHEMY_ECHO = False
 
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # to turn off annoying warnings
+
     GOOGLE_LOGIN_CLIENT_ID = "751130267692-eed3irkpojv6euceh41bkopk3v9q9e97.apps.googleusercontent.com"
     GOOGLE_LOGIN_CLIENT_SECRET = "BejdwirP4k6g0l8WDZyMBTwL"
     GOOGLE_LOGIN_CLIENT_SCOPES = "email"
@@ -44,9 +46,7 @@ class StagingConfig(Config):
 
 
 class DevConfig(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/twistdb"
-    SQLALCHEMY_DATABASE_URI = "postgresql://sampletrack_user:Of2dAd8cir5Y@10.10.53.47/synapp_test"
-    #SQLALCHEMY_DATABASE_URI = 'postgresql://test@localhost/test'
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/smtdev"
 
     DEBUG = True
 
@@ -72,4 +72,3 @@ class Warp1localConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = \
         'postgresql://:@localhost/orders_dev'
-

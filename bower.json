@@ -16,7 +16,7 @@
     ,"rlite": "~0.0.54"
     ,"font-awesome": "~4.3.0"
     ,"moment": "~2.9.0"
-    ,"jquery": "~2.1.4"
+    ,"jquery": "~2.2.0"
     ,"handlebars": "~3.0.2"
     ,"easyModal.js": "*"
     ,"bs-typeahead": "~0.0.5"

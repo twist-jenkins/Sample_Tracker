@@ -40,14 +40,14 @@ EXAMPLE_NGS_BARCODING_SPEC = {
         {
             "source_plate_barcode":"SRN 000577 SM-37",
             "source_well_name":"K13",
-            "source_sample_id":"CS_563fd11f785b1a7dd06dc817",
+            "source_sample_id":"CS_563bff9150a77622447fc8f5",
             "destination_plate_barcode":"SRN 000577 SM-37",
             "destination_well_name":"K13",
             "destination_plate_well_count":384
         },{
             "source_plate_barcode":"SRN 000577 SM-37",
             "source_well_name":"K15",
-            "source_sample_id":"CS_563fd11f785b1a7dd06dc819",
+            "source_sample_id":"CS_563bff9150a77622447fc8f7",
             "destination_plate_barcode":"SRN 000577 SM-37",
             "destination_well_name":"K15",
             "destination_plate_well_count":384
@@ -291,7 +291,7 @@ class TestCase(unittest.TestCase):
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
             "destination_plate_well_count": dest_well_count,
-            "source_sample_id": "CS_563fd11f785b1a7dd06dc817"
+            "source_sample_id": "CS_563bff9150a77622447fc8f5"
         } for (src_well, dest_plate, dest_well, dest_well_count) in [
             ('A1', dest_plate_barcode, 'A1', 48),
             ('A2', dest_plate_barcode, 'A2', 48),
@@ -351,7 +351,7 @@ class TestCase(unittest.TestCase):
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
             "destination_plate_well_count": dest_well_count,
-            "source_sample_id": "CS_563fd11f785b1a7dd06dc817"
+            "source_sample_id": "CS_563bff9150a77622447fc8f5"
         } for (src_well, dest_plate, dest_well, dest_well_count) in [
             ('A1', dest_plate_1_barcode, 'A1', 96),
             ('A1', dest_plate_1_barcode, 'A2', 96),

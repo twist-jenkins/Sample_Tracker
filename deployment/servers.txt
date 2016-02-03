@@ -1,6 +1,0 @@
-QA/staging server:
-
-username: swilliams
-
-10.10.48.46
-

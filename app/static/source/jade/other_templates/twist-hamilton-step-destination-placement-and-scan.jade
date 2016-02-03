@@ -1,0 +1,12 @@
+div(class="twst-hamilton-step")      
+    div(class="twst-hamilton-step-direction")
+        div(class="twst-bullet-number") 4
+        div(class="twst-hamilton-step-direction-text")
+            div(class="twst-hamilton-step-stats")
+                p(class="twst-hamilton-source-plates-remaining" ng-if="scannedPlateCount < destinationPlatesNeedingScanCount") {{destinationPlatesNeedingScanCount - scannedPlateCount}} remaining
+                button(class="twst-button twst-red-button twst-source-plates-start-over-button" ng-click="restartDestinationPlacementScan()") restart placement
+            div(class="twst-hamilton-step-direction-heading") SCAN AND PLACE DESTINATION PLATES:
+            strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
+            button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="scannedPlateCount == destinationPlatesNeedingScanCount" ng-click="destinationPlacementComplete()") Destination Placement Complete
+            button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="highlightedPlate" ng-click="destinationPlaced()") Plate Placed in Position {{destinationTargetPosition}}
+            input(class="twst-hamilton-guided-scan-input twst-offscreen twst-hamilton-barcode-input" type="text" ng-model="guidedScanInput.barcode" ng-change="destinationPlateScanned()" ng-keydown="ignoreTab($event)")
