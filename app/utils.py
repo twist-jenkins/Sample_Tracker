@@ -221,3 +221,7 @@ class PrimerSourcePlate:
                         'destination_sample_id':         well.sample.sample_id,
                     })
         return echo_csv( echo_worklist, transfer_volume=PrimerSourcePlate.XFER_VOL )
+
+    @staticmethod
+    def retrieve_dest_plates( db, src_plate ):
+        ""
