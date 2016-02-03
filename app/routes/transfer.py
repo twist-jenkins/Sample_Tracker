@@ -76,7 +76,7 @@ def filter_transform( transfer_template_id, sources, dests ):
     dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
     dest_ctr = 1
 
-    if transfer_template_id == constants.TRANS_TEMPL_FRAG_ANALYZER:
+    if transfer_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells( barcode ):
             well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
