@@ -9,4 +9,4 @@ div(class="twst-hamilton-step")
             strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
             button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="scannedPlateCount == destinationPlatesNeedingScanCount" ng-click="destinationPlacementComplete()") Destination Placement Complete
             button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="highlightedPlate" ng-click="destinationPlaced()") Plate Placed in Position {{destinationTargetPosition}}
-            input(class="twst-hamilton-guided-scan-input twst-offscreen" type="text" ng-model="guidedScanInput.barcode" ng-change="destinationPlateScanned()" ng-keydown="ignoreTab($event)")
+            input(class="twst-hamilton-guided-scan-input twst-offscreen twst-hamilton-barcode-input" type="text" ng-model="guidedScanInput.barcode" ng-change="destinationPlateScanned()" ng-keydown="ignoreTab($event)")

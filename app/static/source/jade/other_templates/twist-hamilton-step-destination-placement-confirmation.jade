@@ -9,4 +9,4 @@ div(class="twst-hamilton-step")
                 div(class="twst-spinner" ng-if="savingSourcesAndDestinations")
             strong(class="twst-hamilton-step-direction-main" ng-bind-html="currentStepInstruction")
             button(class="twst-button twst-blue-button twst-hamilton-source-scan-complete-button" ng-if="confirmedDestinationCount == destinationPlatesNeedingScanCount" ng-click="confirmationComplete()") Confirmation Complete
-            input(class="twst-hamilton-placement-confirmation-input twst-offscreen" type="text" ng-model="placementConfirmation.value" ng-change="placementConfirmationScanned()" ng-keydown="ignoreTab($event)")
+            input(class="twst-hamilton-placement-confirmation-input twst-offscreen twst-hamilton-barcode-input" type="text" ng-model="placementConfirmation.value" ng-change="placementConfirmationScanned()" ng-keydown="ignoreTab($event)")
