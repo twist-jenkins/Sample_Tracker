@@ -105,7 +105,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                     well_to_passfail[ well_id ] = d['well']
             return well_to_passfail
 
-    elif transfer_template_id == constants.TRANS_TEMPL_NGS_QC_PASSING:
+    elif transfer_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
         # NGS pass/fail
         def filter_wells( barcode ):
             well_to_passfail = {}
@@ -140,10 +140,10 @@ def filter_transform( transfer_template_id, sources, dests ):
     #     logging.warn("transfer_template_id == 34")
     #     return []
 
-    elif transfer_template_id == constants.TRANS_TEMPL_PCA_PREPLANNING:
+    elif transfer_template_id == constants.TRANS_TPL_PCA_PREPLANNING:
         return [{}]
 
-    elif transfer_template_id == constants.TRANS_TEMPL_PCR_PRIMER_HITPICK:
+    elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
         return [{}]
 
     else:
@@ -174,7 +174,7 @@ def filter_transform( transfer_template_id, sources, dests ):
 
 
 def sample_data_determined_transform(transfer_template_id, sources, dests):
-    assert transfer_template_id == constants.TRANS_TEMPL_REBATCH_FOR_TRANSFORM
+    assert transfer_template_id == constants.TRANS_TPL_REBATCH_FOR_TRANSFORM
 
     dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
 
@@ -210,8 +210,6 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
 
 
 
-
-
 def pca_create_src(sources, dests):
     primers, missing = {}, set()
     for src_idx, src in enumerate(sources):
@@ -236,51 +234,36 @@ def pca_create_src(sources, dests):
         for wells in lines:
             txt.append( 'Add %s to wells: %s' % (primer_name, ','.join(wells)))
 
-    print '@@ plate:', plate
-    print '@@ primers:', sorted( primers.items() )
-    print '@@ missing:', sorted( missing )
-
-    """
-    plate format from "Trash Samples":
-    childPlates
-    parentPlates
-    parentToThisTaskName
-    plateDetails
-    success
-    thisToChildTaskName
-    wells: [
-      {"well_id": 1,
-       "column_and_row": "A1",
-       "sample_id": "NPS_56a79c9550a776117ac1b1e7"},
-    ]
-    """
-
+    print '@@ txt:', txt
     # return: responseCommands, rows
     return [{"type": "PRESENT_DATA",
                  "item": {
-                     "type":  'text',
+                     "type":  'csv',
                      "title": 'Custom primer aliquoting',
-                     "data":  ';\n'.join(txt),
+                     "data":  'abc,def\n1,2' #'\n'.join(txt),
                  }}], []
 
 
 def pca_master_mix( sources, dests ):
     "generate Echo worklist for PCA Primer addition"
     assert len(sources) == 1
-    primer_barcode = sources['details']['id']
+    primer_barcode = sources[0]['details']['id']
     src_plate = db.session.query(SamplePlate).filter(SamplePlate.external_barcode == primer_barcode).one()
-    dest_plates = [ (db.session.query(SamplePlate)
-                     .filter(SamplePlate.external_barcode == dest['details']['id'])
-                     .one()) for dest in dests ]
 
-    echo_worklist = PrimerSourcePlate( db, primer_barcode, dest_plates )
+    dest_plates = PrimerSourcePlate.retrieve_dest_plates( db, src_plate )
+
+    echo_worklist = PrimerSourcePlate.echo_worklist( db, primer_barcode, dest_plates )
 
     return [{"type": "PRESENT_DATA",
              "item": {
                  "type": "text",
                  "title": "Custom vector aliquoting",
                  "data":  echo_worklist,
-             }}], []
+             }},
+            {'type':   'SET_DESTINATIONS',
+             'plates': [ {'type': 'SPTT_0006', 'details': {'id': p.external_barcode}}
+                         for p in dest_plates ]
+            }], []
 
             
 def same_to_same( transfer_template_id, transfer_type_id, sources, dests ):
