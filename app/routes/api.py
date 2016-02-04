@@ -195,11 +195,11 @@ def sample_report(sample_id, format):
         }
         return jsonify(response)
 
-    rows = db.session.query(SampleTransfer, SampleTransferDetail, SamplePlateLayout,SamplePlate).filter(and_(
+    rows = db.session.query(SampleTransfer, SampleTransferDetail, PlateLayout,SamplePlate).filter(and_(
         SampleTransferDetail.source_sample_id==sample_id,SampleTransfer.id==SampleTransferDetail.sample_transfer_id,
-        SamplePlateLayout.sample_plate_id==SampleTransferDetail.source_sample_plate_id,
-        SamplePlateLayout.sample_id==SampleTransferDetail.source_sample_id,
-        SamplePlateLayout.well_id==SampleTransferDetail.source_well_id,
+        PlateLayout.sample_plate_id==SampleTransferDetail.source_sample_plate_id,
+        PlateLayout.sample_id==SampleTransferDetail.source_sample_id,
+        PlateLayout.well_id==SampleTransferDetail.source_well_id,
         SamplePlate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
 
     first_row = None
@@ -228,11 +228,11 @@ def sample_report(sample_id, format):
                "task": ""
         }
 
-    rows = db.session.query(SampleTransfer, SampleTransferDetail, SamplePlateLayout,SamplePlate).filter(and_(
+    rows = db.session.query(SampleTransfer, SampleTransferDetail, PlateLayout,SamplePlate).filter(and_(
         SampleTransferDetail.destination_sample_id==sample_id,SampleTransfer.id==SampleTransferDetail.sample_transfer_id,
-        SamplePlateLayout.sample_plate_id==SampleTransferDetail.destination_sample_plate_id,
-        SamplePlateLayout.sample_id==SampleTransferDetail.destination_sample_id,
-        SamplePlateLayout.well_id==SampleTransferDetail.destination_well_id,
+        PlateLayout.sample_plate_id==SampleTransferDetail.destination_sample_plate_id,
+        PlateLayout.sample_id==SampleTransferDetail.destination_sample_id,
+        PlateLayout.well_id==SampleTransferDetail.destination_well_id,
         SamplePlate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
 
     report = []
@@ -489,10 +489,10 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
 
             destination_plate = destination_plates[destination_plate_index]
 
-            existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
-                SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
-                SamplePlateLayout.sample_id==source_plate_well.sample_id,
-                SamplePlateLayout.well_id==destination_plate_well_id
+            existing_sample_plate_layout = db.session.query(PlateLayout).filter(and_(
+                PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                PlateLayout.sample_id==source_plate_well.sample_id,
+                PlateLayout.well_id==destination_plate_well_id
                 )).first()
 
             #existing_sample_plate_layout = True
@@ -509,7 +509,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
             #
             # 3a. Create a row representing a well in the desination plate.
             #
-            destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+            destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
                                                         well_id=destination_plate_well_id,
                                                         sample_id=source_plate_well.sample_id,
                                                         operator_id=operator.operator_id,
@@ -592,10 +592,10 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                     normalized_row_index = floor(normalized_well_id/2) + normalized_well_id%2
                     source_plate_well_id = normalized_row_index + src_row_length*(source_plate_row_index-1)
 
-                    existing_sample_plate_layout = db.session.query(SamplePlateLayout).filter(and_(
-                        SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
-                        SamplePlateLayout.sample_id==source_plate.wells[source_plate_well_id].sample_id,
-                        SamplePlateLayout.well_id==order_number
+                    existing_sample_plate_layout = db.session.query(PlateLayout).filter(and_(
+                        PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                        PlateLayout.sample_id==source_plate.wells[source_plate_well_id].sample_id,
+                        PlateLayout.well_id==order_number
                         )).first()
 
                     if existing_sample_plate_layout:
@@ -608,7 +608,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                     #
                     # 3a. Create a row representing a well in the desination plate.
                     #
-                    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                    destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
                                                                 well_id=order_number, # ?? could this be right?
                                                                 sample_id=source_plate.wells[source_plate_well_id].sample_id,
                                                                 operator_id=operator.operator_id,

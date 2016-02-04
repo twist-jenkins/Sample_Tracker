@@ -288,9 +288,9 @@ def create_adhoc_sample_movement(db_session,
         logging.warn('4. Get the "source plate well"')
         #
 
-        source_plate_well = db_session.query(SamplePlateLayout).filter(and_(
-            SamplePlateLayout.sample_plate_id==source_plate.sample_plate_id,
-            SamplePlateLayout.well_id==source_well_id
+        source_plate_well = db_session.query(PlateLayout).filter(and_(
+            PlateLayout.sample_plate_id==source_plate.sample_plate_id,
+            PlateLayout.well_id==source_well_id
         )).first()
 
         # print "SOURCE PLATE WELL: %s " % str(source_plate_well)
@@ -364,12 +364,12 @@ def create_adhoc_sample_movement(db_session,
 
         #print "DEST WELL ID: ", destination_well_id
 
-        print '@@ querying SamplePlateLayout sample_plate_id: %s, SamplePlateLayout.well_id: %s' \
+        print '@@ querying PlateLayout sample_plate_id: %s, PlateLayout.well_id: %s' \
             % (destination_plate.sample_plate_id, destination_well_id)
-        existing_sample_plate_layout = db_session.query(SamplePlateLayout) \
-                                                 .filter( SamplePlateLayout.sample_plate_id==destination_plate.sample_plate_id,
-                                                          # SamplePlateLayout.sample_id==source_plate_well.sample_id,
-                                                          SamplePlateLayout.well_id==destination_well_id ) \
+        existing_sample_plate_layout = db_session.query(PlateLayout) \
+                                                 .filter( PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                                                          # PlateLayout.sample_id==source_plate_well.sample_id,
+                                                          PlateLayout.well_id==destination_well_id ) \
                                                  .first()
         print '@@ got:', existing_sample_plate_layout
 
@@ -413,7 +413,7 @@ def create_adhoc_sample_movement(db_session,
         #
         # FIXED: 7/17/15
         #
-        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = SamplePlateLayout(destination_plate.sample_plate_id,
+        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = PlateLayout(destination_plate.sample_plate_id,
         #    source_plate_well.sample_id,source_plate_well.well_id,operator.operator_id,
         #    source_plate_well.row,source_plate_well.column)
         #db_session.add(destination_plate_well)
@@ -427,7 +427,7 @@ def create_adhoc_sample_movement(db_session,
                 #source_plate_well.sample_id = destination_sample_id # ???? WRONG! ??
                 #db_session.flush()
         else:
-            destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+            destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
                                                         sample_id=destination_sample_id, well_id=destination_well_id,
                                                         operator_id=operator.operator_id, row=source_plate_well.row,
                                                         column=source_plate_well.column)

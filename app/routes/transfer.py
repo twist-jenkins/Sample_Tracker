@@ -47,9 +47,9 @@ def merge_transform( sources, dests ):
         except MultipleResultsFound:
             raise WebError('multiple plates found with barcode %s' % barcode)
 
-        for well in db.session.query(SamplePlateLayout) \
-                      .filter( SamplePlateLayout.sample_plate == plate ) \
-                      .order_by( SamplePlateLayout.well_id ):
+        for well in db.session.query(PlateLayout) \
+                      .filter( PlateLayout.sample_plate == plate ) \
+                      .order_by( PlateLayout.well_id ):
 
             if well.well_id in seen:
                 raise WebError('multiple source plates have occupied wells at %s' % plate.type.get_well_name( well.well_id ))
@@ -79,9 +79,9 @@ def filter_transform( transfer_template_id, sources, dests ):
         # frag analyzer
         def filter_wells( barcode ):
             well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
-            for plate, orig_well, sample, fa_well in db.session.query( SamplePlate, SamplePlateLayout, Sample, FraganalyzerRunSampleSummaryJoin ) \
+            for plate, orig_well, sample, fa_well in db.session.query( SamplePlate, PlateLayout, Sample, FraganalyzerRunSampleSummaryJoin ) \
                                                                .filter( SamplePlate.external_barcode == barcode ) \
-                                                               .join( SamplePlateLayout ) \
+                                                               .join( PlateLayout ) \
                                                                .join( Sample ) \
                                                                .join( FraganalyzerRunSampleSummaryJoin ) \
                                                                .filter( FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
@@ -108,11 +108,11 @@ def filter_transform( transfer_template_id, sources, dests ):
         # NGS pass/fail
         def filter_wells( barcode ):
             well_to_passfail = {}
-            for plate, well, cs, nps, summ in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
+            for plate, well, cs, nps, summ in db.session.query( SamplePlate, PlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
                                                         .filter( SamplePlate.external_barcode == barcode ) \
-                                                        .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
-                                                        .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ) \
-                                                        .join( NGSPreppedSample, NGSPreppedSample.parent_sample_id == SamplePlateLayout.sample_id ) \
+                                                        .join( PlateLayout, PlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+                                                        .join( ClonedSample, ClonedSample.sample_id == PlateLayout.sample_id ) \
+                                                        .join( NGSPreppedSample, NGSPreppedSample.parent_sample_id == PlateLayout.sample_id ) \
                                                         .join( CallerSummary, CallerSummary.sample_id == NGSPreppedSample.sample_id ) \
                                                         .filter( CallerSummary.caller_stage == 'calling'):
                 if well.well_id in well_to_passfail:
@@ -181,10 +181,10 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     for src in sources:
         barcode = src['details']['id']
 
-        for plate, well, cs in db.session.query( SamplePlate, SamplePlateLayout, ClonedSample ) \
+        for plate, well, cs in db.session.query( SamplePlate, PlateLayout, ClonedSample ) \
                                                     .filter( SamplePlate.external_barcode == barcode ) \
-                                                    .join( SamplePlateLayout, SamplePlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
-                                                    .join( ClonedSample, ClonedSample.sample_id == SamplePlateLayout.sample_id ):
+                                                    .join( PlateLayout, PlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+                                                    .join( ClonedSample, ClonedSample.sample_id == PlateLayout.sample_id ):
             try:
                 marker = cs.parent_process.vector.resistance_marker
             except:
@@ -237,9 +237,9 @@ def preview():
                 except MultipleResultsFound:
                     raise WebError('multiple plates found with barcode %s' % barcode)
 
-                for well in db.session.query(SamplePlateLayout) \
-                              .filter( SamplePlateLayout.sample_plate == plate ) \
-                              .order_by( SamplePlateLayout.well_id ):
+                for well in db.session.query(PlateLayout) \
+                              .filter( PlateLayout.sample_plate == plate ) \
+                              .order_by( PlateLayout.well_id ):
 
                     rows.append( {'source_plate_barcode':           barcode,
                                   'source_well_name':               well.well_name,
@@ -553,9 +553,9 @@ def preview():
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for well in db.session.query(SamplePlateLayout) \
-                                  .filter( SamplePlateLayout.sample_plate == plate ) \
-                                  .order_by( SamplePlateLayout.well_id ):
+                    for well in db.session.query(PlateLayout) \
+                                  .filter( PlateLayout.sample_plate == plate ) \
+                                  .order_by( PlateLayout.well_id ):
                         dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
 
                         rows.append( {'source_plate_barcode': barcode,

@@ -430,7 +430,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                          row, column):
     """helper function for create_step_record"""
 
-    spl = SamplePlateLayout
+    spl = PlateLayout
     existing_sample_plate_layout = db_session.query(spl).filter(and_(
         spl.sample_plate_id == destination_plate.sample_plate_id,
         spl.sample_id == source_plate_well.sample_id,
@@ -447,7 +447,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         raise IndexError(err)
 
     # create a row representing a well in the destination plate.
-    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+    destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
                                                 sample_id=source_plate_well.sample_id,
                                                 well_id=destination_plate_well_id,
                                                 operator_id=operator.operator_id,
@@ -548,8 +548,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     wells = []
 
     if basic_data_only:
-        dbq = db.session.query(SamplePlateLayout)
-        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
+        dbq = db.session.query(PlateLayout)
+        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(PlateLayout.well_id)
         rows = qry.all()
 
         for well in rows:
@@ -562,11 +562,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     else:
         dbq = (
             db.session.query(
-                SamplePlateLayout,
+                PlateLayout,
                 SampleView
-            ).filter(SamplePlateLayout.sample_id == SampleView.c.sample_id)
+            ).filter(PlateLayout.sample_id == SampleView.c.sample_id)
         )
-        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
+        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(PlateLayout.well_id)
         rows = qry.all()
 
         for well, ga in rows:
@@ -693,7 +693,7 @@ def source_plate_well_data():
             }
             return jsonify(response)
 
-        rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
+        rows = db.session.query(PlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
