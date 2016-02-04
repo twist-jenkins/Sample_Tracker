@@ -480,7 +480,7 @@ app = angular.module("twist.app")
 
                 if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_ARRAY) == 0) {
 
-                    var arrayCount = $scope.itemData.type.split('.')[1];
+                    var arrayCount = $scope.itemData.type.split('.')[1] - 0;
 
                     $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = new Array(4);
 
@@ -489,7 +489,7 @@ app = angular.module("twist.app")
 
                     for (var i=0; i < arrayCount; i++) {
                         ml +=   '<p>' +
-                                    '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\'][' + i + ']" ng-change="validate(' + i + ', true);"/>' +
+                                    '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\'][' + i + ']" ng-blur="validate(' + i + ', true);"/>' +
                                     '<twst-thumb-validation-icon validation="validations[' + i + ']" error="errors[' + i + ']"></twst-thumb-validation-icon>' +
                                 '</p>';
                     }
@@ -518,11 +518,15 @@ app = angular.module("twist.app")
                                     } else if (val && val.length) {
 
                                         //check that we haven't already scanned this one
-                                        var allVals = $scope.transformSpec.details.requestedData[$scope.itemData.forProperty].join('|');
-                                        if (allVals.indexOf(val) != allVals.lastIndexOf(val)) {
+                                        var allVals = '|' + $scope.transformSpec.details.requestedData[$scope.itemData.forProperty].join('|') + '|';
+                                        if (allVals.indexOf('|' + val + '|') != allVals.lastIndexOf('|' + val + '|')) {
                                             $scope.validations[arrInd] = false;
                                             $scope.errors[arrInd] = 'This barcode has already been entered.';
                                         } else {
+
+                                            // TODO  We ALSO need to validate the PCA barcodes that were included against the db are real PCA plate barcodes
+                                            // and supply this feedback to the user
+
                                             $scope.validations[arrInd] = 1;
                                             $scope.errors[arrInd] = null;
                                         }
@@ -534,6 +538,8 @@ app = angular.module("twist.app")
                                     } else {
                                         $scope.item.validData = 0;
                                     }
+
+                                    $scope.transformSpec.updateOperationsList();
                                 }
                             }
 
@@ -560,7 +566,7 @@ app = angular.module("twist.app")
                 } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_BARCODE) == 0) {
                     $scope.validation = null;
                     $scope.error = null;
-                    ml +=   '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" ng-change="validate(true);"/>' +
+                    ml +=   '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" ng-blur="validate(true);"/>' +
                             '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon>';
 
 
@@ -625,6 +631,8 @@ app = angular.module("twist.app")
                         }
                     }
 
+                } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_TEXT) == 0) {
+                    ml +=   '<p>' + $scope.itemData.type.data + '</p>';
                 } else {
                     console.log('What? ' + $scope.itemData.type);
                 }

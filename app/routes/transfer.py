@@ -75,7 +75,7 @@ def filter_transform( transfer_template_id, sources, dests ):
     dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
     dest_ctr = 1
 
-    if transfer_template_id == constants.TRANS_TEMPL_FRAG_ANALYZER:
+    if transfer_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells( barcode ):
             well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
@@ -104,7 +104,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                     well_to_passfail[ well_id ] = d['well']
             return well_to_passfail
 
-    elif transfer_template_id == constants.TRANS_TEMPL_NGS_QC_PASSING:
+    elif transfer_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
         # NGS pass/fail
         def filter_wells( barcode ):
             well_to_passfail = {}
@@ -139,10 +139,10 @@ def filter_transform( transfer_template_id, sources, dests ):
     #     logging.warn("transfer_template_id == 34")
     #     return []
 
-    elif transfer_template_id == constants.TRANS_TEMPL_PCA_PREPLANNING:
+    elif transfer_template_id == constants.TRANS_TPL_PCA_PREPLANNING:
         return [{}]
 
-    elif transfer_template_id == constants.TRANS_TEMPL_PCR_PRIMER_HITPICK:
+    elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
         return [{}]
 
     else:
@@ -173,7 +173,7 @@ def filter_transform( transfer_template_id, sources, dests ):
 
 
 def sample_data_determined_transform(transfer_template_id, sources, dests):
-    assert transfer_template_id == constants.TRANS_TEMPL_REBATCH_FOR_TRANSFORM
+    assert transfer_template_id == constants.TRANS_TPL_REBATCH_FOR_TRANSFORM
 
     dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
 
@@ -211,14 +211,20 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
 def preview():
     assert request.method == 'POST'
 
-    print '@@ template_id:', request.json['transfer_template_id']
+    details = request.json["details"]
+
+    transfer_template_id = details["transfer_template_id"]
+    transfer_type_id = details["transfer_type_id"]
+
+
+    print '@@ template_id:', transfer_template_id
 
     responseCommands = []
     rows = []
 
     try:
 
-        if request.json['transfer_type_id'] in (
+        if transfer_type_id in (
                 constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
@@ -249,7 +255,7 @@ def preview():
                                   'destination_plate_well_count':   dest_plate_type.number_clusters
                                   })
 
-            if request.json['transfer_type_id'] == \
+            if transfer_type_id == \
                     constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
                 responseCommands.append({
                     "type": "PRESENT_DATA",
@@ -280,7 +286,7 @@ def preview():
                 #
                 # })
 
-            elif request.json['transfer_type_id'] == \
+            elif transfer_type_id == \
                     constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
                 responseCommands.append({
                     "type": "PRESENT_DATA",
@@ -291,7 +297,7 @@ def preview():
                     }
                 })
 
-            elif request.json['transfer_type_id'] in (
+            elif transfer_type_id in (
                     constants.TRANS_TYPE_PCA_THERMOCYCLE,
                     constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
                 responseCommands.append({
@@ -312,7 +318,7 @@ def preview():
                     }
                 })
 
-            elif request.json['transfer_type_id'] == constants.TRANS_TYPE_UPLOAD_QUANT:
+            elif transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
@@ -328,12 +334,12 @@ def preview():
 
         else:
 
-            if str(request.json['transfer_template_id']) not in TRANSFER_MAP:
-                raise WebError('Unknown transfer template id: %s' % request.json['transfer_template_id'])
+            if str(transfer_template_id) not in TRANSFER_MAP:
+                raise WebError('Unknown transfer template id: %s' % transfer_template_id)
 
-            xfer = TRANSFER_MAP[ str(request.json['transfer_template_id']) ]
+            xfer = TRANSFER_MAP[ str(transfer_template_id) ]
 
-            if request.json['transfer_template_id'] == \
+            if transfer_template_id == \
                     constants.TRANS_TPL_SAME_PLATE:
                 # identity function
                 dest_barcodes = [x['details'].get('id','') for x in request.json['sources']]
@@ -341,7 +347,7 @@ def preview():
                 dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
                 # FIXME: 26 and 27 demand 0 destination plates
-                if request.json['transfer_template_id'] not in (
+                if transfer_template_id not in (
                         constants.TRANS_TPL_REBATCH_FOR_TRANSFORM,
                         constants.TRANS_TPL_FRAG_ANALYZER,
                         constants.TRANS_TPL_NGS_QC_PASSING,
@@ -352,14 +358,14 @@ def preview():
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-            if request.json['transfer_template_id'] == \
+            if transfer_template_id == \
                     constants.TRANS_TPL_PLATE_MERGE:
                 # merge source plate(s) into single destination plate
                 rows = merge_transform( request.json['sources'], request.json['destinations'] )
 
-            elif request.json['transfer_template_id'] == \
+            elif transfer_template_id == \
                     constants.TRANS_TPL_REBATCH_FOR_TRANSFORM:
-                groups = sample_data_determined_transform(request.json['transfer_template_id'], request.json['sources'], request.json['destinations']);
+                groups = sample_data_determined_transform(transfer_template_id, request.json['sources'], request.json['destinations']);
 
                 # to do: create the dest
 
@@ -405,7 +411,7 @@ def preview():
                     "plates": destination_plates
                 })
 
-            elif request.json['transfer_template_id'] == \
+            elif transfer_template_id == \
                     constants.TRANS_TPL_PCA_PREPLANNING:
 
                 destinations_ready = True
@@ -419,7 +425,7 @@ def preview():
                 print("*************************** %s" % destinations_ready)
 
                 if (destinations_ready):
-                    rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
                 else:
                     responseCommands.append({
                         "type": "REQUEST_DATA",
@@ -453,7 +459,34 @@ def preview():
                         ]
                     })
 
-            elif request.json['transfer_template_id'] == \
+                # we need to add master mix needs info or tell the user we need all the PCA plates first
+                masterMixNeeds = "" 
+                pcaPlates = None
+
+                if "requestedData" in details:
+                    pcaPlates = details["requestedData"]
+
+                if pcaPlates and "associatedPcaPlates" in pcaPlates:
+                    pcaPlates = pcaPlates["associatedPcaPlates"]
+
+                if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
+                    masterMixNeeds = "Please scan all 4 PCA plates to retrieve master mix needs."
+                else:
+                    # then all the plates had barcodes
+                    # now we need to decide which master mixes are needed
+                    # content like "Master Mix A x2\n\rMaster Mix B x3"
+                    masterMixNeeds = "Kieran do this!"
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "Master Mix Needs",
+                        "data": masterMixNeeds
+                    }
+                })
+
+            elif transfer_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
 
                 destinations_ready = True
@@ -465,7 +498,7 @@ def preview():
                         destinations_ready = False
 
                 if (destinations_ready):
-                    rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
                 else:
 
                     responseCommands.append({
@@ -510,14 +543,14 @@ def preview():
                         ]
                     })
 
-            elif request.json['transfer_template_id'] in (
+            elif transfer_template_id in (
                     constants.TRANS_TPL_FRAG_ANALYZER,
                     constants.TRANS_TPL_NGS_QC_PASSING):  # , constants.TRANS_TPL_EXTRACTION_TITIN):
 
-                rows = filter_transform( request.json['transfer_template_id'], request.json['sources'], request.json['destinations'] )
+                rows = filter_transform( transfer_template_id, request.json['sources'], request.json['destinations'] )
 
             else:
-                if request.json['transfer_template_id'] in (
+                if transfer_template_id in (
                         constants.TRANS_TPL_SAME_TO_SAME, constants.TRANS_TPL_SAME_PLATE):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
                     dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
