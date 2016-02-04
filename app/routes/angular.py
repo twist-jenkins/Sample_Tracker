@@ -145,7 +145,7 @@ def sample_transfer_types():
 # Returns barcodes for all current sample plates
 #
 def sample_plate_barcodes():
-    plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.sample_plate_id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
 
@@ -161,7 +161,7 @@ def update_plate_barcode():
     sample_plate_id = data["plateId"]
     external_barcode = data["barcode"]
 
-    sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
+    sample_plate = db.session.query(Plate).filter_by(sample_plate_id=sample_plate_id).first()
 
     if not sample_plate:
         errmsg = "There is no sample plate with the id: [%s]"
@@ -170,7 +170,7 @@ def update_plate_barcode():
     #
     # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
     #
-    sample_plate_with_this_barcode = db.session.query(SamplePlate).filter_by(external_barcode=external_barcode).first()
+    sample_plate_with_this_barcode = db.session.query(Plate).filter_by(external_barcode=external_barcode).first()
     if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
         logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
             (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
@@ -319,7 +319,7 @@ def create_step_record():
 
             for barcode in source_barcodes:
                 # load our source plates into an array for looping
-                source_plate = db_session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+                source_plate = db_session.query(Plate).filter_by(external_barcode=barcode).first()
                 if not source_plate:
                     errmsg = "There is no source plate with the barcode: %s"
                     errmsg %= barcode
@@ -470,7 +470,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
 def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
-    sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
+    sample_plate = db.session.query(Plate).filter_by(external_barcode=sample_plate_barcode).first()
 
     if not sample_plate:
         errmsg = "There is no plate with the barcode: [%s]"
@@ -500,9 +500,9 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         384:get_col_and_row_for_well_id_384
     }.get(number_clusters,lambda well_id:"missing map")
 
-    rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
+    rows = db.session.query(Plate,SampleTransferDetail).filter(and_(
         SampleTransferDetail.destination_sample_plate_id==sample_plate_id,
-        SamplePlate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
+        Plate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
 
     parent_to_this_task_name = None
     seen=[]
@@ -519,12 +519,12 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     rows = (
         db.session.query(
-            SamplePlate,
+            Plate,
             SampleTransfer,
             SampleTransferDetail
         )
         .filter(SampleTransferDetail.source_sample_plate_id == sample_plate_id)
-        .filter(SamplePlate.sample_plate_id ==
+        .filter(Plate.sample_plate_id ==
                 SampleTransferDetail.destination_sample_plate_id)
         .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
         .options(subqueryload(SampleTransfer.sample_transfer_type))
@@ -684,7 +684,7 @@ def source_plate_well_data():
 
     for barcode in plateBarcodes:
 
-        sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+        sample_plate = db.session.query(Plate).filter_by(external_barcode=barcode).first()
 
         if not sample_plate:
             response = {
@@ -733,7 +733,7 @@ def check_plates_are_new():
     existPlates = [];
 
     for barcode in plateBarcodes:
-        sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+        sample_plate = db.session.query(Plate).filter_by(external_barcode=barcode).first()
 
         if sample_plate:
             existPlates.append(barcode)

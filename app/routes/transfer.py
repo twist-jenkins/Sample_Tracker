@@ -30,8 +30,8 @@ def merge_transform( sources, dests ):
     assert len(dests) == 1
 
     dest_barcode = dests[0]['details']['id']
-    if db.session.query(SamplePlate) \
-                 .filter(SamplePlate.external_barcode == dest_barcode) \
+    if db.session.query(Plate) \
+                 .filter(Plate.external_barcode == dest_barcode) \
                  .count():
         raise WebError('destinate plate barcode "%s" already exists' % dest_barcode)
 
@@ -41,8 +41,8 @@ def merge_transform( sources, dests ):
         print '@@ merge:', barcode
 
         try:
-            plate = db.session.query(SamplePlate) \
-                              .filter(SamplePlate.external_barcode == barcode) \
+            plate = db.session.query(Plate) \
+                              .filter(Plate.external_barcode == barcode) \
                               .one()
         except MultipleResultsFound:
             raise WebError('multiple plates found with barcode %s' % barcode)
@@ -79,8 +79,8 @@ def filter_transform( transfer_template_id, sources, dests ):
         # frag analyzer
         def filter_wells( barcode ):
             well_scores = defaultdict(lambda: {'well': None, 'scores':set()})
-            for plate, orig_well, sample, fa_well in db.session.query( SamplePlate, PlateLayout, Sample, FraganalyzerRunSampleSummaryJoin ) \
-                                                               .filter( SamplePlate.external_barcode == barcode ) \
+            for plate, orig_well, sample, fa_well in db.session.query( Plate, PlateLayout, Sample, FraganalyzerRunSampleSummaryJoin ) \
+                                                               .filter( Plate.external_barcode == barcode ) \
                                                                .join( PlateLayout ) \
                                                                .join( Sample ) \
                                                                .join( FraganalyzerRunSampleSummaryJoin ) \
@@ -108,9 +108,9 @@ def filter_transform( transfer_template_id, sources, dests ):
         # NGS pass/fail
         def filter_wells( barcode ):
             well_to_passfail = {}
-            for plate, well, cs, nps, summ in db.session.query( SamplePlate, PlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
-                                                        .filter( SamplePlate.external_barcode == barcode ) \
-                                                        .join( PlateLayout, PlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+            for plate, well, cs, nps, summ in db.session.query( Plate, PlateLayout, ClonedSample, NGSPreppedSample, CallerSummary ) \
+                                                        .filter( Plate.external_barcode == barcode ) \
+                                                        .join( PlateLayout, PlateLayout.sample_plate_id == Plate.sample_plate_id ) \
                                                         .join( ClonedSample, ClonedSample.sample_id == PlateLayout.sample_id ) \
                                                         .join( NGSPreppedSample, NGSPreppedSample.parent_sample_id == PlateLayout.sample_id ) \
                                                         .join( CallerSummary, CallerSummary.sample_id == NGSPreppedSample.sample_id ) \
@@ -181,9 +181,9 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     for src in sources:
         barcode = src['details']['id']
 
-        for plate, well, cs in db.session.query( SamplePlate, PlateLayout, ClonedSample ) \
-                                                    .filter( SamplePlate.external_barcode == barcode ) \
-                                                    .join( PlateLayout, PlateLayout.sample_plate_id == SamplePlate.sample_plate_id ) \
+        for plate, well, cs in db.session.query( Plate, PlateLayout, ClonedSample ) \
+                                                    .filter( Plate.external_barcode == barcode ) \
+                                                    .join( PlateLayout, PlateLayout.sample_plate_id == Plate.sample_plate_id ) \
                                                     .join( ClonedSample, ClonedSample.sample_id == PlateLayout.sample_id ):
             try:
                 marker = cs.parent_process.vector.resistance_marker
@@ -231,8 +231,8 @@ def preview():
             for src_idx, src in enumerate(request.json['sources']):
                 barcode = src['details']['id']
                 try:
-                    plate = db.session.query(SamplePlate) \
-                                      .filter(SamplePlate.external_barcode == barcode) \
+                    plate = db.session.query(Plate) \
+                                      .filter(Plate.external_barcode == barcode) \
                                       .one()
                 except MultipleResultsFound:
                     raise WebError('multiple plates found with barcode %s' % barcode)
@@ -547,8 +547,8 @@ def preview():
                 for src_idx, src in enumerate(request.json['sources']):
                     barcode = src['details']['id']
                     try:
-                        plate = db.session.query(SamplePlate) \
-                                          .filter(SamplePlate.external_barcode == barcode) \
+                        plate = db.session.query(Plate) \
+                                          .filter(Plate.external_barcode == barcode) \
                                           .one()
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)

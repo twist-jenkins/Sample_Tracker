@@ -21,7 +21,7 @@ from app.models import create_destination_plate
 from twistdb.public import *
 from twistdb.sampletrack import *
 from twistdb.ngs import *
-from twistdb.backend import GeneAssemblySample, ClonedSample
+from twistdb.sampletrack import Sample
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
@@ -135,7 +135,7 @@ def create_adhoc_sample_movement(db_session,
         #
         logging.warn("1. Obtain access to the source plate for this line item.")
         #
-        source_plate = db_session.query(SamplePlate).filter_by(external_barcode=source_plate_barcode).first()
+        source_plate = db_session.query(Plate).filter_by(external_barcode=source_plate_barcode).first()
 
         if not source_plate:
             logging.info(" %s encountered error creating sample transfer. "
@@ -245,7 +245,7 @@ def create_adhoc_sample_movement(db_session,
 
             if merge_transform_flag:
                 # TODO: add lots more kinds of merge transforms.
-                destination_plate = db_session.query(SamplePlate).filter_by(external_barcode=destination_plate_barcode).first()
+                destination_plate = db_session.query(Plate).filter_by(external_barcode=destination_plate_barcode).first()
 
                 if not destination_plate:
                     logging.info(" %s encountered error creating sample transfer. "
@@ -483,7 +483,7 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     # Create CS
     cs_id = create_unique_id("CS_")()
 
-    cloned_sample = ClonedSample(sample_id=cs_id,
+    cloned_sample =       Sample(sample_id=cs_id,
                                  parent_sample_id=source_sample_id,
                                  source_id=source_id,
                                  colony_name=colony_name,
@@ -499,7 +499,7 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
 
     name = 'cs_' + source_id  # FIXME: determine some more meaningful name
     qry = (
-        db.session.query(GeneAssemblySample)
+        db.session.query(Sample)
         .filter_by(sample_id=source_sample_id)
     )
     result = qry.first()
