@@ -213,7 +213,7 @@ def create_adhoc_sample_movement(db_session,
         #
         sample_plate_type = sample_plate_types_by_name.get(destination_plate_type_name)
         if not sample_plate_type:
-            sample_plate_type = db_session.query(SamplePlateType).filter_by(name=destination_plate_type_name).first()
+            sample_plate_type = db_session.query(PlateType).filter_by(name=destination_plate_type_name).first()
             if sample_plate_type:
                 sample_plate_types_by_name[destination_plate_type_name] = sample_plate_type
             else:

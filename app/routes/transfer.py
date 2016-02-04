@@ -72,7 +72,7 @@ def filter_transform( transfer_template_id, sources, dests ):
 
     dest_barcodes = [x['details'].get('id','') for x in request.json['destinations']]
 
-    dest_type = db.session.query(SamplePlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
+    dest_type = db.session.query(PlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
     dest_ctr = 1
 
     if transfer_template_id == constants.TRANS_TEMPL_FRAG_ANALYZER:
@@ -175,7 +175,7 @@ def filter_transform( transfer_template_id, sources, dests ):
 def sample_data_determined_transform(transfer_template_id, sources, dests):
     assert transfer_template_id == constants.TRANS_TEMPL_REBATCH_FOR_TRANSFORM
 
-    dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
+    dest_type = db.session.query(PlateType).get('SPTT_0006')
 
     by_marker = defaultdict(list)
     for src in sources:
@@ -226,7 +226,7 @@ def preview():
                 # these are same to same transfers
 
             src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-            dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+            dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
             for src_idx, src in enumerate(request.json['sources']):
                 barcode = src['details']['id']
@@ -364,7 +364,7 @@ def preview():
                 # to do: create the dest
 
                 destination_plates = [];
-                dest_type = db.session.query(SamplePlateType).get('SPTT_0006')
+                dest_type = db.session.query(PlateType).get('SPTT_0006')
                 fourToOneMap = maps_json()["transfer_maps"][18]["plate_well_to_well_maps"]
                 dest_plate_index = 0
 
@@ -520,7 +520,7 @@ def preview():
                 if request.json['transfer_template_id'] in (
                         constants.TRANS_TPL_SAME_TO_SAME, constants.TRANS_TPL_SAME_PLATE):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-                    dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+                    dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
                     dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
 
@@ -533,7 +533,7 @@ def preview():
                         raise WebError('Expected %d source plates; got %d'
                                        % (xfer['source']['plateCount'], len(request.json['sources'])))
 
-                    dest_plate_type = db.session.query(SamplePlateType).get(xfer['destination']['plateTypeId'])
+                    dest_plate_type = db.session.query(PlateType).get(xfer['destination']['plateTypeId'])
 
                     def dest_lookup( src_idx, well_id ):
                         dest = xfer['plateWellToWellMaps'][ src_idx ][ str(well_id) ]
