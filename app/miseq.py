@@ -11,7 +11,7 @@ from flask.ext.restful import abort
 from flask_login import current_user
 
 from dbmodels import MiSeqSampleView
-from twistdb.backend import NGSPreppedSample
+from twistdb.sampletrack import Sample
 from twistdb.ngs import NGSBarcodePair
 from twistdb import create_unique_id
 
@@ -390,7 +390,7 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
     status = 'active' # FIXME: is this the right status?
     parent_transfer_process_id = None
     date_created = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    nps_sample = NGSPreppedSample( sample_id=nps_id,
+    nps_sample =           Sample( sample_id=nps_id,
                                    parent_sample_id=source_sample_id,
                                    description=description,
                                    i5_sequence_id=ngs_pair.i5_sequence_id,
