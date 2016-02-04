@@ -13,9 +13,9 @@ from app import app
 from app import db
 from app.utils import scoped_session
 
-from twistdb.sampletrack import *
-from twistdb.ngs import *
-from twistdb.backend import NGSPreppedSample
+from twistdb.sampletrack import Sample
+# from twistdb.ngs import *
+# from twistdb.backend import NGSPreppedSample
 from twistdb import create_unique_id
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 
@@ -113,8 +113,8 @@ class TransformSpecResource(flask_restful.Resource):
             spec_id = tokens[0]
             fmt = '.'.join(tokens[1:])
         with scoped_session(db.engine) as sess:
-            spec = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
+            spec = sess.query(TransformSpec).filter(
+                TransformSpec.spec_id == spec_id).first()
             if spec:
                 data = spec_schema.dump(spec).data
                 # sess.expunge(row)
@@ -124,8 +124,8 @@ class TransformSpecResource(flask_restful.Resource):
     def delete(self, spec_id):
         """deletes a single spec"""
         with scoped_session(db.engine) as sess:
-            spec = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
+            spec = sess.query(TransformSpec).filter(
+                TransformSpec.spec_id == spec_id).first()
             if spec:
                 transfer = sess.query(SampleTransfer).filter(
                     SampleTransfer.sample_transform_spec_id == spec_id).first()
@@ -155,7 +155,7 @@ class TransformSpecResource(flask_restful.Resource):
 
             if method == 'POST':
                 assert spec_id is None
-                spec = SampleTransformSpec()         # create new, unknown id
+                spec = TransformSpec()         # create new, unknown id
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
                 spec.operator_id = current_user.operator_id
@@ -181,12 +181,12 @@ class TransformSpecResource(flask_restful.Resource):
                 assert spec_id is not None
 
                 # create or replace known spec_id
-                row = sess.query(SampleTransformSpec).filter(
-                    SampleTransformSpec.spec_id == spec_id).first()
+                row = sess.query(TransformSpec).filter(
+                    TransformSpec.spec_id == spec_id).first()
                 if row:
                     spec = row                    # replace existing, known id
                 else:
-                    spec = SampleTransformSpec()        # create new, known id
+                    spec = TransformSpec()        # create new, known id
                     spec.spec_id = spec_id
 
                 if request.json and request.json["plan"]:
@@ -245,8 +245,8 @@ class TransformSpecListResource(flask_restful.Resource):
         """returns a list of all specs"""
         result = []
         with scoped_session(db.engine) as sess:
-            rows = (sess.query(SampleTransformSpec)
-                    .order_by(SampleTransformSpec.spec_id.desc())
+            rows = (sess.query(TransformSpec)
+                    .order_by(TransformSpec.spec_id.desc())
                     .all()
                     )
             result = spec_schema.dump(rows, many=True).data
