@@ -1630,11 +1630,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,create: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: true
+                        ,create: true
                     }
                 }
                 ,36: {  // keyed to sample_transfer_template_id in the database
