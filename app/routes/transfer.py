@@ -222,7 +222,8 @@ def preview():
                 constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
+                constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
+                constants.TRANS_TYPE_UPLOAD_QUANT):
                 # these are same to same transfers
 
             src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
