@@ -55,8 +55,8 @@ def sample_transfers_page():
     seen = []
 
     for transfer,details in rows:
-        if (transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id) not in seen:
-            seen.append((transfer.id,details.source_sample_plate_id,details.destination_sample_plate_id))
+        if (transfer.id,details.source_plate_id,details.destination_plate_id) not in seen:
+            seen.append((transfer.id,details.source_plate_id,details.destination_plate_id))
             sample_transfer_details.append((transfer,details))
 
 

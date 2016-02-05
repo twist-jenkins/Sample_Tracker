@@ -131,12 +131,12 @@ def get_well_id_for_col_and_row_384(col_and_row):
 # Returns a sample plate id and the barcode for that plate. Or if a POST is sent to this URL,
 # updates the barcode for the passed-in sample plate id.
 #
-def sample_plate_external_barcode(sample_plate_id):
-    sample_plate = db.session.query(Plate).filter_by(sample_plate_id=sample_plate_id).first()
+def sample_plate_external_barcode(plate_id):
+    sample_plate = db.session.query(Plate).filter_by(plate_id=plate_id).first()
 
     if request.method == 'GET':
         sample_plate_dict = {
-           "sample_plate_id":sample_plate_id,
+           "plate_id":plate_id,
            "externalBarcode":sample_plate.external_barcode,
         }
 
@@ -150,7 +150,7 @@ def sample_plate_external_barcode(sample_plate_id):
         if not sample_plate:
             response = {
                 "success":False,
-                "errorMessage":"There is no sample plate with the id: [%s]" % (sample_plate_id)
+                "errorMessage":"There is no sample plate with the id: [%s]" % (plate_id)
             }
             return jsonify(response)
 
@@ -159,12 +159,12 @@ def sample_plate_external_barcode(sample_plate_id):
         # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
         #
         sample_plate_with_this_barcode = db.session.query(Plate).filter_by(external_barcode=external_barcode).first()
-        if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
+        if sample_plate_with_this_barcode and sample_plate_with_this_barcode.plate_id != sample_plate.plate_id:
             logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
-                (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
+                (g.user.first_and_last_name,plate_id,external_barcode,sample_plate_with_this_barcode.plate_id))
             response = {
                 "success":False,
-                "errorMessage":"The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.sample_plate_id)
+                "errorMessage":"The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.plate_id)
             }
             return jsonify(response)
 
@@ -176,7 +176,7 @@ def sample_plate_external_barcode(sample_plate_id):
             "success":True
         }
 
-        logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
+        logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,plate_id))
 
         return jsonify(response)
 
@@ -197,10 +197,10 @@ def sample_report(sample_id, format):
 
     rows = db.session.query(Transfer, TransferDetail, PlateLayout,Plate).filter(and_(
         TransferDetail.source_sample_id==sample_id,Transfer.id==TransferDetail.sample_transfer_id,
-        PlateLayout.sample_plate_id==TransferDetail.source_sample_plate_id,
+        PlateLayout.plate_id==TransferDetail.source_plate_id,
         PlateLayout.sample_id==TransferDetail.source_sample_id,
         PlateLayout.well_id==TransferDetail.source_well_id,
-        Plate.sample_plate_id==TransferDetail.source_sample_plate_id)).all()
+        Plate.plate_id==TransferDetail.source_plate_id)).all()
 
     first_row = None
 
@@ -230,10 +230,10 @@ def sample_report(sample_id, format):
 
     rows = db.session.query(Transfer, TransferDetail, PlateLayout,Plate).filter(and_(
         TransferDetail.destination_sample_id==sample_id,Transfer.id==TransferDetail.sample_transfer_id,
-        PlateLayout.sample_plate_id==TransferDetail.destination_sample_plate_id,
+        PlateLayout.plate_id==TransferDetail.destination_plate_id,
         PlateLayout.sample_id==TransferDetail.destination_sample_id,
         PlateLayout.well_id==TransferDetail.destination_well_id,
-        Plate.sample_plate_id==TransferDetail.destination_sample_plate_id)).all()
+        Plate.plate_id==TransferDetail.destination_plate_id)).all()
 
     report = []
 
@@ -343,7 +343,7 @@ def create_sample_movement_from_spreadsheet_data(operator,transfer_type_id,wells
 # a sample plate by its barcode).
 #
 def get_sample_plate_barcodes_list():
-    plates = db.session.query(Plate).order_by(Plate.sample_plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.plate_id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
 
@@ -490,7 +490,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
             destination_plate = destination_plates[destination_plate_index]
 
             existing_plate_layout = db.session.query(PlateLayout).filter(and_(
-                PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                PlateLayout.plate_id==destination_plate.plate_id,
                 PlateLayout.sample_id==source_plate_well.sample_id,
                 PlateLayout.well_id==destination_plate_well_id
                 )).first()
@@ -509,7 +509,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
             #
             # 3a. Create a row representing a well in the desination plate.
             #
-            destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+            destination_plate_well = PlateLayout( plate_id=destination_plate.plate_id,
                                                         well_id=destination_plate_well_id,
                                                         sample_id=source_plate_well.sample_id,
                                                         operator_id=operator.operator_id,
@@ -523,10 +523,10 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
             #
             source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
                                                                         item_order_number=order_number,
-                                                                        source_sample_plate_id=source_plate_well.sample_plate_id,
+                                                                        source_plate_id=source_plate_well.plate_id,
                                                                         source_well_id=source_plate_well.well_id, 
                                                                         source_sample_id=source_plate_well.sample_id,
-                                                                        destination_sample_plate_id=destination_plate_well.sample_plate_id, 
+                                                                        destination_plate_id=destination_plate_well.plate_id, 
                                                                         destination_well_id=destination_plate_well.well_id,
                                                                         destination_sample_id=destination_plate_well.sample_id)
             db.session.add(source_to_destination_well_transfer)
@@ -593,7 +593,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                     source_plate_well_id = normalized_row_index + src_row_length*(source_plate_row_index-1)
 
                     existing_plate_layout = db.session.query(PlateLayout).filter(and_(
-                        PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                        PlateLayout.plate_id==destination_plate.plate_id,
                         PlateLayout.sample_id==source_plate.wells[source_plate_well_id].sample_id,
                         PlateLayout.well_id==order_number
                         )).first()
@@ -608,7 +608,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                     #
                     # 3a. Create a row representing a well in the desination plate.
                     #
-                    destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+                    destination_plate_well = PlateLayout( plate_id=destination_plate.plate_id,
                                                                 well_id=order_number, # ?? could this be right?
                                                                 sample_id=source_plate.wells[source_plate_well_id].sample_id,
                                                                 operator_id=operator.operator_id,
@@ -622,10 +622,10 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                     #
                     source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
                                                                                 item_order_number=order_number,
-                                                                                source_sample_plate_id=source_plate.sample_plate_id,
+                                                                                source_plate_id=source_plate.plate_id,
                                                                                 source_well_id=source_plate_well_id,
                                                                                 source_sample_id=source_plate.wells[source_plate_well_id].sample_id,
-                                                                                destination_sample_plate_id=destination_plate.sample_plate_id,
+                                                                                destination_plate_id=destination_plate.plate_id,
                                                                                 destination_well_id=destination_plate_well.well_id,
                                                                                 destination_sample_id=destination_plate_well.sample_id)
                     db.session.add(source_to_destination_well_transfer)
@@ -695,9 +695,9 @@ def create_sample_movement():
 # a sample plate by its id).
 #
 def get_sample_plates_list():
-    plates = db.session.query(Plate).order_by(Plate.sample_plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.plate_id).all()
 
-    plate_ids = [plate.sample_plate_id for plate in plates]
+    plate_ids = [plate.plate_id for plate in plates]
 
     resp = Response(response=json.dumps(plate_ids),
         status=200, \
@@ -707,19 +707,19 @@ def get_sample_plates_list():
 #
 # Returns the JSON representation of a "sample plate" based on the plate's ID.
 #
-def get_sample_plate(sample_plate_id):
-    sample_plate = db.session.query(Plate).filter_by(sample_plate_id=sample_plate_id).first()
+def get_sample_plate(plate_id):
+    sample_plate = db.session.query(Plate).filter_by(plate_id=plate_id).first()
 
     if not sample_plate:
         response = {
             "success":False,
-            "errorMessage":"There is no plate with the id: [%s]" % (sample_plate_id)
+            "errorMessage":"There is no plate with the id: [%s]" % (plate_id)
         }
         return jsonify(response)
 
     sample_plate_dict = {
        "success":True,
-       "sample_plate_id":sample_plate_id,
+       "plate_id":plate_id,
        "name":sample_plate.name,
        "description":sample_plate.description,
        "samplePlateType":sample_plate.sample_plate_type.name,

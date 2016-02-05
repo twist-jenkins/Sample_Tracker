@@ -289,13 +289,13 @@ def create_adhoc_sample_movement(db_session,
         #
 
         source_plate_well = db_session.query(PlateLayout).filter(and_(
-            PlateLayout.sample_plate_id==source_plate.sample_plate_id,
+            PlateLayout.plate_id==source_plate.plate_id,
             PlateLayout.well_id==source_well_id
         )).first()
 
         # print "SOURCE PLATE WELL: %s " % str(source_plate_well)
         logging.info("SOURCE PLATE WELL: %s (%s, %s) ", source_plate_well,
-                     source_plate.sample_plate_id, source_well_id)
+                     source_plate.plate_id, source_well_id)
 
         if sample_plate_type.name == "48 well, plastic":
             plate_size = "48"
@@ -364,10 +364,10 @@ def create_adhoc_sample_movement(db_session,
 
         #print "DEST WELL ID: ", destination_well_id
 
-        print '@@ querying PlateLayout sample_plate_id: %s, PlateLayout.well_id: %s' \
-            % (destination_plate.sample_plate_id, destination_well_id)
+        print '@@ querying PlateLayout plate_id: %s, PlateLayout.well_id: %s' \
+            % (destination_plate.plate_id, destination_well_id)
         existing_plate_layout = db_session.query(PlateLayout) \
-                                                 .filter( PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
+                                                 .filter( PlateLayout.plate_id==destination_plate.plate_id,
                                                           # PlateLayout.sample_id==source_plate_well.sample_id,
                                                           PlateLayout.well_id==destination_well_id ) \
                                                  .first()
@@ -413,7 +413,7 @@ def create_adhoc_sample_movement(db_session,
         #
         # FIXED: 7/17/15
         #
-        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = PlateLayout(destination_plate.sample_plate_id,
+        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = PlateLayout(destination_plate.plate_id,
         #    source_plate_well.sample_id,source_plate_well.well_id,operator.operator_id,
         #    source_plate_well.row,source_plate_well.column)
         #db_session.add(destination_plate_well)
@@ -427,7 +427,7 @@ def create_adhoc_sample_movement(db_session,
                 #source_plate_well.sample_id = destination_sample_id # ???? WRONG! ??
                 #db_session.flush()
         else:
-            destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+            destination_plate_well = PlateLayout( plate_id=destination_plate.plate_id,
                                                         sample_id=destination_sample_id, well_id=destination_well_id,
                                                         operator_id=operator.operator_id, row=source_plate_well.row,
                                                         column=source_plate_well.column)
@@ -442,10 +442,10 @@ def create_adhoc_sample_movement(db_session,
         #
         source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id,
                                                                     item_order_number=order_number,
-                                                                    source_sample_plate_id=source_plate_well.sample_plate_id,
+                                                                    source_plate_id=source_plate_well.plate_id,
                                                                     source_well_id=source_plate_well.well_id,
                                                                     source_sample_id=source_plate_well.sample_id,
-                                                                    destination_sample_plate_id=destination_plate_well.sample_plate_id,
+                                                                    destination_plate_id=destination_plate_well.plate_id,
                                                                     destination_well_id=destination_plate_well.well_id,
                                                                     destination_sample_id=destination_plate_well.sample_id)
         db_session.add(source_to_destination_well_transfer)

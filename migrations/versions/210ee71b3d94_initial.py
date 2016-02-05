@@ -36,15 +36,15 @@ def upgrade():
     op.create_table('sample_transfer_detail',
     sa.Column('sample_transfer_id', sa.Integer(), nullable=False),
     sa.Column('item_order_number', sa.Integer(), nullable=False),
-    sa.Column('source_sample_plate_id', sa.String(length=40), nullable=False),
+    sa.Column('source_plate_id', sa.String(length=40), nullable=False),
     sa.Column('source_well_id', sa.Integer(), nullable=False),
-    sa.Column('destination_sample_plate_id', sa.String(length=40), nullable=False),
+    sa.Column('destination_plate_id', sa.String(length=40), nullable=False),
     sa.Column('destination_well_id', sa.Integer(), nullable=False),
 
     sa.ForeignKeyConstraint(['sample_transfer_id'], ['sample_transfer.id'], ),
-    sa.ForeignKeyConstraint(['source_sample_plate_id'], ['sample_plate.sample_plate_id'], ),
+    sa.ForeignKeyConstraint(['source_plate_id'], ['sample_plate.plate_id'], ),
     #sa.ForeignKeyConstraint(['source_well_id'], ['sample_plate_layout.well_id'], ),
-    sa.ForeignKeyConstraint(['destination_sample_plate_id'], ['sample_plate.sample_plate_id'], ),
+    sa.ForeignKeyConstraint(['destination_plate_id'], ['sample_plate.plate_id'], ),
     #sa.ForeignKeyConstraint(['destination_well_id'], ['sample_plate_layout.well_id'], ),
 
     sa.PrimaryKeyConstraint('sample_transfer_id', 'item_order_number')

@@ -18,7 +18,7 @@ from marshmallow import Schema, fields
 
 
 class PlateInfoSchema(Schema):
-    # samplePlateId = fields.Str(attribute="sample_plate_id")
+    # samplePlateId = fields.Str(attribute="plate_id")
     externalBarcode = fields.Str(attribute="external_barcode")
     plateTypeId = fields.Int(attribute="type_id")
     plateStatus = fields.Str(attribute="status")

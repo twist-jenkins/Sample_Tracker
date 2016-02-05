@@ -145,7 +145,7 @@ def sample_transfer_types():
 # Returns barcodes for all current sample plates
 #
 def sample_plate_barcodes():
-    plates = db.session.query(Plate).order_by(Plate.sample_plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.plate_id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
 
@@ -158,24 +158,24 @@ def update_plate_barcode():
 
     data = request.json
 
-    sample_plate_id = data["plateId"]
+    plate_id = data["plateId"]
     external_barcode = data["barcode"]
 
-    sample_plate = db.session.query(Plate).filter_by(sample_plate_id=sample_plate_id).first()
+    sample_plate = db.session.query(Plate).filter_by(plate_id=plate_id).first()
 
     if not sample_plate:
         errmsg = "There is no sample plate with the id: [%s]"
-        return error_response(404, errmsg % sample_plate_id)
+        return error_response(404, errmsg % plate_id)
 
     #
     # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
     #
     sample_plate_with_this_barcode = db.session.query(Plate).filter_by(external_barcode=external_barcode).first()
-    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
+    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.plate_id != sample_plate.plate_id:
         logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
-            (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
+            (g.user.first_and_last_name,plate_id,external_barcode,sample_plate_with_this_barcode.plate_id))
         errmsg = "The barcode [%s] is already assigned to the plate with id: [%s]"
-        return error_response(400, errmsg % (external_barcode, sample_plate_with_this_barcode.sample_plate_id))
+        return error_response(400, errmsg % (external_barcode, sample_plate_with_this_barcode.plate_id))
 
 
     sample_plate.external_barcode = external_barcode
@@ -185,7 +185,7 @@ def update_plate_barcode():
         "success":True
     }
 
-    logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
+    logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,plate_id))
 
     return jsonify(response)
 
@@ -214,8 +214,8 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     for transfer, details in rows:
         key = (transfer.id,
-               details.source_sample_plate_id,
-               details.destination_sample_plate_id)
+               details.source_plate_id,
+               details.destination_plate_id)
         if key not in seen:
             seen.append(key)
             sample_transfer_details.append((transfer, details))
@@ -432,7 +432,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
     spl = PlateLayout
     existing_plate_layout = db_session.query(spl).filter(and_(
-        spl.sample_plate_id == destination_plate.sample_plate_id,
+        spl.plate_id == destination_plate.plate_id,
         spl.sample_id == source_plate_well.sample_id,
         spl.well_id == destination_plate_well_id
     )).first()
@@ -447,7 +447,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         raise IndexError(err)
 
     # create a row representing a well in the destination plate.
-    destination_plate_well = PlateLayout( sample_plate_id=destination_plate.sample_plate_id,
+    destination_plate_well = PlateLayout( plate_id=destination_plate.plate_id,
                                                 sample_id=source_plate_well.sample_id,
                                                 well_id=destination_plate_well_id,
                                                 operator_id=operator.operator_id,
@@ -459,10 +459,10 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     # the "source" plate to a well in the "destination" plate.
     source_to_dest_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
                                                          item_order_number=order_number,
-                                                         source_sample_plate_id=source_plate.sample_plate_id,
+                                                         source_plate_id=source_plate.plate_id,
                                                          source_well_id=source_plate_well.well_id,
                                                          source_sample_id=source_plate_well.sample_id,
-                                                         destination_sample_plate_id=destination_plate.sample_plate_id,
+                                                         destination_plate_id=destination_plate.plate_id,
                                                          destination_well_id=destination_plate_well.well_id,
                                                          destination_sample_id=destination_plate_well.sample_id)
     db_session.add(source_to_dest_well_transfer)
@@ -476,7 +476,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         errmsg = "There is no plate with the barcode: [%s]"
         return error_response(404, errmsg % sample_plate_barcode)
 
-    sample_plate_id = sample_plate.sample_plate_id
+    plate_id = sample_plate.plate_id
 
     if fmt == 'csv':
         # FIXME: frontend should call different methods for Download Excel
@@ -501,15 +501,15 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     }.get(number_clusters,lambda well_id:"missing map")
 
     rows = db.session.query(Plate,TransferDetail).filter(and_(
-        TransferDetail.destination_sample_plate_id==sample_plate_id,
-        Plate.sample_plate_id==TransferDetail.source_sample_plate_id)).all()
+        TransferDetail.destination_plate_id==plate_id,
+        Plate.plate_id==TransferDetail.source_plate_id)).all()
 
     parent_to_this_task_name = None
     seen=[]
     parent_plates=[]
     for parent_plate, details in rows:
-        if parent_plate.sample_plate_id not in seen:
-            seen.append(parent_plate.sample_plate_id)
+        if parent_plate.plate_id not in seen:
+            seen.append(parent_plate.plate_id)
             parent_plates.append({
                 "externalBarcode":parent_plate.external_barcode,
                 "dateCreated":str(parent_plate.date_created),
@@ -523,9 +523,9 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             Transfer,
             TransferDetail
         )
-        .filter(TransferDetail.source_sample_plate_id == sample_plate_id)
-        .filter(Plate.sample_plate_id ==
-                TransferDetail.destination_sample_plate_id)
+        .filter(TransferDetail.source_plate_id == plate_id)
+        .filter(Plate.plate_id ==
+                TransferDetail.destination_plate_id)
         .filter(TransferDetail.sample_transfer_id == Transfer.id)
         .options(subqueryload(Transfer.sample_transfer_type))
         # .options(subqueryload(Transfer.operator))
@@ -536,8 +536,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     seen=[]
     child_plates=[]
     for child_plate, transfer, details in rows:
-        if child_plate.sample_plate_id not in seen:
-            seen.append(child_plate.sample_plate_id)
+        if child_plate.plate_id not in seen:
+            seen.append(child_plate.plate_id)
             child_plates.append({
                 "externalBarcode":child_plate.external_barcode,
                 "dateCreated":str(child_plate.date_created),
@@ -549,7 +549,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     if basic_data_only:
         dbq = db.session.query(PlateLayout)
-        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(PlateLayout.well_id)
+        qry = dbq.filter_by(plate_id=plate_id).order_by(PlateLayout.well_id)
         rows = qry.all()
 
         for well in rows:
@@ -566,7 +566,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                 SampleView
             ).filter(PlateLayout.sample_id == SampleView.c.sample_id)
         )
-        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(PlateLayout.well_id)
+        qry = dbq.filter_by(plate_id=plate_id).order_by(PlateLayout.well_id)
         rows = qry.all()
 
         for well, ga in rows:
@@ -693,7 +693,7 @@ def source_plate_well_data():
             }
             return jsonify(response)
 
-        rows = db.session.query(PlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
+        rows = db.session.query(PlateLayout).filter_by(plate_id=sample_plate.plate_id).all()
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,

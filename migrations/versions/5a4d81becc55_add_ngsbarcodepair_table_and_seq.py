@@ -205,7 +205,7 @@ def insert_barcode_plate_record():
     bc_plate_id = create_unique_object_id('SPLT_')
     sp_migration_table = table(
         'sample_plate',
-        column('sample_plate_id', String),
+        column('plate_id', String),
         column('type_id', Integer),
         column('operator_id', String),
         column('storage_location_id', String),
@@ -217,7 +217,7 @@ def insert_barcode_plate_record():
     )
     sp_migration_table.schema = 'sampletrack'
     barcode_plate = {
-        'sample_plate_id': bc_plate_id,
+        'plate_id': bc_plate_id,
         'type_id': NGS_BARCODE_PLATE_TYPE,
         'operator_id': 'AH',
         'storage_location_id': 'LOC_0064',  # FAKE STORAGE LOCATION
@@ -241,7 +241,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
 
     splt_migration_table = table(
         'sample_plate_layout',
-        column('sample_plate_id', String),
+        column('plate_id', String),
         column('sample_id', String),
         column('well_id', Integer),
         column('row', Integer),
@@ -251,7 +251,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
         column('status', Enum('active',))
     )
     splt_migration_table.schema = 'sampletrack'
-    rows = [{'sample_plate_id': bc_plate_id,
+    rows = [{'plate_id': bc_plate_id,
              'sample_id': barcode_sequence_to_barcode_sample(wells[well_id]),
              'well_id': well_id,
              'row': row_col_dict["row"],
@@ -270,7 +270,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
             # i7_wells[i7_seq_id] = reverse_map[i7_rowcol]
             barcode_id = 'BC_233'
             barcode_well = {
-                'sample_plate_id': bc_plate_id,
+                'plate_id': bc_plate_id,
                 'sample_id': barcode_id,
                 'well_id': well_id,
                 'row': row_col_dict["row"],

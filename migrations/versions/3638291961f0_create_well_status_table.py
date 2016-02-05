@@ -26,7 +26,7 @@ def upgrade():
 
     op.create_table(
         'well_status',
-        sa.Column('sample_plate_id', sa.String(40), sa.ForeignKey('sample_plate.sample_plate_id'), nullable=False),
+        sa.Column('plate_id', sa.String(40), sa.ForeignKey('sample_plate.plate_id'), nullable=False),
         sa.Column('well_id', sa.INTEGER, nullable=False),
         sa.Column('status_type', sa.String(40), sa.ForeignKey('well_status_code.status_type'), nullable=False),
         sa.Column('status_date', sa.TIMESTAMP, nullable=False),
