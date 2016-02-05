@@ -431,14 +431,14 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     """helper function for create_step_record"""
 
     spl = PlateLayout
-    existing_sample_plate_layout = db_session.query(spl).filter(and_(
+    existing_plate_layout = db_session.query(spl).filter(and_(
         spl.sample_plate_id == destination_plate.sample_plate_id,
         spl.sample_id == source_plate_well.sample_id,
         spl.well_id == destination_plate_well_id
     )).first()
 
     # error if there is already a sample in this dest well
-    if existing_sample_plate_layout:
+    if existing_plate_layout:
         err = ("Plate [%s] already contains "
                "sample %s in well %s") % (
                    destination_plate.external_barcode,

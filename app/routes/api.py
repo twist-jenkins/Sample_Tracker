@@ -489,17 +489,17 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
 
             destination_plate = destination_plates[destination_plate_index]
 
-            existing_sample_plate_layout = db.session.query(PlateLayout).filter(and_(
+            existing_plate_layout = db.session.query(PlateLayout).filter(and_(
                 PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
                 PlateLayout.sample_id==source_plate_well.sample_id,
                 PlateLayout.well_id==destination_plate_well_id
                 )).first()
 
-            #existing_sample_plate_layout = True
+            #existing_plate_layout = True
 
             #print source_plate_well.well_id
 
-            if existing_sample_plate_layout:
+            if existing_plate_layout:
                 return {
                     "success":False,
                     "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,
@@ -592,13 +592,13 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                     normalized_row_index = floor(normalized_well_id/2) + normalized_well_id%2
                     source_plate_well_id = normalized_row_index + src_row_length*(source_plate_row_index-1)
 
-                    existing_sample_plate_layout = db.session.query(PlateLayout).filter(and_(
+                    existing_plate_layout = db.session.query(PlateLayout).filter(and_(
                         PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
                         PlateLayout.sample_id==source_plate.wells[source_plate_well_id].sample_id,
                         PlateLayout.well_id==order_number
                         )).first()
 
-                    if existing_sample_plate_layout:
+                    if existing_plate_layout:
                         return {
                             "success":False,
                             "errorMessage":"This plate [%s] already contains sample [%s] in well [%s]" % (destination_plate.external_barcode,

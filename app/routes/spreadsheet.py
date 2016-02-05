@@ -366,30 +366,30 @@ def create_adhoc_sample_movement(db_session,
 
         print '@@ querying PlateLayout sample_plate_id: %s, PlateLayout.well_id: %s' \
             % (destination_plate.sample_plate_id, destination_well_id)
-        existing_sample_plate_layout = db_session.query(PlateLayout) \
+        existing_plate_layout = db_session.query(PlateLayout) \
                                                  .filter( PlateLayout.sample_plate_id==destination_plate.sample_plate_id,
                                                           # PlateLayout.sample_id==source_plate_well.sample_id,
                                                           PlateLayout.well_id==destination_well_id ) \
                                                  .first()
-        print '@@ got:', existing_sample_plate_layout
+        print '@@ got:', existing_plate_layout
 
-        #existing_sample_plate_layout = True
+        #existing_plate_layout = True
 
         if in_place_transform_flag:
-            if not existing_sample_plate_layout:
+            if not existing_plate_layout:
                 return {
                 "success":False,
                 "errorMessage":"This in-place-transform destination plate [%s] contains no sample in well [%s]" % (destination_plate.external_barcode,
                     source_plate_well.well_id)
                 }
         elif  merge_transform_flag:
-            if not existing_sample_plate_layout:
+            if not existing_plate_layout:
                 return {
                 "success":False,
                 "errorMessage":"This merge-transform destination plate [%s] contains no sample in well [%s]" % (destination_plate.external_barcode,
                     source_plate_well.well_id)
                 }
-        elif existing_sample_plate_layout:
+        elif existing_plate_layout:
             # still wanted in context of in-place transforms and merge transforms?
             return {
                 "success":False,
@@ -419,7 +419,7 @@ def create_adhoc_sample_movement(db_session,
         #db_session.add(destination_plate_well)
 
         if in_place_transform_flag or merge_transform_flag:
-            destination_plate_well = existing_sample_plate_layout
+            destination_plate_well = existing_plate_layout
             if destination_plate_well.sample_id != destination_sample_id:
                 destination_plate_well.sample_id = destination_sample_id  # TODO: is this even necessary orm-wise?
             destination_plate_well.operator_id = operator.operator_id  # unfortunately this will wipe out the old operator_id
