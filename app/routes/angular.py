@@ -127,7 +127,7 @@ def google_login():
     return(resp)
 
 def sample_transfer_types():
-    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.menu_ordering);
+    sample_transfer_types2 = db.session.query(TransferType).order_by(TransferType.menu_ordering);
     simplified_results = []
     for row in sample_transfer_types2:
         simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
@@ -193,15 +193,15 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     qry = (
         db.session.query(
-            SampleTransfer,
+            Transfer,
             TransferDetail
         )
         .options(subqueryload(TransferDetail.source_plate))
         .options(subqueryload(TransferDetail.destination_plate))
-        .options(subqueryload(SampleTransfer.sample_transfer_type))
-        .options(subqueryload(SampleTransfer.operator))
-        .filter(TransferDetail.sample_transfer_id == SampleTransfer.id)
-        .order_by(SampleTransfer.date_transfer.desc())
+        .options(subqueryload(Transfer.sample_transfer_type))
+        .options(subqueryload(Transfer.operator))
+        .filter(TransferDetail.sample_transfer_id == Transfer.id)
+        .order_by(Transfer.date_transfer.desc())
     )
     if limit is None:
         rows = qry.all()
@@ -313,7 +313,7 @@ def create_step_record():
         with scoped_session(db.engine) as db_session:
 
             # Create a "sample_transfer" row representing this entire transfer.
-            sample_transfer = SampleTransfer(sample_transfer_type_id=sample_transfer_type_id,
+            sample_transfer = Transfer(sample_transfer_type_id=sample_transfer_type_id,
                                              operator_id=operator.operator_id)
             db_session.add(sample_transfer)
 
@@ -520,15 +520,15 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     rows = (
         db.session.query(
             Plate,
-            SampleTransfer,
+            Transfer,
             TransferDetail
         )
         .filter(TransferDetail.source_sample_plate_id == sample_plate_id)
         .filter(Plate.sample_plate_id ==
                 TransferDetail.destination_sample_plate_id)
-        .filter(TransferDetail.sample_transfer_id == SampleTransfer.id)
-        .options(subqueryload(SampleTransfer.sample_transfer_type))
-        # .options(subqueryload(SampleTransfer.operator))
+        .filter(TransferDetail.sample_transfer_id == Transfer.id)
+        .options(subqueryload(Transfer.sample_transfer_type))
+        # .options(subqueryload(Transfer.operator))
         .all()
     )
 

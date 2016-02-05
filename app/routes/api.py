@@ -195,8 +195,8 @@ def sample_report(sample_id, format):
         }
         return jsonify(response)
 
-    rows = db.session.query(SampleTransfer, TransferDetail, PlateLayout,Plate).filter(and_(
-        TransferDetail.source_sample_id==sample_id,SampleTransfer.id==TransferDetail.sample_transfer_id,
+    rows = db.session.query(Transfer, TransferDetail, PlateLayout,Plate).filter(and_(
+        TransferDetail.source_sample_id==sample_id,Transfer.id==TransferDetail.sample_transfer_id,
         PlateLayout.sample_plate_id==TransferDetail.source_sample_plate_id,
         PlateLayout.sample_id==TransferDetail.source_sample_id,
         PlateLayout.well_id==TransferDetail.source_well_id,
@@ -228,8 +228,8 @@ def sample_report(sample_id, format):
                "task": ""
         }
 
-    rows = db.session.query(SampleTransfer, TransferDetail, PlateLayout,Plate).filter(and_(
-        TransferDetail.destination_sample_id==sample_id,SampleTransfer.id==TransferDetail.sample_transfer_id,
+    rows = db.session.query(Transfer, TransferDetail, PlateLayout,Plate).filter(and_(
+        TransferDetail.destination_sample_id==sample_id,Transfer.id==TransferDetail.sample_transfer_id,
         PlateLayout.sample_plate_id==TransferDetail.destination_sample_plate_id,
         PlateLayout.sample_id==TransferDetail.destination_sample_id,
         PlateLayout.well_id==TransferDetail.destination_well_id,
@@ -416,7 +416,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
         #
         # 1. Create a "sample_transfer" row representing this entire transfer.
         #
-        sample_transfer = SampleTransfer( sample_transfer_type_id=sample_transfer_type_id,
+        sample_transfer = Transfer( sample_transfer_type_id=sample_transfer_type_id,
                                           operator_id=operator.operator_id )
         db.session.add(sample_transfer)
 
@@ -553,7 +553,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                 #
                 # 1. Create a "sample_transfer" row representing this entire transfer.
                 #
-                sample_transfer = SampleTransfer( sample_transfer_type_id=sample_transfer_type_id,
+                sample_transfer = Transfer( sample_transfer_type_id=sample_transfer_type_id,
                                                   operator_id=operator.operator_id )
                 db.session.add(sample_transfer)
 
