@@ -18,16 +18,16 @@ def upgrade():
 
     connection = op.get_bind()
 
-    sample_transfer_template_id = None 
+    transfer_template_id = None 
 
     select = "select id from sample_transfer_template where name = '384 to 48'"
     results = connection.execute(select)
     for result in results:
-        sample_transfer_template_id = int(result[0])
+        transfer_template_id = int(result[0])
 
-    sql = " UPDATE sample_transfer_type set sample_transfer_template_id = %d "
+    sql = " UPDATE sample_transfer_type set transfer_template_id = %d "
     sql += " WHERE name='Plating on Hamilton' "
-    op.execute(sql % (sample_transfer_template_id))
+    op.execute(sql % (transfer_template_id))
 
 def downgrade():
     pass

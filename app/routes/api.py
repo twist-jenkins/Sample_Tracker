@@ -393,7 +393,7 @@ def create_destination_plate_DEPRECATED(operator, destination_plates, destinatio
 # the "source" plate will be moved to the exact same locations in the "destination" plate.
 #
 
-def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id):
+def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,transfer_template_id):
     print "source_barcode: ", source_barcodes
     print "destination_barcode: ", destination_barcodes
 
@@ -421,15 +421,15 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
         db.session.add(sample_transfer)
 
         # create destination plate(s)
-        if sample_transfer_template_id == 1:
+        if transfer_template_id == 1:
             create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
-        elif sample_transfer_template_id == 13 or sample_transfer_template_id == 14: # 1 to multiple
+        elif transfer_template_id == 13 or transfer_template_id == 14: # 1 to multiple
             for destination_barcode in destination_barcodes:
                 create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id)
         else:
             return {
                 "success":False,
-                "errorMessage":"Unrecognized sample transfer template id: [%s]" % (sample_transfer_template_id)
+                "errorMessage":"Unrecognized sample transfer template id: [%s]" % (transfer_template_id)
             }
 
         db.session.flush()
@@ -445,10 +445,10 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
 
 
             #determine the destination plate
-            if sample_transfer_template_id == 1: # same source well count to destination well count
+            if transfer_template_id == 1: # same source well count to destination well count
                 destination_plate_index = 0
                 destination_plate_well_id = source_plate_well.well_id
-            elif sample_transfer_template_id == 13: # 384 -> 4x96
+            elif transfer_template_id == 13: # 384 -> 4x96
                 # for 1-to-4 transfer, we go in quadrants - everyo-other column + every-other row
                 src_row_length = 24
                 dest_row_length = 12
@@ -471,7 +471,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                         destination_plate_index = 1
                     else:
                         destination_plate_index = 0
-            elif sample_transfer_template_id == 14: # 96 -> 2x48
+            elif transfer_template_id == 14: # 96 -> 2x48
                 src_row_length = 12
                 dest_row_length = 6
                 rowIndex = floor(source_plate_well.well_id/src_row_length) + 1
@@ -534,7 +534,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
             order_number += 1
 
         else:
-            if sample_transfer_template_id == 18: # 4x96 -> 384
+            if transfer_template_id == 18: # 4x96 -> 384
                 source_plates = []
 
                 for barcode in source_barcodes: #load our source plates into an array for looping
@@ -653,9 +653,9 @@ def create_sample_movement():
     transfer_type_id = data["sampleTransferTypeId"]
 
     if "sampleTransferTemplateId" in data:
-        sample_transfer_template_id = data["sampleTransferTemplateId"]
+        transfer_template_id = data["sampleTransferTemplateId"]
     else:
-        sample_transfer_template_id = 1
+        transfer_template_id = 1
 
     wells = data.get("wells",None)
 
@@ -679,7 +679,7 @@ def create_sample_movement():
         source_barcodes = [data["sourceBarcodeId"]]
         destination_barcodes = [data["destinationBarcodeId"]]
 
-        response = create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id)
+        response = create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,transfer_template_id)
 
         #if response["success"]:
             #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))

@@ -46,7 +46,7 @@ def insert_sample_plate_type_record():
 def upgrade_sample_plate_type():
     # update_sql = ("update sample_transfer_type"
     #               " set name = :name,"
-    #               " sample_transfer_template_id = :stti,"
+    #               " transfer_template_id = :stti,"
     #               " source_plate_count = :spc,"
     #               " destination_plate_count = :dpc"
     #               " where id = :id")

@@ -590,7 +590,7 @@ def execute():
 
 TRANSFER_MAP = loads("""
 {
-                "1": {  // keyed to sample_transfer_template_id in the database
+                "1": {  // keyed to transfer_template_id in the database
                     "description": "Source and destination have SAME LAYOUT"
                     ,"type": "same-same"
                     ,"source": {
@@ -602,7 +602,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"2": {  // keyed to sample_transfer_template_id in the database
+                ,"2": {  // keyed to transfer_template_id in the database
                     "description": "Source and destination plate are SAME PLATE"
                     ,"type": "same-same"
                     ,"source": {
@@ -614,7 +614,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"13": {  // keyed to sample_transfer_template_id in the database
+                ,"13": {  // keyed to transfer_template_id in the database
                     "description": "384 to 4x96"
                     ,"type": "standard"
                     ,"source": {
@@ -1019,7 +1019,7 @@ TRANSFER_MAP = loads("""
                         }
                     ]
                 }
-                ,"14": {  // keyed to sample_transfer_template_id in the database
+                ,"14": {  // keyed to transfer_template_id in the database
                     "description": "96 to 2x48"
                     ,"type": "standard"
                     ,"source": {
@@ -1136,7 +1136,7 @@ TRANSFER_MAP = loads("""
                         }
                     ]
                 }
-                ,"16": {  // keyed to sample_transfer_template_id in the database
+                ,"16": {  // keyed to transfer_template_id in the database
                     "description": "Manual picking to nx 96"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1150,7 +1150,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"18": {  // keyed to sample_transfer_template_id in the database
+                ,"18": {  // keyed to transfer_template_id in the database
                     "description": "4x96 to 384"
                     ,"type": "standard"
                     ,"source": {
@@ -1561,7 +1561,7 @@ TRANSFER_MAP = loads("""
                         }
                     ]
                 }
-                ,"20": {  // keyed to sample_transfer_template_id in the database
+                ,"20": {  // keyed to transfer_template_id in the database
                     "description": "Hitpick for shipping"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1574,7 +1574,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"21": {  // keyed to sample_transfer_template_id in the database
+                ,"21": {  // keyed to transfer_template_id in the database
                     "description": "Qpix Log Reading to nx 96"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1588,7 +1588,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"22": {  // keyed to sample_transfer_template_id in the database
+                ,"22": {  // keyed to transfer_template_id in the database
                     "description": "Qpix Log Reading to nx 384"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1602,7 +1602,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"23": {  // keyed to sample_transfer_template_id in the database
+                ,"23": {  // keyed to transfer_template_id in the database
                     "description": "Plate Merge"
                     ,"type": "standard"
                     ,"source": {
@@ -1614,7 +1614,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"24": {  // keyed to sample_transfer_template_id in the database
+                ,"24": {  // keyed to transfer_template_id in the database
                     "description": "Generic Transform"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1626,7 +1626,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"25": {  // keyed to sample_transfer_template_id in the database
+                ,"25": {  // keyed to transfer_template_id in the database
                     "description": "Rebatching for Transformation"
                     ,"type": "standard"
                     ,"source": {
@@ -1640,7 +1640,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
-                ,"26": {  // keyed to sample_transfer_template_id in the database
+                ,"26": {  // keyed to transfer_template_id in the database
                     "description": "Fragment Analyzer"
                     ,"type": "standard"
                     ,"source": {
@@ -1652,7 +1652,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"27": {  // keyed to sample_transfer_template_id in the database
+                ,"27": {  // keyed to transfer_template_id in the database
                     "description": "NGS QC Pass"
                     ,"type": "standard"
                     ,"source": {
@@ -1664,7 +1664,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"28": {  // keyed to sample_transfer_template_id in the database
+                ,"28": {  // keyed to transfer_template_id in the database
                     "description": "Shipping"
                     ,"type": "standard"
                     ,"source": {
@@ -1676,7 +1676,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"29": {  // keyed to sample_transfer_template_id in the database
+                ,"29": {  // keyed to transfer_template_id in the database
                     "description": "Reformatting for Purification"
                     ,"type": "standard"
                     ,"source": {
@@ -1688,7 +1688,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"34": {  // keyed to sample_transfer_template_id in the database
+                ,"34": {  // keyed to transfer_template_id in the database
                     "description": "1x6144 to 16x384"
                     ,"type": "standard"
                     ,"source": {
@@ -1705,7 +1705,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;","Quadrant&nbsp;5:&nbsp;","Quadrant&nbsp;6:&nbsp;","Quadrant&nbsp;7:&nbsp;","Quadrant&nbsp;8:&nbsp;","Quadrant&nbsp;9:&nbsp;","Quadrant&nbsp;10:&nbsp;","Quadrant&nbsp;11:&nbsp;","Quadrant&nbsp;12:&nbsp;","Quadrant&nbsp;13:&nbsp;","Quadrant&nbsp;14:&nbsp;","Quadrant&nbsp;15:&nbsp;","Quadrant&nbsp;16:&nbsp;"]
                     }
                 }
-                ,"35": {  // keyed to sample_transfer_template_id in the database
+                ,"35": {  // keyed to transfer_template_id in the database
                     "description": "PCA Pre-Planning"
                     ,"type": "standard"
                     ,"source": {
@@ -1719,7 +1719,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
-                ,"36": {  // keyed to sample_transfer_template_id in the database
+                ,"36": {  // keyed to transfer_template_id in the database
                     "description": "PCR Primer Hitpicking"
                     ,"type": "standard"
                     ,"source": {

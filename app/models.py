@@ -4,12 +4,12 @@ from twistdb.sampletrack import Plate
 from twistdb import create_unique_id
 
 
-def check_destination_plate(db_session, barcode, sample_transfer_template_id):
+def check_destination_plate(db_session, barcode, transfer_template_id):
     """Is there already a plate in the database with the barcode being specified?
     # If so, that is an error!"""
     destination_plate = db_session.query(Plate).filter_by(external_barcode=barcode).first()
 
-    if destination_plate and sample_transfer_template_id != 2:
+    if destination_plate and transfer_template_id != 2:
         logging.error("Encountered error creating sample transfer. "
                       "A plate with the barcode: [%s] already exists",
                       barcode)
@@ -18,10 +18,10 @@ def check_destination_plate(db_session, barcode, sample_transfer_template_id):
 
 
 def create_destination_plate(db_session, operator, destination_barcode,
-                             source_plate_type_id, storage_location_id, sample_transfer_template_id):
+                             source_plate_type_id, storage_location_id, transfer_template_id):
     """creates a destination plate for a transfer"""
 
-    check_destination_plate(db_session, destination_barcode, sample_transfer_template_id)
+    check_destination_plate(db_session, destination_barcode, transfer_template_id)
     destination_plate_name = create_unique_id("PLATE_")()
     destination_plate_description = create_unique_id("PLATEDESC_")()
     plate = Plate(type_id=source_plate_type_id,

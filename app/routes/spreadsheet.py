@@ -56,13 +56,13 @@ def error_response(status_code, message):
 
 
 def create_step_record_adhoc(transfer_type_id,
-                             sample_transfer_template_id,
+                             transfer_template_id,
                              wells):
 
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session,
                                               transfer_type_id,
-                                              sample_transfer_template_id,
+                                              transfer_template_id,
                                               wells)
         if result["success"]:
             return jsonify({
@@ -74,7 +74,7 @@ def create_step_record_adhoc(transfer_type_id,
 
 def create_adhoc_sample_movement(db_session,
                                  transfer_type_id,
-                                 sample_transfer_template_id, wells,
+                                 transfer_template_id, wells,
                                  transform_spec_id=None):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
@@ -270,7 +270,7 @@ def create_adhoc_sample_movement(db_session,
                         destination_plate_barcode,
                         sample_plate_type.type_id,
                         storage_location_id,
-                        sample_transfer_template_id)
+                        transfer_template_id)
                     db_session.flush()
                 except IndexError:
                     err_msg = ("Encountered error creating sample "

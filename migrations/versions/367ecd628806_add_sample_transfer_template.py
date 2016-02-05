@@ -46,20 +46,20 @@ def upgrade():
     #
     #
     #
-    op.add_column('sample_transfer_type', sa.Column('sample_transfer_template_id', sa.Integer(), default=1))
+    op.add_column('sample_transfer_type', sa.Column('transfer_template_id', sa.Integer(), default=1))
 
     op.create_foreign_key(
             "fk_sample_transfer_template", "sample_transfer_type", "sample_transfer_template", 
-            ["sample_transfer_template_id"], ["id"])
+            ["transfer_template_id"], ["id"])
 
     #op.drop_constraint('session_app_fkey', 'session', 'foreignkey')
 
     #
     # Change the fake (madeup) values in the first 3 rows to the real values.
     #
-    op.execute("update sample_transfer_type set name='PCA master mix addition', sample_transfer_template_id=1 where id = 1");
-    op.execute("update sample_transfer_type set name='post-PCA-PCR purification', sample_transfer_template_id=1  where id = 2");
-    op.execute("update sample_transfer_type set name='Cloning', sample_transfer_template_id=1  where id = 3");
+    op.execute("update sample_transfer_type set name='PCA master mix addition', transfer_template_id=1 where id = 1");
+    op.execute("update sample_transfer_type set name='post-PCA-PCR purification', transfer_template_id=1  where id = 2");
+    op.execute("update sample_transfer_type set name='Cloning', transfer_template_id=1  where id = 3");
 
     #
     # Now insert all the remaining transfer types.
@@ -67,7 +67,7 @@ def upgrade():
     lookup_table = table('sample_transfer_type',
         column('id', Integer),
         column('name', String),
-        column('sample_transfer_template_id', Integer)
+        column('transfer_template_id', Integer)
     )
     data = [
         "Transformation","Plating on Q-pix","Plating on Hamilton","Picking colonies on Q-pix",
@@ -75,7 +75,7 @@ def upgrade():
     ]
     ins = lookup_table.insert()
     for value in data:
-        new_row = ins.values(name=value,sample_transfer_template_id=1)
+        new_row = ins.values(name=value,transfer_template_id=1)
         op.execute(new_row)
 
     

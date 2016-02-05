@@ -25,7 +25,7 @@ class PlateInfoSchema(Schema):
     transferTypeId = fields.Int(attribute="transfer_type_id")
     dateTransfer = fields.Date(attribute="date_transfer")
     transferTypeName = fields.Str(attribute="name")
-    transferTemplateId = fields.Int(attribute="sample_transfer_template_id")
+    transferTemplateId = fields.Int(attribute="transfer_template_id")
     priorTransferTypeId = fields.Int(attribute="prior_transfer_type_id")
 
 plate_info_schema = PlateInfoSchema()

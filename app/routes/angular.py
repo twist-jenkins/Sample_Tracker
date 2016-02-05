@@ -130,7 +130,7 @@ def sample_transfer_types():
     sample_transfer_types2 = db.session.query(TransferType).order_by(TransferType.menu_ordering);
     simplified_results = []
     for row in sample_transfer_types2:
-        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
+        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.transfer_template_id})
     returnData = {
         "success": True
         ,"results": simplified_results
@@ -272,12 +272,12 @@ def create_step_record():
     operator = g.user
 
     transfer_type_id = data["sampleTransferTypeId"]
-    sample_transfer_template_id = data["sampleTransferTemplateId"]
+    transfer_template_id = data["sampleTransferTemplateId"]
 
     if "transferMap" in data:
         transfer_map = data["transferMap"]
         return create_step_record_adhoc(transfer_type_id,
-                                        sample_transfer_template_id,
+                                        transfer_template_id,
                                         transfer_map)
 
     else:
@@ -289,11 +289,11 @@ def create_step_record():
 
         json_maps = maps_json()
 
-        if sample_transfer_template_id in json_maps["transfer_maps"]:
-            templateData = json_maps["transfer_maps"][sample_transfer_template_id]
+        if transfer_template_id in json_maps["transfer_maps"]:
+            templateData = json_maps["transfer_maps"][transfer_template_id]
         else:
             errmsg = "A template for this transfer type (%s) could not be found."
-            return error_response(404, errmsg % sample_transfer_template_id)
+            return error_response(404, errmsg % transfer_template_id)
 
         # validate that the plate counts/barcodes expected for a given template are present
         source_barcodes_count = len(source_barcodes)
@@ -328,7 +328,7 @@ def create_step_record():
                 source_plates.append(source_plate)
 
             # the easy case: source and destination plates have same layout and there's only 1 of each
-            if sample_transfer_template_id == 1:
+            if transfer_template_id == 1:
 
                 order_number = 1
                 source_plate = source_plates[0]
@@ -338,7 +338,7 @@ def create_step_record():
                                                  destination_barcodes[0],
                                                  source_plate.type_id,
                                                  source_plate.storage_location_id,
-                                                 sample_transfer_template_id)
+                                                 transfer_template_id)
                 destination_plates.append(plate)
                 db_session.flush()
 
@@ -372,7 +372,7 @@ def create_step_record():
                                                      destination_barcode,
                                                      target_plate_type_id,
                                                      storage_location_id,
-                                                     sample_transfer_template_id)
+                                                     transfer_template_id)
                     destination_plates.append(plate)
 
                 db_session.flush()
