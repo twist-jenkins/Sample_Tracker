@@ -205,7 +205,7 @@ def create_adhoc_sample_movement(db_session,
         """
 
         # print "source plate barcode [%s]" % (source_plate_barcode)
-        storage_location_id = source_plate.storage_location_id
+        storage_location = source_plate.storage_location
 
         #
         # 2. Obtain (or create if we haven't yet grabbed it) the sample plate type row for the type of plate
@@ -269,7 +269,7 @@ def create_adhoc_sample_movement(db_session,
                         operator,
                         destination_plate_barcode,
                         sample_plate_type.type_id,
-                        storage_location_id,
+                        storage_location,
                         transfer_template_id)
                     db_session.flush()
                 except IndexError:

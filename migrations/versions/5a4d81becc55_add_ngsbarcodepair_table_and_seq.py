@@ -208,7 +208,7 @@ def insert_barcode_plate_record():
         column('plate_id', String),
         column('type_id', Integer),
         column('operator_id', String),
-        column('storage_location_id', String),
+        column('storage_location', String),
         column('date_created', DateTime),
         column('description', String),
         column('external_barcode', String),
@@ -220,7 +220,7 @@ def insert_barcode_plate_record():
         'plate_id': bc_plate_id,
         'type_id': NGS_BARCODE_PLATE_TYPE,
         'operator_id': 'AH',
-        'storage_location_id': 'LOC_0064',  # FAKE STORAGE LOCATION
+        'storage_location': 'LOC_0064',  # FAKE STORAGE LOCATION
         'date_created': datetime.now(),
         'description': 'Barcoding Plate Test 1',
         'external_barcode': NGS_BARCODE_PLATE,

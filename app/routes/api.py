@@ -379,12 +379,12 @@ def get_samples_list():
 
 
 # creates a destination plate for a transfer
-def create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id):
+def create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location):
     raise DeprecationWarning
 
     destination_plate_name = create_unique_id("PLATE_")()
     destination_plate_description = create_unique_id("PLATEDESC_")()
-    destination_plates.append(Plate(source_plate_type_id,operator.operator_id,storage_location_id,
+    destination_plates.append(Plate(source_plate_type_id,operator.operator_id,storage_location,
         destination_plate_name, destination_plate_description, destination_barcode))
     db.session.add(destination_plates[len(destination_plates) - 1])
 
@@ -411,7 +411,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
             }
 
         source_plate_type_id = source_plate.type_id
-        storage_location_id = source_plate.storage_location_id
+        storage_location = source_plate.storage_location
 
         #
         # 1. Create a "sample_transfer" row representing this entire transfer.
@@ -422,10 +422,10 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
 
         # create destination plate(s)
         if transfer_template_id == 1:
-            create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
+            create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location)
         elif transfer_template_id == 13 or transfer_template_id == 14: # 1 to multiple
             for destination_barcode in destination_barcodes:
-                create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location_id)
+                create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcode, source_plate_type_id, storage_location)
         else:
             return {
                 "success":False,
@@ -558,7 +558,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                 db.session.add(sample_transfer)
 
                 # create destination plate
-                create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location_id)
+                create_destination_plate_DEPRECATED(operator, destination_plates, destination_barcodes[0], source_plate_type_id, storage_location)
 
                 destination_plate = destination_plates[0]
 

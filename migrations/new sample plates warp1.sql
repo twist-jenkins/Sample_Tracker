@@ -14,11 +14,11 @@ select * from sampletrack.sample_plate;
 
 
 
-INSERT INTO sampletrack.sample_plate ("plate_id","type_id","operator_id","storage_location_id","date_created","name","description","external_barcode","status") VALUES (E'SPLT_WARP1.2',E'SPTT_1009',E'CL',E'LOC_0064',E'26-JAN-16 11:01:00',E'PLATE_WARP1.2',E'PLATEDESC_WARP1.2',E'SRN-WARP1.2',E'new');
+INSERT INTO sampletrack.sample_plate ("plate_id","type_id","operator_id","storage_location","date_created","name","description","external_barcode","status") VALUES (E'SPLT_WARP1.2',E'SPTT_1009',E'CL',E'LOC_0064',E'26-JAN-16 11:01:00',E'PLATE_WARP1.2',E'PLATEDESC_WARP1.2',E'SRN-WARP1.2',E'new');
 
-INSERT INTO sampletrack.sample_plate ("plate_id","type_id","operator_id","storage_location_id","date_created","name","description","external_barcode","status") VALUES (E'SPLT_WARP1.3',E'SPTT_1009',E'CL',E'LOC_0064',E'26-JAN-16 11:04:00',E'PLATE_WARP1.3',E'PLATEDESC_WARP1.3',E'SRN-WARP1.3',E'new');
+INSERT INTO sampletrack.sample_plate ("plate_id","type_id","operator_id","storage_location","date_created","name","description","external_barcode","status") VALUES (E'SPLT_WARP1.3',E'SPTT_1009',E'CL',E'LOC_0064',E'26-JAN-16 11:04:00',E'PLATE_WARP1.3',E'PLATEDESC_WARP1.3',E'SRN-WARP1.3',E'new');
 
-INSERT INTO sampletrack.sample_plate ("plate_id","type_id","operator_id","storage_location_id","date_created","name","description","external_barcode","status") VALUES (E'SPLT_WARP1.4',E'SPTT_1009',E'CL',E'LOC_0064',E'28-JAN-16 15:25:00',E'PLATE_WARP1.4',E'PLATEDESC_WARP1.4',E'SRN-WARP1.4',E'new');
+INSERT INTO sampletrack.sample_plate ("plate_id","type_id","operator_id","storage_location","date_created","name","description","external_barcode","status") VALUES (E'SPLT_WARP1.4',E'SPTT_1009',E'CL',E'LOC_0064',E'28-JAN-16 15:25:00',E'PLATE_WARP1.4',E'PLATEDESC_WARP1.4',E'SRN-WARP1.4',E'new');
 
 -- done
 

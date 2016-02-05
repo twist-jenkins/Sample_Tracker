@@ -337,7 +337,7 @@ def create_step_record():
                 plate = create_destination_plate(db_session, operator,
                                                  destination_barcodes[0],
                                                  source_plate.type_id,
-                                                 source_plate.storage_location_id,
+                                                 source_plate.storage_location,
                                                  transfer_template_id)
                 destination_plates.append(plate)
                 db_session.flush()
@@ -363,7 +363,7 @@ def create_step_record():
             # source(s) and destination(s) are not the same plate type/layout
             else:
 
-                storage_location_id = source_plates[0].storage_location_id
+                storage_location = source_plates[0].storage_location
                 target_plate_type_id = templateData["destination"]["plate_type_id"]
 
                 # create the destination plate(s)
@@ -371,7 +371,7 @@ def create_step_record():
                     plate = create_destination_plate(db_session, operator,
                                                      destination_barcode,
                                                      target_plate_type_id,
-                                                     storage_location_id,
+                                                     storage_location,
                                                      transfer_template_id)
                     destination_plates.append(plate)
 
