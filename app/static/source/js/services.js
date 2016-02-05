@@ -860,6 +860,7 @@ app = angular.module('twist.app')
                             base.sourcesReady = true;
                         }
                         base.updateOperationsList();
+                        ready();
                     } else {
                         onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
                     }

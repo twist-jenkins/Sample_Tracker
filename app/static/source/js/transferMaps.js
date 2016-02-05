@@ -1625,7 +1625,7 @@ app = angular.module('twist.app')
                 }
                 ,35: {  // keyed to sample_transfer_template_id in the database
                     description: 'PCA Pre-Planning'
-                    ,type: 'standard_template'
+                    ,type: 'PLATE_PLANNING'
                     ,source: {
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
@@ -1634,9 +1634,7 @@ app = angular.module('twist.app')
                     }
                     ,destination: {
                         plateCount: 0
-                        ,plateTypeId: 'SPTT_0006'
-                        ,variablePlateCount: true
-                        ,create: true
+                        ,variablePlateCount: false
                     }
                 }
                 ,36: {  // keyed to sample_transfer_template_id in the database
@@ -1648,9 +1646,9 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                     ,destination: {
-                        plateCount: 0
+                        plateCount: 4
                         ,plateTypeId: 'SPTT_0006'
-                        ,variablePlateCount: true
+                        ,variablePlateCount: false
                     }
                 }
                 ,37: {  // keyed to sample_transfer_template_id in the database

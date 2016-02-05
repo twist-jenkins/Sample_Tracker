@@ -228,32 +228,38 @@ def preview():
                 constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
+                constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
+                constants.TRANS_TYPE_PCA_PREPLANNING):
                 # these are same to same transfers
 
-            src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-            dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+            if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+                src_plate_type = "SPTT_0006"
+                dest_plate_type = src_plate_type
 
-            for src_idx, src in enumerate(request.json['sources']):
-                barcode = src['details']['id']
-                try:
-                    plate = db.session.query(SamplePlate) \
-                                      .filter(SamplePlate.external_barcode == barcode) \
-                                      .one()
-                except MultipleResultsFound:
-                    raise WebError('multiple plates found with barcode %s' % barcode)
+            else:
+                src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+                dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
 
-                for well in db.session.query(SamplePlateLayout) \
-                              .filter( SamplePlateLayout.sample_plate == plate ) \
-                              .order_by( SamplePlateLayout.well_id ):
+                for src_idx, src in enumerate(request.json['sources']):
+                    barcode = src['details']['id']
+                    try:
+                        plate = db.session.query(SamplePlate) \
+                                          .filter(SamplePlate.external_barcode == barcode) \
+                                          .one()
+                    except MultipleResultsFound:
+                        raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    rows.append( {'source_plate_barcode':           barcode,
-                                  'source_well_name':               well.well_name,
-                                  'source_sample_id':               well.sample_id,
-                                  'destination_plate_barcode':      barcode,
-                                  'destination_well_name':          well.well_name,
-                                  'destination_plate_well_count':   dest_plate_type.number_clusters
-                                  })
+                    for well in db.session.query(SamplePlateLayout) \
+                                  .filter( SamplePlateLayout.sample_plate == plate ) \
+                                  .order_by( SamplePlateLayout.well_id ):
+
+                        rows.append( {'source_plate_barcode':           barcode,
+                                      'source_well_name':               well.well_name,
+                                      'source_sample_id':               well.sample_id,
+                                      'destination_plate_barcode':      barcode,
+                                      'destination_well_name':          well.well_name,
+                                      'destination_plate_well_count':   dest_plate_type.number_clusters
+                                      })
 
             if transfer_type_id == \
                     constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
@@ -326,6 +332,48 @@ def preview():
                         "title": "Quantification Results",
                         "forProperty": "instrument_data",
                         "fileType": "quantification"
+                    }
+                })
+
+            elif transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+
+                rows = [{}]
+
+                # we need to add master mix needs info or tell the user we need all the PCA plates first
+                masterMixNeeds = "" 
+                pcaPlates = None
+
+                if "requestedData" in details:
+                    pcaPlates = details["requestedData"]
+
+                if pcaPlates and "associatedPcaPlates" in pcaPlates:
+                    pcaPlates = pcaPlates["associatedPcaPlates"]
+                else:
+                    # if they're not already in spec, we need to add the requested PCA plates
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": "array.4",
+                            "dataType": "barcode",
+                            "title": "Associated PCA Plate Barcodes",
+                            "forProperty": "associatedPcaPlates"
+                        }
+                    })
+
+                if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
+                    masterMixNeeds = "Please scan all 4 PCA plates to retrieve master mix needs."
+                else:
+                    # then all the plates had barcodes
+                    # now we need to decide which master mixes are needed
+                    # content like "Master Mix A x2\n\rMaster Mix B x3"
+                    masterMixNeeds = "Kieran do this!"
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "Master Mix Needs",
+                        "data": masterMixNeeds
                     }
                 })
 
@@ -412,81 +460,6 @@ def preview():
                 })
 
             elif transfer_template_id == \
-                    constants.TRANS_TPL_PCA_PREPLANNING:
-
-                destinations_ready = True
-                if ("destinations" not in request.json or not len(request.json['destinations'])):
-                    destinations_ready = False
-
-                for dest_index, destination in enumerate(request.json['destinations']):
-                    if "id" not in destination["details"] or destination["details"]["id"] == "":
-                        destinations_ready = False
-
-                print("*************************** %s" % destinations_ready)
-
-                if (destinations_ready):
-                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
-                else:
-                    responseCommands.append({
-                        "type": "REQUEST_DATA",
-                        "item": {
-                            "type": "array.4",
-                            "dataType": "barcode",
-                            "title": "Associated PCA Plate Barcodes",
-                            "forProperty": "associatedPcaPlates"
-                        }
-                    })
-
-                    responseCommands.append({
-                        "type": "SET_DESTINATIONS",
-                        "plates": [
-                            {
-                                "type": "SPTT_0006",
-                                "details": {}
-                            },
-                            {
-                                "type": "SPTT_0006",
-                                "details": {}
-                            },
-                            {
-                                "type": "SPTT_0006",
-                                "details": {}
-                            },
-                            {
-                                "type": "SPTT_0006",
-                                "details": {}
-                            }
-                        ]
-                    })
-
-                # we need to add master mix needs info or tell the user we need all the PCA plates first
-                masterMixNeeds = "" 
-                pcaPlates = None
-
-                if "requestedData" in details:
-                    pcaPlates = details["requestedData"]
-
-                if pcaPlates and "associatedPcaPlates" in pcaPlates:
-                    pcaPlates = pcaPlates["associatedPcaPlates"]
-
-                if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
-                    masterMixNeeds = "Please scan all 4 PCA plates to retrieve master mix needs."
-                else:
-                    # then all the plates had barcodes
-                    # now we need to decide which master mixes are needed
-                    # content like "Master Mix A x2\n\rMaster Mix B x3"
-                    masterMixNeeds = "Kieran do this!"
-
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "Master Mix Needs",
-                        "data": masterMixNeeds
-                    }
-                })
-
-            elif transfer_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
 
                 destinations_ready = True
@@ -499,7 +472,6 @@ def preview():
 
                 if (destinations_ready):
                     rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
-                else:
 
                     responseCommands.append({
                         "type": "PRESENT_DATA",
@@ -511,36 +483,6 @@ def preview():
                             "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
                         }
 
-                    })
-
-                    responseCommands.append({
-                        "type": "SET_DESTINATIONS",
-                        "plates": [
-                            {
-                                "type": "SPTT_0006",
-                                "details": {
-                                    "id": "ASSOCIATED BARCODEC1"
-                                }
-                            },
-                            {
-                                "type": "SPTT_0006",
-                                "details": {
-                                    "id": "ASSOCIATED BARCODEC2"
-                                }
-                            },
-                            {
-                                "type": "SPTT_0006",
-                                "details": {
-                                    "id": "ASSOCIATED BARCODEC3"
-                                }
-                            },
-                            {
-                                "type": "SPTT_0006",
-                                "details": {
-                                    "id": "ASSOCIATED BARCODEC4"
-                                }
-                            }
-                        ]
                     })
 
             elif transfer_template_id in (
