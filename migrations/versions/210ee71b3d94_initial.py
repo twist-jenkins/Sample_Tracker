@@ -25,10 +25,10 @@ def upgrade():
 
     op.create_table('sample_transfer',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('sample_transfer_type_id', sa.Integer(), nullable=False),
+    sa.Column('transfer_type_id', sa.Integer(), nullable=False),
     sa.Column('operator_id', sa.String(length=10), nullable=False),
     sa.Column('date_transfer', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['sample_transfer_type_id'], ['sample_transfer_type.id'], ),
+    sa.ForeignKeyConstraint(['transfer_type_id'], ['sample_transfer_type.id'], ),
     sa.ForeignKeyConstraint(['operator_id'], ['operator.operator_id'], ),
     sa.PrimaryKeyConstraint('id')
     )

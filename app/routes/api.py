@@ -335,7 +335,7 @@ def plate_report(sample_plate_barcode, format):
 # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
 # process that spreadsheet data.
 #
-def create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_id,wells):
+def create_sample_movement_from_spreadsheet_data(operator,transfer_type_id,wells):
     raise DeprecationWarning
 
 #
@@ -393,7 +393,7 @@ def create_destination_plate_DEPRECATED(operator, destination_plates, destinatio
 # the "source" plate will be moved to the exact same locations in the "destination" plate.
 #
 
-def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id):
+def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id):
     print "source_barcode: ", source_barcodes
     print "destination_barcode: ", destination_barcodes
 
@@ -416,7 +416,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
         #
         # 1. Create a "sample_transfer" row representing this entire transfer.
         #
-        sample_transfer = Transfer( sample_transfer_type_id=sample_transfer_type_id,
+        sample_transfer = Transfer( transfer_type_id=transfer_type_id,
                                           operator_id=operator.operator_id )
         db.session.add(sample_transfer)
 
@@ -553,7 +553,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                 #
                 # 1. Create a "sample_transfer" row representing this entire transfer.
                 #
-                sample_transfer = Transfer( sample_transfer_type_id=sample_transfer_type_id,
+                sample_transfer = Transfer( transfer_type_id=transfer_type_id,
                                                   operator_id=operator.operator_id )
                 db.session.add(sample_transfer)
 
@@ -650,7 +650,7 @@ def create_sample_movement():
 
     operator = g.user
 
-    sample_transfer_type_id = data["sampleTransferTypeId"]
+    transfer_type_id = data["sampleTransferTypeId"]
 
     if "sampleTransferTemplateId" in data:
         sample_transfer_template_id = data["sampleTransferTemplateId"]
@@ -664,7 +664,7 @@ def create_sample_movement():
     # process that spreadsheet data.
     #
     if wells:
-        response = create_sample_movement_from_spreadsheet_data(operator,sample_transfer_type_id,wells)
+        response = create_sample_movement_from_spreadsheet_data(operator,transfer_type_id,wells)
 
         if response["success"]:
             logger.info(" %s created a new sample movement using spreadsheet data." % (g.user.first_and_last_name))
@@ -679,7 +679,7 @@ def create_sample_movement():
         source_barcodes = [data["sourceBarcodeId"]]
         destination_barcodes = [data["destinationBarcodeId"]]
 
-        response = create_plate_sample_movement(operator,sample_transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id)
+        response = create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,sample_transfer_template_id)
 
         #if response["success"]:
             #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))

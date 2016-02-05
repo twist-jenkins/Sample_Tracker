@@ -271,12 +271,12 @@ def create_step_record():
     data = request.json
     operator = g.user
 
-    sample_transfer_type_id = data["sampleTransferTypeId"]
+    transfer_type_id = data["sampleTransferTypeId"]
     sample_transfer_template_id = data["sampleTransferTemplateId"]
 
     if "transferMap" in data:
         transfer_map = data["transferMap"]
-        return create_step_record_adhoc(sample_transfer_type_id,
+        return create_step_record_adhoc(transfer_type_id,
                                         sample_transfer_template_id,
                                         transfer_map)
 
@@ -313,7 +313,7 @@ def create_step_record():
         with scoped_session(db.engine) as db_session:
 
             # Create a "sample_transfer" row representing this entire transfer.
-            sample_transfer = Transfer(sample_transfer_type_id=sample_transfer_type_id,
+            sample_transfer = Transfer(transfer_type_id=transfer_type_id,
                                              operator_id=operator.operator_id)
             db_session.add(sample_transfer)
 

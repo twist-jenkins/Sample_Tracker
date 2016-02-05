@@ -13,7 +13,7 @@ from app import app
 from app import db
 from app.utils import scoped_session
 
-from twistdb.sampletrack import Sample, TransformSpec
+from twistdb.sampletrack import Sample, TransformSpec, Transfer
 
 # from twistdb.ngs import *
 # from twistdb.backend import NGSPreppedSample
@@ -129,9 +129,9 @@ class TransformSpecResource(flask_restful.Resource):
                 TransformSpec.spec_id == spec_id).first()
             if spec:
                 transfer = sess.query(Transfer).filter(
-                    Transfer.sample_transform_spec_id == spec_id).first()
+                    Transfer.transform_spec_id == spec_id).first()
                 if transfer:
-                    transfer.sample_transform_spec_id = None
+                    transfer.transform_spec_id = None
                     sess.flush()
                 sess.delete(spec)
                 sess.flush()

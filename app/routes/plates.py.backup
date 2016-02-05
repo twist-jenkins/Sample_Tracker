@@ -22,7 +22,7 @@ class PlateInfoSchema(Schema):
     externalBarcode = fields.Str(attribute="external_barcode")
     plateTypeId = fields.Int(attribute="type_id")
     plateStatus = fields.Str(attribute="status")
-    transferTypeId = fields.Int(attribute="sample_transfer_type_id")
+    transferTypeId = fields.Int(attribute="transfer_type_id")
     dateTransfer = fields.Date(attribute="date_transfer")
     transferTypeName = fields.Str(attribute="name")
     transferTemplateId = fields.Int(attribute="sample_transfer_template_id")

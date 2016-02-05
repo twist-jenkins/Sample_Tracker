@@ -55,13 +55,13 @@ def error_response(status_code, message):
 #
 
 
-def create_step_record_adhoc(sample_transfer_type_id,
+def create_step_record_adhoc(transfer_type_id,
                              sample_transfer_template_id,
                              wells):
 
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session,
-                                              sample_transfer_type_id,
+                                              transfer_type_id,
                                               sample_transfer_template_id,
                                               wells)
         if result["success"]:
@@ -73,15 +73,15 @@ def create_step_record_adhoc(sample_transfer_type_id,
 
 
 def create_adhoc_sample_movement(db_session,
-                                 sample_transfer_type_id,
+                                 transfer_type_id,
                                  sample_transfer_template_id, wells,
                                  transform_spec_id=None):
     #
     # FIRST. Create a "sample_transfer" row representing this row's transfer.
     #
     operator = g.user
-    sample_transfer = Transfer(sample_transfer_type_id=sample_transfer_type_id,
-                                     sample_transform_spec_id=transform_spec_id,
+    sample_transfer = Transfer(transfer_type_id=transfer_type_id,
+                                     transform_spec_id=transform_spec_id,
                                      operator_id=operator.operator_id)
     db_session.add(sample_transfer)
     db_session.flush()
@@ -402,7 +402,7 @@ def create_adhoc_sample_movement(db_session,
         #
         if not destination_sample_id:
             destination_sample_id = sample_handler(db_session,
-                                                   sample_transfer_type_id,
+                                                   transfer_type_id,
                                                    source_plate_well,
                                                    destination_well_id)
 
@@ -465,9 +465,9 @@ def create_adhoc_sample_movement(db_session,
         "success":True
     }
 
-def sample_handler(db_session, sample_transfer_type_id,
+def sample_handler(db_session, transfer_type_id,
                         source_plate_well, destination_well_id):
-    if sample_transfer_type_id in (15, 16):  # QPix To 96/384 plates
+    if transfer_type_id in (15, 16):  # QPix To 96/384 plates
         return make_cloned_sample(db_session,
                                   source_plate_well.sample_id,
                                   destination_well_id)
