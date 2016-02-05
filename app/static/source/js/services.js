@@ -1070,6 +1070,17 @@ app = angular.module('twist.app')
                 base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
             };
 
+            base.reset = function () {
+                base.presentedDataItems = [];
+                base.requestedDataItems = [];
+                for (var i=0; i< base.sources.length; i++) {
+                    base.addSource(i);
+                }
+                for (var i=0; i< base.destinations.length; i++) {
+                    base.addDestination(i);
+                }
+            }
+
             base.setCreateEditDefaults = function () {
                 base.setTitle('New Transform Spec');
                 base.setType(Constants.TRANSFORM_SPEC_TYPE_CUSTOM_PLATING);
