@@ -194,13 +194,13 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
     qry = (
         db.session.query(
             SampleTransfer,
-            SampleTransferDetail
+            TransferDetail
         )
-        .options(subqueryload(SampleTransferDetail.source_plate))
-        .options(subqueryload(SampleTransferDetail.destination_plate))
+        .options(subqueryload(TransferDetail.source_plate))
+        .options(subqueryload(TransferDetail.destination_plate))
         .options(subqueryload(SampleTransfer.sample_transfer_type))
         .options(subqueryload(SampleTransfer.operator))
-        .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
+        .filter(TransferDetail.sample_transfer_id == SampleTransfer.id)
         .order_by(SampleTransfer.date_transfer.desc())
     )
     if limit is None:
@@ -457,7 +457,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+    source_to_dest_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
                                                          item_order_number=order_number,
                                                          source_sample_plate_id=source_plate.sample_plate_id,
                                                          source_well_id=source_plate_well.well_id,
@@ -500,9 +500,9 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         384:get_col_and_row_for_well_id_384
     }.get(number_clusters,lambda well_id:"missing map")
 
-    rows = db.session.query(Plate,SampleTransferDetail).filter(and_(
-        SampleTransferDetail.destination_sample_plate_id==sample_plate_id,
-        Plate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
+    rows = db.session.query(Plate,TransferDetail).filter(and_(
+        TransferDetail.destination_sample_plate_id==sample_plate_id,
+        Plate.sample_plate_id==TransferDetail.source_sample_plate_id)).all()
 
     parent_to_this_task_name = None
     seen=[]
@@ -521,12 +521,12 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         db.session.query(
             Plate,
             SampleTransfer,
-            SampleTransferDetail
+            TransferDetail
         )
-        .filter(SampleTransferDetail.source_sample_plate_id == sample_plate_id)
+        .filter(TransferDetail.source_sample_plate_id == sample_plate_id)
         .filter(Plate.sample_plate_id ==
-                SampleTransferDetail.destination_sample_plate_id)
-        .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
+                TransferDetail.destination_sample_plate_id)
+        .filter(TransferDetail.sample_transfer_id == SampleTransfer.id)
         .options(subqueryload(SampleTransfer.sample_transfer_type))
         # .options(subqueryload(SampleTransfer.operator))
         .all()

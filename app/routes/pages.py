@@ -29,7 +29,7 @@ from sqlalchemy import and_
 
 from app import app, db
 
-# from twistdb.sampletrack import SampleTransfer, SampleTransferType, SampleTransferDetail
+# from twistdb.sampletrack import SampleTransfer, SampleTransferType, TransferDetail
 from twistdb.public import Operator
 
 #
@@ -46,8 +46,8 @@ def home():
 #
 def sample_transfers_page():
     raise DeprecationWarning
-    rows = db.session.query(SampleTransfer, SampleTransferDetail).filter(
-        SampleTransferDetail.sample_transfer_id==SampleTransfer.id).order_by(
+    rows = db.session.query(SampleTransfer, TransferDetail).filter(
+        TransferDetail.sample_transfer_id==SampleTransfer.id).order_by(
         SampleTransfer.date_transfer.desc()).all()
 
     sample_transfer_details = []

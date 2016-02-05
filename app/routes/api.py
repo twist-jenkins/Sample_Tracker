@@ -195,12 +195,12 @@ def sample_report(sample_id, format):
         }
         return jsonify(response)
 
-    rows = db.session.query(SampleTransfer, SampleTransferDetail, PlateLayout,Plate).filter(and_(
-        SampleTransferDetail.source_sample_id==sample_id,SampleTransfer.id==SampleTransferDetail.sample_transfer_id,
-        PlateLayout.sample_plate_id==SampleTransferDetail.source_sample_plate_id,
-        PlateLayout.sample_id==SampleTransferDetail.source_sample_id,
-        PlateLayout.well_id==SampleTransferDetail.source_well_id,
-        Plate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
+    rows = db.session.query(SampleTransfer, TransferDetail, PlateLayout,Plate).filter(and_(
+        TransferDetail.source_sample_id==sample_id,SampleTransfer.id==TransferDetail.sample_transfer_id,
+        PlateLayout.sample_plate_id==TransferDetail.source_sample_plate_id,
+        PlateLayout.sample_id==TransferDetail.source_sample_id,
+        PlateLayout.well_id==TransferDetail.source_well_id,
+        Plate.sample_plate_id==TransferDetail.source_sample_plate_id)).all()
 
     first_row = None
 
@@ -228,12 +228,12 @@ def sample_report(sample_id, format):
                "task": ""
         }
 
-    rows = db.session.query(SampleTransfer, SampleTransferDetail, PlateLayout,Plate).filter(and_(
-        SampleTransferDetail.destination_sample_id==sample_id,SampleTransfer.id==SampleTransferDetail.sample_transfer_id,
-        PlateLayout.sample_plate_id==SampleTransferDetail.destination_sample_plate_id,
-        PlateLayout.sample_id==SampleTransferDetail.destination_sample_id,
-        PlateLayout.well_id==SampleTransferDetail.destination_well_id,
-        Plate.sample_plate_id==SampleTransferDetail.destination_sample_plate_id)).all()
+    rows = db.session.query(SampleTransfer, TransferDetail, PlateLayout,Plate).filter(and_(
+        TransferDetail.destination_sample_id==sample_id,SampleTransfer.id==TransferDetail.sample_transfer_id,
+        PlateLayout.sample_plate_id==TransferDetail.destination_sample_plate_id,
+        PlateLayout.sample_id==TransferDetail.destination_sample_id,
+        PlateLayout.well_id==TransferDetail.destination_well_id,
+        Plate.sample_plate_id==TransferDetail.destination_sample_plate_id)).all()
 
     report = []
 
@@ -521,7 +521,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
             # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
             # in the "desination" plate.
             #
-            source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+            source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
                                                                         item_order_number=order_number,
                                                                         source_sample_plate_id=source_plate_well.sample_plate_id,
                                                                         source_well_id=source_plate_well.well_id, 
@@ -620,7 +620,7 @@ def create_plate_sample_movement(operator,sample_transfer_type_id,source_barcode
                     # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
                     # in the "desination" plate.
                     #
-                    source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
+                    source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
                                                                                 item_order_number=order_number,
                                                                                 source_sample_plate_id=source_plate.sample_plate_id,
                                                                                 source_well_id=source_plate_well_id,

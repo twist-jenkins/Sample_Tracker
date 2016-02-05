@@ -440,7 +440,7 @@ def create_adhoc_sample_movement(db_session,
         logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
         # in the "desination" plate.
         #
-        source_to_destination_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id,
+        source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id,
                                                                     item_order_number=order_number,
                                                                     source_sample_plate_id=source_plate_well.sample_plate_id,
                                                                     source_well_id=source_plate_well.well_id,
