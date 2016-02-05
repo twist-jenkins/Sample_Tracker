@@ -200,14 +200,13 @@ app = angular.module('twist.app')
                 }
                 return $http(saveAndExReq);
             }
-            ,previewTransformation: function(sources, destinations, transfer_type_id, transfer_template_id ) {
+            ,previewTransformation: function(sources, destinations, details ) {
                 // kieran
                 var preview = ApiRequestObj.getPost('transfer-preview');
                 preview.data = {
                     sources: sources,
                     destinations: destinations,
-                    transfer_type_id: transfer_type_id,
-                    transfer_template_id: transfer_template_id
+                    details: details
                 }
                 return $http(preview);
             }
@@ -393,14 +392,14 @@ app = angular.module('twist.app')
                 return new TransformSpecSource(Constants.SOURCE_TYPE_PLATE);
             };
 
-            var updateOperationsList = function () {
+            base.updateOperationsList = function () {
                 if (base.autoUpdateSpec) {
 
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
                         (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
                             // kieran
-                            Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id )
+                            Api.previewTransformation( base.sources, base.destinations, base.details )
                                 .success( function(result) {
                                     if( result.success ) {
                                         base.error_message = '';
@@ -764,7 +763,7 @@ app = angular.module('twist.app')
                 }
                 base.map[which].plateCount += howMany;
                 base.updateInputs();
-                updateOperationsList();
+                base.updateOperationsList();
             }
 
             base.removePlateInput = function (which, plateIndex) {
@@ -779,7 +778,7 @@ app = angular.module('twist.app')
                 }
                 base[which + 's'] = newSources;
                 base.updateInputs();
-                updateOperationsList();
+                base.updateOperationsList();
             }
 
             base.checkSourcesReady = function () {
@@ -801,6 +800,8 @@ app = angular.module('twist.app')
                 delete sourceItem.loaded;
                 var barcode = sourceItem.details.id;
 
+                /* TODO: add barcode format validation once we have it settled */
+
                 var onError = function (sourceItem, msg) {
                     notReady('source');
                     sourceItem.loaded = false;
@@ -821,30 +822,48 @@ app = angular.module('twist.app')
 
                 plateDetailsFetcher(barcode).success(function (data) {
                     if (data.success) {
-                        if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
-                            onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
+                        if (base.map.source.create) {
+                            //then the source plate will be created in this step and should not exist - this success is actually an error  
+                            onError(sourceItem, 'Error: An plate with barcocde <strong>#' + barcode + '</strong> already exists.');
                         } else {
-                            sourceItem.loaded = true;
-                            sourceItem.items = data.wells;
 
-                            var dataCopy = angular.copy(data);
-                            delete dataCopy.wells;
-                            jQuery.extend(sourceItem.details, dataCopy);
-                            sourceItem.updating = false;
-                            if (base.checkSourcesReady()) {
-                                base.sourcesReady = true;
+                            if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
+                                onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
                             } else {
-                                return;
-                            } 
-                            updateOperationsList();
+                                sourceItem.loaded = true;
+                                sourceItem.items = data.wells;
+
+                                var dataCopy = angular.copy(data);
+                                delete dataCopy.wells;
+                                jQuery.extend(sourceItem.details, dataCopy);
+                                sourceItem.updating = false;
+                                if (base.checkSourcesReady()) {
+                                    base.sourcesReady = true;
+                                } else {
+                                    return;
+                                } 
+                                base.updateOperationsList();
+                            }
+                            ready();
                         }
-                        ready();
                         sourceItem.updating = false;
                     } else {
                         onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
                     }  
                 }).error(function (data) {
-                    onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
+                    // if this transform expects source plates to be created in this step, then they won't already exist
+                    // and this is an expected error
+                    if (base.map.source.create) {
+                        sourceItem.loaded = true;
+                        sourceItem.updating = false;
+                        if (base.checkSourcesReady()) {
+                            base.sourcesReady = true;
+                        }
+                        base.updateOperationsList();
+                        ready();
+                    } else {
+                        onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
+                    }
                 });
             }
 
@@ -901,7 +920,7 @@ app = angular.module('twist.app')
                                 }
                             }
                             base.destinationsReady = true;
-                            updateOperationsList();
+                            base.updateOperationsList();
                         }
                         ready(); 
                     }).error(function (data) {
