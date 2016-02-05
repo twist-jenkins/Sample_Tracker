@@ -789,6 +789,13 @@ app = angular.module('twist.app')
                             notReady('source');
                             return false;
                         }
+                    } else {
+                        //we might have loaded data but then removed the barcode for this input
+                        if (base.sources[i].details.id == "") {
+                            base.sources[i].loaded = false;
+                            notReady('source');
+                            return false;
+                        }
                     }
                 }
                 return true;    
