@@ -149,7 +149,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.transformSpec.details.transfer_template_id == 28 || 
                 $scope.transformSpec.details.transfer_template_id == 29 ||
                 $scope.transformSpec.details.transfer_template_id == 30 ||
-                $scope.transformSpec.details.transfer_template_id == 31) {
+                $scope.transformSpec.details.transfer_template_id == 31 ||
+                $scope.transformSpec.details.transfer_template_id == 35) {
                 executeNow = false;
             }
 

@@ -45,6 +45,14 @@ class StagingConfig(Config):
     """
 
 
+class Warp1Config(Config):
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp1smt"
+
+
+class Warp2Config(Config):
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp2smt"
+
+
 class DevConfig(Config):
     SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.53.47/smtdev"
 
