@@ -83,6 +83,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 if (option.id == optionId) {
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
+                    $scope.transformSpec.reset();
+                    $scope.showPresentedRequestedData = false;
                     $scope.transformSpec.setTransformSpecDetails(option);
                     $scope.transformSpec.setTitle(option.text)
                     $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
@@ -188,6 +190,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transformSpec = TransformBuilder.newTransformSpec();
             $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
+            $scope.showPresentedRequestedData = false;
             if (!skipGo) {
                 $state.go('root.record_transform');
             }
@@ -305,20 +308,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         
         $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
-                if (!oldVal || oldVal.length != newVal.length) {
-                    if (newVal.length) {
-                        $scope.showPresentedRequestedData = true;
-                    }
-                }
+                $scope.showPresentedRequestedData = true;
             }
         });
 
         $scope.$watch('transformSpec.requestedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
                 if (!oldVal || oldVal.length != newVal.length) {
-                    if (newVal.length) {
-                        $scope.showPresentedRequestedData = true;
-                    }
+                    $scope.showPresentedRequestedData = true;
                 }
             }
         });
