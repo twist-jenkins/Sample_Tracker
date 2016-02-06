@@ -83,10 +83,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 if (option.id == optionId) {
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
+                    $scope.transformSpec.setTransformSpecDetails(option);
+                    $scope.transformSpec.setTitle(option.text);
                     $scope.transformSpec.reset();
                     $scope.showPresentedRequestedData = false;
-                    $scope.transformSpec.setTransformSpecDetails(option);
-                    $scope.transformSpec.setTitle(option.text)
                     $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
                     break;
                 }
@@ -288,9 +288,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             } else {
                 if (which == Constants.PLATE_SOURCE) {
-                    $scope.transformSpec.checkSourcesReady();
+                    $scope.transformSpec.checkSourcesReady(true);
                 } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transformSpec.checkDestinationsReady();
+                    $scope.transformSpec.checkDestinationsReady(true);
                 }
             }
         };
