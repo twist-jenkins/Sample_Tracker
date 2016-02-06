@@ -17,19 +17,19 @@ from sqlalchemy import String, Integer, Enum
 
 TITIN_TYPE_ID = 'SPTT_1009'
 
-def insert_sample_plate_type_record():
+def insert_plate_type_record():
     #
     # older code to insert a new SAMPLE_PLATE_TYPE row.
     # doesn't work... "AttributeError: Neither 'Column' object nor 'Comparator' object has an attribute '_has_bind_expression' "...
     # using raw sql instead, below.
     #
     sp_migration_table = table(
-        'sample_plate_type',
+        'plate_type',
         column('type_id', String),
         column('name', Integer),
         column('description', String),
         column('number_clusters', Integer),
-        column('sample_plate_type', String),
+        column('plate_type', String),
         column('status', Enum)
     )
     titin_plate = {
@@ -37,13 +37,13 @@ def insert_sample_plate_type_record():
         'name': '6144 well, silicon, Titin X.X',
         'description': 'Silicon - Titin 6144 silicon Chip',
         'number_clusters': 6144,
-        'sample_plate_type': 'silicon_6144',
+        'plate_type': 'silicon_6144',
         'status': 'active'
     }
     op.bulk_insert(sp_migration_table, [titin_plate])
 
 
-def upgrade_sample_plate_type():
+def upgrade_plate_type():
     # update_sql = ("update sample_transfer_type"
     #               " set name = :name,"
     #               " transfer_template_id = :stti,"
@@ -51,20 +51,20 @@ def upgrade_sample_plate_type():
     #               " destination_plate_count = :dpc"
     #               " where id = :id")
 
-    insert_sql = ("insert into sample_plate_type"
+    insert_sql = ("insert into plate_type"
                   " (type_id, name, description,"
-                  " number_clusters, sample_plate_type, status)"
+                  " number_clusters, plate_type, status)"
                   " select :type_id, :name, :description,"
-                  " :number_clusters, :sample_plate_type, :status"
+                  " :number_clusters, :plate_type, :status"
                   " where not exists"
-                  " (select * from sample_plate_type "
+                  " (select * from plate_type "
                   "  where type_id = :type_id)")
 
     sql_params = {"type_id": TITIN_TYPE_ID,
                   "name": '6144 well, silicon, Titin X.X',
                   "description": 'Silicon - Titin 6144 silicon Chip',
                   "number_clusters": 6144,
-                  "sample_plate_type": 'silicon_6144',
+                  "plate_type": 'silicon_6144',
                   "status": 'active'
                   }
 
@@ -76,10 +76,10 @@ def upgrade_sample_plate_type():
 
 def upgrade():
 
-    upgrade_sample_plate_type()
+    upgrade_plate_type()
 
 
 def downgrade():
-    delete_sql = 'delete from sample_plate_type where sample_plate_type = :pt'
+    delete_sql = 'delete from plate_type where plate_type = :pt'
     args = {"pt": TITIN_TYPE_ID}
     op.execute(sa.text(delete_sql).bindparams(**args))

@@ -122,7 +122,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                 if plate.type_id != 'SPTT_0006':
                     # FIXME: hard-coded for now
                     raise WebError('selected source plates should be plain 384 well plates, while plate %s is %s / "%s"'
-                                   % (barcode, plate.type_id, plate.sample_plate_type.name))
+                                   % (barcode, plate.type_id, plate.plate_type.name))
 
                 # this is an implicit OR: for a given parent CS plate well, we often have multiple NPS samples
                 if json.loads(summ.value)['OK to Ship'] == "Yes":

@@ -209,7 +209,7 @@ def sample_report(sample_id, format):
     if len(rows) > 0:
         transfer, transfer_detail, well, plate = rows[0]
 
-        number_clusters = plate.sample_plate_type.number_clusters
+        number_clusters = plate.plate_type.number_clusters
 
         #print "number_clusters: ", number_clusters
 
@@ -239,7 +239,7 @@ def sample_report(sample_id, format):
 
     for transfer, transfer_detail, well, plate in rows:
 
-        number_clusters = plate.sample_plate_type.number_clusters
+        number_clusters = plate.plate_type.number_clusters
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
@@ -722,7 +722,7 @@ def get_sample_plate(plate_id):
        "plate_id":plate_id,
        "name":sample_plate.name,
        "description":sample_plate.description,
-       "samplePlateType":sample_plate.sample_plate_type.name,
+       "samplePlateType":sample_plate.plate_type.name,
        "storageLocation":sample_plate.storage_location.name,
        "status":sample_plate.status,
        "externalBarcode":sample_plate.external_barcode,

@@ -87,7 +87,7 @@ def create_adhoc_sample_movement(db_session,
     db_session.flush()
 
     destination_plates_by_barcode = {}
-    sample_plate_types_by_name = {}
+    plate_types_by_name = {}
 
     #
     # NEXT: Now, do the transfer for each source-plate-well to each destination-plate-well...
@@ -149,22 +149,22 @@ def create_adhoc_sample_movement(db_session,
         #
         # 96 well, plastic
         #
-        sample_plate_type = source_plate.sample_plate_type
+        plate_type = source_plate.plate_type
         plate_size = None
-        if sample_plate_type.name == "48 well, plastic":
+        if plate_type.name == "48 well, plastic":
             plate_size = "48"
-        elif sample_plate_type.name == "96 well, plastic":
+        elif plate_type.name == "96 well, plastic":
             plate_size = "96"
-        elif sample_plate_type.name == "384 well, plastic":
+        elif plate_type.name == "384 well, plastic":
             plate_size = "384"
-        elif sample_plate_type.name == "6144 well, silicon, Titin":
+        elif plate_type.name == "6144 well, silicon, Titin":
             plate_size = "6144"
         else:
             plate_size = None
 
-        # print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (#source_plate.external_barcode,sample_plate_type.name)
+        # print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (#source_plate.external_barcode,plate_type.name)
         logging.info("SOURCE PLATE, barcode: %s  plate type: [%s]",
-                     source_plate.external_barcode, sample_plate_type.name)
+                     source_plate.external_barcode, plate_type.name)
 
         source_col_and_row = source_col_and_row.strip()
 
@@ -172,7 +172,7 @@ def create_adhoc_sample_movement(db_session,
         if plate_size is None:
             return {
                 "success": False,
-                "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
+                "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (plate_type.name)
             }
         else:
             logging.info("source_col_and_row: %s", source_col_and_row)
@@ -211,11 +211,11 @@ def create_adhoc_sample_movement(db_session,
         # 2. Obtain (or create if we haven't yet grabbed it) the sample plate type row for the type of plate
         # specified for the destination of this line item.
         #
-        sample_plate_type = sample_plate_types_by_name.get(destination_plate_type_name)
-        if not sample_plate_type:
-            sample_plate_type = db_session.query(PlateType).filter_by(name=destination_plate_type_name).first()
-            if sample_plate_type:
-                sample_plate_types_by_name[destination_plate_type_name] = sample_plate_type
+        plate_type = plate_types_by_name.get(destination_plate_type_name)
+        if not plate_type:
+            plate_type = db_session.query(PlateType).filter_by(name=destination_plate_type_name).first()
+            if plate_type:
+                plate_types_by_name[destination_plate_type_name] = plate_type
             else:
                 logging.info(" %s encountered error creating sample "
                              "transfer. There are no sample plates with "
@@ -268,7 +268,7 @@ def create_adhoc_sample_movement(db_session,
                         db_session,
                         operator,
                         destination_plate_barcode,
-                        sample_plate_type.type_id,
+                        plate_type.type_id,
                         storage_location,
                         transfer_template_id)
                     db_session.flush()
@@ -297,11 +297,11 @@ def create_adhoc_sample_movement(db_session,
         logging.info("SOURCE PLATE WELL: %s (%s, %s) ", source_plate_well,
                      source_plate.plate_id, source_well_id)
 
-        if sample_plate_type.name == "48 well, plastic":
+        if plate_type.name == "48 well, plastic":
             plate_size = "48"
-        elif sample_plate_type.name == "96 well, plastic":
+        elif plate_type.name == "96 well, plastic":
             plate_size = "96"
-        elif sample_plate_type.name == "384 well, plastic":
+        elif plate_type.name == "384 well, plastic":
             plate_size = "384"
         else:
             plate_size = None
@@ -338,16 +338,16 @@ def create_adhoc_sample_movement(db_session,
 
 
 
-        #print "DESTINATION PLATE TYPE: ",sample_plate_type.name
+        #print "DESTINATION PLATE TYPE: ",plate_type.name
 
-        print "DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,sample_plate_type.name)
-        logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",destination_plate.external_barcode,sample_plate_type.name)
+        print "DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,plate_type.name)
+        logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",destination_plate.external_barcode,plate_type.name)
 
         #if destination_well_id is None or destination_well_id.strip() == "":
         if plate_size is None:
             return {
                 "success":False,
-                "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (sample_plate_type.name)
+                "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (plate_type.name)
             }
         else:
             try:

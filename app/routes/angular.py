@@ -483,14 +483,14 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         # (csv) vs. check existence (name check)
         basic_data_only = False
 
-    if not sample_plate.sample_plate_type:
+    if not sample_plate.plate_type:
         response = {
             "success": False,
             "errorMessage": "Plate with barcode [%s] has no plate type" % (sample_plate_barcode)
         }
         return jsonify(response)
 
-    number_clusters = sample_plate.sample_plate_type.number_clusters
+    number_clusters = sample_plate.plate_type.number_clusters
 
     #print "number_clusters: ", number_clusters
 
@@ -699,7 +699,7 @@ def source_plate_well_data():
             48:get_col_and_row_for_well_id_48,
             96:get_col_and_row_for_well_id_96,
             384:get_col_and_row_for_well_id_384
-        }.get(sample_plate.sample_plate_type.number_clusters,lambda well_id:"missing map")
+        }.get(sample_plate.plate_type.number_clusters,lambda well_id:"missing map")
 
         wells = {}
         for well in rows:
