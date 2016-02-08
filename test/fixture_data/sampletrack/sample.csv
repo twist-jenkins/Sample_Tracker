@@ -1,4 +1,4 @@
-sample_id,type_id,date_created,operator_id,name,description,external_barcode
+id,type_id,date_created,operator_id,name,description,external_barcode
 CS_563bff8e50a77622447fc873,cloned_sample,"2016-01-17 00:00:00",cledogar,GA_879.7EE-tmp_src_563bff8e50a77622447fc872.12-1,"Cloned sample: GA_562a647b799305708a8797ee, Source: tmp_src_563bff8e50a77622447fc872, Colony: 12-1",
 CS_563bff8e50a77622447fc875,cloned_sample,"2016-01-17 00:00:00",cledogar,GA_879.7EC-tmp_src_563bff8e50a77622447fc874.12-3,"Cloned sample: GA_562a647b799305708a8797ec, Source: tmp_src_563bff8e50a77622447fc874, Colony: 12-3",
 CS_563bff8e50a77622447fc877,cloned_sample,"2016-01-17 00:00:00",cledogar,GA_879.7EC-tmp_src_563bff8e50a77622447fc876.12-5,"Cloned sample: GA_562a647b799305708a8797ec, Source: tmp_src_563bff8e50a77622447fc876, Colony: 12-5",
