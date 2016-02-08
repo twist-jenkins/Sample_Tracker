@@ -61,13 +61,13 @@ class RootPlate(object):
         with scoped_session(db.engine) as db_session:
             operator = AutomatedTestingUser()
             destination_barcode = barcode
-            storage_location_id = 'LOC_0064'
+            storage_location = 'LOC_0064'
             source_plate_type_id = "SPTT_0006"
             try:
                 plate = create_destination_plate(db_session, operator,
                                              destination_barcode,
                                              source_plate_type_id,
-                                             storage_location_id,
+                                             storage_location,
                                              1)
             except:
                 raise
