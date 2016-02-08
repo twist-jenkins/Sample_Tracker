@@ -150,16 +150,15 @@ def create_adhoc_sample_movement(db_session,
         #
         # Lookup source well id
         #
-        feature_count = source_plate.plate_type.layout.feature_count
-        plate_size = str(feature_count)
-        if plate_size not in well_from_col_and_row_methods:
+        source_plate_size = str(source_plate.plate_type.layout.feature_count)
+        if source_plate_size not in well_from_col_and_row_methods:
             return {
                 "success": False,
-                "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 48/96/384/6144 size plates and the source plate is of size [%s]" % feature_count
+                "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 48/96/384/6144 size plates and the source plate is of size [%s]" % source_plate_size
             }
 
         logging.info("SOURCE PLATE, barcode: %s  plate size: [%s]",
-                     source_plate.external_barcode, plate_size)
+                     source_plate.external_barcode, source_plate_size)
 
         source_col_and_row = source_col_and_row.strip()
 
@@ -167,10 +166,10 @@ def create_adhoc_sample_movement(db_session,
         try:
             source_well_id = int(source_col_and_row)
         except ValueError:
-            source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
+            source_well_id = well_from_col_and_row_methods[source_plate_size](source_col_and_row)
         logging.info("calculated source well id: %s from "
                      "plate size: %s and column/row: %s",
-                     source_well_id, plate_size, source_col_and_row)
+                     source_well_id, source_plate_size, source_col_and_row)
 
         # print "source plate barcode [%s]" % (source_plate_barcode)
         storage_location = source_plate.storage_location
@@ -179,11 +178,11 @@ def create_adhoc_sample_movement(db_session,
         # 2. Obtain (or create if we haven't yet grabbed it) the sample plate type row for the type of plate
         # specified for the destination of this line item.
         #
-        plate_type = plate_types_by_name.get(destination_plate_type_name)
-        if not plate_type:
-            plate_type = db_session.query(PlateType).filter_by(name=destination_plate_type_name).first()
-            if plate_type:
-                plate_types_by_name[destination_plate_type_name] = plate_type
+        dest_plate_type = plate_types_by_name.get(destination_plate_type_name)
+        if not dest_plate_type:
+            dest_plate_type = db_session.query(PlateType).filter_by(name=destination_plate_type_name).first()
+            if dest_plate_type:
+                plate_types_by_name[destination_plate_type_name] = dest_plate_type
             else:
                 logging.info(" %s encountered error creating sample "
                              "transfer. There are no sample plates with "
@@ -236,7 +235,7 @@ def create_adhoc_sample_movement(db_session,
                         db_session,
                         operator,
                         destination_plate_barcode,
-                        plate_type.type_id,
+                        dest_plate_type.type_id,
                         storage_location,
                         transfer_template_id)
                     db_session.flush()
@@ -265,29 +264,22 @@ def create_adhoc_sample_movement(db_session,
         logging.info("SOURCE PLATE WELL: %s (%s, %s) ", source_plate_well,
                      source_plate.id, source_well_id)
 
-        if plate_type.name == "48 well, plastic":
-            plate_size = "48"
-        elif plate_type.name == "96 well, plastic":
-            plate_size = "96"
-        elif plate_type.name == "384 well, plastic":
-            plate_size = "384"
-        else:
-            plate_size = None
+        dest_plate_size = str(dest_plate_type.layout.feature_count)
 
         if not source_plate_well and not merge_transform_flag:
             error_well_id = source_well_id
-            if plate_size:
-                if plate_size == "48":
+            if dest_plate_size:
+                if dest_plate_size == "48":
                     try:
                         error_well_id = get_col_and_row_for_well_id_48(source_well_id)
                     except:
                         error_well_id = source_well_id
-                elif plate_size == "96":
+                elif dest_plate_size == "96":
                     try:
                         error_well_id = get_col_and_row_for_well_id_96(source_well_id)
                     except:
                         error_well_id = source_well_id
-                elif plate_size == "384":
+                elif dest_plate_size == "384":
                     try:
                         error_well_id = get_col_and_row_for_well_id_384(source_well_id)
                     except:
@@ -306,28 +298,28 @@ def create_adhoc_sample_movement(db_session,
 
 
 
-        #print "DESTINATION PLATE TYPE: ",plate_type.name
+        #print "DESTINATION PLATE TYPE: ",dest_plate_type.name
 
-        print "DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,plate_type.name)
-        logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",destination_plate.external_barcode,plate_type.name)
+        print "DESTINATION PLATE, barcode: %s  plate type: [%s]" % (destination_plate.external_barcode,dest_plate_type.name)
+        logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",destination_plate.external_barcode,dest_plate_type.name)
 
         #if destination_well_id is None or destination_well_id.strip() == "":
-        if plate_size is None:
+        if dest_plate_size is None:
             return {
                 "success":False,
-                "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (plate_type.name)
+                "errorMessage":"You must specify a DESTINATION well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (dest_plate_type.name)
             }
         else:
             try:
-                destination_well_id = well_from_col_and_row_methods[plate_size](destination_col_and_row)
+                destination_well_id = well_from_col_and_row_methods[dest_plate_size](destination_col_and_row)
             except KeyError:
                 return {
                     "success":False,
                     "errorMessage":"Destination plate well mapping failed."
                 }
-            logging.info("calculated DEST well id: %s from plate size: %s and column/row: %s", destination_well_id, plate_size,
+            logging.info("calculated DEST well id: %s from plate size: %s and column/row: %s", destination_well_id, dest_plate_size,
                          destination_col_and_row)
-            print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,plate_size, destination_col_and_row)
+            print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,dest_plate_size, destination_col_and_row)
 
 
         #print "DEST WELL ID: ", destination_well_id
@@ -445,15 +437,15 @@ def sample_handler(db_session, transfer_type_id,
 def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     operator = g.user
     source_id = create_unique_id("tmp_src_")()
-    colony_name = "%d-%s" % (12, destination_well_id)
+    # colony_name = "%d-%s" % (12, destination_well_id)
 
     # Create CS
     cs_id = create_unique_id("CS_")()
 
-    cloned_sample =       Sample(sample_id=cs_id,
+    cloned_sample =       Sample(id=cs_id,
                                  parent_sample_id=source_sample_id,
-                                 source_id=source_id,
-                                 colony_name=colony_name,
+                                 # source_id=source_id,
+                                 # colony_name=colony_name,
                                  operator_id=operator.operator_id)
 
     # Add CLO
@@ -467,7 +459,7 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     name = 'cs_' + source_id  # FIXME: determine some more meaningful name
     qry = (
         db.session.query(Sample)
-        .filter_by(sample_id=source_sample_id)
+        .filter_by(id=source_sample_id)
     )
     result = qry.first()
     if not result:
@@ -487,36 +479,3 @@ def make_cloned_sample(db_session, source_sample_id, destination_well_id):
     db_session.flush()
 
     return cs_id
-
-
-def make_ngs_prepped_sample(db_session, source_plate_well,
-                            destination_well_id):
-    operator = g.user
-
-    # Create NPS
-    nps_id = create_unique_id("NPS_")()
-    i5_sequence_id, i7_sequence_id = "i5a", "i7b"
-    insert_size_expected = 1000
-    parent_process_id = None
-    external_barcode = None
-    reagent_type_set_lot_id = None
-    status = None
-    parent_transfer_process_id = None
-    # FIXME: we should just leave notes & description blank, no?
-    nps_sample = NGSPreppedSample( sample_id=nps_id, parent_sample_id=source_plate_well.sample_id,
-                                   description="temp nps description", i5_sequence_id=i5_sequence_id,
-                                   i7_sequence_id=i7_sequence_id, notes="temp nps notes",
-                                   insert_size_expected=insert_size_expected, date_created=datetime.utcnow(),
-                                   operator_id=operator.operator_id, parent_process_id=parent_process_id,
-                                   external_barcode=external_barcode,
-                                   reagent_type_set_lot_id=reagent_type_set_lot_id,
-                                   parent_transfer_process_id=parent_transfer_process_id)
-
-    logging.info('NPS_ID %s for %s assigned [%s, %s]',
-                 nps_id, source_plate_well.sample_id,
-                 i5_sequence_id, i7_sequence_id)
-
-    db_session.add(nps_sample)
-    db_session.flush()
-
-    return nps_id
