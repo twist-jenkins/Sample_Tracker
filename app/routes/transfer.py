@@ -48,7 +48,7 @@ def merge_transform( sources, dests ):
             raise WebError('multiple plates found with barcode %s' % barcode)
 
         for well in db.session.query(WellSample) \
-                      .filter( WellSample.sample_plate == plate ) \
+                      .filter( WellSample.plate == plate ) \
                       .order_by( WellSample.well_id ):
 
             if well.well_id in seen:
@@ -232,36 +232,31 @@ def preview():
                 constants.TRANS_TYPE_PCA_PREPLANNING):
                 # these are same to same transfers
 
-            if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
-                src_plate_type = "SPTT_0006"
-                dest_plate_type = src_plate_type
+            src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+            dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
-            else:
-                src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-                dest_plate_type = db.session.query(PlateType).get(src_plate_type)
+            for src_idx, src in enumerate(request.json['sources']):
+                barcode = src['details']['id']
+                try:
+                    plate = db.session.query(Plate) \
+                                      .filter(Plate.external_barcode == barcode) \
+                                      .one()
+                except MultipleResultsFound:
+                    raise WebError('multiple plates found with barcode %s' % barcode)
 
-                for src_idx, src in enumerate(request.json['sources']):
-                    barcode = src['details']['id']
-                    try:
-                        plate = db.session.query(Plate) \
-                                          .filter(Plate.external_barcode == barcode) \
-                                          .one()
-                    except MultipleResultsFound:
-                        raise WebError('multiple plates found with barcode %s' % barcode)
+                for well in db.session.query(WellSample) \
+                              .filter( WellSample.plate == plate ) \
+                              .order_by( WellSample.well_id ):
 
-                    for well in db.session.query(WellSample) \
-                                  .filter(WellSample.plate == plate) \
-                                  .order_by(WellSample.well_id):
+                    rows.append( {'source_plate_barcode':           barcode,
+                                  'source_well_name':               well.well_name,
+                                  'source_sample_id':               well.sample_id,
+                                  'destination_plate_barcode':      barcode,
+                                  'destination_well_name':          well.well_name,
+                                  'destination_plate_well_count':   dest_plate_type.number_clusters
+                                  })
 
-                        rows.append( {'source_plate_barcode':           barcode,
-                                      'source_well_name':               well.well_name,
-                                      'source_sample_id':               well.sample_id,
-                                      'destination_plate_barcode':      barcode,
-                                      'destination_well_name':          well.well_name,
-                                      'destination_plate_well_count':   dest_plate_type.number_clusters
-                                      })
-
-            if transfer_type_id == \
+            if request.json['transfer_type_id'] == \
                     constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
                 responseCommands.append({
                     "type": "PRESENT_DATA",
@@ -529,7 +524,7 @@ def preview():
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
                     for well in db.session.query(WellSample) \
-                                  .filter( WellSample.sample_plate == plate ) \
+                                  .filter( WellSample.plate == plate ) \
                                   .order_by( WellSample.well_id ):
                         dest_barcode, dest_well = dest_lookup( src_idx, well.well_id )
 
