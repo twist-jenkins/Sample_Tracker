@@ -240,7 +240,7 @@ def insert_barcode_well_records(bc_plate_id, wells):
     plate_map = json_maps["row_column_maps"][NGS_BARCODE_PLATE_TYPE]
 
     splt_migration_table = table(
-        'sample_plate_layout',
+        'well_sample',
         column('plate_id', String),
         column('sample_id', String),
         column('well_id', Integer),

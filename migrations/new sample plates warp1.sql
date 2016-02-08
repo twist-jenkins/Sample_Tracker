@@ -2,7 +2,7 @@
 
 create table public.backup_sample_plate as select * from sampletrack.sample_plate;
 
-create table public.backup_sample_plate_layout as select * from sampletrack.sample_plate_layout;
+create table public.backup_well_sample as select * from sampletrack.well_sample;
 
 create table public.backup_sample as select * from backend.sample;
 
@@ -67,28 +67,28 @@ from backend.sample where sample_id like 'GA_WARP1_TEST1%';
 
 -- done
 
-insert into sampletrack.sample_plate_layout
+insert into sampletrack.well_sample
 ("plate_id","well_id","sample_id","operator_id","row","column","date_created","notes","status")
 select 'SPLT_WARP1.2', well_id,
 E'GA_WARP1.2_' || right(sample_id, 4),
 operator_id, row, "column",  E'26-JAN-16 13:51:01', NULL, status
-from sampletrack.sample_plate_layout
+from sampletrack.well_sample
 where plate_id = 'SPLT_WARP1_TEST1';
 
-insert into sampletrack.sample_plate_layout
+insert into sampletrack.well_sample
 ("plate_id","well_id","sample_id","operator_id","row","column","date_created","notes","status")
 select 'SPLT_WARP1.3', well_id,
 E'GA_WARP1.3_' || right(sample_id, 4),
 operator_id, row, "column",  E'26-JAN-16 13:53:01', NULL, status
-from sampletrack.sample_plate_layout
+from sampletrack.well_sample
 where plate_id = 'SPLT_WARP1_TEST1';
 
-insert into sampletrack.sample_plate_layout
+insert into sampletrack.well_sample
 ("plate_id","well_id","sample_id","operator_id","row","column","date_created","notes","status")
 select 'SPLT_WARP1.4', well_id,
 E'GA_WARP1.4_' || right(sample_id, 4),
 operator_id, row, "column",  E'26-JAN-16 13:54:01', NULL, status
-from sampletrack.sample_plate_layout
+from sampletrack.well_sample
 where plate_id = 'SPLT_WARP1_TEST1';
 
 -- done

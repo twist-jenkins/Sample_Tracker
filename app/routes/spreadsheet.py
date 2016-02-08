@@ -18,10 +18,11 @@ from sqlalchemy.sql import func
 from app import app, db
 from app.utils import scoped_session
 from app.models import create_destination_plate
-from twistdb.public import *
-from twistdb.sampletrack import *
-from twistdb.ngs import *
-from twistdb.sampletrack import Sample
+# from twistdb.public import *
+# from twistdb.sampletrack import *
+# from twistdb.ngs import *
+from twistdb.sampletrack import (Sample, WellSample, Plate, Transfer,
+                                 PlateType, TransferDetail)
 from app.dbmodels import NGS_BARCODE_PLATE, NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
@@ -288,14 +289,14 @@ def create_adhoc_sample_movement(db_session,
         logging.warn('4. Get the "source plate well"')
         #
 
-        source_plate_well = db_session.query(PlateLayout).filter(and_(
-            PlateLayout.plate_id==source_plate.plate_id,
-            PlateLayout.well_id==source_well_id
+        source_plate_well = db_session.query(WellSample).filter(and_(
+            WellSample.plate_id==source_plate.id,
+            WellSample.well_id==source_well_id
         )).first()
 
         # print "SOURCE PLATE WELL: %s " % str(source_plate_well)
         logging.info("SOURCE PLATE WELL: %s (%s, %s) ", source_plate_well,
-                     source_plate.plate_id, source_well_id)
+                     source_plate.id, source_well_id)
 
         if plate_type.name == "48 well, plastic":
             plate_size = "48"
@@ -364,12 +365,12 @@ def create_adhoc_sample_movement(db_session,
 
         #print "DEST WELL ID: ", destination_well_id
 
-        print '@@ querying PlateLayout plate_id: %s, PlateLayout.well_id: %s' \
-            % (destination_plate.plate_id, destination_well_id)
-        existing_plate_layout = db_session.query(PlateLayout) \
-                                                 .filter( PlateLayout.plate_id==destination_plate.plate_id,
-                                                          # PlateLayout.sample_id==source_plate_well.sample_id,
-                                                          PlateLayout.well_id==destination_well_id ) \
+        print '@@ querying WellSample plate_id: %s, WellSample.well_id: %s' \
+            % (destination_plate.id, destination_well_id)
+        existing_plate_layout = db_session.query(WellSample) \
+                                                 .filter( WellSample.plate_id==destination_plate.id,
+                                                          # WellSample.sample_id==source_plate_well.sample_id,
+                                                          WellSample.well_id==destination_well_id ) \
                                                  .first()
         print '@@ got:', existing_plate_layout
 
@@ -413,7 +414,7 @@ def create_adhoc_sample_movement(db_session,
         #
         # FIXED: 7/17/15
         #
-        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = PlateLayout(destination_plate.plate_id,
+        # WRONG! Was depositing in source well id not dest well idn destination_plate_well = WellSample(destination_plate.id,
         #    source_plate_well.sample_id,source_plate_well.well_id,operator.operator_id,
         #    source_plate_well.row,source_plate_well.column)
         #db_session.add(destination_plate_well)
@@ -427,7 +428,7 @@ def create_adhoc_sample_movement(db_session,
                 #source_plate_well.sample_id = destination_sample_id # ???? WRONG! ??
                 #db_session.flush()
         else:
-            destination_plate_well = PlateLayout( plate_id=destination_plate.plate_id,
+            destination_plate_well = WellSample( plate_id=destination_plate.id,
                                                         sample_id=destination_sample_id, well_id=destination_well_id,
                                                         operator_id=operator.operator_id, row=source_plate_well.row,
                                                         column=source_plate_well.column)
@@ -440,8 +441,7 @@ def create_adhoc_sample_movement(db_session,
         logging.warn("6. Create a row representing a transfer from a well in the 'source' plate to a well")
         # in the "desination" plate.
         #
-        source_to_destination_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id,
-                                                                    item_order_number=order_number,
+        source_to_destination_well_transfer = TransferDetail( transfer_id=sample_transfer.id,
                                                                     source_plate_id=source_plate_well.plate_id,
                                                                     source_well_id=source_plate_well.well_id,
                                                                     source_sample_id=source_plate_well.sample_id,

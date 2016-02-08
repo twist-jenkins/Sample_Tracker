@@ -21,15 +21,20 @@ def create_destination_plate(db_session, operator, destination_barcode,
                              source_plate_type_id, storage_location, transfer_template_id):
     """creates a destination plate for a transfer"""
 
+    # TODO: use a proper barcode, not a bson objectid
+
     check_destination_plate(db_session, destination_barcode, transfer_template_id)
-    destination_plate_name = create_unique_id("PLATE_")()
-    destination_plate_description = create_unique_id("PLATEDESC_")()
-    plate = Plate(type_id=source_plate_type_id,
-                        operator_id=operator.operator_id,
-                        storage_location=storage_location,
-                        name=destination_plate_name,
-                        description=destination_plate_description,
-                        external_barcode=destination_barcode)
+
+    destination_plate_id = create_unique_id("PLATE_")()
+    destination_plate_name = "smt placeholder name"
+    destination_plate_description = "smt placeholder descr"
+    plate = Plate(id=destination_plate_id,
+                  type_id=source_plate_type_id,
+                  operator_id=operator.operator_id,
+                  storage_location=storage_location,
+                  name=destination_plate_name,
+                  description=destination_plate_description,
+                  external_barcode=destination_barcode)
 
     db_session.add(plate)
     return plate

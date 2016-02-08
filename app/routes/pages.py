@@ -47,7 +47,7 @@ def home():
 def sample_transfers_page():
     raise DeprecationWarning
     rows = db.session.query(Transfer, TransferDetail).filter(
-        TransferDetail.sample_transfer_id==Transfer.id).order_by(
+        TransferDetail.transfer_id==Transfer.id).order_by(
         Transfer.date_transfer.desc()).all()
 
     sample_transfer_details = []

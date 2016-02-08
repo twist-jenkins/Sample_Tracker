@@ -171,7 +171,7 @@ def update_plate_barcode():
     # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
     #
     sample_plate_with_this_barcode = db.session.query(Plate).filter_by(external_barcode=external_barcode).first()
-    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.plate_id != sample_plate.plate_id:
+    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.plate_id != sample_plate.id:
         logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
             (g.user.first_and_last_name,plate_id,external_barcode,sample_plate_with_this_barcode.plate_id))
         errmsg = "The barcode [%s] is already assigned to the plate with id: [%s]"
@@ -200,7 +200,7 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
         .options(subqueryload(TransferDetail.destination_plate))
         .options(subqueryload(Transfer.sample_transfer_type))
         .options(subqueryload(Transfer.operator))
-        .filter(TransferDetail.sample_transfer_id == Transfer.id)
+        .filter(TransferDetail.transfer_id == Transfer.id)
         .order_by(Transfer.date_transfer.desc())
     )
     if limit is None:
@@ -430,9 +430,9 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                          row, column):
     """helper function for create_step_record"""
 
-    spl = PlateLayout
+    spl = WellSample
     existing_plate_layout = db_session.query(spl).filter(and_(
-        spl.plate_id == destination_plate.plate_id,
+        spl.plate_id == destination_plate.id,
         spl.sample_id == source_plate_well.sample_id,
         spl.well_id == destination_plate_well_id
     )).first()
@@ -447,7 +447,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         raise IndexError(err)
 
     # create a row representing a well in the destination plate.
-    destination_plate_well = PlateLayout( plate_id=destination_plate.plate_id,
+    destination_plate_well = WellSample( plate_id=destination_plate.id,
                                                 sample_id=source_plate_well.sample_id,
                                                 well_id=destination_plate_well_id,
                                                 operator_id=operator.operator_id,
@@ -457,12 +457,12 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = TransferDetail( sample_transfer_id=sample_transfer.id, 
-                                                         item_order_number=order_number,
-                                                         source_plate_id=source_plate.plate_id,
+    source_to_dest_well_transfer = TransferDetail( transfer_id=sample_transfer.id,
+                                                         # item_order_number=order_number,
+                                                         source_plate_id=source_plate.id,
                                                          source_well_id=source_plate_well.well_id,
                                                          source_sample_id=source_plate_well.sample_id,
-                                                         destination_plate_id=destination_plate.plate_id,
+                                                         destination_plate_id=destination_plate.id,
                                                          destination_well_id=destination_plate_well.well_id,
                                                          destination_sample_id=destination_plate_well.sample_id)
     db_session.add(source_to_dest_well_transfer)
@@ -476,7 +476,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         errmsg = "There is no plate with the barcode: [%s]"
         return error_response(404, errmsg % sample_plate_barcode)
 
-    plate_id = sample_plate.plate_id
+    plate_id = sample_plate.id
 
     if fmt == 'csv':
         # FIXME: frontend should call different methods for Download Excel
@@ -508,8 +508,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     seen=[]
     parent_plates=[]
     for parent_plate, details in rows:
-        if parent_plate.plate_id not in seen:
-            seen.append(parent_plate.plate_id)
+        if parent_plate.id not in seen:
+            seen.append(parent_plate.id)
             parent_plates.append({
                 "externalBarcode":parent_plate.external_barcode,
                 "dateCreated":str(parent_plate.date_created),
@@ -526,7 +526,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         .filter(TransferDetail.source_plate_id == plate_id)
         .filter(Plate.plate_id ==
                 TransferDetail.destination_plate_id)
-        .filter(TransferDetail.sample_transfer_id == Transfer.id)
+        .filter(TransferDetail.transfer_id == Transfer.id)
         .options(subqueryload(Transfer.sample_transfer_type))
         # .options(subqueryload(Transfer.operator))
         .all()
@@ -536,8 +536,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     seen=[]
     child_plates=[]
     for child_plate, transfer, details in rows:
-        if child_plate.plate_id not in seen:
-            seen.append(child_plate.plate_id)
+        if child_plate.id not in seen:
+            seen.append(child_plate.id)
             child_plates.append({
                 "externalBarcode":child_plate.external_barcode,
                 "dateCreated":str(child_plate.date_created),
@@ -548,8 +548,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     wells = []
 
     if basic_data_only:
-        dbq = db.session.query(PlateLayout)
-        qry = dbq.filter_by(plate_id=plate_id).order_by(PlateLayout.well_id)
+        dbq = db.session.query(WellSample)
+        qry = dbq.filter_by(plate_id=plate_id).order_by(WellSample.well_id)
         rows = qry.all()
 
         for well in rows:
@@ -562,11 +562,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     else:
         dbq = (
             db.session.query(
-                PlateLayout,
+                WellSample,
                 SampleView
-            ).filter(PlateLayout.sample_id == SampleView.c.sample_id)
+            ).filter(WellSample.sample_id == SampleView.c.sample_id)
         )
-        qry = dbq.filter_by(plate_id=plate_id).order_by(PlateLayout.well_id)
+        qry = dbq.filter_by(plate_id=plate_id).order_by(WellSample.well_id)
         rows = qry.all()
 
         for well, ga in rows:
@@ -693,7 +693,7 @@ def source_plate_well_data():
             }
             return jsonify(response)
 
-        rows = db.session.query(PlateLayout).filter_by(plate_id=sample_plate.plate_id).all()
+        rows = db.session.query(WellSample).filter_by(plate_id=sample_plate.id).all()
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
@@ -977,29 +977,29 @@ carriers = {
             }
 
         }
-    }   
+    }
 }
 
 
 
 def get_hamilton_by_barcode(hamilton_barcode):
-    
+
     if hamilton_barcode in hamiltons:
-        respData = hamiltons[hamilton_barcode] 
+        respData = hamiltons[hamilton_barcode]
     else:
         errmsg = "There is no Hamilton with the barcode: [%s]"
         return error_response(404, errmsg % hamilton_barcode)
 
-    
+
     resp = Response(response=json.dumps(respData),
             status=200, \
             mimetype="application/json")
-    return(resp) 
+    return(resp)
 
 def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
 
     if carrier_barcode in carriers:
-        respData = carriers[carrier_barcode] 
+        respData = carriers[carrier_barcode]
     else:
         errmsg = "There is no carrier with the barcode: [%s]"
         return error_response(404, errmsg % carrier_barcode)
@@ -1099,7 +1099,7 @@ def process_hamilton_sources(transform_type_id):
         );
 
     elif transform_type_id == 58: # PCR/PCA Master Mix addition:
-        
+
         '''
             this code needs to actually analyze the wells in the plates of plateBarcodes
             and build a master mix addition worklist AND needs to determine where the 4 destination plates should be placed.
@@ -1154,7 +1154,7 @@ def trash_samples():
         "all_trashed": True
     }
 
-    
+
 
 def get_worklist(spec_id):
     response = make_response("****** worklist data for transform spec %s ******" % spec_id)
