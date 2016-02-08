@@ -430,15 +430,14 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                          row, column):
     """helper function for create_step_record"""
 
-    spl = WellSample
-    existing_plate_layout = db_session.query(spl).filter(and_(
-        spl.plate_id == destination_plate.id,
-        spl.sample_id == source_plate_well.sample_id,
-        spl.well_id == destination_plate_well_id
+    existing_well_sample = db_session.query(WellSample).filter(and_(
+        WellSample.plate_id == destination_plate.id,
+        WellSample.sample_id == source_plate_well.sample_id,
+        WellSample.well_id == destination_plate_well_id
     )).first()
 
     # error if there is already a sample in this dest well
-    if existing_plate_layout:
+    if existing_well_sample:
         err = ("Plate [%s] already contains "
                "sample %s in well %s") % (
                    destination_plate.external_barcode,
@@ -446,14 +445,26 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                    source_plate_well.well_id)
         raise IndexError(err)
 
-    # create a row representing a well in the destination plate.
-    destination_plate_well = WellSample( plate_id=destination_plate.id,
-                                                sample_id=source_plate_well.sample_id,
-                                                well_id=destination_plate_well_id,
-                                                operator_id=operator.operator_id,
-                                                row=row, column=column)
+    source_well_sample = db_session.query(WellSample).filter(and_(
+        WellSample.plate_id == source_plate.id,
+        WellSample.sample_id == source_plate_well.sample_id,
+        WellSample.well_id == source_plate_well.well_id
+    )).first()
+    if not source_well_sample:
+        err = ("Plate [%s] has no sample %s in well %s") % (
+                   source_plate.external_barcode,
+                   source_plate_well.sample_id,
+                   source_plate_well.well_id)
+        raise IndexError(err)
 
-    db_session.add(destination_plate_well)
+    # create a row representing a well in the destination plate.
+    destination_well_sample = WellSample(plate_id=destination_plate.id,
+                                         sample_id=source_plate_well.sample_id,
+                                         well_id=destination_plate_well_id,
+                                         operator_id=operator.operator_id,
+                                         row=row, column=column)
+
+    db_session.add(destination_well_sample)
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
@@ -463,9 +474,16 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                                                          source_well_id=source_plate_well.well_id,
                                                          source_sample_id=source_plate_well.sample_id,
                                                          destination_plate_id=destination_plate.id,
-                                                         destination_well_id=destination_plate_well.well_id,
-                                                         destination_sample_id=destination_plate_well.sample_id)
+                                                         destination_well_id=destination_well_sample.well_id,
+                                                         destination_sample_id=destination_well_sample.sample_id)
     db_session.add(source_to_dest_well_transfer)
+    db_session.flush()
+
+    aliquot = Aliquot(transfer_id=sample_transfer.id,
+                      source_well_sample_id=source_well_sample.id,
+                      destination_well_sample_id=destination_well_sample.id)
+    db_session.add(aliquot)
+    db_session.flush()
 
 
 def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
