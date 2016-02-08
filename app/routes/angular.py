@@ -145,7 +145,7 @@ def sample_transfer_types():
 # Returns barcodes for all current sample plates
 #
 def sample_plate_barcodes():
-    plates = db.session.query(Plate).order_by(Plate.plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
 
@@ -198,7 +198,7 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
         )
         .options(subqueryload(TransferDetail.source_plate))
         .options(subqueryload(TransferDetail.destination_plate))
-        .options(subqueryload(Transfer.sample_transfer_type))
+        .options(subqueryload(Transfer.transfer_type))
         .options(subqueryload(Transfer.operator))
         .filter(TransferDetail.transfer_id == Transfer.id)
         .order_by(Transfer.date_transfer.desc())
@@ -227,7 +227,7 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
         if (sample_transfer.id not in transfers_data):
             transfers_data[sample_transfer.id] = {
                 "id": sample_transfer.id
-                ,"name": sample_transfer.sample_transfer_type.name
+                ,"name": sample_transfer.transfer_type.name
                 ,"date": sample_transfer.date_transfer.strftime("%A, %B %d %Y, %I:%M%p")
                 ,"operator": sample_transfer.operator.first_and_last_name
                 ,"source_barcodes": [details.source_plate.external_barcode]
@@ -490,7 +490,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         }
         return jsonify(response)
 
-    number_clusters = sample_plate.plate_type.number_clusters
+    number_clusters = sample_plate.plate_type.layout.feature_count
 
     #print "number_clusters: ", number_clusters
 
@@ -502,7 +502,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     rows = db.session.query(Plate,TransferDetail).filter(and_(
         TransferDetail.destination_plate_id==plate_id,
-        Plate.plate_id==TransferDetail.source_plate_id)).all()
+        Plate.id==TransferDetail.source_plate_id)).all()
 
     parent_to_this_task_name = None
     seen=[]
@@ -515,7 +515,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                 "dateCreated":str(parent_plate.date_created),
                 "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
-            parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
+            parent_to_this_task_name = details.sample_transfer.transfer_type.name
 
     rows = (
         db.session.query(
@@ -524,10 +524,10 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             TransferDetail
         )
         .filter(TransferDetail.source_plate_id == plate_id)
-        .filter(Plate.plate_id ==
+        .filter(Plate.id ==
                 TransferDetail.destination_plate_id)
         .filter(TransferDetail.transfer_id == Transfer.id)
-        .options(subqueryload(Transfer.sample_transfer_type))
+        .options(subqueryload(Transfer.transfer_type))
         # .options(subqueryload(Transfer.operator))
         .all()
     )
@@ -543,7 +543,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                 "dateCreated":str(child_plate.date_created),
                 "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
-            this_to_child_task_name = details.sample_transfer.sample_transfer_type.name
+            this_to_child_task_name = details.sample_transfer.transfer_type.name
 
     wells = []
 
@@ -699,7 +699,7 @@ def source_plate_well_data():
             48:get_col_and_row_for_well_id_48,
             96:get_col_and_row_for_well_id_96,
             384:get_col_and_row_for_well_id_384
-        }.get(sample_plate.plate_type.number_clusters,lambda well_id:"missing map")
+        }.get(sample_plate.plate_type.layout.feature_count,lambda well_id:"missing map")
 
         wells = {}
         for well in rows:

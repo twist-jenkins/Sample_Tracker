@@ -110,7 +110,7 @@ def filter_transform( transfer_template_id, sources, dests ):
             well_to_passfail = {}
             for plate, well, cs, nps, summ in db.session.query( Plate, WellSample, ClonedSample, NGSPreppedSample, CallerSummary ) \
                                                         .filter( Plate.external_barcode == barcode ) \
-                                                        .join( WellSample, WellSample.plate_id == Plate.plate_id ) \
+                                                        .join( WellSample, WellSample.plate_id == Plate.id ) \
                                                         .join( ClonedSample, ClonedSample.sample_id == WellSample.sample_id ) \
                                                         .join( NGSPreppedSample, NGSPreppedSample.parent_sample_id == WellSample.sample_id ) \
                                                         .join( CallerSummary, CallerSummary.sample_id == NGSPreppedSample.sample_id ) \
@@ -183,7 +183,7 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
 
         for plate, well, cs in db.session.query( Plate, WellSample, ClonedSample ) \
                                                     .filter( Plate.external_barcode == barcode ) \
-                                                    .join( WellSample, WellSample.plate_id == Plate.plate_id ) \
+                                                    .join( WellSample, WellSample.plate_id == Plate.id ) \
                                                     .join( ClonedSample, ClonedSample.sample_id == WellSample.sample_id ):
             try:
                 marker = cs.parent_process.vector.resistance_marker

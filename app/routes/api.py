@@ -200,7 +200,7 @@ def sample_report(sample_id, format):
         WellSample.plate_id==TransferDetail.source_plate_id,
         WellSample.sample_id==TransferDetail.source_sample_id,
         WellSample.well_id==TransferDetail.source_well_id,
-        Plate.plate_id==TransferDetail.source_plate_id)).all()
+        Plate.id==TransferDetail.source_plate_id)).all()
 
     first_row = None
 
@@ -209,7 +209,7 @@ def sample_report(sample_id, format):
     if len(rows) > 0:
         transfer, transfer_detail, well, plate = rows[0]
 
-        number_clusters = plate.plate_type.number_clusters
+        number_clusters = plate.plate_type.layout.feature_count
 
         #print "number_clusters: ", number_clusters
 
@@ -233,13 +233,13 @@ def sample_report(sample_id, format):
         WellSample.plate_id==TransferDetail.destination_plate_id,
         WellSample.sample_id==TransferDetail.destination_sample_id,
         WellSample.well_id==TransferDetail.destination_well_id,
-        Plate.plate_id==TransferDetail.destination_plate_id)).all()
+        Plate.id==TransferDetail.destination_plate_id)).all()
 
     report = []
 
     for transfer, transfer_detail, well, plate in rows:
 
-        number_clusters = plate.plate_type.number_clusters
+        number_clusters = plate.plate_type.layout.feature_count
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
@@ -253,7 +253,7 @@ def sample_report(sample_id, format):
            "destination_plate_barcode": plate.external_barcode,
            "well_id": well.well_id,
            "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-           "task": transfer.sample_transfer_type.name
+           "task": transfer.transfer_type.name
         }
         report.append(row)
 
@@ -343,7 +343,7 @@ def create_sample_movement_from_spreadsheet_data(operator,transfer_type_id,wells
 # a sample plate by its barcode).
 #
 def get_sample_plate_barcodes_list():
-    plates = db.session.query(Plate).order_by(Plate.plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
 
@@ -695,7 +695,7 @@ def create_sample_movement():
 # a sample plate by its id).
 #
 def get_sample_plates_list():
-    plates = db.session.query(Plate).order_by(Plate.plate_id).all()
+    plates = db.session.query(Plate).order_by(Plate.id).all()
 
     plate_ids = [plate.id for plate in plates]
 
