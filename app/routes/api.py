@@ -394,6 +394,9 @@ def create_destination_plate_DEPRECATED(operator, destination_plates, destinatio
 #
 
 def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,transfer_template_id):
+
+    raise DeprecationWarning
+
     print "source_barcode: ", source_barcodes
     print "destination_barcode: ", destination_barcodes
 
@@ -521,12 +524,12 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
             # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
             # in the "desination" plate.
             #
-            source_to_destination_well_transfer = TransferDetail( transfer_id=sample_transfer.id, 
+            source_to_destination_well_transfer = TransferDetail( transfer_id=sample_transfer.id,
                                                                         # item_order_number=order_number,
                                                                         source_plate_id=source_plate_well.plate_id,
-                                                                        source_well_id=source_plate_well.well_id, 
+                                                                        source_well_id=source_plate_well.well_id,
                                                                         source_sample_id=source_plate_well.sample_id,
-                                                                        destination_plate_id=destination_plate_well.plate_id, 
+                                                                        destination_plate_id=destination_plate_well.plate_id,
                                                                         destination_well_id=destination_plate_well.well_id,
                                                                         destination_sample_id=destination_plate_well.sample_id)
             db.session.add(source_to_destination_well_transfer)
@@ -620,7 +623,7 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
                     # 3.b. Create a row representing a transfer from a well in the "source" plate to a well
                     # in the "desination" plate.
                     #
-                    source_to_destination_well_transfer = TransferDetail( transfer_id=sample_transfer.id, 
+                    source_to_destination_well_transfer = TransferDetail( transfer_id=sample_transfer.id,
                                                                                 # item_order_number=order_number,
                                                                                 source_plate_id=source_plate.id,
                                                                                 source_well_id=source_plate_well_id,
@@ -646,6 +649,9 @@ def create_plate_sample_movement(operator,transfer_type_id,source_barcodes,desti
 # This creates a new "sample movement" or "sample transfer."
 #
 def create_sample_movement():
+
+    raise DeprecationWarning
+
     data = request.json
 
     operator = g.user
@@ -695,6 +701,9 @@ def create_sample_movement():
 # a sample plate by its id).
 #
 def get_sample_plates_list():
+
+    raise DeprecationWarning
+
     plates = db.session.query(Plate).order_by(Plate.id).all()
 
     plate_ids = [plate.id for plate in plates]
@@ -708,6 +717,9 @@ def get_sample_plates_list():
 # Returns the JSON representation of a "sample plate" based on the plate's ID.
 #
 def get_sample_plate(plate_id):
+
+    raise DeprecationWarning
+
     sample_plate = db.session.query(Plate).filter_by(plate_id=plate_id).first()
 
     if not sample_plate:
