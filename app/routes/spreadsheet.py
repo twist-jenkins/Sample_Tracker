@@ -148,62 +148,29 @@ def create_adhoc_sample_movement(db_session,
             }
 
         #
-        # 96 well, plastic
+        # Lookup source well id
         #
-        plate_type = source_plate.plate_type
-        plate_size = None
-        if plate_type.name == "48 well, plastic":
-            plate_size = "48"
-        elif plate_type.name == "96 well, plastic":
-            plate_size = "96"
-        elif plate_type.name == "384 well, plastic":
-            plate_size = "384"
-        elif plate_type.name == "6144 well, silicon, Titin":
-            plate_size = "6144"
-        else:
-            plate_size = None
+        feature_count = source_plate.plate_type.layout.feature_count
+        plate_size = str(feature_count)
+        if plate_size not in well_from_col_and_row_methods:
+            return {
+                "success": False,
+                "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 48/96/384/6144 size plates and the source plate is of size [%s]" % feature_count
+            }
 
-        # print "\n\nSOURCE PLATE, barcode: %s  plate type: [%s]" % (#source_plate.external_barcode,plate_type.name)
-        logging.info("SOURCE PLATE, barcode: %s  plate type: [%s]",
-                     source_plate.external_barcode, plate_type.name)
+        logging.info("SOURCE PLATE, barcode: %s  plate size: [%s]",
+                     source_plate.external_barcode, plate_size)
 
         source_col_and_row = source_col_and_row.strip()
 
-        # if source_well_id is None or source_well_id.strip() == "":
-        if plate_size is None:
-            return {
-                "success": False,
-                "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 96 and 384 size plates and the source plate is this type: [%s]" % (plate_type.name)
-            }
-        else:
-            logging.info("source_col_and_row: %s", source_col_and_row)
-            try:
-                source_well_id = int(source_col_and_row)
-            except ValueError:
-                source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
-            logging.info("calculated source well id: %s from "
-                         "plate size: %s and column/row: %s",
-                         source_well_id, plate_size, source_col_and_row)
-
-        # else:
-        #    source_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
-        #    logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column))
-        #    print "calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column)
-
-        """
-        if source_col_and_row != "":
-            parts = source_col_and_row.split(":")
-            if len(parts) < 2:
-                return {
-                    "success":False,
-                    "errorMessage":"Please specify both the plate size and the row-and-column ==> Like this: 384:A2"
-                }
-                plate_size, row_and_column = parts[0], parts[1]
-                print "plate size: %s   row and column %s " % (plate_size, row_and_column)
-                source_well_id = well_from_col_and_row_methods[plate_size](row_and_column)
-                logger.info ("calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column))
-                print "calculated source well id: %s from plate size: %s and column/row: %s" % (source_well_id,plate_size, row_and_column)
-        """
+        logging.info("source_col_and_row: %s", source_col_and_row)
+        try:
+            source_well_id = int(source_col_and_row)
+        except ValueError:
+            source_well_id = well_from_col_and_row_methods[plate_size](source_col_and_row)
+        logging.info("calculated source well id: %s from "
+                     "plate size: %s and column/row: %s",
+                     source_well_id, plate_size, source_col_and_row)
 
         # print "source plate barcode [%s]" % (source_plate_barcode)
         storage_location = source_plate.storage_location
