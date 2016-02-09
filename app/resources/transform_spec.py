@@ -345,11 +345,21 @@ def store_quant_data(db, plate_id, quant_str):
     except:
         logger.error("Failed to find plate %s" % plate_id)
 
+    f_id = create_unique_id(Sample.id_prefix)
     for conc in spectramax.parse(quant_str):
         well = plate.get_well_by_number(conc[0])
 
-        # Then find the well_sample record and then sample
-        samples = db.query(Sample).filter(Sample.plate_id == plate.id,
-                                    Sample.plate_well_id == well.pk)
+        # FIXME this should carry metadata over from the parent sample
+        # instance into these new child instances but since we don't
+        # currently *have* parent instances, there's nothing to carry over
+        curr_id = f_id()
+        # FIXME ridiculous 'name' value due to unique constraint on name
+        new_S = Sample(id=curr_id, plate_id=plate.id, plate_well_id=well.pk,
+                       conc_ng_ul=conc[2],
+                       name="Spectramax concentration (%s)" % curr_id)
 
-        import ipdb; ipdb.set_trace()
+        db.add(new_S)
+    logger.info("Flushing inserts for parsed concentration data")
+    db.flush()
+
+    return {'success': True}  # caller is expecting this
