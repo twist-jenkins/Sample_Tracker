@@ -334,6 +334,7 @@ def create_step_record():
                 source_plate = source_plates[0]
 
                 # create the destination plate
+                logging.warning("FOUND DEST BC: %s" % destination_barcodes[0])
                 plate = create_destination_plate(db_session, operator,
                                                  destination_barcodes[0],
                                                  source_plate.type_id,
@@ -1186,4 +1187,3 @@ def get_date_time():
             status=200, \
             mimetype="application/json")
     return(resp)
-

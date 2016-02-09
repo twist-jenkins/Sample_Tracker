@@ -1,3 +1,5 @@
+"""Define REST resources for CRUD on transform specs."""
+
 import json
 import logging
 from datetime import datetime
@@ -13,10 +15,9 @@ from app import app
 from app import db
 from app.utils import scoped_session
 
-from twistdb.sampletrack import Sample, TransformSpec, Transfer
+from app import constants
+from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
 
-# from twistdb.ngs import *
-# from twistdb.backend import NGSPreppedSample
 from twistdb import create_unique_id
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 
@@ -27,7 +28,7 @@ api = flask_restful.Api(app)
 
 from marshmallow import Schema, fields
 
-
+logger = logging.getLogger()
 
 
 def json_api_success(data, status_code, headers=None):
@@ -40,18 +41,16 @@ def json_api_success(data, status_code, headers=None):
     else:
         return json_api_response, status_code, headers
 
-"""
-TODO:
-def json_api_error(err_list, status_code, headers=None):
-    json_api_response = {"data": {},
-                         "errors": err_list,
-                         "meta": {}
-                         }
-    if headers is None:
-        return json_api_response, status_code
-    else:
-        return json_api_response, status_code, headers
-"""
+# TODO:
+# def json_api_error(err_list, status_code, headers=None):
+#     json_api_response = {"data": {},
+#                          "errors": err_list,
+#                          "meta": {}
+#                          }
+#     if headers is None:
+#         return json_api_response, status_code
+#     else:
+#         return json_api_response, status_code, headers
 
 
 def formatted(db_session, data, fmt, spec):
@@ -86,8 +85,6 @@ def formatted(db_session, data, fmt, spec):
         return json_api_success(data, 200)
     else:
         abort(404, message="Invalid format {}".format(fmt))
-
-
 
 
 class SpecSchema(Schema):
@@ -225,13 +222,21 @@ class TransformSpecResource(flask_restful.Resource):
         transfer_template_id = details["transfer_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
-        result = create_adhoc_sample_movement(sess,
-                                              transfer_type_id,
-                                              transfer_template_id,
-                                              wells,
-                                              transform_spec_id=spec.spec_id)
-        if not result:
-            raise ValueError("create_adhoc_sample_movement returned nothing")
+
+        if 'requestedData' in spec.data_json['details'].keys():
+            if transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+                aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
+                quant_data = spec.data_json['details']['requestedData']['instrument_data']
+                result = store_quant_data(sess, aliquot_plate, quant_data)
+        else:
+            result = create_adhoc_sample_movement(sess,
+                                                  transfer_type_id,
+                                                  transfer_template_id,
+                                                  wells,
+                                                  transform_spec_id=spec.spec_id)
+            if not result:
+                raise ValueError("create_adhoc_sample_movement returned nothing")
+
         if not result["success"]:
             abort(400, message="Failed to execute step (sample_movement)")
         spec.date_executed = datetime.utcnow()
@@ -275,7 +280,8 @@ def modify_before_insert(db_session, spec):
     # if not "ngs barcoding" step, do nothing
     details = spec.data_json["details"]
     if "transfer_type_id" in details:
-        if details["transfer_type_id"] != 26:
+        if details["transfer_type_id"] != \
+                constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
             return False
 
     operations = spec.data_json["operations"]
@@ -327,3 +333,23 @@ def modify_before_insert(db_session, spec):
         }
     }]
     return True
+
+
+def store_quant_data(db, plate_id, quant_str):
+    """Associated quant data from an uploaded file with an aliquot plate."""
+    from app.parser import spectramax
+
+    try:
+        plate = db.query(Plate).\
+            filter(Plate.external_barcode == plate_id).one()
+    except:
+        logger.error("Failed to find plate %s" % plate_id)
+
+    for conc in spectramax.parse(quant_str):
+        well = plate.get_well_by_number(conc[0])
+
+        # Then find the well_sample record and then sample
+        samples = db.query(Sample).filter(Sample.plate_id == plate.id,
+                                    Sample.plate_well_id == well.pk)
+
+        import ipdb; ipdb.set_trace()
