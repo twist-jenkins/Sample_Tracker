@@ -4,7 +4,7 @@ app = angular.module('twist.app')
     function (Constants) {
         return {
             transferTemplates: {
-                1: {  // keyed to sample_transfer_template_id in the database
+                1: {  // keyed to transfer_template_id in the database
                     description: 'Source and destination have SAME LAYOUT'
                     ,type: 'same-same'
                     ,source: {
@@ -16,7 +16,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,2: {  // keyed to sample_transfer_template_id in the database
+                ,2: {  // keyed to transfer_template_id in the database
                     description: 'Source and destination plate are SAME PLATE'
                     ,type: 'same-same'
                     ,source: {
@@ -28,7 +28,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,13: {  // keyed to sample_transfer_template_id in the database
+                ,13: {  // keyed to transfer_template_id in the database
                     description: '384 to 4x96'
                     ,type: 'standard_template'
                     ,source: {
@@ -433,7 +433,7 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
-                ,14: {  // keyed to sample_transfer_template_id in the database
+                ,14: {  // keyed to transfer_template_id in the database
                     description: '96 to 2x48'
                     ,type: 'standard_template'
                     ,source: {
@@ -550,7 +550,7 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
-                ,16: {  // keyed to sample_transfer_template_id in the database
+                ,16: {  // keyed to transfer_template_id in the database
                     description: 'Manual picking to nx 96'
                     ,type: 'user_specified'
                     ,source: {
@@ -564,7 +564,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,18: {  // keyed to sample_transfer_template_id in the database
+                ,18: {  // keyed to transfer_template_id in the database
                     description: '4x96 to 384'
                     ,type: 'standard_template'
                     ,source: {
@@ -975,7 +975,7 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
-                ,20: {  // keyed to sample_transfer_template_id in the database
+                ,20: {  // keyed to transfer_template_id in the database
                     description: 'Hitpick for shipping'
                     ,type: 'user_specified'
                     ,source: {
@@ -988,7 +988,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,21: {  // keyed to sample_transfer_template_id in the database
+                ,21: {  // keyed to transfer_template_id in the database
                     description: 'Qpix Log Reading to nx 96'
                     ,type: 'user_specified'
                     ,source: {
@@ -1002,7 +1002,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,22: {  // keyed to sample_transfer_template_id in the database
+                ,22: {  // keyed to transfer_template_id in the database
                     description: 'Qpix Log Reading to nx 384'
                     ,type: 'user_specified'
                     ,source: {
@@ -1016,7 +1016,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,23: {  // keyed to sample_transfer_template_id in the database
+                ,23: {  // keyed to transfer_template_id in the database
                     description: 'Plate Merge'
                     ,type: 'standard_template'
                     ,source: {
@@ -1028,7 +1028,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,24: {  // keyed to sample_transfer_template_id in the database
+                ,24: {  // keyed to transfer_template_id in the database
                     description: 'Generic Transform'
                     ,type: 'user_specified'
                     ,source: {
@@ -1040,7 +1040,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,25: {  // keyed to sample_transfer_template_id in the database
+                ,25: {  // keyed to transfer_template_id in the database
                     description: 'Rebatching for Transformation'
                     ,type: 'standard_template'
                     ,source: {
@@ -1054,7 +1054,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                     }
                 }
-                ,26: {  // keyed to sample_transfer_template_id in the database
+                ,26: {  // keyed to transfer_template_id in the database
                     description: 'Fragment Analyzer'
                     ,type: 'standard_template'
                     ,source: {
@@ -1066,7 +1066,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,27: {  // keyed to sample_transfer_template_id in the database
+                ,27: {  // keyed to transfer_template_id in the database
                     description: 'NGS QC Pass'
                     ,type: 'standard_template'
                     ,source: {
@@ -1078,7 +1078,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,28: {  // keyed to sample_transfer_template_id in the database
+                ,28: {  // keyed to transfer_template_id in the database
                     description: 'Hitpicking for shipping in plates'
                     ,type: 'hamilton'
                     ,source: {
@@ -1177,7 +1177,7 @@ app = angular.module('twist.app')
 
                     }
                 }
-                ,29: {  // keyed to sample_transfer_template_id in the database
+                ,29: {  // keyed to transfer_template_id in the database
                     description: 'Reformatting for Purification'
                     ,type: 'standard_template'
                     ,source: {
@@ -1189,7 +1189,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,30: {  // keyed to sample_transfer_template_id in the database
+                ,30: {  // keyed to transfer_template_id in the database
                     description: 'NGS Barcoding'
                     ,type: 'standard_template'
                     ,source: {
@@ -1201,7 +1201,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,31: {  // keyed to sample_transfer_template_id in the database
+                ,31: {  // keyed to transfer_template_id in the database
                     description: 'NGS: sample sheet generation'
                     ,type: 'standard_template'
                     ,source: {
@@ -1213,7 +1213,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,32: {  // keyed to sample_transfer_template_id in the database
+                ,32: {  // keyed to transfer_template_id in the database
                     description: 'Hitpicking for miniprep'
                     ,type: 'hamilton'
                     ,source: {
@@ -1334,7 +1334,7 @@ app = angular.module('twist.app')
 
                     }
                 }
-                ,33: {  // keyed to sample_transfer_template_id in the database
+                ,33: {  // keyed to transfer_template_id in the database
                     description: 'Hitpicking for shipping in tubes'
                     ,type: 'hamilton'
                     ,source: {
@@ -1591,7 +1591,7 @@ app = angular.module('twist.app')
 
                     }
                 }
-                ,34: {  // keyed to sample_transfer_template_id in the database
+                ,34: {  // keyed to transfer_template_id in the database
                     description: 'Titin Extraction'
                     ,type: 'standard_template'
                     ,source: {
@@ -1623,7 +1623,7 @@ app = angular.module('twist.app')
                         ]
                     }
                 }
-                ,35: {  // keyed to sample_transfer_template_id in the database
+                ,35: {  // keyed to transfer_template_id in the database
                     description: 'PCA Pre-Planning'
                     ,type: 'PLATE_PLANNING'
                     ,source: {
@@ -1637,7 +1637,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,36: {  // keyed to sample_transfer_template_id in the database
+                ,36: {  // keyed to transfer_template_id in the database
                     description: 'PCR Primer Hitpicking'
                     ,type: 'standard_template'
                     ,source: {
@@ -1651,7 +1651,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,37: {  // keyed to sample_transfer_template_id in the database
+                ,37: {  // keyed to transfer_template_id in the database
                     description: 'PCA/PCR Master Mix Addition'
                     ,type: 'hamilton'
                     ,source: {
@@ -1696,7 +1696,7 @@ app = angular.module('twist.app')
                         
                     }
                 }
-                ,38: {  // keyed to sample_transfer_template_id in the database
+                ,38: {  // keyed to transfer_template_id in the database
                     description: 'Normalization'
                     ,type: 'hamilton'
                     ,source: {

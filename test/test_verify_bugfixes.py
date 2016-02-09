@@ -39,7 +39,7 @@ class TestCase(unittest.TestCase):
         rv = self.client.post('/api/v1/track-sample-step', data=payload)
         assert rv.status_code == 404
         """ was getting:     state_str(existing)))
-FlushError: New instance <SampleTransferDetail at 0x112848990> with identity key (<class 'app.dbmodels.SampleTransferDetail'>, (186, 1)) conflicts with persistent instance <SampleTransferDetail at 0x11be20ed0>"""
+FlushError: New instance <TransferDetail at 0x112848990> with identity key (<class 'app.dbmodels.TransferDetail'>, (186, 1)) conflicts with persistent instance <TransferDetail at 0x11be20ed0>"""
 
     def disabled_test_get_samples(self):
         rv = self.client.get('/samples')

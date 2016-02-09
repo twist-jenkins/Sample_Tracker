@@ -1,7 +1,7 @@
 def maps_json():
     return {
         "transfer_maps": {
-            1: {  # keyed to sample_transfer_template_id in the database
+            1: {  # keyed to transfer_template_id in the database
                 "description": "Source and destination are SAME TYPE."
                 ,"source": {
                     "plate_count": 1
@@ -10,7 +10,7 @@ def maps_json():
                     "plate_count": 1
                 }
             }
-            ,2: {  # keyed to sample_transfer_template_id in the database
+            ,2: {  # keyed to transfer_template_id in the database
                 "description": "Source and destination are SAME PLATE"
                 ,"source": {
                     "plate_count": 1
@@ -19,7 +19,7 @@ def maps_json():
                     "plate_count": 0
                 }
             }
-            ,13: {  # keyed to sample_transfer_template_id in the database
+            ,13: {  # keyed to transfer_template_id in the database
                 "description": "384 to 4x96"
                 ,"source": {
                     "plate_count": 1
@@ -420,7 +420,7 @@ def maps_json():
                     }
                 ]
             }
-            ,14: {  # keyed to sample_transfer_template_id in the database
+            ,14: {  # keyed to transfer_template_id in the database
                 "description": "96 to 2x48"
                 ,"source": {
                     "plate_count": 1
@@ -533,7 +533,7 @@ def maps_json():
                     }
                 ]
             }
-            ,18: {  # keyed to sample_transfer_template_id in the database
+            ,18: {  # keyed to transfer_template_id in the database
                 "description": "4x96 to 384"
                 ,"source": {
                     "plate_count": 4
