@@ -152,6 +152,10 @@ def create_adhoc_sample_movement(db_session,
         #
         source_plate_size = str(source_plate.plate_type.layout.feature_count)
         if source_plate_size not in well_from_col_and_row_methods:
+            logging.error(" %s encountered error creating sample transfer. "
+                          "The source plate with barcode [%s] is size [%s]",
+                          g.user.first_and_last_name, source_plate_barcode,
+                          source_plate_size)
             return {
                 "success": False,
                 "errorMessage": "You must specify a SOURCE well id. Currently this app only has wellid-to-col/row mappings for 48/96/384/6144 size plates and the source plate is of size [%s]" % source_plate_size
