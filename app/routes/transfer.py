@@ -263,8 +263,10 @@ def preview():
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
                 constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
-                constants.TRANS_TYPE_PCA_PREPLANNING):
-                # these are same to same transfers
+                constants.TRANS_TYPE_PCA_PREPLANNING,
+                constants.TRANS_TYPE_PCR_PRIMER_HITPICK,):
+
+            # these are same to same transfers
 
             if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
                 src_plate_type = "SPTT_0006"
