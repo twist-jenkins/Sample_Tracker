@@ -149,6 +149,7 @@ class TransformSpecResource(flask_restful.Resource):
 
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
+        print '@@ create_or_replace'
         with scoped_session(db.engine) as sess:
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
@@ -158,6 +159,7 @@ class TransformSpecResource(flask_restful.Resource):
                 spec = SampleTransformSpec()         # create new, unknown id
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
+                print '@@ spec.data_json:', spec.data_json
                 spec.operator_id = current_user.operator_id
 
                 # workaround for poor input marshaling
@@ -217,6 +219,7 @@ class TransformSpecResource(flask_restful.Resource):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
+        print '@@ executing - details:', details
         try:
             transfer_type_id = details["transfer_type_id"]
         except:
