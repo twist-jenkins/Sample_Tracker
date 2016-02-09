@@ -51,8 +51,8 @@ class SampleView(db.Model):
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
-        from twistdb.backend import GeneAssemblySample
-        __table__ = GeneAssemblySample.__table__
+        from twistdb.sampletrack import Sample
+        __table__ = Sample.__table__
 
 
 class MiSeqSampleView(db.Model):
@@ -61,8 +61,8 @@ class MiSeqSampleView(db.Model):
                              db.Column("sample_id", db.String(40),
                                        primary_key=True), autoload=True)
     except:
-        from twistdb.ngs import NGSPreppedSample
-        __table__ = NGSPreppedSample.__table__
+        from twistdb.sampletrack import Sample
+        __table__ = Sample.__table__
 
 
 

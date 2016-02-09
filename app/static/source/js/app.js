@@ -84,7 +84,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
                     $scope.transformSpec.setTransformSpecDetails(option);
-                    $scope.transformSpec.setTitle(option.text)
+                    $scope.transformSpec.setTitle(option.text);
+                    $scope.transformSpec.reset();
+                    $scope.showPresentedRequestedData = false;
                     $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
                     break;
                 }
@@ -149,7 +151,8 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.transformSpec.details.transfer_template_id == 28 || 
                 $scope.transformSpec.details.transfer_template_id == 29 ||
                 $scope.transformSpec.details.transfer_template_id == 30 ||
-                $scope.transformSpec.details.transfer_template_id == 31) {
+                $scope.transformSpec.details.transfer_template_id == 31 ||
+                $scope.transformSpec.details.transfer_template_id == 35) {
                 executeNow = false;
             }
 
@@ -187,6 +190,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transformSpec = TransformBuilder.newTransformSpec();
             $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
+            $scope.showPresentedRequestedData = false;
             if (!skipGo) {
                 $state.go('root.record_transform');
             }
@@ -284,9 +288,9 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 }
             } else {
                 if (which == Constants.PLATE_SOURCE) {
-                    $scope.transformSpec.checkSourcesReady();
+                    $scope.transformSpec.checkSourcesReady(true);
                 } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transformSpec.checkDestinationsReady();
+                    $scope.transformSpec.checkDestinationsReady(true);
                 }
             }
         };
@@ -304,20 +308,14 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         
         $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
-                if (!oldVal || oldVal.length != newVal.length) {
-                    if (newVal.length) {
-                        $scope.showPresentedRequestedData = true;
-                    }
-                }
+                $scope.showPresentedRequestedData = true;
             }
         });
 
         $scope.$watch('transformSpec.requestedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
                 if (!oldVal || oldVal.length != newVal.length) {
-                    if (newVal.length) {
-                        $scope.showPresentedRequestedData = true;
-                    }
+                    $scope.showPresentedRequestedData = true;
                 }
             }
         });

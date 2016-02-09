@@ -200,14 +200,13 @@ app = angular.module('twist.app')
                 }
                 return $http(saveAndExReq);
             }
-            ,previewTransformation: function(sources, destinations, transfer_type_id, transfer_template_id ) {
+            ,previewTransformation: function(sources, destinations, details ) {
                 // kieran
                 var preview = ApiRequestObj.getPost('transfer-preview');
                 preview.data = {
                     sources: sources,
                     destinations: destinations,
-                    transfer_type_id: transfer_type_id,
-                    transfer_template_id: transfer_template_id
+                    details: details
                 }
                 return $http(preview);
             }
@@ -393,14 +392,14 @@ app = angular.module('twist.app')
                 return new TransformSpecSource(Constants.SOURCE_TYPE_PLATE);
             };
 
-            var updateOperationsList = function () {
+            base.updateOperationsList = function () {
                 if (base.autoUpdateSpec) {
 
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
                         (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
                             // kieran
-                            Api.previewTransformation( base.sources, base.destinations, base.details.transfer_type_id, base.details.transfer_template_id )
+                            Api.previewTransformation( base.sources, base.destinations, base.details )
                                 .success( function(result) {
                                     if( result.success ) {
                                         base.error_message = '';
@@ -764,7 +763,7 @@ app = angular.module('twist.app')
                 }
                 base.map[which].plateCount += howMany;
                 base.updateInputs();
-                updateOperationsList();
+                base.updateOperationsList();
             }
 
             base.removePlateInput = function (which, plateIndex) {
@@ -779,18 +778,30 @@ app = angular.module('twist.app')
                 }
                 base[which + 's'] = newSources;
                 base.updateInputs();
-                updateOperationsList();
+                base.updateOperationsList();
             }
 
-            base.checkSourcesReady = function () {
+            base.checkSourcesReady = function (clearErrors) {
+
                 for (var i=0; i<base.sources.length; i++) {
+
                     if (!base.sources[i].loaded) {
                         if (!base.sources[i].updating) { /* don't call notReady if the plate is still fetching its data */
-                            base.sources[i].loaded = false;
+                            delete base.sources[i].loaded
+                            delete base.sources[i].error;
+                            notReady('source');
+                            return false;
+                        }
+                    } else {
+                        //we might have loaded data but then removed the barcode for this input
+                        if (base.sources[i].details.id == "") {
+                            delete base.sources[i].loaded;
+                            delete base.sources[i].error;
                             notReady('source');
                             return false;
                         }
                     }
+
                 }
                 return true;    
             }
@@ -800,6 +811,8 @@ app = angular.module('twist.app')
                 delete sourceItem.error;
                 delete sourceItem.loaded;
                 var barcode = sourceItem.details.id;
+
+                /* TODO: add barcode format validation once we have it settled */
 
                 var onError = function (sourceItem, msg) {
                     notReady('source');
@@ -821,30 +834,48 @@ app = angular.module('twist.app')
 
                 plateDetailsFetcher(barcode).success(function (data) {
                     if (data.success) {
-                        if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
-                            onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
+                        if (base.map.source.create) {
+                            //then the source plate will be created in this step and should not exist - this success is actually an error  
+                            onError(sourceItem, 'Error: An plate with barcocde <strong>#' + barcode + '</strong> already exists.');
                         } else {
-                            sourceItem.loaded = true;
-                            sourceItem.items = data.wells;
 
-                            var dataCopy = angular.copy(data);
-                            delete dataCopy.wells;
-                            jQuery.extend(sourceItem.details, dataCopy);
-                            sourceItem.updating = false;
-                            if (base.checkSourcesReady()) {
-                                base.sourcesReady = true;
+                            if (base.map.source.plateTypeId && data.plateDetails.type != base.map.source.plateTypeId) {
+                                onError(sourceItem, 'Error: Source plate ' + barcode + ' type (' + data.plateDetails.type + ') does not match the expected value of ' + base.map.source.plateTypeId);
                             } else {
-                                return;
-                            } 
-                            updateOperationsList();
+                                sourceItem.loaded = true;
+                                sourceItem.items = data.wells;
+
+                                var dataCopy = angular.copy(data);
+                                delete dataCopy.wells;
+                                jQuery.extend(sourceItem.details, dataCopy);
+                                sourceItem.updating = false;
+                                if (base.checkSourcesReady()) {
+                                    base.sourcesReady = true;
+                                } else {
+                                    return;
+                                } 
+                                base.updateOperationsList();
+                            }
+                            ready();
                         }
-                        ready();
                         sourceItem.updating = false;
                     } else {
                         onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
                     }  
                 }).error(function (data) {
-                    onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
+                    // if this transform expects source plates to be created in this step, then they won't already exist
+                    // and this is an expected error
+                    if (base.map.source.create) {
+                        sourceItem.loaded = true;
+                        sourceItem.updating = false;
+                        if (base.checkSourcesReady()) {
+                            base.sourcesReady = true;
+                        }
+                        base.updateOperationsList();
+                        ready();
+                    } else {
+                        onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
+                    }
                 });
             }
 
@@ -901,7 +932,7 @@ app = angular.module('twist.app')
                                 }
                             }
                             base.destinationsReady = true;
-                            updateOperationsList();
+                            base.updateOperationsList();
                         }
                         ready(); 
                     }).error(function (data) {
@@ -1043,6 +1074,31 @@ app = angular.module('twist.app')
             base.setPlateStepDefaults = function () {
                 base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
             };
+
+            base.reset = function () {
+                base.presentedDataItems = [];
+                base.requestedDataItems = [];
+
+
+                for (var i=0; i< base.sources.length; i++) {
+                    var source = base.sources[i];
+                    if (source.details.id && source.details.id != '') {
+                        base.addSource(i);
+                    } else {
+                        delete source.error;
+                        delete source.loaded;
+                    }
+                }
+                for (var i=0; i< base.destinations.length; i++) {
+                    var destination = base.destinations[i];
+                    if (destination.details.id && destination.details.id != '') {
+                        base.addDestination(i);
+                    } else {
+                        delete destination.error;
+                        delete destination.loaded;
+                    }
+                }
+            }
 
             base.setCreateEditDefaults = function () {
                 base.setTitle('New Transform Spec');

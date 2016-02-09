@@ -16,17 +16,17 @@ import sqlalchemy as db
 
 def upgrade():
     op.add_column('sample_transfer',
-                  db.Column('sample_transform_spec_id',
+                  db.Column('transform_spec_id',
                             db.Integer(),
                             db.ForeignKey('sample_transform_spec.spec_id')))
 
     op.create_foreign_key(
         "fk_sample_transfer_transform_spec",
         "sample_transfer", "sample_transform_spec",
-        ["sample_transform_spec_id"], ["spec_id"])
+        ["transform_spec_id"], ["spec_id"])
 
 
 def downgrade():
     op.execute("alter table sample_transfer"
                " drop column if exists "
-               " sample_transform_spec_id")
+               " transform_spec_id")
