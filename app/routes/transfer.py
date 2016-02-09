@@ -60,7 +60,7 @@ def merge_transform( sources, dests ):
                           'source_sample_id':               well.sample_id,
                           'destination_plate_barcode':      dest_barcode,
                           'destination_well_name':          plate.type.get_well_name( well.well_id ),
-                          'destination_plate_well_count':   plate.type.number_clusters,
+                          'destination_plate_well_count':   plate.type.layout.feature_count,
             })
     print rows
     return rows
@@ -167,7 +167,7 @@ def filter_transform( transfer_template_id, sources, dests ):
                           'source_sample_id':               well.sample_id,
                           'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
                           'destination_well_name':          dest_type.get_well_name( dest_well ),
-                          'destination_plate_well_count':   dest_type.number_clusters
+                          'destination_plate_well_count':   dest_type.layout.feature_count
             })
     return rows
 
@@ -211,7 +211,7 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
 def preview():
     assert request.method == 'POST'
 
-    details = request.json["details"]
+    details = request.json # ["details"]
 
     transfer_template_id = details["transfer_template_id"]
     transfer_type_id = details["transfer_type_id"]
@@ -253,7 +253,7 @@ def preview():
                                   'source_sample_id':               well.sample_id,
                                   'destination_plate_barcode':      barcode,
                                   'destination_well_name':          well.well_name,
-                                  'destination_plate_well_count':   dest_plate_type.number_clusters
+                                  'destination_plate_well_count':   dest_plate_type.layout.feature_count
                                   })
 
             if request.json['transfer_type_id'] == \
@@ -441,7 +441,7 @@ def preview():
                                 'source_sample_id':               row["source_sample_id"],
                                 'destination_plate_barcode':      dest_barcode,
                                 'destination_well_name':          dest_type.get_well_name(fourToOneMap[quadrantIndex%4][rowIndex + 1]["destination_well_id"]),
-                                'destination_plate_well_count':   dest_type.number_clusters
+                                'destination_plate_well_count':   dest_type.layout.feature_count
                             });
                         quadrantIndex += 1
                         if (quadrantIndex and quadrantIndex%4 == 0):
@@ -533,7 +533,7 @@ def preview():
                                       'source_sample_id': well.sample_id,
                                       'destination_plate_barcode': dest_barcode,
                                       'destination_well_name': dest_plate_type.get_well_name(dest_well),
-                                      'destination_plate_well_count': dest_plate_type.number_clusters,
+                                      'destination_plate_well_count': dest_plate_type.layout.feature_count,
                                       })
 
     except WebError as e:
