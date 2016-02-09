@@ -229,7 +229,10 @@ def preview():
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
                 constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
-                constants.TRANS_TYPE_PCA_PREPLANNING):
+                constants.TRANS_TYPE_PCA_PREPLANNING,
+                constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
+                constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
+                constants.TRANS_TYPE_NGS_THERMOCYCLE):
                 # these are same to same transfers
 
             if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
@@ -305,24 +308,36 @@ def preview():
 
             elif transfer_type_id in (
                     constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "Thermocycling conditions",
-                        "data": "Thermocycling conditions here... maybe CSV format to render a table?"
-                    }
-                })
+                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
+                    constants.TRANS_TYPE_NGS_THERMOCYCLE):
 
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode",
-                        "title": "Thermocycler barcode",
-                        "forProperty": "thermocyclerBarcode"
-                    }
-                })
+                reqData = {};
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if reqData and "thermocyclerBarcode" in reqData:
+                    thermoBarcode = reqData["thermocyclerBarcode"]
+
+                    # TO DO  Actually derive the proper thermocycling conditions for presentation to the user
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Thermocycling conditions",
+                            "data": "Thermocycling conditions here... maybe CSV format to render a table?"
+                        }
+                    })
+                else:
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": "barcode",
+                            "title": "Thermocycler barcode",
+                            "forProperty": "thermocyclerBarcode"
+                        }
+                    })
 
             elif transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 responseCommands.append({
@@ -332,6 +347,39 @@ def preview():
                         "title": "Quantification Results",
                         "forProperty": "instrument_data",
                         "fileType": "quantification"
+                    }
+                })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
+
+                rows = [{}]
+
+
+                # TO DO   Generate worklist...
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "file-data",
+                        "title": "Worklist",
+                        "forProperty": "worklist",
+                        "fileType": "worklist"
+                    }
+                })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION:
+
+                rows = [{}]
+
+
+                # TO DO   Generate master mix instructions...
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "NGS Master Mix",
+                        "data": "Master mix data here... maybe CSV format to render a table?"
                     }
                 })
 
@@ -583,6 +631,18 @@ TRANSFER_MAP = loads("""
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": false
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"4": {  // keyed to sample_transfer_template_id in the database
+                    "description": "Multiplexed same-same"
+                    ,"type": "same-same"
+                    ,"source": {
+                        "plateCount": 4
+                        ,"variablePlateCount": true
                     }
                     ,"destination": {
                         "plateCount": 0

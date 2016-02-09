@@ -28,6 +28,18 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
+                ,4: {  // keyed to transfer_template_id in the database
+                    description: 'Multiplexed same to same'
+                    ,type: 'same-same'
+                    ,source: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
                 ,13: {  // keyed to sample_transfer_template_id in the database
                     description: '384 to 4x96'
                     ,type: 'standard_template'

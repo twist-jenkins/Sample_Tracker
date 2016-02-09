@@ -588,6 +588,8 @@ app = angular.module("twist.app")
                                     $scope.error = null;
                                     $scope.item.validData = true;
                                 }
+
+                                $scope.transformSpec.updateOperationsList();
                             }
                         }
 
