@@ -6,7 +6,7 @@ from twistdb.frag import *
 import twistdb.ngs
 from collections import defaultdict
 from app import app, db
-from app.resources import primer_hitpicking
+from app.steps import primer_hitpicking
 
 from app import constants
 from flask_login import current_user
@@ -224,22 +224,23 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
     pca_plates = []
     for bc in pca_barcodes:
         try:
-            pca_plates.append( db.session.query(SamplePlate).filter(SamplePlate.external_barcode == bc).one() )
+            pca_plates.append( db.session.query(Plate).filter(Plate.external_barcode == bc).one() )
         except NoResultFound:
             print '@@ bad barcode:', bc
 
     try:
-        bulk = db.session.query(SamplePlate).filter(SamplePlate.external_barcode == bulk_barcode).one()
+        bulk = db.session.query(Plate).filter(Plate.external_barcode == bulk_barcode).one()
     except NoResultFound:
         # we don't really need a plate for this step, but will later
-        bulk = SamplePlate( type_id='SPTT_0006', operator_id=current_user.operator_id,
-                            external_barcode=bulk_barcode )
+        bulk = Plate( type_id='SPTT_0006', operator_id=current_user.operator_id,
+                      external_barcode=bulk_barcode )
         db.session.add( bulk )
         db.session.commit()
 
     rows = primer_hitpicking.bulk_to_temp_transform( db.session, bulk_barcode, pca_plates )
-    print rows
-    return 'placeholder', rows
+    print '@@ bulk_to_temp_transform - rows:', rows
+    master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
+    return master_mixes, rows
 
 
 def preview():
@@ -274,20 +275,20 @@ def preview():
 
             else:
                 src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-                dest_plate_type = db.session.query(SamplePlateType).get(src_plate_type)
+                dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
                 for src_idx, src in enumerate(request.json['sources']):
                     barcode = src['details']['id']
                     try:
-                        plate = db.session.query(SamplePlate) \
-                                          .filter(SamplePlate.external_barcode == barcode) \
+                        plate = db.session.query(Plate) \
+                                          .filter(Plate.external_barcode == barcode) \
                                           .one()
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for well in db.session.query(SamplePlateLayout) \
-                                  .filter( SamplePlateLayout.sample_plate == plate ) \
-                                  .order_by( SamplePlateLayout.well_id ):
+                    for well in db.session.query(Sample) \
+                                          .filter( Sample.plate == plate ) \
+                                          .order_by( Sample.plate_well_id ):
 
                         rows.append( {'source_plate_barcode':           barcode,
                                       'source_well_name':               well.well_name,
