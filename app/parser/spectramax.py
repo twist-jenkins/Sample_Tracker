@@ -13,21 +13,16 @@ BLOCK_END = "Group Summaries".encode(AWKWARD_ENCODING)
 OUTSIDE_LADDER = "Range?".encode(AWKWARD_ENCODING)
 
 
-
 def parse(fcontents):
     """Parse the file (as a string in fcontents)."""
-    # Handle a bunch of Unicode nonsense
+    # Handle a bunch of Unicode nonsense; files appear to be in UTF-16LE
     quant_results = fcontents.split(BLOCK_DIVIDER)[3]\
         .decode(AWKWARD_ENCODING).encode('ascii', 'ignore').split("\r\n")
 
-    quants = []
-    quant_results = quant_results
     for res in quant_results:
         items = res.split("\t")
         if re.search("\d+", items[0]):  # ignore non-digit rows
             amt = items[9]
             if amt == OUTSIDE_LADDER:
                 amt = 100
-            quants.append((int(items[0]), items[1], float(amt)))
-
-    return quants
+            yield (int(items[0]), items[1], float(amt))
