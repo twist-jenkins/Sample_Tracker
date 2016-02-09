@@ -321,19 +321,11 @@ def create_adhoc_sample_movement(db_session,
                          destination_col_and_row)
             print "calculated DEST well id: %s from plate size: %s and column/row: %s" % (destination_well_id,dest_plate_size, destination_col_and_row)
 
-
-        #print "DEST WELL ID: ", destination_well_id
-
-        print '@@ querying WellSample plate_id: %s, WellSample.well_id: %s' \
-            % (destination_plate.id, destination_well_id)
         existing_plate_layout = db_session.query(WellSample) \
                                                  .filter( WellSample.plate_id==destination_plate.id,
                                                           # WellSample.sample_id==source_well_sample.sample_id,
                                                           WellSample.well_id==destination_well_id ) \
                                                  .first()
-        print '@@ got:', existing_plate_layout
-
-        #existing_plate_layout = True
 
         if in_place_transform_flag:
             if not existing_plate_layout:

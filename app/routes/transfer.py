@@ -38,7 +38,6 @@ def merge_transform( sources, dests ):
     rows, seen = [], set()
     for src in sources:
         barcode = src['details']['id']
-        print '@@ merge:', barcode
 
         try:
             plate = db.session.query(Plate) \
@@ -217,8 +216,6 @@ def preview():
     transfer_type_id = details["transfer_type_id"]
 
 
-    print '@@ template_id:', transfer_template_id
-
     responseCommands = []
     rows = []
 
@@ -257,7 +254,7 @@ def preview():
                                   'destination_plate_well_count':   dest_plate_type.number_clusters
                                   })
 
-            if request.json['transfer_type_id'] == \
+            if transfer_type_id == \
                     constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
                 responseCommands.append({
                     "type": "PRESENT_DATA",
@@ -269,24 +266,6 @@ def preview():
                         "fileName": "source_plate_map.txt"
                     }
                 })
-                # responseCommands.append({
-                #     "type": "PRESENT_DATA"
-                #     ,"item": {
-                #         "type": "text"
-                #         ,"title": "Source Plate Map"
-                #         ,"data": "this is some text"
-                #     }
-                #
-                # })
-                # responseCommands.append({
-                #     "type": "PRESENT_DATA"
-                #     ,"item": {
-                #         "type": "link"
-                #         ,"title": "Source Plate Map"
-                #         ,"data": "http://www.sfgate.com"
-                #     }
-                #
-                # })
 
             elif transfer_type_id == \
                     constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
