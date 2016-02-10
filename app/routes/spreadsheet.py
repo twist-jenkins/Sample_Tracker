@@ -90,7 +90,7 @@ def create_adhoc_sample_movement(db_session,
             source_plate = db_session.query(Plate).\
                 filter(Plate.external_barcode == source_plate_barcode).one()
         except:
-            logging.info(" %s encountered error creating sample transfer. "
+            logging.warn(" %s encountered error creating sample transfer. "
                          "There is no source plate with the barcode: [%s]",
                          g.user.first_and_last_name, source_plate_barcode)
             return {
@@ -142,7 +142,7 @@ def create_adhoc_sample_movement(db_session,
                     destination_plate = db_session.query(Plate).\
                         filter(Plate.external_barcode == destination_plate_barcode).one()
                 except:
-                    logging.info(" %s encountered error creating sample transfer. "
+                    logging.warn(" %s encountered error creating sample transfer. "
                                  "There is no destination plate with the barcode: [%s]",
                                  g.user.first_and_last_name, destination_plate_barcode)
                     return {
@@ -337,7 +337,8 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         return None
 
     if copy_metadata:
-        new_s = source_well_sample.copy()  # Copy all extent metadata
+        # Copy all extant metadata
+        new_s = quick_copy(db_session, source_well_sample)
         new_s.id = new_id()
         new_s.plate_id = destination_plate.id
         new_s.plate_well_pk = well.pk
@@ -358,3 +359,44 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
 
     db_session.add(new_s)
     return new_s
+
+
+def safe_sqlalchemy_copy(session, object_handle):
+    """Implement a safe copy.copy().
+
+    Based on http://permalink.gmane.org/gmane.comp.python.sqlalchemy.user/39675
+
+    SQLAlchemy-mapped objects travel with an object
+    called an InstanceState, which is pegged to that object
+    specifically and tracks everything about that object.  It's
+    critical within all attribute operations, including gets
+    and deferred loading.   This object definitely cannot be
+    shared among two instances, and must be handled.
+
+    The copy routine here makes use of session.merge() which
+    already essentially implements a "copy" style of operation,
+    which produces a new instance with a new InstanceState and copies
+    all the data along mapped attributes without using any SQL.
+
+    The mode we are using here has the caveat that the given object
+    must be "clean", e.g. that it has no database-loaded state
+    that has been updated and not flushed.   This is a good thing,
+    as creating a copy of an object including non-flushed, pending
+    database state is probably not a good idea; neither represents
+    what the actual row looks like, and only one should be flushed.
+
+    """
+    copy = session.merge(object_handle, load=False)
+    session.expunge(copy)
+    return copy
+
+
+def quick_copy(session, orig_obj):
+    """Copy a sample, quick fix"""
+
+    copy = Sample()
+    for attrname in ("order_item_id", "type_id", "operator_id",
+                     "external_barcode", "name", "description", ):
+        setattr(copy, attrname, getattr(orig_obj, attrname))
+    return copy
+
