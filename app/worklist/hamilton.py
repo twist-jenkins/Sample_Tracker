@@ -5,7 +5,7 @@ from twistdb.sampletrack import Plate
 INITIAL_VOL = 25  # ul
 FINAL_DNA_CONC = 15  # ng/ul
 
-MAX_TRANSFER_VOL = 65  # ul per Leslie
+MAX_TRANSFER_VOL = 50  # ul per Leslie
 VOL_FORMAT = "{0:.2f}"
 
 WORKLIST_HEADERS = "Well ID,Volume\n"
