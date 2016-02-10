@@ -36,6 +36,8 @@ def post_pca_normalization_worklist(db, plate_id):
         # Limit the total amount of liquid we transfer for normalization
         if norm_vol > MAX_TRANSFER_VOL:
             norm_vol = MAX_TRANSFER_VOL
+        elif norm_vol < 0:
+            norm_vol = 0
 
         row += VOL_FORMAT.format(norm_vol) + "\n"
         worklist += row
