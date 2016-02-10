@@ -246,18 +246,10 @@ def sample_map_response(nps_detail_rows, fname=None):
     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
     return response
 
-
-def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
-    """ assumes each oper looks like {
-            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
-            "source_well_name": "A1",
-            "source_sample_id":"BCS_00234",
-            "source_plate_well_count": 384,
-            "destination_plate_barcode":"SRN 000577 SM-37",
-            "destination_well_name":"K13",
-            "destination_plate_well_count":384
-            "destination_sample_id": "NPS_89111c1a0327a61016dc4d017"
-        }
+def echo_csv( operations, transfer_volume ):
+    """
+    generates string containing CSV in Echo format
+    see echo_csv_for_nps()
     """
     si = StringIO.StringIO()
     cw = csv.writer(si)
@@ -277,10 +269,25 @@ def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
         ]
         cw.writerow(data)
 
-    csvout = si.getvalue().strip('\r\n')
+    return si.getvalue().strip('\r\n')
+
+
+def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
+    """ assumes each oper looks like {
+            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
+            "source_well_name": "A1",
+            "source_sample_id":"BCS_00234",
+            "source_plate_well_count": 384,
+            "destination_plate_barcode":"SRN 000577 SM-37",
+            "destination_well_name":"K13",
+            "destination_plate_well_count":384
+            "destination_sample_id": "NPS_89111c1a0327a61016dc4d017"
+        }
+    """
     logging.info(" %s downloaded an ECHO WORKLIST",
                  current_user.first_and_last_name)
 
+    csvout = echo_csv( operations, transfer_volume )
     response = make_response(csvout)
 
     if fname is None:
@@ -290,6 +297,7 @@ def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
     assert fname[-4:] == '.csv'
     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
     return response
+
 
 '''
 def create_msr(cur_session, form_params):

@@ -11,6 +11,7 @@
 import logging
 
 from flask import g, jsonify
+from flask_login import current_user
 
 from app import db, constants
 from app.utils import scoped_session
@@ -342,7 +343,8 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         new_s.plate_well_pk = well.pk
     else:
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
-                       plate_well_pk=well.pk)
+                       plate_well_pk=well.pk,
+                       operator_id=current_user.operator_id)
     new_s.parent_sample_id = source_well_sample.id
 
     if transfer_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,

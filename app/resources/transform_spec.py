@@ -17,7 +17,6 @@ from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
-from twistdb import create_unique_id
 from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
 
 api = flask_restful.Api(app)
@@ -141,6 +140,7 @@ class TransformSpecResource(flask_restful.Resource):
 
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
+        logger.debug('@@ create_or_replace')
         with scoped_session(db.engine) as sess:
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
@@ -150,6 +150,7 @@ class TransformSpecResource(flask_restful.Resource):
                 spec = TransformSpec()         # create new, unknown id
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
+                logger.debug('@@ spec.data_json:', spec.data_json)
                 spec.operator_id = current_user.operator_id
 
                 # workaround for poor input marshaling
@@ -209,6 +210,7 @@ class TransformSpecResource(flask_restful.Resource):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
+        logger.debug('@@ executing - details:' % details)
         try:
             transfer_type_id = details["transfer_type_id"]
         except:
@@ -251,8 +253,8 @@ class TransformSpecListResource(flask_restful.Resource):
                     )
             result = spec_schema.dump(rows, many=True).data
             #    sess.expunge(rows)
-            #print "^" * 10000
-            #print str(result)
+            # print "^" * 10000
+            # print str(result)
         return json_api_success(result, 200)  # FIXME
         # return result, 200
 

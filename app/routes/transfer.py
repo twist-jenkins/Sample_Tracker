@@ -6,13 +6,15 @@ import logging
 
 from app import db
 from app import constants
+from app.steps import primer_hitpicking
 from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
 
 from flask import request, Response
+from flask_login import current_user
 from json_tricks.nonp import loads  # json w/ support for comments
-from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from twistdb.ngs import CallerSummary
 from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
@@ -75,6 +77,7 @@ def merge_transform(sources, dests):
                          'destination_plate_type':       plate.plate_type.type_id,
                          'destination_plate_well_count': plate.layout.feature_count,
                          })
+
     return rows
 
 
@@ -167,6 +170,7 @@ def filter_transform(transfer_template_id, sources, dests):
             if dest_plate_idx >= len(dest_barcodes):
                 raise WebError('we need at least %d destination plates, but only %d were provided'
                                % (dest_plate_idx + 1, len(dest_barcodes)))
+
             rows.append({'source_plate_barcode':           barcode,
                          'source_well_name':               sample.well.well_label,
                          'source_well_number':             sample.well.well_number,
@@ -178,6 +182,7 @@ def filter_transform(transfer_template_id, sources, dests):
                          'destination_plate_type':         dest_type.type_id,
                          'destination_plate_well_count':   dest_type.layout.feature_count
                          })
+
     return rows
 
 
@@ -214,6 +219,40 @@ def sample_data_determined_transform(transfer_template_id, sources, dests):
     return groups
 
 
+def pca_pre_planning( bulk_barcode, pca_barcodes ):
+    """
+    return list of master mix conditions for extracted PCA plates.
+
+    more importantly, this function has a side-effect: it pre-generates the Echo worklist
+    for the later "Primer Hitpicking" step.
+
+    worse, this is stored in a misleading way, as a transform that moves primers from the
+    bulk primer plate to the PCA plates, but the REAL destinations are temporary PCR plates.
+    the plate id's are later replaced with the real destination barcodes.
+    """
+    pca_plates = []
+    for bc in pca_barcodes:
+        try:
+            pca_plates.append( db.session.query(Plate).filter(Plate.external_barcode == bc).one() )
+        except NoResultFound:
+            logger.error("Bad barcode for PCA plate: %s" % bc)
+
+    try:
+        bulk = db.session.query(Plate).filter(
+            Plate.external_barcode == bulk_barcode).one()
+    except NoResultFound:
+        # we don't really need a plate for this step, but will later
+        bulk = Plate( type_id='SPTT_0006', operator_id=current_user.operator_id,
+                      external_barcode=bulk_barcode )
+        db.session.add( bulk )
+        db.session.commit()
+
+    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode,
+                                                    pca_plates )
+    master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
+    return master_mixes, rows
+
+
 def preview():
     """Called by the UI to generate a draft transform spec before execution."""
     assert request.method == 'POST'
@@ -232,59 +271,70 @@ def preview():
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
                 constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
-                constants.TRANS_TYPE_PCA_PREPLANNING):
+                constants.TRANS_TYPE_PCA_PREPLANNING,
+                constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
                 # these are same to same transfers or data uploads
 
-            # Pull the first source plate to fix the plate type
-            src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-            dest_plate_type = db.session.query(PlateType).get(src_plate_type)
+            if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+                src_plate_type = "SPTT_0006"
+                dest_plate_type = src_plate_type
 
-            for src_idx, src in enumerate(request.json['sources']):
-                barcode = src['details']['id']
-                try:
-                    plate = db.session.query(Plate) \
-                                      .filter(Plate.external_barcode == barcode) \
-                                      .one()
-                except MultipleResultsFound:
-                    raise WebError('multiple plates found with barcode %s' % barcode)
+            else:
 
-                for sample in db.session.query(Sample).join(PlateWell) \
-                        .filter(Sample.plate == plate) \
-                        .order_by(PlateWell.well_number):
+                # Pull the first source plate to fix the plate type
+                src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+                dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
-                    rows.append({'source_plate_barcode':           barcode,
-                                 'source_well_name':               sample.well.well_label,
-                                 'source_well_number':             sample.well.well_number,
-                                 'source_well_pk':                 sample.well.pk,
-                                 'source_sample_id':               sample.id,
-                                 'destination_plate_barcode':      barcode,
-                                 'destination_well_name':          sample.well.well_label,
-                                 'destination_well_number':        sample.well.well_number,
-                                 'destination_plate_type':         plate.type_id,
-                                 'destination_plate_well_count':   plate.plate_type.layout.feature_count
-                                 })
+                for src_idx, src in enumerate(request.json['sources']):
+                    barcode = src['details']['id']
+                    try:
+                        plate = db.session.query(Plate) \
+                                          .filter(Plate.external_barcode == barcode) \
+                                          .one()
+                    except MultipleResultsFound:
+                        raise WebError('multiple plates found with barcode %s' % barcode)
+
+                    for sample in db.session.query(Sample).join(PlateWell) \
+                            .filter(Sample.plate == plate) \
+                            .order_by(PlateWell.well_number):
+
+                        rows.append({'source_plate_barcode':           barcode,
+                                     'source_well_name':               sample.well.well_label,
+                                     'source_well_number':             sample.well.well_number,
+                                     'source_well_pk':                 sample.well.pk,
+                                     'source_sample_id':               sample.id,
+                                     'destination_plate_barcode':      barcode,
+                                     'destination_well_name':          sample.well.well_label,
+                                     'destination_well_number':        sample.well.well_number,
+                                     'destination_plate_type':         plate.type_id,
+                                     'destination_plate_well_count':   plate.plate_type.layout.feature_count
+                                     })
 
             if transfer_type_id == \
                     constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
+                custom_primers = primer_hitpicking.primer_src_creation(
+                    db.session, request.json['sources'][0]['details']['id'])
+
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "file-data",
+                        "type": "text",
                         "title": "Source Plate Map",
-                        "data": "this is some file data",
-                        "mimeType": "text",
-                        "fileName": "source_plate_map.txt"
+                        "data": custom_primers,
                     }
                 })
 
             elif transfer_type_id == \
                     constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+                mixes = primer_hitpicking.bulk_barcode_to_mastermixes(
+                    db.session, request.json['sources'][0]['details']['id'])
+
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type":  "text",
                         "title": "PCA Master Mix",
-                        "data": "Master mix data here... maybe CSV format to render a table?"
+                        "data":  mixes,
                     }
                 })
 
@@ -321,7 +371,6 @@ def preview():
                 })
 
             elif transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
-
                 rows = [{}]
 
                 # we need to add master mix needs info or tell the user we need all the PCA plates first
@@ -351,7 +400,8 @@ def preview():
                     # then all the plates had barcodes
                     # now we need to decide which master mixes are needed
                     # content like "Master Mix A x2\n\rMaster Mix B x3"
-                    masterMixNeeds = "Kieran do this!"
+                    masterMixNeeds, rows = pca_pre_planning( request.json['sources'][0]['details']['id'],
+                                                             pcaPlates )
 
                 responseCommands.append({
                     "type": "PRESENT_DATA",
@@ -361,6 +411,37 @@ def preview():
                         "data": masterMixNeeds
                     }
                 })
+
+            elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+
+                destinations_ready = ("destinations" in request.json
+                                      and request.json['destinations'])
+
+                for dest_index, destination in enumerate(request.json['destinations']):
+                    if "id" not in destination["details"] or \
+                            destination["details"]["id"] == "":
+                        destinations_ready = False
+
+                if destinations_ready:
+                    rows = filter_transform(transfer_template_id,
+                                            request.json['sources'],
+                                            request.json['destinations'] )
+
+                    echo_worklist = primer_hitpicking.munge_echo_worklist(
+                        db.session, request.json['sources'][0]['details']['id'],
+                        [x['details']['id'] for x in request.json['destinations']])
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "file-data",
+                            "title": "Echo worklist",
+                            "data": echo_worklist,
+                            "mimeType": "text/csv",
+                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+                        }
+
+                    })
 
             else:
                 rows = []
@@ -443,6 +524,7 @@ def preview():
                                 'destination_plate_type':         dest_type.type_id,
                                 'destination_plate_well_count':   dest_type.layout.feature_count
                             })
+
                         quadrantIndex += 1
                         if (quadrantIndex and (quadrantIndex % 4 == 0)):
                             dest_plate_index += 1
@@ -454,33 +536,6 @@ def preview():
                     "plates": destination_plates
                 })
 
-            elif transfer_template_id == \
-                    constants.TRANS_TPL_PCR_PRIMER_HITPICK:
-
-                destinations_ready = True
-                if ("destinations" not in request.json or
-                        not len(request.json['destinations'])):
-                    destinations_ready = False
-
-                for dest_index, destination in enumerate(request.json['destinations']):
-                    if "id" not in destination["details"] or destination["details"]["id"] == "":
-                        destinations_ready = False
-
-                if (destinations_ready):
-                    rows = filter_transform(transfer_template_id, request.json['sources'],
-                                            request.json['destinations'])
-
-                    responseCommands.append({
-                        "type": "PRESENT_DATA",
-                        "item": {
-                            "type": "file-data",
-                            "title": "Echo worklist",
-                            "data": "echo worklist file contents...",
-                            "mimeType": "text/csv",
-                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
-                        }
-                    })
-
             elif transfer_template_id in (
                     constants.TRANS_TPL_FRAG_ANALYZER,
                     constants.TRANS_TPL_NGS_QC_PASSING):  # , constants.TRANS_TPL_EXTRACTION_TITIN):
@@ -490,7 +545,8 @@ def preview():
 
             else:
                 if transfer_template_id in (
-                        constants.TRANS_TPL_SAME_TO_SAME, constants.TRANS_TPL_SAME_PLATE):
+                        constants.TRANS_TPL_SAME_TO_SAME,
+                        constants.TRANS_TPL_SAME_PLATE):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
                     dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
