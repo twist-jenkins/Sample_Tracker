@@ -351,7 +351,7 @@ def create_nrsj(cur_session, ngs_run, ngs_prepped_samples):
         # now create sample join (redundant info with plate layout -- refactor)
         nrsj = NGSRunSampleJoin(
             ngs_run.run_id,
-            ngs_prepped_sample.sample_id,
+            ngs_prepped_sample.id,
             sample_num_on_run,
             "-%s" % sample_num_on_run,  # dummy value
             "-1",  # rec['plate_column_id']

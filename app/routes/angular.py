@@ -469,8 +469,8 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         source_well_id=source_plate_well.well_id,
         source_sample_id=source_plate_well.sample_id,
         destination_plate_id=destination_plate.id,
-        destination_well_id=destination_well_sample.well_id,
-        destination_sample_id=destination_well_sample.sample_id)
+        destination_well_id=destination_well_sample.plate_well_pk,
+        destination_sample_id=destination_well_sample.id)
     db_session.add(source_to_dest_well_transfer)
     db_session.flush()
 

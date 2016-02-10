@@ -248,22 +248,22 @@ def create_adhoc_sample_movement(db_session,
                 return {
                     "success": False,
                     "errorMessage": "This in-place-transform destination plate [%s] contains no sample in well [%s]" %
-                                    (destination_plate.external_barcode, source_well_sample.well_id)
+                                    (destination_plate.external_barcode, source_well_sample.plate_well_pk)
                 }
         elif merge_transform_flag:
             if not existing_plate_layout:
                 return {
                     "success": False,
                     "errorMessage": "This merge-transform destination plate [%s] contains no sample in well [%s]" %
-                                    (destination_plate.external_barcode, source_well_sample.well_id)
+                                    (destination_plate.external_barcode, source_well_sample.plate_well_pk)
                 }
         elif existing_plate_layout:
             # still wanted in context of in-place transforms and merge transforms?
             return {
                 "success": False,
                 "errorMessage": "This destination plate [%s] already contains sample [%s] in well [%s]" %
-                                (destination_plate.external_barcode, source_well_sample.sample_id,
-                                 source_well_sample.well_id)
+                                (destination_plate.external_barcode, source_well_sample.id,
+                                 source_well_sample.plate_well_pk)
             }
 
         logging.info("4. Accession the new sample record for the well")
@@ -281,8 +281,8 @@ def create_adhoc_sample_movement(db_session,
         #
         # if in_place_transform_flag or merge_transform_flag:
         #     destination_well_sample = existing_plate_layout
-        #     if destination_well_sample.sample_id != destination_sample_id:
-        #         destination_well_sample.sample_id = destination_sample_id  # TODO: is this even necessary orm-wise?
+        #     if destination_well_sample.id != destination_sample_id:
+        #         destination_well_sample.id = destination_sample_id  # TODO: is this even necessary orm-wise?
         #     destination_well_sample.operator_id = operator.operator_id  # unfortunately this will wipe out the old operator_id
         # else:
         #     destination_well_sample = Sample(plate_id=destination_plate.id,

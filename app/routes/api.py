@@ -244,7 +244,7 @@ def sample_report(sample_id, format):
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["", "SAMPLE ID", "CREATION DATE/TIME","CREATED BY"])
-        cw.writerow(["", sample.sample_id, sample.date_created.strftime("%A, %B %d, %Y %I:%M%p"),sample.operator.first_and_last_name])
+        cw.writerow(["", sample.id, sample.date_created.strftime("%A, %B %d, %Y %I:%M%p"),sample.operator.first_and_last_name])
 
         cw.writerow("")
         cw.writerow("")
@@ -263,7 +263,7 @@ def sample_report(sample_id, format):
         response = make_response(csvout)
         # This is the key: Set the right header for the response
         # to be downloaded, instead of just printed on the browser
-        response.headers["Content-Disposition"] = "attachment; filename=Sample_" + sample.sample_id + "_Report.csv"
+        response.headers["Content-Disposition"] = "attachment; filename=Sample_" + sample.id + "_Report.csv"
         return response
 
 
