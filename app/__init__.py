@@ -253,6 +253,10 @@ rest.api.add_resource(rest.TransformSpecListResource,
 rest.api.add_resource(rest.TransformSpecResource,
                       '/api/v1/rest/transform-specs/<spec_id>')
 
+rest.api.add_resource(rest.WorklistResource,
+                      '/api/v1/rest/worklist/<spec_id>')
+
+
 
 # older REST API routes:
 #

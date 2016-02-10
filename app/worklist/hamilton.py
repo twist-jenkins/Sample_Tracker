@@ -1,6 +1,6 @@
 """Hamilton worklist generation."""
 
-from twistdb.sampletrack import Plate, PlateWell, Sample
+from twistdb.sampletrack import Plate
 
 INITIAL_VOL = 25  # ul
 FINAL_DNA_CONC = 15  # ng/ul
