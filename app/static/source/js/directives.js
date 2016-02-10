@@ -458,8 +458,6 @@ app = angular.module("twist.app")
             ,restrict: 'E'
             ,link: function($scope, element, attrs) {
 
-                console.log($scope.transformSpec);
-
                 var ml = '';
 
                 $scope.itemData = $scope.item.item;
@@ -538,7 +536,6 @@ app = angular.module("twist.app")
                                     } else {
                                         $scope.item.validData = 0;
                                     }
-
                                     $scope.transformSpec.updateOperationsList();
                                 }
                             }

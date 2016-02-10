@@ -781,15 +781,27 @@ app = angular.module('twist.app')
                 base.updateOperationsList();
             }
 
-            base.checkSourcesReady = function () {
+            base.checkSourcesReady = function (clearErrors) {
+
                 for (var i=0; i<base.sources.length; i++) {
+
                     if (!base.sources[i].loaded) {
                         if (!base.sources[i].updating) { /* don't call notReady if the plate is still fetching its data */
-                            base.sources[i].loaded = false;
+                            delete base.sources[i].loaded
+                            delete base.sources[i].error;
+                            notReady('source');
+                            return false;
+                        }
+                    } else {
+                        //we might have loaded data but then removed the barcode for this input
+                        if (base.sources[i].details.id == "") {
+                            delete base.sources[i].loaded;
+                            delete base.sources[i].error;
                             notReady('source');
                             return false;
                         }
                     }
+
                 }
                 return true;    
             }
@@ -860,6 +872,7 @@ app = angular.module('twist.app')
                             base.sourcesReady = true;
                         }
                         base.updateOperationsList();
+                        ready();
                     } else {
                         onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
                     }
@@ -1061,6 +1074,31 @@ app = angular.module('twist.app')
             base.setPlateStepDefaults = function () {
                 base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
             };
+
+            base.reset = function () {
+                base.presentedDataItems = [];
+                base.requestedDataItems = [];
+
+
+                for (var i=0; i< base.sources.length; i++) {
+                    var source = base.sources[i];
+                    if (source.details.id && source.details.id != '') {
+                        base.addSource(i);
+                    } else {
+                        delete source.error;
+                        delete source.loaded;
+                    }
+                }
+                for (var i=0; i< base.destinations.length; i++) {
+                    var destination = base.destinations[i];
+                    if (destination.details.id && destination.details.id != '') {
+                        base.addDestination(i);
+                    } else {
+                        delete destination.error;
+                        delete destination.loaded;
+                    }
+                }
+            }
 
             base.setCreateEditDefaults = function () {
                 base.setTitle('New Transform Spec');
