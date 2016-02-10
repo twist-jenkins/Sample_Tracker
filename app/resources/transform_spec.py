@@ -224,6 +224,9 @@ class TransformSpecResource(flask_restful.Resource):
                 aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
                 quant_data = spec.data_json['details']['requestedData']['instrument_data']
                 result = store_quant_data(sess, aliquot_plate, quant_data)
+                if not result["success"]:
+                    abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
+
         else:
             result = create_adhoc_sample_movement(sess,
                                                   transfer_type_id,
@@ -231,10 +234,8 @@ class TransformSpecResource(flask_restful.Resource):
                                                   wells,
                                                   transform_spec_id=spec.spec_id)
             if not result:
-                raise ValueError("create_adhoc_sample_movement returned nothing")
+                abort(400, message="Failed to execute step (sample_movement) -- create_adhoc_sample_movement returned nothing")
 
-        if not result["success"]:
-            abort(400, message="Failed to execute step (sample_movement)")
         spec.date_executed = datetime.utcnow()
         spec.operator_id = current_user.operator_id
         # TODO: allow execution operator_id != creation operator_id
