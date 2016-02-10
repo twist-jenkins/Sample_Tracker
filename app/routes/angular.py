@@ -10,30 +10,24 @@ import logging
 import StringIO
 import datetime
 
-from flask import g, make_response, request, Response, jsonify, abort
+from flask import g, make_response, request, Response, jsonify
 
-from sqlalchemy import and_
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlalchemy.orm import subqueryload
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
 from app.utils import scoped_session
+from app import app, db, googlelogin, constants
+from app.plate_to_plate_maps import maps_json
+from app.models import create_destination_plate
 from app.routes.spreadsheet import create_step_record_adhoc
 
-from app import app, db, googlelogin
-
-from twistdb.sampletrack import *
-from twistdb.public import *
-
-from app.models import create_destination_plate
+from twistdb.sampletrack import TransferType, Plate, Transfer, \
+    TransferDetail, Sample, Aliquot
 
 from well_mappings import (get_col_and_row_for_well_id_48,
-                           get_well_id_for_col_and_row_48,
                            get_col_and_row_for_well_id_96,
-                           get_well_id_for_col_and_row_96,
-                           get_col_and_row_for_well_id_384,
-                           get_well_id_for_col_and_row_384)
+                           get_col_and_row_for_well_id_384)
 
-from app.plate_to_plate_maps import maps_json
-
-from well_count_to_plate_type_name import well_count_to_plate_type_name
 
 from logging_wrapper import get_logger
 logger = get_logger(__name__)
@@ -86,10 +80,9 @@ SAMPLE_VIEW_ATTRS = (
     'gs_description'
 )
 
-#
-# This is the "home" page, which is actually the "enter a sample movement" page.
-#
+
 def new_home():
+    """This is the "home" page, which is actually the "enter a sample movement" page."""
     return app.send_static_file('index.html')
 
 
@@ -109,99 +102,98 @@ def user_data():
         }
 
     returnData = {
-        "success": True
-        ,"user": user
+        "success": True, "user": user
     }
     resp = Response(response=json.dumps(returnData),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def google_login():
     returnData = {
         "login_url": googlelogin.login_url(scopes=['https://www.googleapis.com/auth/userinfo.email'])
     }
     resp = Response(response=json.dumps(returnData),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
+
 def sample_transfer_types():
-    sample_transfer_types2 = db.session.query(SampleTransferType).order_by(SampleTransferType.menu_ordering);
+    sample_transfer_types2 = db.session.query(TransferType).\
+        order_by(TransferType.menu_ordering)
     simplified_results = []
     for row in sample_transfer_types2:
-        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.sample_transfer_template_id})
+        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.transfer_template_id})
     returnData = {
-        "success": True
-        ,"results": simplified_results
+        "success": True, "results": simplified_results
     }
 
     resp = Response(response=json.dumps(returnData),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
-#
-# Returns barcodes for all current sample plates
-#
+
 def sample_plate_barcodes():
-    plates = db.session.query(SamplePlate).order_by(SamplePlate.sample_plate_id).all()
+    """Returns barcodes for all current sample plates."""
+    plates = db.session.query(Plate).order_by(Plate.id).all()
 
     plate_barcodes = [plate.external_barcode for plate in plates if plate.external_barcode is not None]
 
     resp = Response(response=json.dumps(plate_barcodes),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def update_plate_barcode():
 
     data = request.json
 
-    sample_plate_id = data["plateId"]
+    plate_id = data["plateId"]
     external_barcode = data["barcode"]
 
-    sample_plate = db.session.query(SamplePlate).filter_by(sample_plate_id=sample_plate_id).first()
+    sample_plate = db.session.query(Plate).filter_by(plate_id=plate_id).first()
 
     if not sample_plate:
         errmsg = "There is no sample plate with the id: [%s]"
-        return error_response(404, errmsg % sample_plate_id)
+        return error_response(404, errmsg % plate_id)
 
     #
     # Is there a row in the database that already has this barcode? If so, bail, it is aready in use!
     #
-    sample_plate_with_this_barcode = db.session.query(SamplePlate).filter_by(external_barcode=external_barcode).first()
-    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.sample_plate_id != sample_plate.sample_plate_id:
+    sample_plate_with_this_barcode = db.session.query(Plate).filter_by(external_barcode=external_barcode).first()
+    if sample_plate_with_this_barcode and sample_plate_with_this_barcode.plate_id != sample_plate.id:
         logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
-            (g.user.first_and_last_name,sample_plate_id,external_barcode,sample_plate_with_this_barcode.sample_plate_id))
+                    (g.user.first_and_last_name, plate_id, external_barcode,
+                     sample_plate_with_this_barcode.plate_id))
         errmsg = "The barcode [%s] is already assigned to the plate with id: [%s]"
-        return error_response(400, errmsg % (external_barcode, sample_plate_with_this_barcode.sample_plate_id))
-
+        return error_response(400, errmsg % (external_barcode, sample_plate_with_this_barcode.plate_id))
 
     sample_plate.external_barcode = external_barcode
     db.session.commit()
     logging.info("external_barcode: %s", external_barcode)
     response = {
-        "success":True
+        "success": True
     }
 
-    logger.info(" %s set the barcode [%s] for plate with id [%s]" % (g.user.first_and_last_name,external_barcode,sample_plate_id))
+    logger.info(" %s set the barcode [%s] for plate with id [%s]" %
+                (g.user.first_and_last_name, external_barcode, plate_id))
 
     return jsonify(response)
+
 
 def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     qry = (
         db.session.query(
-            SampleTransfer,
-            SampleTransferDetail
+            Transfer,
+            TransferDetail
         )
-        .options(subqueryload(SampleTransferDetail.source_plate))
-        .options(subqueryload(SampleTransferDetail.destination_plate))
-        .options(subqueryload(SampleTransfer.sample_transfer_type))
-        .options(subqueryload(SampleTransfer.operator))
-        .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
-        .order_by(SampleTransfer.date_transfer.desc())
+        .options(subqueryload(TransferDetail.source_plate))
+        .options(subqueryload(TransferDetail.destination_plate))
+        .options(subqueryload(Transfer.transfer_type))
+        .options(subqueryload(Transfer.operator))
+        .filter(TransferDetail.transfer_id == Transfer.id)
+        .order_by(Transfer.date_transfer.desc())
     )
     if limit is None:
         rows = qry.all()
@@ -214,8 +206,8 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     for transfer, details in rows:
         key = (transfer.id,
-               details.source_sample_plate_id,
-               details.destination_sample_plate_id)
+               details.source_plate_id,
+               details.destination_plate_id)
         if key not in seen:
             seen.append(key)
             sample_transfer_details.append((transfer, details))
@@ -226,12 +218,12 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
     for sample_transfer, details in sample_transfer_details:
         if (sample_transfer.id not in transfers_data):
             transfers_data[sample_transfer.id] = {
-                "id": sample_transfer.id
-                ,"name": sample_transfer.sample_transfer_type.name
-                ,"date": sample_transfer.date_transfer.strftime("%A, %B %d %Y, %I:%M%p")
-                ,"operator": sample_transfer.operator.first_and_last_name
-                ,"source_barcodes": [details.source_plate.external_barcode]
-                ,"destination_barcodes": [details.destination_plate.external_barcode]
+                "id": sample_transfer.id,
+                "name": sample_transfer.transfer_type.name,
+                "date": sample_transfer.date_transfer.strftime("%A, %B %d %Y, %I:%M%p"),
+                "operator": sample_transfer.operator.first_and_last_name,
+                "source_barcodes": [details.source_plate.external_barcode],
+                "destination_barcodes": [details.destination_plate.external_barcode]
             }
         else:
             already = False
@@ -262,8 +254,7 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
     fullDataArray.reverse()
 
     resp = Response(response=json.dumps(fullDataArray),
-        status=200, \
-        mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
 
@@ -271,13 +262,13 @@ def create_step_record():
     data = request.json
     operator = g.user
 
-    sample_transfer_type_id = data["sampleTransferTypeId"]
-    sample_transfer_template_id = data["sampleTransferTemplateId"]
+    transfer_type_id = data["sampleTransferTypeId"]
+    transfer_template_id = data["sampleTransferTemplateId"]
 
     if "transferMap" in data:
         transfer_map = data["transferMap"]
-        return create_step_record_adhoc(sample_transfer_type_id,
-                                        sample_transfer_template_id,
+        return create_step_record_adhoc(transfer_type_id,
+                                        transfer_template_id,
                                         transfer_map)
 
     else:
@@ -289,11 +280,11 @@ def create_step_record():
 
         json_maps = maps_json()
 
-        if sample_transfer_template_id in json_maps["transfer_maps"]:
-            templateData = json_maps["transfer_maps"][sample_transfer_template_id]
+        if transfer_template_id in json_maps["transfer_maps"]:
+            templateData = json_maps["transfer_maps"][transfer_template_id]
         else:
             errmsg = "A template for this transfer type (%s) could not be found."
-            return error_response(404, errmsg % sample_transfer_template_id)
+            return error_response(404, errmsg % transfer_template_id)
 
         # validate that the plate counts/barcodes expected for a given template are present
         source_barcodes_count = len(source_barcodes)
@@ -313,13 +304,13 @@ def create_step_record():
         with scoped_session(db.engine) as db_session:
 
             # Create a "sample_transfer" row representing this entire transfer.
-            sample_transfer = SampleTransfer(sample_transfer_type_id=sample_transfer_type_id,
-                                             operator_id=operator.operator_id)
+            sample_transfer = Transfer(transfer_type_id=transfer_type_id,
+                                       operator_id=operator.operator_id)
             db_session.add(sample_transfer)
 
             for barcode in source_barcodes:
                 # load our source plates into an array for looping
-                source_plate = db_session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+                source_plate = db_session.query(Plate).filter_by(external_barcode=barcode).first()
                 if not source_plate:
                     errmsg = "There is no source plate with the barcode: %s"
                     errmsg %= barcode
@@ -328,17 +319,18 @@ def create_step_record():
                 source_plates.append(source_plate)
 
             # the easy case: source and destination plates have same layout and there's only 1 of each
-            if sample_transfer_template_id == 1:
+            if transfer_template_id == 1:
 
                 order_number = 1
                 source_plate = source_plates[0]
 
                 # create the destination plate
+                logging.warning("FOUND DEST BC: %s" % destination_barcodes[0])
                 plate = create_destination_plate(db_session, operator,
                                                  destination_barcodes[0],
                                                  source_plate.type_id,
-                                                 source_plate.storage_location_id,
-                                                 sample_transfer_template_id)
+                                                 source_plate.storage_location,
+                                                 transfer_template_id)
                 destination_plates.append(plate)
                 db_session.flush()
 
@@ -363,7 +355,7 @@ def create_step_record():
             # source(s) and destination(s) are not the same plate type/layout
             else:
 
-                storage_location_id = source_plates[0].storage_location_id
+                storage_location = source_plates[0].storage_location
                 target_plate_type_id = templateData["destination"]["plate_type_id"]
 
                 # create the destination plate(s)
@@ -371,8 +363,8 @@ def create_step_record():
                     plate = create_destination_plate(db_session, operator,
                                                      destination_barcode,
                                                      target_plate_type_id,
-                                                     storage_location_id,
-                                                     sample_transfer_template_id)
+                                                     storage_location,
+                                                     transfer_template_id)
                     destination_plates.append(plate)
 
                 db_session.flush()
@@ -430,15 +422,17 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                          row, column):
     """helper function for create_step_record"""
 
-    spl = SamplePlateLayout
-    existing_sample_plate_layout = db_session.query(spl).filter(and_(
-        spl.sample_plate_id == destination_plate.sample_plate_id,
-        spl.sample_id == source_plate_well.sample_id,
-        spl.well_id == destination_plate_well_id
-    )).first()
+    try:
+        existing_well_sample = db_session.query(Sample).filter(
+            Sample.plate_id == destination_plate.id,
+            Sample.id == source_plate_well.id,
+            Sample.plate_well_pk == destination_plate_well_id
+        ).one()
+    except:
+        pass
 
     # error if there is already a sample in this dest well
-    if existing_sample_plate_layout:
+    if existing_well_sample:
         err = ("Plate [%s] already contains "
                "sample %s in well %s") % (
                    destination_plate.external_barcode,
@@ -446,165 +440,181 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
                    source_plate_well.well_id)
         raise IndexError(err)
 
-    # create a row representing a well in the destination plate.
-    destination_plate_well = SamplePlateLayout( sample_plate_id=destination_plate.sample_plate_id,
-                                                sample_id=source_plate_well.sample_id,
-                                                well_id=destination_plate_well_id,
-                                                operator_id=operator.operator_id,
-                                                row=row, column=column)
+    source_well_sample = db_session.query(Sample).filter(
+        Sample.plate_id == source_plate.id,
+        Sample.id == source_plate_well.id,
+        Sample.plate_well_pk == source_plate_well.plate_well_pk
+    ).order_by(Sample.date_created.desc()).first()
 
-    db_session.add(destination_plate_well)
+    if not source_well_sample:
+        err = ("Plate [%s] has no sample %s in well %s") % \
+            (source_plate.external_barcode,
+             source_plate_well.sample_id,
+             source_plate_well.well_id)
+        raise IndexError(err)
+
+    # create a row representing a well in the destination plate.
+    # FIXME this is wrong but unclear if this method is in use?
+    destination_well_sample = Sample(plate_id=destination_plate.id,
+                                     id=source_plate_well.sample_id,
+                                     well_id=destination_plate_well_id,
+                                     operator_id=operator.operator_id)
+    db_session.add(destination_well_sample)
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = SampleTransferDetail( sample_transfer_id=sample_transfer.id, 
-                                                         item_order_number=order_number,
-                                                         source_sample_plate_id=source_plate.sample_plate_id,
-                                                         source_well_id=source_plate_well.well_id,
-                                                         source_sample_id=source_plate_well.sample_id,
-                                                         destination_sample_plate_id=destination_plate.sample_plate_id,
-                                                         destination_well_id=destination_plate_well.well_id,
-                                                         destination_sample_id=destination_plate_well.sample_id)
+    source_to_dest_well_transfer = TransferDetail(
+        transfer_id=sample_transfer.id,  # item_order_number=order_number,
+        source_plate_id=source_plate.id,
+        source_well_id=source_plate_well.well_id,
+        source_sample_id=source_plate_well.sample_id,
+        destination_plate_id=destination_plate.id,
+        destination_well_id=destination_well_sample.plate_well_pk,
+        destination_sample_id=destination_well_sample.id)
     db_session.add(source_to_dest_well_transfer)
+    db_session.flush()
+
+    aliquot = Aliquot(transfer_id=sample_transfer.id,
+                      source_well_sample_id=source_well_sample.id,
+                      destination_well_sample_id=destination_well_sample.id)
+    db_session.add(aliquot)
+    db_session.flush()
 
 
 def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
-    sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=sample_plate_barcode).first()
-
-    if not sample_plate:
+    try:
+        sample_plate = db.session.query(Plate).filter(
+            Plate.external_barcode == sample_plate_barcode).one()
+    except NoResultFound:
         errmsg = "There is no plate with the barcode: [%s]"
         return error_response(404, errmsg % sample_plate_barcode)
 
-    sample_plate_id = sample_plate.sample_plate_id
+    plate_id = sample_plate.id
 
     if fmt == 'csv':
         # FIXME: frontend should call different methods for Download Excel
         # (csv) vs. check existence (name check)
         basic_data_only = False
 
-    if not sample_plate.sample_plate_type:
+    if not sample_plate.plate_type:
         response = {
             "success": False,
             "errorMessage": "Plate with barcode [%s] has no plate type" % (sample_plate_barcode)
         }
         return jsonify(response)
 
-    number_clusters = sample_plate.sample_plate_type.number_clusters
-
-    #print "number_clusters: ", number_clusters
+    number_clusters = sample_plate.plate_type.layout.feature_count
 
     well_to_col_and_row_mapping_fn = {
-        48:get_col_and_row_for_well_id_48,
-        96:get_col_and_row_for_well_id_96,
-        384:get_col_and_row_for_well_id_384
-    }.get(number_clusters,lambda well_id:"missing map")
+        48: get_col_and_row_for_well_id_48,
+        96: get_col_and_row_for_well_id_96,
+        384: get_col_and_row_for_well_id_384
+    }.get(number_clusters, lambda well_id: "missing map")
 
-    rows = db.session.query(SamplePlate,SampleTransferDetail).filter(and_(
-        SampleTransferDetail.destination_sample_plate_id==sample_plate_id,
-        SamplePlate.sample_plate_id==SampleTransferDetail.source_sample_plate_id)).all()
+    rows = db.session.query(Plate, TransferDetail).filter(
+        TransferDetail.destination_plate_id == plate_id,
+        Plate.id == TransferDetail.source_plate_id).all()
 
     parent_to_this_task_name = None
-    seen=[]
-    parent_plates=[]
+    seen = []
+    parent_plates = []
     for parent_plate, details in rows:
-        if parent_plate.sample_plate_id not in seen:
-            seen.append(parent_plate.sample_plate_id)
+        if parent_plate.id not in seen:
+            seen.append(parent_plate.id)
             parent_plates.append({
-                "externalBarcode":parent_plate.external_barcode,
-                "dateCreated":str(parent_plate.date_created),
-                "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+                "externalBarcode": parent_plate.external_barcode,
+                "dateCreated": str(parent_plate.date_created),
+                "dateCreatedFormatted":
+                    sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
-            parent_to_this_task_name = details.sample_transfer.sample_transfer_type.name
+            parent_to_this_task_name = details.sample_transfer.transfer_type.name
 
     rows = (
         db.session.query(
-            SamplePlate,
-            SampleTransfer,
-            SampleTransferDetail
+            Plate,
+            Transfer,
+            TransferDetail
         )
-        .filter(SampleTransferDetail.source_sample_plate_id == sample_plate_id)
-        .filter(SamplePlate.sample_plate_id ==
-                SampleTransferDetail.destination_sample_plate_id)
-        .filter(SampleTransferDetail.sample_transfer_id == SampleTransfer.id)
-        .options(subqueryload(SampleTransfer.sample_transfer_type))
-        # .options(subqueryload(SampleTransfer.operator))
+        .filter(TransferDetail.source_plate_id == plate_id)
+        .filter(Plate.id ==
+                TransferDetail.destination_plate_id)
+        .filter(TransferDetail.transfer_id == Transfer.id)
+        .options(subqueryload(Transfer.transfer_type))
+        # .options(subqueryload(Transfer.operator))
         .all()
     )
 
     this_to_child_task_name = None
-    seen=[]
-    child_plates=[]
+    seen = []
+    child_plates = []
     for child_plate, transfer, details in rows:
-        if child_plate.sample_plate_id not in seen:
-            seen.append(child_plate.sample_plate_id)
+        if child_plate.id not in seen:
+            seen.append(child_plate.id)
             child_plates.append({
-                "externalBarcode":child_plate.external_barcode,
-                "dateCreated":str(child_plate.date_created),
-                "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+                "externalBarcode": child_plate.external_barcode,
+                "dateCreated": str(child_plate.date_created),
+                "dateCreatedFormatted":
+                    sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
             })
-            this_to_child_task_name = details.sample_transfer.sample_transfer_type.name
+            this_to_child_task_name = details.sample_transfer.transfer_type.name
 
     wells = []
 
     if basic_data_only:
-        dbq = db.session.query(SamplePlateLayout)
-        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
-        rows = qry.all()
+        rows = db.session.query(Sample).filter(
+            Sample.plate_id == plate_id).order_by(Sample.plate_well_pk).all()
 
-        for well in rows:
+        for sample in rows:
             wells.append({
-                "well_id": well.well_id,
-                "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-                "sample_id": well.sample_id
+                "well_id": sample.well.well_number,
+                "column_and_row": sample.well.well_label,
+                "sample_id": sample.id
             })
 
-    else:
-        dbq = (
-            db.session.query(
-                SamplePlateLayout,
-                SampleView
-            ).filter(SamplePlateLayout.sample_id == SampleView.c.sample_id)
-        )
-        qry = dbq.filter_by(sample_plate_id=sample_plate_id).order_by(SamplePlateLayout.well_id)
-        rows = qry.all()
-
-        for well, ga in rows:
-            well_dict = {
-                "well_id": well.well_id,
-                "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-                "sample_id": well.sample_id
-            }
-            for attr_name in SAMPLE_VIEW_ATTRS:
-                val = getattr(ga, attr_name, None)
-                if val is not None:
-                    val = str(val)
-                well_dict[attr_name] = val
-            wells.append(well_dict)
+    # else:
+        # db.session.query(
+        #         WellSample,
+        #         SampleView
+        #     ).filter(WellSample.sample_id == SampleView.c.sample_id)
+        # )
+        # qry = dbq.filter_by(plate_id=plate_id).order_by(WellSample.well_id)
+        # rows = qry.all()
+        #
+        # for well, ga in rows:
+        #     well_dict = {
+        #         "well_id": well.well_id,
+        #         "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
+        #         "sample_id": well.sample_id
+        #     }
+        #     for attr_name in SAMPLE_VIEW_ATTRS:
+        #         val = getattr(ga, attr_name, None)
+        #         if val is not None:
+        #             val = str(val)
+        #         well_dict[attr_name] = val
+        #     wells.append(well_dict)
 
     report = {
-        "success":True,
-        "parentPlates":parent_plates,
-        "parentToThisTaskName":parent_to_this_task_name,
-        "childPlates":child_plates,
-        "thisToChildTaskName":this_to_child_task_name,
-        "wells":wells,
-        "plateDetails":{
-            "dateCreated":str(sample_plate.date_created),
-            "dateCreatedFormatted":sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
-            "createdBy":str(sample_plate.operator.first_and_last_name),
-            "type":str(sample_plate.type_id)
+        "success": True,
+        "parentPlates": parent_plates,
+        "parentToThisTaskName": parent_to_this_task_name,
+        "childPlates": child_plates,
+        "thisToChildTaskName": this_to_child_task_name,
+        "wells": wells,
+        "plateDetails": {
+            "dateCreated": str(sample_plate.date_created),
+            "dateCreatedFormatted": sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p"),
+            "createdBy": str(sample_plate.operator.first_and_last_name),
+            "type": str(sample_plate.type_id)
         }
     }
 
     if fmt == "json":
         resp = Response(response=json.dumps(report),
-            status=200, \
-            mimetype="application/json")
+                        status=200, mimetype="application/json")
         return(resp)
 
-    elif fmt=="csv":
-
+    elif fmt == "csv":
 
         si = StringIO.StringIO()
         cw = csv.writer(si)
@@ -612,17 +622,9 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         cw.writerow(["PLATE REPORT"])
         cw.writerow("")
         cw.writerow("")
-        cw.writerow(["","PLATE BARCODE", "CREATION DATE/TIME","CREATED BY"])
+        cw.writerow(["","PLATE BARCODE", "CREATION DATE/TIME", "CREATED BY"])
         cw.writerow("")
         cw.writerow(["",sample_plate_barcode, report["plateDetails"]["dateCreatedFormatted"],report["plateDetails"]["createdBy"]])
-
-        #csv = "PLATE REPORT\n\n"
-        #csv += """,PLATE BARCODE, CREATION DATE/TIME,CREATED BY\n """
-        #csv += "," + sample_plate_barcode + "," + "\"" + report["plateDetails"]["dateCreatedFormatted"] + "\" ," + report["plateDetails"]["createdBy"]
-
-        #
-        # dt.strftime("%A, %d. %B %Y %I:%M%p")
-        #
 
         if len(parent_plates) > 0:
             cw.writerow("")
@@ -634,7 +636,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             for plate in parent_plates:
                 cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
 
-
         if len(child_plates) > 0:
             cw.writerow("")
             cw.writerow("")
@@ -645,7 +646,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             for plate in child_plates:
                 cw.writerow(["",plate["externalBarcode"], plate["dateCreatedFormatted"]])
 
-
         cw.writerow("")
         cw.writerow("")
         cw.writerow(["PLATE WELLS"])
@@ -653,7 +653,6 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         for attr_name in SAMPLE_VIEW_ATTRS:
             col_header_names.append(attr_name)
         cw.writerow(col_header_names)
-
 
         for well in wells:
             cols = ["",
@@ -677,6 +676,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         response.headers["Content-Disposition"] = "attachment; filename=Plate_" + sample_plate_barcode + "_Report.csv"
         return response
 
+
 def source_plate_well_data():
     data = request.json
     plateBarcodes = data["plateBarcodes"]
@@ -684,7 +684,7 @@ def source_plate_well_data():
 
     for barcode in plateBarcodes:
 
-        sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+        sample_plate = db.session.query(Plate).filter_by(external_barcode=barcode).first()
 
         if not sample_plate:
             response = {
@@ -693,13 +693,15 @@ def source_plate_well_data():
             }
             return jsonify(response)
 
-        rows = db.session.query(SamplePlateLayout).filter_by(sample_plate_id=sample_plate.sample_plate_id).all()
+        rows = db.session.query(Sample).filter(
+            Sample.plate_id == sample_plate.id).all()
 
         well_to_col_and_row_mapping_fn = {
             48:get_col_and_row_for_well_id_48,
             96:get_col_and_row_for_well_id_96,
             384:get_col_and_row_for_well_id_384
-        }.get(sample_plate.sample_plate_type.number_clusters,lambda well_id:"missing map")
+        }.get(sample_plate.plate_type.layout.feature_count,
+              lambda well_id: "missing map")
 
         wells = {}
         for well in rows:
@@ -711,303 +713,299 @@ def source_plate_well_data():
                 "column_and_row":col_row,
                 "sample_id":well.sample_id
             }
-            wells[col_row] = well_data;
+            wells[col_row] = well_data
 
         plateWellData[barcode] = {
             "wells": wells
         }
 
     respData = {
-        "success": True
-        ,"plateWellData": plateWellData
+        "success": True,
+        "plateWellData": plateWellData
     }
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def check_plates_are_new():
     data = request.json
     plateBarcodes = data["plateBarcodes"]
 
-    existPlates = [];
-
+    existPlates = []
     for barcode in plateBarcodes:
-        sample_plate = db.session.query(SamplePlate).filter_by(external_barcode=barcode).first()
+        try:
+            sample_plate = db.session.query(Plate).filter(
+                Plate.external_barcode == barcode).one()
 
-        if sample_plate:
-            existPlates.append(barcode)
-
+            if sample_plate:
+                existPlates.append(barcode)
+        except NoResultFound:
+            pass
 
     if len(existPlates):
         response = {
-                "success": False,
-                "errorMessage": "Plates already exist in the database: %s" % (', '.join(existPlates))
-            }
+            "success": False,
+            "errorMessage": "Plates already exist in the database: %s" %
+                            (', '.join(existPlates))
+        }
         return jsonify(response)
 
     respData = {
         "success": True
     }
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
 
 ##################
-#### Hamailton operation endpoints
+# ### Hamailton operation endpoints
 ##################
 
 hamiltons = {
     "HAM04": {
-        "label": "Jupiter 2 - STAR Plus"
-        ,"type": "Star Plus"
-        ,"barcode": "HAM04"
-        ,"trackCount": 68
-        ,"deckRegions": {
+        "label": "Jupiter 2 - STAR Plus",
+        "type": "Star Plus",
+        "barcode": "HAM04",
+        "trackCount": 68,
+        "deckRegions": {
             "left side": {
-                "trackWidth": 30
-                ,"startTrack": 1
-            }
-            ,"middle partition": {
-                "trackWidth": 12
-                ,"startTrack": 31
-            }
-            ,"right side": {
-                "trackWidth": 24
-                ,"startTrack": 43
-            }
-        }
-    }
-    ,"HAM01": {
-        "label": "Galactica - STAR"
-        ,"type": "Star Plus"
-        ,"barcode": "HAM01"
-        ,"trackCount": 54
-        ,"deckRegions": {
-            "main": {
-                "trackWidth": 54
-                ,"startTrack": 1
+                "trackWidth": 30,
+                "startTrack": 1
+            },
+            "middle partition": {
+                "trackWidth": 12,
+                "startTrack": 31
+            },
+            "right side": {
+                "trackWidth": 24,
+                "startTrack": 43
             }
         }
-    }
-    ,"HAM0X": {
-        "label": "Enterprise - STAR"
-        ,"type": "Star"
-        ,"barcode": "HAM0X"
-        ,"trackCount": 54
-        ,"deckRegions": {
+    },
+    "HAM01": {
+        "label": "Galactica - STAR",
+        "type": "Star Plus",
+        "barcode": "HAM01",
+        "trackCount": 54,
+        "deckRegions": {
             "main": {
-                "trackWidth": 54
-                ,"startTrack": 1
+                "trackWidth": 54,
+                "startTrack": 1
             }
         }
-    }
-    ,"HAM0Y": {
-        "label": "Millenium Falcon - STAR"
-        ,"type": "Star"
-        ,"barcode": "HAM0Y"
-        ,"trackCount": 54
-        ,"deckRegions": {
+    },
+    "HAM0X": {
+        "label": "Enterprise - STAR",
+        "type": "Star",
+        "barcode": "HAM0X",
+        "trackCount": 54,
+        "deckRegions": {
             "main": {
-                "trackWidth": 54
-                ,"startTrack": 1
+                "trackWidth": 54,
+                "startTrack": 1
+            }
+        }
+    },
+    "HAM0Y": {
+        "label": "Millenium Falcon - STAR",
+        "type": "Star",
+        "barcode": "HAM0Y",
+        "trackCount": 54,
+        "deckRegions": {
+            "main": {
+                "trackWidth": 54,
+                "startTrack": 1
             }
         }
     }
 }
 
 carriers = {
-    "CARR0001" : {
+    "CARR0001": {
         "positions": {
-            "CARR0001-01" : {
+            "CARR0001-01": {
                 "index": 1
-            }
-            ,"CARR0001-02" : {
+            },
+            "CARR0001-02": {
                 "index": 2
-            }
-            ,"CARR0001-03" : {
+            },"CARR0001-03": {
                 "index": 3
+            },
+            "CARR0001-04": {
+                "index": 4
+            },
+            "CARR0001-05": {
+                "index": 5
             }
-            ,"CARR0001-04" : {
+
+        }
+    },
+    "CARR0002": {
+        "positions": {
+            "CARR0002-01": {
+                "index": 1
+            },
+            "CARR0002-02": {
+                "index": 2
+            },
+            "CARR0002-03": {
+                "index": 3
+            },
+            "CARR0002-04": {
+                "index": 4
+            },
+            "CARR0002-05": {
+                "index": 5
+            }
+
+        }
+    },
+    "CARR0003": {
+        "positions": {
+            "CARR0003-01": {
+                "index": 1
+            },
+            "CARR0003-02": {
+                "index": 2
+            },
+            "CARR0003-03": {
+                "index": 3
+            },
+            "CARR0003-04": {
+                "index": 4
+            },
+            "CARR0003-05": {
+                "index": 5
+            }
+
+        }
+    },
+    "CARR0004": {
+        "positions": {
+            "CARR0004-01": {
+                "index": 1
+            },"CARR0004-02": {
+                "index": 2
+            },
+            "CARR0004-03": {
+                "index": 3
+            },
+            "CARR0004-04": {
+                "index": 4
+            },
+            "CARR0004-05": {
+                "index": 5
+            }
+
+        }
+    },
+    "CARR0005": {
+        "positions": {
+            "CARR0005-01": {
+                "index": 1
+            },
+            "CARR0005-02": {
+                "index": 2
+            },
+            "CARR0005-03": {
+                "index": 3
+            },
+            "CARR0005-04": {
+                "index": 4
+            },
+            "CARR0005-05": {
+                "index": 5
+            }
+
+        }
+    },
+    "CARR0006": {
+        "positions": {
+            "CARR0006-01": {
+                "index": 1
+            },
+            "CARR0006-02": {
+                "index": 2
+            },
+            "CARR0006-03": {
+                "index": 3
+            },
+            "CARR0006-04": {
+                "index": 4
+            },
+            "CARR0006-05": {
+                "index": 5
+            }
+        }
+    },
+    "CARR0007": {
+        "positions": {
+            "CARR0007-01": {
+                "index": 1
+            },
+            "CARR0007-02": {
+                "index": 2
+            },
+            "CARR0007-03": {
+                "index": 3
+            },
+            "CARR0007-04": {
+                "index": 4
+            },
+            "CARR0007-05": {
+                "index": 5
+            }
+        }
+    },
+    "CARR0008": {
+        "positions": {
+            "CARR0008-01": {
+                "index": 1
+            },
+            "CARR0008-02": {
+                "index": 2
+            },
+            "CARR0008-03": {
+                "index": 3
+            },
+            "CARR0008-04": {
                 "index": 4
             }
-            ,"CARR0001-05" : {
+            ,"CARR0008-05": {
                 "index": 5
             }
 
         }
     }
-    ,"CARR0002" : {
-        "positions": {
-            "CARR0002-01" : {
-                "index": 1
-            }
-            ,"CARR0002-02" : {
-                "index": 2
-            }
-            ,"CARR0002-03" : {
-                "index": 3
-            }
-            ,"CARR0002-04" : {
-                "index": 4
-            }
-            ,"CARR0002-05" : {
-                "index": 5
-            }
-
-        }
-    }
-    ,"CARR0003" : {
-        "positions": {
-            "CARR0003-01" : {
-                "index": 1
-            }
-            ,"CARR0003-02" : {
-                "index": 2
-            }
-            ,"CARR0003-03" : {
-                "index": 3
-            }
-            ,"CARR0003-04" : {
-                "index": 4
-            }
-            ,"CARR0003-05" : {
-                "index": 5
-            }
-
-        }
-    }
-    ,"CARR0004" : {
-        "positions": {
-            "CARR0004-01" : {
-                "index": 1
-            }
-            ,"CARR0004-02" : {
-                "index": 2
-            }
-            ,"CARR0004-03" : {
-                "index": 3
-            }
-            ,"CARR0004-04" : {
-                "index": 4
-            }
-            ,"CARR0004-05" : {
-                "index": 5
-            }
-
-        }
-    }
-    ,"CARR0005" : {
-        "positions": {
-            "CARR0005-01" : {
-                "index": 1
-            }
-            ,"CARR0005-02" : {
-                "index": 2
-            }
-            ,"CARR0005-03" : {
-                "index": 3
-            }
-            ,"CARR0005-04" : {
-                "index": 4
-            }
-            ,"CARR0005-05" : {
-                "index": 5
-            }
-
-        }
-    }
-    ,"CARR0006" : {
-        "positions": {
-            "CARR0006-01" : {
-                "index": 1
-            }
-            ,"CARR0006-02" : {
-                "index": 2
-            }
-            ,"CARR0006-03" : {
-                "index": 3
-            }
-            ,"CARR0006-04" : {
-                "index": 4
-            }
-            ,"CARR0006-05" : {
-                "index": 5
-            }
-
-        }
-    }
-    ,"CARR0007" : {
-        "positions": {
-            "CARR0007-01" : {
-                "index": 1
-            }
-            ,"CARR0007-02" : {
-                "index": 2
-            }
-            ,"CARR0007-03" : {
-                "index": 3
-            }
-            ,"CARR0007-04" : {
-                "index": 4
-            }
-            ,"CARR0007-05" : {
-                "index": 5
-            }
-
-        }
-    }
-    ,"CARR0008" : {
-        "positions": {
-            "CARR0008-01" : {
-                "index": 1
-            }
-            ,"CARR0008-02" : {
-                "index": 2
-            }
-            ,"CARR0008-03" : {
-                "index": 3
-            }
-            ,"CARR0008-04" : {
-                "index": 4
-            }
-            ,"CARR0008-05" : {
-                "index": 5
-            }
-
-        }
-    }   
 }
 
 
-
 def get_hamilton_by_barcode(hamilton_barcode):
-    
+
     if hamilton_barcode in hamiltons:
-        respData = hamiltons[hamilton_barcode] 
+        respData = hamiltons[hamilton_barcode]
     else:
         errmsg = "There is no Hamilton with the barcode: [%s]"
         return error_response(404, errmsg % hamilton_barcode)
 
-    
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
-    return(resp) 
+                    status=200, mimetype="application/json")
+    return(resp)
+
 
 def get_carrier_by_barcode(carrier_barcode, hamilton_barcode):
 
     if carrier_barcode in carriers:
-        respData = carriers[carrier_barcode] 
+        respData = carriers[carrier_barcode]
     else:
         errmsg = "There is no carrier with the barcode: [%s]"
         return error_response(404, errmsg % carrier_barcode)
 
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def get_plate_ready_for_step(plate_barcode, transform_type_id):
 
@@ -1018,132 +1016,130 @@ def get_plate_ready_for_step(plate_barcode, transform_type_id):
         return error_response(404, errmsg % transform_type_id)
 
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def process_hamilton_sources(transform_type_id):
 
-    data = request.json
-    plateBarcodes = data["plateBarcodes"]
-
-    transform_type_id = int(transform_type_id);
+    transform_type_id = int(transform_type_id)
 
     respData = {
         "responseCommands": []
     }
 
-    if transform_type_id == 39: # hitpicking of miniprep
-
+    if transform_type_id == constants.TRANS_TYPE_HITPICK_MINIPREP:
         '''
-            this code needs to actually analyze the wells in the plates of plateBarcodes
-            and build a Hamilton worklist to hitpick into necessary # of destination plates.
+        this code needs to actually analyze the wells in the plates of plateBarcodes
+        and build a Hamilton worklist to hitpick into necessary # of destination plates.
         '''
 
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
                     {"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
                 ]
             }
-        );
-    elif transform_type_id == 48: # hitpicking of shipping into plates
+        )
 
+    elif transform_type_id == constants.TRANS_TYPE_HITPICK_SHIP_PLATES:
         '''
-            this code needs to actually analyze the wells in the plates of plateBarcodes
-            and build a shipping worklist to hitpick into necessary # of destination plates.
+        this code needs to actually analyze the wells in the plates of plateBarcodes
+        and build a shipping worklist to hitpick into necessary # of destination plates.
         '''
 
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
                     {"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
                 ]
             }
-        );
-    elif transform_type_id == 51: # hitpicking of shipping into tubes
+        )
 
+    elif transform_type_id == constants.TRANS_TYPE_HITPICK_SHIP_TUBES:
         '''
-            this code needs to actually analyze the wells in the plates of plateBarcodes
-            and build a shipping worklist to hitpick into necessary # of destination tubes.
+        this code needs to actually analyze the wells in the plates of plateBarcodes
+        and build a shipping worklist to hitpick into necessary # of destination tubes.
         '''
 
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [ # front end just uses length of plates array
+                "type": "SET_DESTINATIONS",
+                "plates": [ # front end just uses length of plates array
+                    {"type": "SHIPPING_TUBE_PLATE"},
+                    {"type": "SHIPPING_TUBE_PLATE"},
                     {"type": "SHIPPING_TUBE_PLATE"}
-                    ,{"type": "SHIPPING_TUBE_PLATE"}
-                    ,{"type": "SHIPPING_TUBE_PLATE"}
                 ]
             }
-        );
+        )
+
         respData["responseCommands"].append(
             {
-                "type": "ADD_TRANSFORM_SPEC_DETAIL"
-                ,"detail": {
-                    "key": "shippingTubeBarcodeData"
-                    ,"value": [
-                        {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item", "partNumber": "12345ABCD", "labelMass": "1 ug"}
-                        ,{"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item", "partNumber": "6789GHIJ", "labelMass": "1 ug"}
-                        ,{"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item", "partNumber": "3456MNOP", "labelMass": "1 ug"}
+                "type": "ADD_TRANSFORM_SPEC_DETAIL",
+                "detail": {
+                    "key": "shippingTubeBarcodeData",
+                    "value": [
+                        {"forWellNumber": 1, "COI": "TUBE01", "itemName": "ordered tube item",
+                         "partNumber": "12345ABCD", "labelMass": "1 ug"},
+                        {"forWellNumber": 2, "COI": "TUBE02", "itemName": "ordered tube item",
+                         "partNumber": "6789GHIJ", "labelMass": "1 ug"},
+                        {"forWellNumber": 3, "COI": "TUBE03", "itemName": "ordered tube item",
+                         "partNumber": "3456MNOP", "labelMass": "1 ug"}
                     ]
                 }
             }
-        );
+        )
 
-    elif transform_type_id == 58: # PCR/PCA Master Mix addition:
-        
+    elif transform_type_id == constants.TRANS_TYPE_PCA_PCR_ADD_MMIX:
         '''
-            this code needs to actually analyze the wells in the plates of plateBarcodes
-            and build a master mix addition worklist AND needs to determine where the 4 destination plates should be placed.
-            It will return the SET_DESTINATIONS command as-is below.
-            The ADD_TRANSFORM_SPEC_DETAIL should be the array of 4 destination plates with their forPosition and barcode properties set accordingly
+        this code needs to actually analyze the wells in the plates of plateBarcodes
+        and build a master mix addition worklist AND needs to determine where the 4 destination plates should be placed.
+        It will return the SET_DESTINATIONS command as-is below.
+        The ADD_TRANSFORM_SPEC_DETAIL should be the array of 4 destination plates with their forPosition and barcode properties set accordingly
         '''
 
         respData["responseCommands"].append(
             {
-                "type": "SET_DESTINATIONS"
-                ,"plates": [
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
                     {"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
-                    ,{"type": "SPTT_0006"}
                 ]
             }
-        );
+        )
         respData["responseCommands"].append(
             {
-                "type": "ADD_TRANSFORM_SPEC_DETAIL"
-                ,"detail": {
-                    "key": "guidedDestinationPlacementData"
-                    ,"value": [
-                        {"forPosition": 1, "barcode": "TUBE01"}
-                        ,{"forPosition": 2, "barcode": "TUBE02"}
-                        ,{"forPosition": 3, "barcode": "TUBE03"}
-                        ,{"forPosition": 4, "barcode": "TUBE04"}
+                "type": "ADD_TRANSFORM_SPEC_DETAIL",
+                "detail": {
+                    "key": "guidedDestinationPlacementData",
+                    "value": [
+                        {"forPosition": 1, "barcode": "TUBE01"},
+                        {"forPosition": 2, "barcode": "TUBE02"},
+                        {"forPosition": 3, "barcode": "TUBE03"},
+                        {"forPosition": 4, "barcode": "TUBE04"}
                     ]
                 }
             }
-        );
+        )
 
-    elif transform_type_id == 61: # Normalization:
-
+    elif transform_type_id == constants.TRANS_TYPE_POST_PCA_NORM:
         '''
-            this code needs to actually analyze the wells in the plates of plateBarcodes
-            and build nornalization worklist for the source plate.
+        this code needs to actually analyze the wells in the plates of plateBarcodes
+        and build nornalization worklist for the source plate.
         '''
 
     resp = Response(response=json.dumps(respData),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
+
 
 def trash_samples():
 
@@ -1154,7 +1150,6 @@ def trash_samples():
         "all_trashed": True
     }
 
-    
 
 def get_worklist(spec_id):
     response = make_response("****** worklist data for transform spec %s ******" % spec_id)
@@ -1163,9 +1158,8 @@ def get_worklist(spec_id):
     response.headers["Content-Disposition"] = "attachment;"
     return response
 
+
 def get_date_time():
     resp = Response(response=json.dumps({"date": str(datetime.datetime.utcnow())}),
-            status=200, \
-            mimetype="application/json")
+                    status=200, mimetype="application/json")
     return(resp)
-

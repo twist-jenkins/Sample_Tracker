@@ -253,6 +253,10 @@ rest.api.add_resource(rest.TransformSpecListResource,
 rest.api.add_resource(rest.TransformSpecResource,
                       '/api/v1/rest/transform-specs/<spec_id>')
 
+rest.api.add_resource(rest.WorklistResource,
+                      '/api/v1/rest/worklist/<spec_id>')
+
+
 
 # older REST API routes:
 #
@@ -266,17 +270,17 @@ def dragndrop():
 #
 # Returns the JSON representation of a "sample plate" based on the plate's ID.
 #
-@app.route('/sample_plate/<sample_plate_id>')
-def get_sample_plate(sample_plate_id):
-    return routes.get_sample_plate(sample_plate_id)
+@app.route('/sample_plate/<plate_id>')
+def get_sample_plate(plate_id):
+    return routes.get_sample_plate(plate_id)
 
 #
 # Returns a sample plate id and the barcode for that plate. Or if a POST is sent to this URL,
 # updates the barcode for the passed-in sample plate id.
 #
-@app.route('/sample_plate/<sample_plate_id>/external_barcode',methods=['GET','POST'])
-def sample_plate_external_barcode(sample_plate_id):
-    return routes.sample_plate_external_barcode(sample_plate_id)
+@app.route('/sample_plate/<plate_id>/external_barcode',methods=['GET','POST'])
+def sample_plate_external_barcode(plate_id):
+    return routes.sample_plate_external_barcode(plate_id)
 
 #
 # Returns the "Sample Plate" report for a specified sample (specified by id). This can return the
@@ -378,9 +382,9 @@ def track_sample_step():
 def sample_plates_list():
     return routes.get_sample_plates_list()
 
-@app.route('/api/v1/plate-info/<sample_plate_id>', methods=['GET'])
-def plate_info(sample_plate_id):
-    return routes.get_sample_plate(sample_plate_id)
+@app.route('/api/v1/plate-info/<plate_id>', methods=['GET'])
+def plate_info(plate_id):
+    return routes.get_sample_plate(plate_id)
 
 @app.route('/api/v1/update-barcode', methods=['POST'])
 def update_barcode():

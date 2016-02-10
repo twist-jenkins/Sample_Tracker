@@ -17,7 +17,7 @@ import sqlalchemy as sa
 def upgrade():
     op.create_table('sample_transfer_template_details',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('sample_transfer_template_id', sa.Integer(), nullable=False),
+    sa.Column('transfer_template_id', sa.Integer(), nullable=False),
 
     sa.Column('source_plate_number', sa.Integer(), nullable=False),
     sa.Column('source_plate_well_count', sa.Integer(), nullable=False),
@@ -29,7 +29,7 @@ def upgrade():
     sa.Column('destination_plate_well_id', sa.Integer(), nullable=False),
     sa.Column('destination_plate_well_id_string', sa.String(length=10), default="", nullable=False),
 
-    sa.ForeignKeyConstraint(['sample_transfer_template_id'], ['sample_transfer_template.id'], ),
+    sa.ForeignKeyConstraint(['transfer_template_id'], ['sample_transfer_template.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
 

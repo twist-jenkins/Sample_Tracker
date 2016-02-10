@@ -16,13 +16,13 @@ import sqlalchemy as sa
 
 update_sql_t_type = ("update sample_transfer_type "
               "set name = :name, "
-              "sample_transfer_template_id = :stti, "
+              "transfer_template_id = :stti, "
               "source_plate_count = :spc, "
               "destination_plate_count = :dpc "
               "where id = :id")
 
 insert_sql_t_type = ("insert into sample_transfer_type "
-              "(id, name, sample_transfer_template_id, "
+              "(id, name, transfer_template_id, "
               " source_plate_count, destination_plate_count) "
               "select :id, :name, :stti, :spc, :dpc "
               "where not exists "

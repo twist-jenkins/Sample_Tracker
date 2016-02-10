@@ -1,32 +1,27 @@
+"""Define REST resources for CRUD on transform specs."""
+
 import json
 import logging
 from datetime import datetime
 
+import flask_restful
 from flask import request
 from flask.ext.restful import abort
 from flask_login import current_user
 
-from sqlalchemy.sql import func
-import flask_restful
+from marshmallow import Schema, fields
 
 from app import app
-from app import db
+from app import db, constants, miseq
 from app.utils import scoped_session
-
-from twistdb.sampletrack import *
-from twistdb.ngs import *
-from twistdb.backend import NGSPreppedSample
-from twistdb import create_unique_id
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
-
 from app.routes.spreadsheet import create_adhoc_sample_movement
-from app import miseq
+
+from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
 
 api = flask_restful.Api(app)
 
-from marshmallow import Schema, fields
-
-
+logger = logging.getLogger()
 
 
 def json_api_success(data, status_code, headers=None):
@@ -39,18 +34,16 @@ def json_api_success(data, status_code, headers=None):
     else:
         return json_api_response, status_code, headers
 
-"""
-TODO:
-def json_api_error(err_list, status_code, headers=None):
-    json_api_response = {"data": {},
-                         "errors": err_list,
-                         "meta": {}
-                         }
-    if headers is None:
-        return json_api_response, status_code
-    else:
-        return json_api_response, status_code, headers
-"""
+# TODO:
+# def json_api_error(err_list, status_code, headers=None):
+#     json_api_response = {"data": {},
+#                          "errors": err_list,
+#                          "meta": {}
+#                          }
+#     if headers is None:
+#         return json_api_response, status_code
+#     else:
+#         return json_api_response, status_code, headers
 
 
 def formatted(db_session, data, fmt, spec):
@@ -87,8 +80,6 @@ def formatted(db_session, data, fmt, spec):
         abort(404, message="Invalid format {}".format(fmt))
 
 
-
-
 class SpecSchema(Schema):
     spec_id = fields.Int()
     type_id = fields.Int()
@@ -113,8 +104,8 @@ class TransformSpecResource(flask_restful.Resource):
             spec_id = tokens[0]
             fmt = '.'.join(tokens[1:])
         with scoped_session(db.engine) as sess:
-            spec = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
+            spec = sess.query(TransformSpec).filter(
+                TransformSpec.spec_id == spec_id).first()
             if spec:
                 data = spec_schema.dump(spec).data
                 # sess.expunge(row)
@@ -124,13 +115,13 @@ class TransformSpecResource(flask_restful.Resource):
     def delete(self, spec_id):
         """deletes a single spec"""
         with scoped_session(db.engine) as sess:
-            spec = sess.query(SampleTransformSpec).filter(
-                SampleTransformSpec.spec_id == spec_id).first()
+            spec = sess.query(TransformSpec).filter(
+                TransformSpec.spec_id == spec_id).first()
             if spec:
-                transfer = sess.query(SampleTransfer).filter(
-                    SampleTransfer.sample_transform_spec_id == spec_id).first()
+                transfer = sess.query(Transfer).filter(
+                    Transfer.transform_spec_id == spec_id).first()
                 if transfer:
-                    transfer.sample_transform_spec_id = None
+                    transfer.transform_spec_id = None
                     sess.flush()
                 sess.delete(spec)
                 sess.flush()
@@ -149,15 +140,17 @@ class TransformSpecResource(flask_restful.Resource):
 
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
+        logger.debug('@@ create_or_replace')
         with scoped_session(db.engine) as sess:
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
 
             if method == 'POST':
                 assert spec_id is None
-                spec = SampleTransformSpec()         # create new, unknown id
+                spec = TransformSpec()         # create new, unknown id
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
+                logger.debug('@@ spec.data_json:', spec.data_json)
                 spec.operator_id = current_user.operator_id
 
                 # workaround for poor input marshaling
@@ -181,12 +174,12 @@ class TransformSpecResource(flask_restful.Resource):
                 assert spec_id is not None
 
                 # create or replace known spec_id
-                row = sess.query(SampleTransformSpec).filter(
-                    SampleTransformSpec.spec_id == spec_id).first()
+                row = sess.query(TransformSpec).filter(
+                    TransformSpec.spec_id == spec_id).first()
                 if row:
                     spec = row                    # replace existing, known id
                 else:
-                    spec = SampleTransformSpec()        # create new, known id
+                    spec = TransformSpec()        # create new, known id
                     spec.spec_id = spec_id
 
                 if request.json and request.json["plan"]:
@@ -217,6 +210,7 @@ class TransformSpecResource(flask_restful.Resource):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
+        logger.debug('@@ executing - details:' % details)
         try:
             transfer_type_id = details["transfer_type_id"]
         except:
@@ -224,13 +218,21 @@ class TransformSpecResource(flask_restful.Resource):
         transfer_template_id = details["transfer_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
-        result = create_adhoc_sample_movement(sess,
-                                              transfer_type_id,
-                                              transfer_template_id,
-                                              wells,
-                                              transform_spec_id=spec.spec_id)
-        if not result:
-            raise ValueError("create_adhoc_sample_movement returned nothing")
+
+        if 'requestedData' in spec.data_json['details'].keys():
+            if transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+                aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
+                quant_data = spec.data_json['details']['requestedData']['instrument_data']
+                result = store_quant_data(sess, aliquot_plate, quant_data)
+        else:
+            result = create_adhoc_sample_movement(sess,
+                                                  transfer_type_id,
+                                                  transfer_template_id,
+                                                  wells,
+                                                  transform_spec_id=spec.spec_id)
+            if not result:
+                raise ValueError("create_adhoc_sample_movement returned nothing")
+
         if not result["success"]:
             abort(400, message="Failed to execute step (sample_movement)")
         spec.date_executed = datetime.utcnow()
@@ -245,14 +247,14 @@ class TransformSpecListResource(flask_restful.Resource):
         """returns a list of all specs"""
         result = []
         with scoped_session(db.engine) as sess:
-            rows = (sess.query(SampleTransformSpec)
-                    .order_by(SampleTransformSpec.spec_id.desc())
+            rows = (sess.query(TransformSpec)
+                    .order_by(TransformSpec.spec_id.desc())
                     .all()
                     )
             result = spec_schema.dump(rows, many=True).data
             #    sess.expunge(rows)
-            #print "^" * 10000
-            #print str(result)
+            # print "^" * 10000
+            # print str(result)
         return json_api_success(result, 200)  # FIXME
         # return result, 200
 
@@ -271,12 +273,37 @@ def modify_before_insert(db_session, spec):
     if "details" not in spec.data_json:
         return False
 
-    # if not "ngs barcoding" step, do nothing
+    # if not "ngs barcoding" or one of the hamilton worklist steps, do nothing
     details = spec.data_json["details"]
     if "transfer_type_id" in details:
-        if details["transfer_type_id"] != 26:
+        if details["transfer_type_id"] not in (
+                constants.TRANS_TYPE_NGS_HITPICK_INDEXING,
+                constants.TRANS_TYPE_POST_PCA_NORM):
             return False
 
+    if details["transfer_type_id"] == constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
+        res = alter_spec_ngs_barcodes(db_session, spec)
+    elif details["transfer_type_id"] == constants.TRANS_TYPE_POST_PCA_NORM:
+        res = alter_spec_post_pca_hamilton_worklist(db_session, spec)
+
+    return res
+
+
+def alter_spec_post_pca_hamilton_worklist(db_session, spec):
+    """Inject a Hamilton worklist for post-PCA normalization."""
+    from app.worklist import hamilton
+    spec.data_json['details']['worklist'] = {}
+    spec.data_json['details']['worklist']['filename'] = "Test!"  # For the UI
+
+    plate_id = spec.data_json['sources'][0]['details']['id']
+    worklist = hamilton.post_pca_normalization_worklist(db_session, plate_id)
+    spec.data_json['details']['worklist']['content'] = worklist
+
+    return True
+
+
+def alter_spec_ngs_barcodes(db_session, spec):
+    """Update the POSTed transform spec to contain NGS-specific info."""
     operations = spec.data_json["operations"]
     new_operations = []
     for oper in operations:
@@ -326,3 +353,33 @@ def modify_before_insert(db_session, spec):
         }
     }]
     return True
+
+
+def store_quant_data(db, plate_id, quant_str):
+    """Associated quant data from an uploaded file with an aliquot plate."""
+    from app.parser import spectramax
+
+    try:
+        plate = db.query(Plate).\
+            filter(Plate.external_barcode == plate_id).one()
+    except:
+        logger.error("Failed to find plate %s" % plate_id)
+
+    for conc in spectramax.parse(quant_str):
+        well = plate.get_well_by_number(conc[0])
+
+        # Get the latest Sample in this plate/well
+        curr_s = db.query(Sample).filter(
+            Sample.plate == plate,
+            Sample.well == well
+        ).order_by(Sample.date_created.desc()).first()
+
+        if curr_s:
+            curr_s.conc_ng_ul = conc[2]
+            # Then update the concentration of its parent too
+            curr_s.parent.conc_ng_ul = conc[2]
+
+    logger.info("Flushing updates for parsed concentration data")
+    db.flush()
+
+    return {'success': True}  # caller is expecting this

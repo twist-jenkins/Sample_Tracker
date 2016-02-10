@@ -1,23 +1,20 @@
 #!/bin/env python
 
-import unittest
 import json
-import os
+import unittest
 import logging
 import random
 import string
-logging.basicConfig(level=logging.INFO)
 
 from flask_login import AnonymousUserMixin
+
+logging.basicConfig(level=logging.INFO)
 
 # os.environ["WEBSITE_ENV"] = "Local"
 
 # NOTE: because of the FLASK_APP.config.from_object(os.environ['APP_SETTINGS'])
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
-
-import sys
-print '@@', sys.path
 
 from app import app
 from app import db
@@ -28,6 +25,7 @@ def rnd_bc():
     """Random barcode"""
     return 'test' + ''.join([random.choice(string.letters + string.digits)
                              for _ in range(10)])
+
 
 class AutomatedTestingUser(AnonymousUserMixin):
     '''
@@ -61,14 +59,13 @@ class RootPlate(object):
         with scoped_session(db.engine) as db_session:
             operator = AutomatedTestingUser()
             destination_barcode = barcode
-            storage_location_id = 'LOC_0064'
+            storage_location = 'LOC_0064'
             source_plate_type_id = "SPTT_0006"
             try:
                 plate = create_destination_plate(db_session, operator,
-                                             destination_barcode,
-                                             source_plate_type_id,
-                                             storage_location_id,
-                                             1)
+                                                 destination_barcode,
+                                                 source_plate_type_id,
+                                                 storage_location, 1)
             except:
                 raise
         return destination_barcode
