@@ -271,13 +271,37 @@ def modify_before_insert(db_session, spec):
     if "details" not in spec.data_json:
         return False
 
-    # if not "ngs barcoding" step, do nothing
+    # if not "ngs barcoding" or one of the hamilton worklist steps, do nothing
     details = spec.data_json["details"]
     if "transfer_type_id" in details:
-        if details["transfer_type_id"] != \
-                constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
+        if details["transfer_type_id"] not in (
+                constants.TRANS_TYPE_NGS_HITPICK_INDEXING,
+                constants.TRANS_TYPE_POST_PCA_NORM):
             return False
 
+    if details["transfer_type_id"] == constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
+        res = alter_spec_ngs_barcodes(db_session, spec)
+    elif details["transfer_type_id"] == constants.TRANS_TYPE_POST_PCA_NORM:
+        res = alter_spec_post_pca_hamilton_worklist(db_session, spec)
+
+    return res
+
+
+def alter_spec_post_pca_hamilton_worklist(db_session, spec):
+    """Inject a Hamilton worklist for post-PCA normalization."""
+    from app.worklist import hamilton
+    spec.data_json['details']['worklist'] = {}
+    spec.data_json['details']['worklist']['filename'] = "Test!"  # For the UI
+
+    plate_id = spec.data_json['sources'][0]['details']['id']
+    worklist = hamilton.post_pca_normalization_worklist(db_session, plate_id)
+    spec.data_json['details']['worklist']['content'] = worklist
+
+    return True
+
+
+def alter_spec_ngs_barcodes(db_session, spec):
+    """Update the POSTed transform spec to contain NGS-specific info."""
     operations = spec.data_json["operations"]
     new_operations = []
     for oper in operations:
