@@ -170,7 +170,6 @@ class TestCase(unittest.TestCase):
                 "sampleTransferTemplateId": 21,
                 "transferMap": transfer_map
                 }
-        import ipdb; ipdb.set_trace()
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
@@ -193,15 +192,19 @@ class TestCase(unittest.TestCase):
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
+            "source_well_number": src_number,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
+            "destination_plate_type": "SPTT_0005",
             "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
+        } for (src_well, src_number, dest_plate, dest_well,
+               dest_number, dest_well_count) in [
+            ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
+            ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
+            ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
+            ('B1', 13, dest_plate_2_barcode, 'A1', 1, 96),
+            ('B1', 13, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
 
         data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
@@ -275,18 +278,23 @@ class TestCase(unittest.TestCase):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
         dest_plate_2_barcode = rnd + '_2'
+
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
+            "source_well_number": src_number,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
+            "destination_plate_type": "SPTT_0005",
             "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
+        } for (src_well, src_number, dest_plate, dest_well,
+               dest_number, dest_well_count) in [
+            ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
+            ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
+            ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
+            ('B1', 13, dest_plate_2_barcode, 'A1', 1, 96),
+            ('B1', 13, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
 
         data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
@@ -315,16 +323,20 @@ class TestCase(unittest.TestCase):
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
+            "source_well_number": src_number,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
             "destination_plate_well_count": dest_well_count,
+            "destination_plate_type": "SPTT_0004",
             "source_sample_id": "CS_563bff9150a77622447fc8f5"
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_barcode, 'A1', 48),
-            ('A2', dest_plate_barcode, 'A2', 48),
-            ('B1', dest_plate_barcode, 'B1', 48),
-            ('B2', dest_plate_barcode, 'B2', 48),
-            ('C1', dest_plate_barcode, 'C1', 48),
+        } for (src_well, src_number, dest_plate, dest_well,
+               dest_number, dest_well_count) in [
+            ('A1', 1, dest_plate_barcode, 'A1', 1, 48),
+            ('A2', 2, dest_plate_barcode, 'A2', 2, 48),
+            ('B1', 25, dest_plate_barcode, 'B1', 7, 48),
+            ('B2', 26, dest_plate_barcode, 'B2', 8, 48),
+            ('C1', 49, dest_plate_barcode, 'C1', 13, 48),
         ]]
         spec["operations"] = transfer_map
 
@@ -375,9 +387,12 @@ class TestCase(unittest.TestCase):
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
+            "source_well_number": src_number,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
             "destination_plate_well_count": dest_well_count,
+            "destination_plate_type": ""
             "source_sample_id": "CS_563bff9150a77622447fc8f5"
         } for (src_well, dest_plate, dest_well, dest_well_count) in [
             ('A1', dest_plate_1_barcode, 'A1', 96),
