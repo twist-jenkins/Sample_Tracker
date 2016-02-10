@@ -4,29 +4,23 @@ import json
 import logging
 from datetime import datetime
 
+import flask_restful
 from flask import request
 from flask.ext.restful import abort
 from flask_login import current_user
 
-from sqlalchemy.sql import func
-import flask_restful
+from marshmallow import Schema, fields
 
 from app import app
-from app import db
+from app import db, constants, miseq
 from app.utils import scoped_session
-
-from app import constants
-from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
+from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
+from app.routes.spreadsheet import create_adhoc_sample_movement
 
 from twistdb import create_unique_id
-from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
-
-from app.routes.spreadsheet import create_adhoc_sample_movement
-from app import miseq
+from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
 
 api = flask_restful.Api(app)
-
-from marshmallow import Schema, fields
 
 logger = logging.getLogger()
 
@@ -345,21 +339,21 @@ def store_quant_data(db, plate_id, quant_str):
     except:
         logger.error("Failed to find plate %s" % plate_id)
 
-    f_id = create_unique_id(Sample.id_prefix)
     for conc in spectramax.parse(quant_str):
         well = plate.get_well_by_number(conc[0])
 
-        # FIXME this should carry metadata over from the parent sample
-        # instance into these new child instances but since we don't
-        # currently *have* parent instances, there's nothing to carry over
-        curr_id = f_id()
-        # FIXME ridiculous 'name' value due to unique constraint on name
-        new_S = Sample(id=curr_id, plate_id=plate.id, plate_well_id=well.pk,
-                       conc_ng_ul=conc[2],
-                       name="Spectramax concentration (%s)" % curr_id)
+        # Get the latest Sample in this plate/well
+        curr_s = db.query(Sample).filter(
+            Sample.plate == plate,
+            Sample.well == well
+        ).order_by(Sample.date_created.desc()).first()
 
-        db.add(new_S)
-    logger.info("Flushing inserts for parsed concentration data")
+        if curr_s:
+            curr_s.conc_ng_ul = conc[2]
+            # Then update the concentration of its parent too
+            curr_s.parent.conc_ng_ul = conc[2]
+
+    logger.info("Flushing updates for parsed concentration data")
     db.flush()
 
     return {'success': True}  # caller is expecting this
