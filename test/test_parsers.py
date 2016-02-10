@@ -13,7 +13,12 @@ def quant_file():
 
 def test_quant_parsing(quant_file):
     """Test parsing of Spectramax quantification output file for 384-well."""
-    res = spectramax.parse(quant_file)
+    # Cleanup the file so it is in UTF-8 which is how the backend
+    # receives the file from the UI even though the file on disk
+    # is encoded in UTF-16LE
+    # quant_file = quant_file.decode(spectramax.AWKWARD_ENCODING).encode('ascii', 'ignore')
+
+    res = spectramax.parse(quant_file, utf16=True)
     for conc in res:
         assert len(conc) == 3
         if conc[0] == 1:  # first well

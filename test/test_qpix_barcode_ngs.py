@@ -392,12 +392,12 @@ class TestCase(unittest.TestCase):
             "destination_well_name": dest_well,
             "destination_well_number": dest_number,
             "destination_plate_well_count": dest_well_count,
-            "destination_plate_type": ""
+            "destination_plate_type": "SPTT_0005",
             "source_sample_id": "CS_563bff9150a77622447fc8f5"
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
+        } for (src_well, src_number, dest_plate, dest_well, dest_number, dest_well_count) in [
+            ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
+            ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
+            ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
         ]]
         spec["operations"] = transfer_map
         spec["details"] = {
