@@ -161,6 +161,7 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                     })
     return rows
 
+
 def bulk_barcode_to_pca_plates( db, bulk_barcode ):
     from twistdb.sampletrack import Plate, TransformSpec
 
@@ -229,3 +230,39 @@ def bulk_barcode_to_mastermixes( db, bulk_barcode ):
     from twistdb.sampletrack import Plate, TransformSpec
     pca_plates = bulk_barcode_to_pca_plates( db, bulk_barcode )
     return pca_plates_to_master_mixes( pca_plates )
+
+
+def munge_echo_worklist( db, bulk_barcode, temp_plate_barcodes ):
+    """
+    retrieves transform associated with @bulk_barcode and replaces existing
+    pca plate names with @temp_plate_barcodes, then returns the whole mess
+    as an echo worklist
+    """
+    from twistdb.sampletrack import Plate, TransformSpec
+    from app.miseq import echo_csv
+
+    N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
+    specs = []
+    for spec in db.query(TransformSpec) \
+                  .filter(TransformSpec.date_created >= N_days_ago):
+        srcs = spec.data_json['sources']
+        if ( len(srcs) == 1
+             and srcs[0]['details']['id'] == bulk_barcode ):
+            specs.append( spec.data_json )
+
+    # there should only be one:
+    [spec] = specs
+
+    dest_barcodes = {}
+    for i, op in enumerate( spec['operations'] ):
+        if op['destination_plate_barcode'] not in dest_barcodes:
+            dest_barcodes[ op['destination_plate_barcode'] ] = i
+
+    assert dest_barcodes
+    dest_barcodes = sorted( dest_barcodes.keys(), key=lambda s: dest_barcodes[s] )
+
+    renaming = dict( zip( dest_barcodes, temp_plate_barcodes ))
+    for op in spec['operations']:
+        op['destination_plate_barcode'] = renaming[ op['destination_plate_barcode'] ]
+
+    return echo_csv( spec['operations'], XFER_VOL )
