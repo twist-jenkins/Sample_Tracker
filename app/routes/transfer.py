@@ -40,8 +40,6 @@ def merge_transform( sources, dests ):
     rows, seen = [], set()
     for src in sources:
         barcode = src['details']['id']
-        print '@@ merge:', barcode
-
         try:
             plate = db.session.query(Plate) \
                               .filter(Plate.external_barcode == barcode) \
@@ -238,7 +236,6 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
         db.session.commit()
 
     rows = primer_hitpicking.bulk_to_temp_transform( db.session, bulk_barcode, pca_plates )
-    print '@@ bulk_to_temp_transform - rows:', rows
     master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
     return master_mixes, rows
 
@@ -248,12 +245,8 @@ def preview():
 
     details = request.json['details']
 
-    print '@@ keys:', details
     transfer_template_id = details["transfer_template_id"]
     transfer_type_id = details["transfer_type_id"]
-
-
-    print '@@ template_id:', transfer_template_id
 
     responseCommands = []
     rows = []
@@ -311,12 +304,13 @@ def preview():
                 })
 
             elif transfer_type_id == constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+                mixes = primer_hitpicking.bulk_barcode_to_mastermixes( db.session, request.json['sources'][0]['details']['id'] )
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type":  "text",
                         "title": "PCA Master Mix",
-                        "data": "Master mix data here... maybe CSV format to render a table?"
+                        "data":  mixes,
                     }
                 })
 
@@ -353,7 +347,6 @@ def preview():
                 })
 
             elif transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
-                print '@@ here k'
                 rows = [{}]
 
                 # we need to add master mix needs info or tell the user we need all the PCA plates first
@@ -394,6 +387,32 @@ def preview():
                         "data": masterMixNeeds
                     }
                 })
+
+            elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+    
+                destinations_ready = ("destinations" in request.json
+                                      and request.json['destinations'])
+
+                for dest_index, destination in enumerate(request.json['destinations']):
+                    if "id" not in destination["details"] or destination["details"]["id"] == "":
+                        destinations_ready = False
+
+                if destinations_ready:
+                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
+
+                    echo_worklist = primer_hitpicking.munge_echo_worklist( db.session, request.json['sources'][0]['details']['id'],
+                                                                           [x['details']['id'] for x in request.json['destinations']] )
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "file-data",
+                            "title": "Echo worklist",
+                            "data": echo_worklist,
+                            "mimeType": "text/csv",
+                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+                        }
+
+                    })
 
             else:
                 rows = []
@@ -477,31 +496,6 @@ def preview():
                     "plates": destination_plates
                 })
 
-            elif transfer_template_id == \
-                    constants.TRANS_TPL_PCR_PRIMER_HITPICK:
-
-                destinations_ready = True
-                if ("destinations" not in request.json or not len(request.json['destinations'])):
-                    destinations_ready = False
-
-                for dest_index, destination in enumerate(request.json['destinations']):
-                    if "id" not in destination["details"] or destination["details"]["id"] == "":
-                        destinations_ready = False
-
-                if (destinations_ready):
-                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
-
-                    responseCommands.append({
-                        "type": "PRESENT_DATA",
-                        "item": {
-                            "type": "file-data",
-                            "title": "Echo worklist",
-                            "data": "echo worklist file contents...",
-                            "mimeType": "text/csv",
-                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
-                        }
-
-                    })
 
             elif transfer_template_id in (
                     constants.TRANS_TPL_FRAG_ANALYZER,
