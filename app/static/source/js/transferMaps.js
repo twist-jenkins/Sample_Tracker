@@ -1214,15 +1214,28 @@ app = angular.module('twist.app')
                     }
                 }
                 ,31: {  // keyed to sample_transfer_template_id in the database
-                    description: 'NGS: sample sheet generation'
+                    description: 'NGS: Pooling'
                     ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 1
-                        ,variablePlateCount: false
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                    ,details: {
+                        requestedData: [
+                            {
+                                type: 'radio'
+                                ,title: 'Select Sequencer:'
+                                ,forProperty: 'sequencer'
+                                ,data: [
+                                    {option: 'MiSeq'}
+                                    ,{option: 'NextSeq'}
+                                ]
+                            }
+                        ]
                     }
                 }
                 ,32: {  // keyed to sample_transfer_template_id in the database

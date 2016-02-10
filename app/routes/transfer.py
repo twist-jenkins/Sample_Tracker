@@ -508,6 +508,25 @@ def preview():
                 })
 
             elif transfer_template_id == \
+                    constants.TRANS_TPL_NGS_POOLING:
+                
+                rows = [{}];
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": 'radio'
+                        ,"title": 'Select Sequencer:'
+                        ,"forProperty": 'sequencer'
+                        ,"data": [
+                            {"option": 'MiSeq'}
+                            ,{"option": 'NextSeq'}
+                        ]
+                    }
+                })
+
+
+            elif transfer_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
 
                 destinations_ready = True
@@ -1714,6 +1733,18 @@ TRANSFER_MAP = loads("""
                 ,"29": {  // keyed to sample_transfer_template_id in the database
                     "description": "Reformatting for Purification"
                     ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": true
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": true
+                    }
+                }
+                ,"31": {  // keyed to sample_transfer_template_id in the database
+                    "description": "NGS: Pooling"
+                    ,"type": "standard_template"
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": true
