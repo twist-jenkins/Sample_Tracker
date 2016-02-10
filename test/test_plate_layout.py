@@ -55,11 +55,11 @@ class TestCase(unittest.TestCase):
 
             assert layout.get_well_name(1) == 'A1'
             assert layout.get_well_name(6) == 'A6'
-            assert layout.get_well_name(7) == 'A7'
-            assert layout.get_well_name(8) == 'A8'
-            assert layout.get_well_name(9) == 'B1'
-            assert layout.get_well_name(10) == 'B2'
-            assert layout.get_well_name(48) == 'F8'
+            assert layout.get_well_name(7) == 'B1'
+            assert layout.get_well_name(8) == 'B2'
+            assert layout.get_well_name(9) == 'B3'
+            assert layout.get_well_name(10) == 'B4'
+            assert layout.get_well_name(48) == 'H6'
 
     def test_384_well_layout(self):
         plate_id = rnd_bc()
