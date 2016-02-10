@@ -223,7 +223,7 @@ def create_adhoc_sample_movement(db_session,
             #             error_well_id = get_col_and_row_for_well_id_384(source_well_number)
             #         except:
             #             error_well_id = source_well_number
-            name_test = destination_plate.get_well_name(source_well_number)
+            name_test = destination_plate.get_well_by_number(source_well_number)
             if not name_test:
                 msg = "There is no well [%s] in the source plate with barcode: [%s]" % (source_well_number, source_plate_barcode)
                 if IGNORE_MISSING_SOURCE_PLATE_WELLS:
@@ -345,7 +345,8 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
                        plate_well_pk=well.pk,
                        operator_id=current_user.operator_id)
-    new_s.parent_sample_id = source_well_sample.id
+    if source_well_sample:
+        new_s.parent_sample_id = source_well_sample.id
 
     if transfer_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
                             constants.TRANS_TYPE_QPIX_TO_384_WELL):

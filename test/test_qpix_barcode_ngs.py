@@ -40,16 +40,22 @@ EXAMPLE_NGS_BARCODING_SPEC = {
         {
             "source_plate_barcode":"SRN 000577 SM-37",
             "source_well_name":"K13",
+            "source_well_number": 253,
             "source_sample_id":"CS_563bff9150a77622447fc8f5",
             "destination_plate_barcode":"SRN 000577 SM-37",
             "destination_well_name":"K13",
+            "destination_well_number": 253,
+            "destination_plate_type": "SPTT_0006",
             "destination_plate_well_count":384
         },{
             "source_plate_barcode":"SRN 000577 SM-37",
             "source_well_name":"K15",
+            "source_well_number": 255,
             "source_sample_id":"CS_563bff9150a77622447fc8f7",
             "destination_plate_barcode":"SRN 000577 SM-37",
             "destination_well_name":"K15",
+            "destination_well_number": 255,
+            "destination_plate_type": "SPTT_0006",
             "destination_plate_well_count":384
         }
     ],
@@ -87,9 +93,25 @@ EXAMPLE_ALIQUOT_SPEC = {
     }],
     "operations":[
         {
-            "source_plate_barcode":"SRN 000577 SM-21","source_well_name":"A1","source_sample_id":"GA_562a647b799305708a87982f","destination_plate_barcode":"f8m938fm3984y9834y","destination_well_name":"A1","destination_plate_well_count":48
+            "source_plate_barcode":"SRN 000577 SM-21",
+            "source_well_name":"A1",
+            "source_well_number": 1,
+            "source_sample_id":"GA_562a647b799305708a87982f",
+            "destination_plate_barcode":"f8m938fm3984y9834y",
+            "destination_well_name":"A1",
+            "destination_well_number": 1,
+            "destination_plate_type": "SPTT_0006",
+            "destination_plate_well_count":48
         }, {
-            "source_plate_barcode":"SRN 000577 SM-21","source_well_name":"A2","source_sample_id":"GA_562a647b799305708a87982d","destination_plate_barcode":"f8m938fm3984y9834y","destination_well_name":"A2","destination_plate_well_count":48
+            "source_plate_barcode":"SRN 000577 SM-21",
+            "source_well_name":"A2",
+            "source_well_number": 2,
+            "source_sample_id":"GA_562a647b799305708a87982d",
+            "destination_plate_barcode":"f8m938fm3984y9834y",
+            "destination_well_name":"A2",
+            "destination_well_number": 2,
+            "destination_plate_type": "SPTT_0006",
+            "destination_plate_well_count":48
         }
     ],
     "details":{
@@ -130,20 +152,25 @@ class TestCase(unittest.TestCase):
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
+            "source_well_number": src_number,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
+            "destination_plate_type": "SPTT_0005",
             "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
+        } for (src_well, src_number, dest_plate, dest_well,
+               dest_number, dest_well_count) in [
+            ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
+            ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
+            ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
+            ('B1', 25, dest_plate_2_barcode, 'A1', 1, 96),
+            ('B1', 25, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
         data = {"sampleTransferTypeId": 15,  # QPix To 96 plates
                 "sampleTransferTemplateId": 21,
                 "transferMap": transfer_map
                 }
+        import ipdb; ipdb.set_trace()
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
                               content_type='application/json')
