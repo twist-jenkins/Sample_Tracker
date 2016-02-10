@@ -5,10 +5,6 @@ __version_info__ = ('0', '0', '8')
 __version__ = '.'.join(__version_info__)
 __module_name__ = 'hitpicking-utils-' + __version__
 
-from collections import defaultdict
-import math
-from collections import defaultdict
-from app.miseq import echo_csv
 
 def char2num(val):
     """
@@ -120,5 +116,3 @@ def scoped_session(db_engine=None):
         raise
     finally:
         session.close()
-
-

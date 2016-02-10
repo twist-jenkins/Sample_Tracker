@@ -21,7 +21,7 @@ app = angular.module('twist.app')
             ,HAMILTON_TRANSFER_TYPE: 'hamilton'
             ,HAMILTON_CARRIER_BARCODE_PREFIX: 'CARR'
             ,HAMILTON_CARRIER_POSITION_BARCODE_PREFIX: 'CARP'
-            ,HAMILTON_PLATE_BARCODE_PREFIX: 'SPLT'
+            ,HAMILTON_PLATE_BARCODE_PREFIX: 'PLT'
             ,HAMILTON_ELEMENT_CARRIER: 'carrier'
             ,HAMILTON_ELEMENT_CARRIER_POSITION: 'carrier-position'
             ,HAMILTON_ELEMENT_PLATE: 'plate'
@@ -36,7 +36,7 @@ app = angular.module('twist.app')
             ,DATA_TYPE_LINK: 'link'
             ,DATA_TYPE_ARRAY: 'array'
             ,DATA_TYPE_BARCODE: 'barcode'
-            ,BARCODE_PREFIX_PLATE: 'SPLT'
+            ,BARCODE_PREFIX_PLATE: 'PLT'
         };
     }]
 )

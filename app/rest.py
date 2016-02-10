@@ -21,8 +21,8 @@ from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 from app import miseq
 from app.resources.transform_spec import TransformSpecResource, TransformSpecListResource
+from app.resources.worklist import WorklistResource
 
 api = flask_restful.Api(app)
 
 from marshmallow import Schema, fields
-

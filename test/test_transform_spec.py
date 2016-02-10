@@ -18,6 +18,7 @@ from app import login_manager
 from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 # from sqlalchemy.exc import IntegrityError
 
+
 def example_spec_random_dest_plate():
     dest_plate = rnd_bc()
     spec = {
@@ -27,11 +28,35 @@ def example_spec_random_dest_plate():
             "sources": [{"id": None, "type": "plate", "details": {"text": "", "id": "H3904Y1W", "plateDetails": {"type": "SPTT_0006", "createdBy": "Jackie Fidanza", "dateCreated": "2015-08-17 10:19:06"}}}],
             "destinations": [{"id": None, "type": "plate", "details": {"text": "", "id": dest_plate}}],
             "operations": [
-            {"source_plate_barcode": "H3904Y1W", "source_well_name": "A5", "source_sample_id": "GA_55d2178b799305dbef8bf2c7", "destination_plate_barcode": dest_plate, "destination_well_name": "A5", "destination_plate_well_count": 384},
+            {"source_plate_barcode": "H3904Y1W",
+             "source_well_name": "A5",
+             "source_well_number": 5,
+             "source_sample_id": "GA_55d2178b799305dbef8bf2c7",
+             "destination_plate_barcode": dest_plate,
+             "destination_well_name": "A5",
+             "destination_well_number": 5,
+             "destination_plate_type": "SPTT_0006",
+             "destination_plate_well_count": 384},
             {
-            "source_plate_barcode": "H3904Y1W", "source_well_name": "A6", "source_sample_id": "GA_55d2178b799305dbef8bf2c6", "destination_plate_barcode": dest_plate, "destination_well_name": "A6", "destination_plate_well_count": 384},
+            "source_plate_barcode": "H3904Y1W",
+            "source_well_name": "A6",
+            "source_well_number": 6,
+            "source_sample_id": "GA_55d2178b799305dbef8bf2c6",
+            "destination_plate_barcode": dest_plate,
+            "destination_well_name": "A6",
+            "destination_well_number": 6,
+            "destination_plate_type": "SPTT_0006",
+            "destination_plate_well_count": 384},
             {
-            "source_plate_barcode": "H3904Y1W", "source_well_name": "A7", "source_sample_id": "GA_55d2178b799305dbef8bf2c5", "destination_plate_barcode": dest_plate, "destination_well_name": "A7", "destination_plate_well_count": 384}
+            "source_plate_barcode": "H3904Y1W",
+            "source_well_name": "A7",
+            "source_well_number": 7,
+            "source_sample_id": "GA_55d2178b799305dbef8bf2c5",
+            "destination_plate_barcode": dest_plate,
+            "destination_well_name": "A7",
+            "destination_well_number": 7,
+            "destination_plate_type": "SPTT_0006",
+            "destination_plate_well_count": 384}
             ],
             "details": {"transfer_template_id": 1,
                         "transfer_type_id": 1,
