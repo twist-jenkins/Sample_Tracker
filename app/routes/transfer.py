@@ -311,12 +311,13 @@ def preview():
                 })
 
             elif transfer_type_id == constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+                mixes = primer_hitpicking.bulk_barcode_to_mastermixes( db.session, request.json['sources'][0]['details']['id'] )
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type":  "text",
                         "title": "PCA Master Mix",
-                        "data": "Master mix data here... maybe CSV format to render a table?"
+                        "data":  mixes,
                     }
                 })
 

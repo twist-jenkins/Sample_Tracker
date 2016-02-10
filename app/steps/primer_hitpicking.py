@@ -124,8 +124,9 @@ def primer_dict( db, plates ):
         for primer_name, lines in rows_for_custom_primers( primer_counts ):
             for wells in lines:
                 dd[primer_name].extend( wells )
-    return dict( (primer_name, sorted(l)) for primer_name, l in dd.items() )
-
+    d = dict( (primer_name, sorted(l)) for primer_name, l in dd.items() )
+    print '@@ primer_dict - keys:', sorted(d)
+    return d
 
 def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
     """
@@ -160,17 +161,9 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                     })
     return rows
 
-
-def primer_src_creation( db, bulk_barcode ):
-    """
-    look up SampleTransformSpec based on bulk-plate barcode, and retrieve the barcodes
-    of the PCA extraction plates from this record.
-
-    then use that information to generate instructions for creating a source bulk plate
-    """
+def bulk_barcode_to_pca_plates( db, bulk_barcode ):
     from twistdb.sampletrack import Plate, TransformSpec
 
-    # hacky, but we currently just look @ all transforms from the last few days
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
     dest_barcodes = {}
     for spec in db.query(TransformSpec) \
@@ -186,8 +179,19 @@ def primer_src_creation( db, bulk_barcode ):
 
     assert dest_barcodes
     dest_barcodes = sorted( dest_barcodes.keys(), key=lambda s: dest_barcodes[s] )
-    pca_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in dest_barcodes ]
+    return [ db.query(Plate).filter(Plate.external_barcode == bc).one()
+             for bc in dest_barcodes ]
+
+def primer_src_creation( db, bulk_barcode ):
+    """
+    look up SampleTransformSpec based on bulk-plate barcode, and retrieve the barcodes
+    of the PCA extraction plates from this record.
+
+    then use that information to generate instructions for creating a source bulk plate
+    """
+
+    # hacky, but we currently just look @ all transforms from the last few days
+    pca_plates = bulk_barcode_to_pca_plates( db, bulk_barcode )
     buff = StringIO()
     c = csv.writer(buff)
     c.writerow( ('Primer','Destination_Row') )
@@ -217,3 +221,11 @@ def pca_plates_to_master_mixes( pca_plates ):
         except Exception as e:
             mixes.append( 'ERROR: '+str(e) )
     return mixes
+
+
+def bulk_barcode_to_mastermixes( db, bulk_barcode ):
+    # FIXME: is this the right UI?  shouldn't we be using the PCA plates as input?
+    
+    from twistdb.sampletrack import Plate, TransformSpec
+    pca_plates = bulk_barcode_to_pca_plates( db, bulk_barcode )
+    return pca_plates_to_master_mixes( pca_plates )
