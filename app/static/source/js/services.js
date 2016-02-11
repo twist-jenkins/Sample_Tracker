@@ -637,7 +637,7 @@ app = angular.module('twist.app')
                 }
             };
 
-            var notReady = function (which) {
+            base.notReady = function (which) {
                 if (which == Constants.PLATE_SOURCE) {
                     base.sourcesReady = false;
                 } else if (which == Constants.PLATE_DESTINATION) {
@@ -799,10 +799,10 @@ app = angular.module('twist.app')
                 for (var i=0; i<base.sources.length; i++) {
 
                     if (!base.sources[i].loaded) {
-                        if (!base.sources[i].updating) { /* don't call notReady if the plate is still fetching its data */
+                        if (!base.sources[i].updating) { /* don't call base.notReady if the plate is still fetching its data */
                             delete base.sources[i].loaded
                             delete base.sources[i].error;
-                            notReady('source');
+                            base.notReady('source');
                             return false;
                         }
                     } else {
@@ -810,7 +810,7 @@ app = angular.module('twist.app')
                         if (base.sources[i].details.id == "") {
                             delete base.sources[i].loaded;
                             delete base.sources[i].error;
-                            notReady('source');
+                            base.notReady('source');
                             return false;
                         }
                     }
@@ -828,7 +828,7 @@ app = angular.module('twist.app')
                 /* TODO: add barcode format validation once we have it settled */
 
                 var onError = function (sourceItem, msg) {
-                    notReady('source');
+                    base.notReady('source');
                     sourceItem.loaded = false;
                     sourceItem.transferList = null;
                     sourceItem.error = msg;
@@ -896,7 +896,7 @@ app = angular.module('twist.app')
                 for (var i=0; i<base.destinations.length; i++) {
                     if (!base.destinations[i].details.id || (base.destinations[i].details.id && base.destinations[i].details.id.length < 6)) {
                         base.destinations[i].loaded = false;
-                        notReady('destination');
+                        base.notReady('destination');
                         return false;
                     }
                 }
@@ -908,7 +908,7 @@ app = angular.module('twist.app')
                 var barcode = destItem.details.id;
 
                 var onError = function (destItem, msg) {
-                    notReady('destination');
+                    base.notReady('destination');
                     if (msg) {
                         destItem.error = msg;
                     }
