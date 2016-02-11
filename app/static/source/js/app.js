@@ -57,8 +57,21 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.transformSpec = TransformBuilder.newTransformSpec();
         $scope.transformSpec.setPlateStepDefaults();
 
-        $scope.selectStepType = function (option) {
+        var setTransformSpecDetails = function (option) {
             $scope.transformSpec.setTransformSpecDetails(option);
+
+            /* this could be a transform spec with requested by default so allow for that */
+            if ($scope.transformSpec.requestedDataItems && $scope.transformSpec.requestedDataItems.length) {
+                $scope.setShowPresentedRequestedData(true);
+            }
+        }
+
+        $scope.setShowPresentedRequestedData = function (what) {
+            $scope.showPresentedRequestedData = what;
+        }
+
+        $scope.selectStepType = function (option) {
+            setTransformSpecDetails(option);
             $scope.transformSpec.setTitle(option.text);
 
             var route = 'root.record_transform.step_type_selected.tab_selected';
@@ -83,10 +96,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 if (option.id == optionId) {
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
-                    $scope.transformSpec.setTransformSpecDetails(option);
-                    $scope.transformSpec.setTitle(option.text);
+                    $scope.setShowPresentedRequestedData(false);
                     $scope.transformSpec.reset();
-                    $scope.showPresentedRequestedData = false;
+                    setTransformSpecDetails(option);
+                    $scope.transformSpec.setTitle(option.text);
                     $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
                     break;
                 }
@@ -190,7 +203,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transformSpec = TransformBuilder.newTransformSpec();
             $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
-            $scope.showPresentedRequestedData = false;
+            $scope.setShowPresentedRequestedData(false);
             if (!skipGo) {
                 $state.go('root.record_transform');
             }
@@ -308,15 +321,13 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         
         $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
-                $scope.showPresentedRequestedData = true;
+                $scope.setShowPresentedRequestedData(true);
             }
         });
 
         $scope.$watch('transformSpec.requestedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
-                if (!oldVal || oldVal.length != newVal.length) {
-                    $scope.showPresentedRequestedData = true;
-                }
+                $scope.setShowPresentedRequestedData(true);
             }
         });
 
