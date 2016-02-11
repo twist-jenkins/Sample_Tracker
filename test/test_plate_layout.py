@@ -42,6 +42,7 @@ class TestCase(unittest.TestCase):
             plate_in = Plate(id=plate_id,
                              type_id=plate_type_id,
                              operator_id=self.operator_id,
+                             external_barcode=plate_id
                              )
             db_session_1.add(plate_in)
 
@@ -51,15 +52,31 @@ class TestCase(unittest.TestCase):
             assert plate_out.type_id == plate_type_id
             assert plate_out.plate_type.name == '48 well, plastic (QTray)'
 
+            assert plate_out.get_well_by_number(1).well_label == 'A1'
+            assert plate_out.get_well_by_number(6).well_label == 'A6'
+            assert plate_out.get_well_by_number(7).well_label == 'B1'
+            assert plate_out.get_well_by_number(8).well_label == 'B2'
+            assert plate_out.get_well_by_number(9).well_label == 'B3'
+            assert plate_out.get_well_by_number(10).well_label == 'B4'
+            assert plate_out.get_well_by_number(48).well_label == 'H6'
+
+            assert plate_out.get_well_by_label('A1').well_number == 1
+            assert plate_out.get_well_by_label('A6').well_number == 6
+            assert plate_out.get_well_by_label('B1').well_number == 7
+            assert plate_out.get_well_by_label('B2').well_number == 8
+            assert plate_out.get_well_by_label('B3').well_number == 9
+            assert plate_out.get_well_by_label('B4').well_number == 10
+            assert plate_out.get_well_by_label('H6').well_number == 48
+
             layout = plate_out.plate_type.layout
 
-            assert layout.get_well_name(1) == 'A1'
-            assert layout.get_well_name(6) == 'A6'
-            assert layout.get_well_name(7) == 'B1'
-            assert layout.get_well_name(8) == 'B2'
-            assert layout.get_well_name(9) == 'B3'
-            assert layout.get_well_name(10) == 'B4'
-            assert layout.get_well_name(48) == 'H6'
+            assert layout.get_well_by_number(1).well_label == 'A1'
+            assert layout.get_well_by_number(6).well_label == 'A6'
+            assert layout.get_well_by_number(7).well_label == 'B1'
+            assert layout.get_well_by_number(8).well_label == 'B2'
+            assert layout.get_well_by_number(9).well_label == 'B3'
+            assert layout.get_well_by_number(10).well_label == 'B4'
+            assert layout.get_well_by_number(48).well_label == 'H6'
 
     def test_384_well_layout(self):
         plate_id = rnd_bc()
@@ -68,6 +85,7 @@ class TestCase(unittest.TestCase):
             plate_in = Plate(id=plate_id,
                              type_id=plate_type_id,
                              operator_id=self.operator_id,
+                             external_barcode=plate_id
                              )
             db_session_1.add(plate_in)
 
@@ -79,10 +97,10 @@ class TestCase(unittest.TestCase):
 
             layout = plate_out.plate_type.layout
 
-            assert layout.get_well_name(1) == 'A1'
-            assert layout.get_well_name(24) == 'A24'
-            assert layout.get_well_name(25) == 'B1'
-            assert layout.get_well_name(384) == 'P24'
+            assert layout.get_well_by_number(1).well_label == 'A1'
+            assert layout.get_well_by_number(24).well_label == 'A24'
+            assert layout.get_well_by_number(25).well_label == 'B1'
+            assert layout.get_well_by_number(384).well_label == 'P24'
 
 
 if __name__ == '__main__':

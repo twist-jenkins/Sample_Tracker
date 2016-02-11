@@ -69,7 +69,7 @@ XFER_VOL = 0.1 # [ul]
 def populate_row( starting_row, target_ct ):
     """
     @starting_row -- int representing row, eg, ord('A')
-    
+
     returns [ ['A1','A2', ...], ['B1','B2', ...]]
     """
     container_ct = lambda tot, per: int( math.ceil( float(tot) / per ))
@@ -150,14 +150,17 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                     loc = pd[ primer.name ][ primer_ct[ primer.name ] // ALIQ_PER_WELL ]
                     primer_ct[ primer.name ] += 1
                     rows.append( {
-                        'source_plate_barcode':          bulk_plate_barcode,
-                        'source_well_name':              loc,
-                        'source_sample_id':              primer.name,  # ??
-                        'source_plate_well_count':       384,
-                        'destination_plate_barcode':     plate.external_barcode,
-                        'destination_well_name':         plate.plate_type.get_well_name( sample.plate_well_pk ),
-                        'destination_plate_well_count':  384,
-                        'destination_sample_id':         sample.id,
+                        'source_plate_barcode':         bulk_plate_barcode,
+                        'source_well_name':             loc,
+                        'source_well_number':
+                            plate.get_well_number_by_label(loc),
+                        'source_sample_id':             primer.name,  # ??
+                        'source_plate_well_count':      384,
+                        'destination_plate_barcode':    plate.external_barcode,
+                        'destination_well_name':        sample.well.well_label,
+                        'destination_well_number':      sample.well.well_number,
+                        'destination_plate_well_count': 384,
+                        'destination_sample_id':        sample.id,
                     })
     return rows
 
@@ -226,7 +229,7 @@ def pca_plates_to_master_mixes( pca_plates ):
 
 def bulk_barcode_to_mastermixes( db, bulk_barcode ):
     # FIXME: is this the right UI?  shouldn't we be using the PCA plates as input?
-    
+
     from twistdb.sampletrack import Plate, TransformSpec
     pca_plates = bulk_barcode_to_pca_plates( db, bulk_barcode )
     return pca_plates_to_master_mixes( pca_plates )
