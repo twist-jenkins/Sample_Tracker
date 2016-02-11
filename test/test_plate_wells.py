@@ -28,12 +28,10 @@ class TestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # cls._connection.destroy()
-        # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 
     def test_titin_plate(self):
-        """ should move to a different .py file """
+        """ assumes some stuff about fixtures """
 
         uri = '/api/v1/basic-plate-info/SRN-WARP1-TEST1'
         rv = self.client.get(uri,

@@ -42,6 +42,7 @@ class TestCase(unittest.TestCase):
             plate_in = Plate(id=plate_id,
                              type_id=plate_type_id,
                              operator_id=self.operator_id,
+                             external_barcode=plate_id
                              )
             db_session_1.add(plate_in)
 
@@ -84,6 +85,7 @@ class TestCase(unittest.TestCase):
             plate_in = Plate(id=plate_id,
                              type_id=plate_type_id,
                              operator_id=self.operator_id,
+                             external_barcode=plate_id
                              )
             db_session_1.add(plate_in)
 
