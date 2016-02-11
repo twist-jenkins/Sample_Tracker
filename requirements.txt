@@ -50,4 +50,5 @@ WTForms==2.0.2
 xlrd==0.9.3
 json-tricks
 biopython
+-e git+ssh://git@github.com/Twistbioscience/twistdb.git@d2a446038182ebda0891cac3a60822227da8d714#egg=twistdb
 
