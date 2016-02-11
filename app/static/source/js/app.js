@@ -294,11 +294,24 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         /* refresh the current transfer plan based on changes to plates inputs or upload file */
         $scope.updateTransferPlan = function (val, which, itemIndex) {
             if (val && val.length > 5) {
-                if (which == Constants.PLATE_SOURCE) {
-                    $scope.transformSpec.addSource(itemIndex);
-                } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transformSpec.addDestination(itemIndex);
+
+                /* prevent a source or destination from being entered more than once */
+                if (checkDupeBarcode(val, which)) {
+                    $scope.transformSpec.notReady(which);
+                    var errMsg = 'A plate with barcode <strong>' + val + '</strong> is already a ' + which + ' plate.';
+                    if (which == Constants.PLATE_SOURCE) {
+                        $scope.transformSpec.sources[itemIndex].error = errMsg
+                    } else if (which == Constants.PLATE_DESTINATION) {
+                        $scope.transformSpec.destinations[itemIndex].error = errMsg;
+                    }
+                } else {
+                    if (which == Constants.PLATE_SOURCE) {
+                        $scope.transformSpec.addSource(itemIndex);
+                    } else if (which == Constants.PLATE_DESTINATION) {
+                        $scope.transformSpec.addDestination(itemIndex);
+                    }
                 }
+
             } else {
                 if (which == Constants.PLATE_SOURCE) {
                     $scope.transformSpec.checkSourcesReady(true);
@@ -330,6 +343,27 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 $scope.setShowPresentedRequestedData(true);
             }
         });
+
+        var checkDupeBarcode = function (barcode, which) {
+            var plateArray = [];
+            if (which == Constants.PLATE_SOURCE) {
+                plateArray = $scope.transformSpec.sources;
+            } else if (which == Constants.PLATE_DESTINATION) {
+                plateArray = $scope.transformSpec.destinations;
+            }
+            var alreadyFound = false;
+            for (var i=0; i< plateArray.length; i++) {
+                var plate = plateArray[i];
+                if (plate.details.id == barcode) {
+                    if (alreadyFound) {
+                        return true;  
+                    } else {
+                        alreadyFound = true;
+                    }
+                }
+            }
+            return false;
+        }
 
         $scope.clearExcelUploadData = function () {
             $scope.excelFileStats = {};
