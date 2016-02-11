@@ -314,15 +314,14 @@ def preview():
                                      'destination_plate_well_count':   plate.plate_type.layout.feature_count
                                      })
 
-            if transfer_type_id == \
-                    constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
-                custom_primers = primer_hitpicking.primer_src_creation(
-                    db.session, request.json['sources'][0]['details']['id'])
+            if transfer_type_id == constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
+                bulk_barcode = request.json['sources'][0]['details']['id']
+                custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
 
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type": "csv",
                         "title": "Source Plate Map",
                         "data": custom_primers,
                     }
@@ -455,7 +454,7 @@ def preview():
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type": "csv",
                         "title": "Master Mix Needs",
                         "data": masterMixNeeds
                     }
