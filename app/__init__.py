@@ -376,7 +376,8 @@ def sample_plate_barcodes():
 
 @app.route('/api/v1/track-sample-step', methods=['POST'])
 def track_sample_step():
-    return routes.create_step_record()
+    raise NotImplementedError
+    # return routes.create_step_record()
 
 @app.route('/api/v1/sample-plates-list', methods=['GET'])
 def sample_plates_list():

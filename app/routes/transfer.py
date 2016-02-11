@@ -59,7 +59,7 @@ def merge_transform(sources, dests):
             raise WebError('multiple plates found with barcode %s' % barcode)
 
         for sample in db.session.query(Sample) \
-                .filter(Sample.plate == plate).order_by(Sample.plate_well_pk):
+                .filter(Sample.plate == plate).order_by(Sample.plate_well_code):
 
             if sample.well.well_number in seen:
                 raise WebError('multiple source plates have occupied wells at %s' %
@@ -69,7 +69,7 @@ def merge_transform(sources, dests):
             rows.append({'source_plate_barcode':         barcode,
                          'source_well_name':             sample.well.well_label,
                          'source_well_number':           sample.well.well_number,
-                         'source_well_pk':               sample.well.pk,
+                         'source_well_code':               sample.well.well_code,
                          'source_sample_id':             sample.id,
                          'destination_plate_barcode':    dest_barcode,
                          'destination_well_name':        sample.well.well_label,
@@ -164,7 +164,7 @@ def filter_transform(transfer_template_id, sources, dests):
         for well_number in sorted(well_to_passfail):
             sample = well_to_passfail[well_number]
             dest_plate_idx = dest_ctr / 96
-            dest_well = dest_ctr % 96
+            dest_well_number = dest_ctr % 96
             dest_ctr += 1
 
             if dest_plate_idx >= len(dest_barcodes):
@@ -174,11 +174,11 @@ def filter_transform(transfer_template_id, sources, dests):
             rows.append({'source_plate_barcode':           barcode,
                          'source_well_name':               sample.well.well_label,
                          'source_well_number':             sample.well.well_number,
-                         'source_well_pk':                 sample.well.pk,
+                         'source_well_code':                 sample.well.well_code,
                          'source_sample_id':               sample.id,
                          'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
-                         'destination_well_name':          dest_type.get_well_name(dest_well),
-                         'destination_well_number':        dest_well,
+                         'destination_well_name':          dest_type.get_well_by_number(dest_well_number).well_label,
+                         'destination_well_number':        dest_well_number,
                          'destination_plate_type':         dest_type.type_id,
                          'destination_plate_well_count':   dest_type.layout.feature_count
                          })
@@ -305,7 +305,7 @@ def preview():
                         rows.append({'source_plate_barcode':           barcode,
                                      'source_well_name':               sample.well.well_label,
                                      'source_well_number':             sample.well.well_number,
-                                     'source_well_pk':                 sample.well.pk,
+                                     'source_well_code':                 sample.well.well_code,
                                      'source_sample_id':               sample.id,
                                      'destination_plate_barcode':      barcode,
                                      'destination_well_name':          sample.well.well_label,
@@ -559,7 +559,7 @@ def preview():
 
                     for quadrant in group["quadrants"]:
                         for rowIndex, row in enumerate(quadrant):
-                            dest_well_id = \
+                            dest_well_number = \
                                 fourToOneMap[quadrantIndex % 4][rowIndex + 1]["destination_well_id"]
                             rows.append({
                                 'source_plate_barcode':           row["source_plate_barcode"],
@@ -567,8 +567,8 @@ def preview():
                                 'source_well_number':             row["source_well_number"],
                                 'source_sample_id':               row["source_sample_id"],
                                 'destination_plate_barcode':      dest_barcode,
-                                'destination_well_name':          dest_type.get_well_name(dest_well_id),
-                                'destination_well_number':        dest_well_id,
+                                'destination_well_name':          dest_type.get_well_by_number(dest_well_number).well_label,
+                                'destination_well_number':        dest_well_number,
                                 'destination_plate_type':         dest_type.type_id,
                                 'destination_plate_well_count':   dest_type.layout.feature_count
                             })
@@ -586,7 +586,7 @@ def preview():
 
             elif transfer_template_id == \
                     constants.TRANS_TPL_NGS_POOLING:
-                
+
                 rows = [{}];
                 sequencer = None;
 
@@ -662,7 +662,7 @@ def preview():
                             "item": {
                                 "type": "text",
                                 "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                                "data": "Return plate <strong>" + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"] + "</strong> to the pooling bin." 
+                                "data": "Return plate <strong>" + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"] + "</strong> to the pooling bin."
                             }
                         })
 
@@ -766,10 +766,10 @@ def preview():
                         rows.append({'source_plate_barcode': barcode,
                                      'source_well_name': sample.well.well_label,
                                      'source_well_number': sample.well.well_number,
-                                     'source_well_pk': sample.well.pk,
+                                     'source_well_code': sample.well.well_code,
                                      'source_sample_id': sample.id,
                                      'destination_plate_barcode': dest_barcode,
-                                     'destination_well_name': dest_plate_type.get_well_name(dest_well),
+                                     'destination_well_name': dest_plate_type.get_well_by_number(dest_well).well_label,
                                      'destination_well_number': dest_well,
                                      'destination_plate_type': dest_plate_type.type_id,
                                      'destination_plate_well_count': dest_plate_type.layout.feature_count

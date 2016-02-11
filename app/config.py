@@ -46,11 +46,13 @@ class StagingConfig(Config):
 
 
 class Warp1Config(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp1smt"
+    # SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp1smt"
+    SQLALCHEMY_DATABASE_URI = "The Warp1 database is now considered frozen"
 
 
 class Warp2Config(Config):
-    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp2smt"
+    # SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp2smt"
+    SQLALCHEMY_DATABASE_URI = "The Warp2 database is now considered frozen"
 
 
 class DevConfig(Config):
@@ -70,9 +72,15 @@ class UnittestConfig(Config):
 class LocalConfig(Config):
     TESTING = True
     DEBUG = True
+    # SQLALCHEMY_ECHO = True
+
     # WTF_CSRF_ENABLED = True
     # SQLALCHEMY_DATABASE_URI = "postgresql://test:test@dev01.twistbioscience.com/test"
     SQLALCHEMY_DATABASE_URI = 'postgresql://@localhost/orders_dev'
+
+
+class LocalechoConfig(LocalConfig):
+    SQLALCHEMY_ECHO = True
 
 
 class Warp1localConfig(Config):

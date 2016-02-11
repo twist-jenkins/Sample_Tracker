@@ -277,5 +277,6 @@ class TestCase(unittest.TestCase):
         self.client.delete(new_url)
         assert self.client.get(new_url).status_code == 404
 
+
 if __name__ == '__main__':
     unittest.main()
