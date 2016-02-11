@@ -52,6 +52,8 @@ pip install virtualenv
 ```
 git clone https://github.com/Twistbioscience/sample_movement_tracker.git
 
+   # you may need to add your ssh key into your github profile
+
 cd sample_movement_tracker
 
 git checkout develop  # Gitflow convention: work against the "develop" branch

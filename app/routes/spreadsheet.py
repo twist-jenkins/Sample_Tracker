@@ -248,14 +248,14 @@ def create_adhoc_sample_movement(db_session,
                 return {
                     "success": False,
                     "errorMessage": "This in-place-transform destination plate [%s] contains no sample in well [%s]" %
-                                    (destination_plate.external_barcode, source_well_sample.plate_well_pk)
+                                    (destination_plate.external_barcode, source_well_sample.well.well_number)
                 }
         elif merge_transform_flag:
             if not existing_plate_layout:
                 return {
                     "success": False,
                     "errorMessage": "This merge-transform destination plate [%s] contains no sample in well [%s]" %
-                                    (destination_plate.external_barcode, source_well_sample.plate_well_pk)
+                                    (destination_plate.external_barcode, source_well_sample.well.well_number)
                 }
         elif existing_plate_layout:
             # still wanted in context of in-place transforms and merge transforms?
@@ -263,7 +263,7 @@ def create_adhoc_sample_movement(db_session,
                 "success": False,
                 "errorMessage": "This destination plate [%s] already contains sample [%s] in well [%s]" %
                                 (destination_plate.external_barcode, source_well_sample.id,
-                                 source_well_sample.plate_well_pk)
+                                 source_well_sample.well.well_number)
             }
 
         logging.info("4. Accession the new sample record for the well")
@@ -299,10 +299,10 @@ def create_adhoc_sample_movement(db_session,
         source_to_destination_well_transfer = TransferDetail(
             transfer_id=sample_transfer.id,
             source_plate_id=source_well_sample.plate_id,
-            source_well_id=source_well_sample.plate_well_pk,
+            source_well_id=source_well_sample.well.well_number,
             source_sample_id=source_well_sample.id,
             destination_plate_id=destination_sample.plate_id,
-            destination_well_id=destination_sample.plate_well_pk,
+            destination_well_id=destination_sample.well.well_number,
             destination_sample_id=destination_sample.id)
         db_session.add(source_to_destination_well_transfer)
         db_session.flush()

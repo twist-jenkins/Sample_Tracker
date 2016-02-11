@@ -155,7 +155,7 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                         'source_sample_id':              primer.name,  # ??
                         'source_plate_well_count':       384,
                         'destination_plate_barcode':     plate.external_barcode,
-                        'destination_well_name':         plate.plate_type.get_well_name( sample.plate_well_pk ),
+                        'destination_well_name':         plate.plate_type.get_well_name( sample.well.well_number ),
                         'destination_plate_well_count':  384,
                         'destination_sample_id':         sample.id,
                     })

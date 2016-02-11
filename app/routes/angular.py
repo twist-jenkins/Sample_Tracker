@@ -22,7 +22,7 @@ from app.models import create_destination_plate
 from app.routes.spreadsheet import create_step_record_adhoc
 
 from twistdb.sampletrack import TransferType, Plate, Transfer, \
-    TransferDetail, Sample, Aliquot
+    TransferDetail, Sample, Aliquot, PlateWell
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_col_and_row_for_well_id_96,
@@ -426,7 +426,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         existing_well_sample = db_session.query(Sample).filter(
             Sample.plate_id == destination_plate.id,
             Sample.id == source_plate_well.id,
-            Sample.plate_well_pk == destination_plate_well_id
+            Sample.well.well_number == destination_plate_well_id
         ).one()
     except:
         pass
@@ -469,7 +469,7 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
         source_well_id=source_plate_well.well_id,
         source_sample_id=source_plate_well.sample_id,
         destination_plate_id=destination_plate.id,
-        destination_well_id=destination_well_sample.plate_well_pk,
+        destination_well_id=destination_well_sample.well.well_number,
         destination_sample_id=destination_well_sample.id)
     db_session.add(source_to_dest_well_transfer)
     db_session.flush()
@@ -504,13 +504,13 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         }
         return jsonify(response)
 
-    number_clusters = sample_plate.plate_type.layout.feature_count
-
-    well_to_col_and_row_mapping_fn = {
-        48: get_col_and_row_for_well_id_48,
-        96: get_col_and_row_for_well_id_96,
-        384: get_col_and_row_for_well_id_384
-    }.get(number_clusters, lambda well_id: "missing map")
+    # number_clusters = sample_plate.plate_type.layout.feature_count
+    #
+    # well_to_col_and_row_mapping_fn = {
+    #     48: get_col_and_row_for_well_id_48,
+    #    96: get_col_and_row_for_well_id_96,
+    #    384: get_col_and_row_for_well_id_384
+    # }.get(number_clusters, lambda well_id: "missing map")
 
     rows = db.session.query(Plate, TransferDetail).filter(
         TransferDetail.destination_plate_id == plate_id,
@@ -562,17 +562,22 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     wells = []
 
     if basic_data_only:
-        rows = db.session.query(Sample).filter(
-            Sample.plate_id == plate_id).order_by(Sample.plate_well_pk).all()
+        rows = (db.session.query(Sample, PlateWell)
+                .filter(Sample.plate_id == plate_id,
+                        Sample.plate_well_pk == PlateWell.pk)
+                .order_by(Sample.plate_well_pk)
+                .all())
 
-        for sample in rows:
+        for sample, well in rows:
             wells.append({
-                "well_id": sample.well.well_number,
-                "column_and_row": sample.well.well_label,
+                "well_id": well.well_number,
+                "column_and_row": well.well_label,
                 "sample_id": sample.id
             })
 
-    # else:
+    else:
+        raise NotImplementedError
+
         # db.session.query(
         #         WellSample,
         #         SampleView
@@ -616,6 +621,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
 
     elif fmt == "csv":
 
+        raise NotImplementedError
+
         si = StringIO.StringIO()
         cw = csv.writer(si)
 
@@ -657,7 +664,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         for well in wells:
             cols = ["",
                     well["well_id"],
-                    well_to_col_and_row_mapping_fn(well["well_id"]),
+                    "TBD",
+                    # well_to_col_and_row_mapping_fn(well["well_id"]),
                     well["sample_id"]
                     ]
             for attr_name in SAMPLE_VIEW_ATTRS:
