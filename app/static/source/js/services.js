@@ -117,11 +117,6 @@ app = angular.module('twist.app')
                 var userReq = ApiRequestObj.getGet('sample-plate-barcodes');
                 return $http(userReq);
             }
-            ,submitSampleStep: function (data) {
-                var submitReq = ApiRequestObj.getPost('track-sample-step');
-                submitReq.data = data;
-                return $http(submitReq);
-            }
             ,getSamplePlatesList: function () {
                 var plateListReq = ApiRequestObj.getGet('sample-plates-list');
                 return $http(plateListReq);
