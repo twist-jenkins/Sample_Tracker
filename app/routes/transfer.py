@@ -634,8 +634,10 @@ def preview():
                     currentBasePairTotal = total of BPs in all source plates
                     previousBasePairTotal = total BPS on all plates but the last one
                     '''
+
+                    # DEV ONLY - remove when real basepair counting is done
                     previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax + 1;
+                    currentBasePairTotal = basePairMax=1;
 
                     reponseTally = currentBasePairTotal
 
