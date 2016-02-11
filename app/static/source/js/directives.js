@@ -398,8 +398,8 @@ app = angular.module("twist.app")
     }
 ])
 
-.directive('twstTransformSpecDataPresentationItem', ['$compile', 'Constants',   
-    function($compile, Constants) {
+.directive('twstTransformSpecDataPresentationItem', ['$compile', 'Constants', '$sce',   
+    function($compile, Constants, $sce) {
         return {
             scope: {
                 transformSpec: '='
@@ -413,12 +413,12 @@ app = angular.module("twist.app")
                 $scope.itemData = $scope.item.item;
 
                 if ($scope.itemData.title) {
-                    ml += '<h4>{{itemData.title}}</h4>';
+                    ml += '<h4 ng-bind-html="itemData.title"></h4>';
                 }
 
                 switch ($scope.itemData.type) {
                     case Constants.DATA_TYPE_TEXT:
-                        ml += '<p>{{itemData.data}}</p>';
+                        ml += '<p ng-bind-html="itemData.data"></p>';
                         break;
                     case Constants.DATA_TYPE_FILE_DATA:
                         // assemble the presented data
@@ -632,6 +632,26 @@ app = angular.module("twist.app")
 
                 } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_TEXT) == 0) {
                     ml +=   '<p>' + $scope.itemData.type.data + '</p>';
+                } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_RADIO) == 0) {
+
+                    $scope.validation = null;
+                    $scope.error = null;
+
+                    var options = $scope.itemData.data;
+
+                    ml += '<div>';
+
+                    for (var i=0; i < options.length; i++) {
+                        ml +=   '<label><input type="radio" name="sequencerSelection" ng-mouseup="validate()" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" value="' + options[i].option + '"> ' + (options[i].label ? options[i].label : options[i].option) + '</label>';
+                    }
+
+                    ml += '</div>';
+
+                    $scope.validate = function (errorOnEmpty) {
+                        $scope.item.validData = true;
+                        $timeout($scope.transformSpec.updateOperationsList, 0);
+                    }
+
                 } else {
                     console.log('What? ' + $scope.itemData.type);
                 }

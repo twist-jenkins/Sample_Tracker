@@ -273,7 +273,7 @@ def preview():
                 constants.TRANS_TYPE_PCA_PREPLANNING,
                 constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
                 constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
-                constants.TRANS_TYPE_NGS_THERMOCYCLE):
+                constants.TRANS_TYPE_NGS_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
                 constants.TRANS_TYPE_PCA_PREPLANNING,
                 constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
@@ -589,20 +589,100 @@ def preview():
                     constants.TRANS_TPL_NGS_POOLING:
                 
                 rows = [{}];
+                sequencer = None;
+
+                basePairMax = 0;
+                currentBasePairTotal = 0;
+                previousBasePairTotal = 0;
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": 'radio'
+                            ,"title": 'Select Sequencer:'
+                            ,"forProperty": 'sequencer'
+                            ,"data": [
+                                {"option": 'MiSeq'}
+                                ,{"option": 'NextSeq'}
+                            ]
+                        }
+                    })
+
+                sources = request.json['sources'];
+
+                sourcesSet = [];
+
+                for sourceIndex, source in enumerate(sources):
+                    sourcesSet.append({
+                        "type": "SPTT_0006"
+                        ,"details" : {
+                            "id" : source["details"]["id"]
+                        }
+                    });
+
+                if "sequencer" in reqData:
+                    # TO DO  Derive the max BP count for this sequencer
+                    #        AND
+                    #        Return total count of basepairs on source plate(s)
+                    basePairMax = 12500000;
+
+                    '''
+                    currentBasePairTotal = total of BPs in all source plates
+                    previousBasePairTotal = total BPS on all plates but the last one
+                    '''
+                    previousBasePairTotal = 500;
+                    currentBasePairTotal = basePairMax + 1;
+
+                    reponseTally = currentBasePairTotal
+
+                    if currentBasePairTotal < basePairMax:
+                        #and add another source input to indicate there's more room
+                        sourcesSet.append({
+                            "type": "SPTT_0006"
+                        });
+
+                    elif basePairMax and currentBasePairTotal == basePairMax:
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
+                                "data": "No more plates will fit in this run."
+                            }
+                        })
+
+                    else :
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
+                                "data": "Return plate <strong>" + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"] + "</strong> to the pooling bin." 
+                            }
+                        })
+
+                        reponseTally = previousBasePairTotal
+
+                        #remove the last added source from the list
+                        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Base Pair Tally",
+                            "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
+                        }
+                    })
 
                 responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": 'radio'
-                        ,"title": 'Select Sequencer:'
-                        ,"forProperty": 'sequencer'
-                        ,"data": [
-                            {"option": 'MiSeq'}
-                            ,{"option": 'NextSeq'}
-                        ]
-                    }
+                    "type": "SET_SOURCES",
+                    "plates": sourcesSet
                 })
-
 
             elif transfer_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
