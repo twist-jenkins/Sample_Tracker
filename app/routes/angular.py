@@ -562,18 +562,29 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     wells = []
 
     if basic_data_only:
-        rows = (db.session.query(Sample, PlateWell)
-                .filter(Sample.plate_id == plate_id,
-                        Sample.plate_well_pk == PlateWell.pk)
-                .order_by(Sample.plate_well_pk)
-                .all())
 
-        for sample, well in rows:
-            wells.append({
-                "well_id": well.well_number,
-                "column_and_row": well.well_label,
-                "sample_id": sample.id
-            })
+        plate = (db.session.query(Plate)
+                 .filter(Plate.id == plate_id)
+                 ).one()
+
+        # pandas stuff
+        records = plate.current_well_contents.to_dict('records')
+        wells = [{"well_id": rec["plate_well_pk"],
+                  "column_and_row": rec["plate_well_pk"],
+                  "sample_id": rec["id"]} for rec in records]
+
+        # rows = (db.session.query(Sample, PlateWell)
+        #        .filter(Sample.plate_id == plate_id,
+        #                Sample.plate_well_pk == PlateWell.pk)
+        #        .order_by(Sample.plate_well_pk)
+        #        .all())
+        #
+        # for sample, well in rows:
+        #    wells.append({
+        #        "well_id": well.well_number,
+        #        "column_and_row": well.well_label,
+        #        "sample_id": sample.id
+        #    })
 
     else:
         raise NotImplementedError
