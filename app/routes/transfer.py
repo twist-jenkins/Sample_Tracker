@@ -247,8 +247,7 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
         db.session.add( bulk )
         db.session.commit()
 
-    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode,
-                                                    pca_plates )
+    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode, pca_plates )
     master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
     return master_mixes, rows
 
@@ -275,7 +274,6 @@ def preview():
                 constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
                 constants.TRANS_TYPE_NGS_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
-                constants.TRANS_TYPE_PCA_PREPLANNING,
                 constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
                 # these are same to same transfers or data uploads
 
@@ -327,15 +325,14 @@ def preview():
                     }
                 })
 
-            elif transfer_type_id == \
-                    constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
-                mixes = primer_hitpicking.bulk_barcode_to_mastermixes(
-                    db.session, request.json['sources'][0]['details']['id'])
+            elif transfer_type_id ==  constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+                bulk_barcode = request.json['sources'][0]['details']['id']
+                mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
 
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type":  "text",
+                        "type":  "csv",
                         "title": "PCA Master Mix",
                         "data":  mixes,
                     }
@@ -448,9 +445,8 @@ def preview():
                     # then all the plates had barcodes
                     # now we need to decide which master mixes are needed
                     # content like "Master Mix A x2\n\rMaster Mix B x3"
-                    masterMixNeeds, rows = pca_pre_planning( request.json['sources'][0]['details']['id'],
-                                                             pcaPlates )
-
+                    bulk_barcode = request.json['sources'][0]['details']['id']
+                    masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {

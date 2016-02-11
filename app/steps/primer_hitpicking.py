@@ -130,12 +130,13 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
     """
     returns a transform for consumption by echo_csv
     """
-    from twistdb.sampletrack import Sample
+    from twistdb.sampletrack import Sample, PlateType
 
     pd = primer_dict( db, pca_plates )
 
     rows = []
     primer_ct = defaultdict(int)
+    layout = db.query(PlateType).get('SPTT_0006').layout
     for plate in pca_plates:
         for sample in db.query(Sample) \
                       .filter( Sample.plate == plate ) \
@@ -144,12 +145,12 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                 for primer in (sample.order_item.primer_pair.fwd_primer,
                                sample.order_item.primer_pair.rev_primer):
                     loc = pd[ primer.name ][ primer_ct[ primer.name ] // ALIQ_PER_WELL ]
+                    db.query
                     primer_ct[ primer.name ] += 1
                     rows.append( {
                         'source_plate_barcode':         bulk_plate_barcode,
                         'source_well_name':             loc,
-                        'source_well_number':
-                            plate.get_well_number_by_label(loc),
+                        'source_well_number':           layout.get_well_by_label(loc).well_number,
                         'source_sample_id':             primer.name,  # ??
                         'source_plate_well_count':      384,
                         'destination_plate_barcode':    plate.external_barcode,
