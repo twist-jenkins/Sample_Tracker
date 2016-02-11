@@ -98,7 +98,7 @@ def plate_to_custom_primers(db, plate):
     primers, missing = defaultdict(int), set()
     for sample in db.query(Sample) \
                     .filter( Sample.plate == plate ) \
-                    .order_by( Sample.plate_well_pk ):
+                    .order_by( Sample.plate_well_code ):
         try:
             if sample.order_item.primer_pair.primer_pair_type == 'custom':
                 primers[ sample.order_item.primer_pair ] += 1
@@ -139,7 +139,7 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
     for plate in pca_plates:
         for sample in db.query(Sample) \
                       .filter( Sample.plate == plate ) \
-                      .order_by( Sample.plate_well_pk ):
+                      .order_by( Sample.plate_well_code ):
             if sample.order_item and sample.order_item.primer_pair:
                 for primer in (sample.order_item.primer_pair.fwd_primer,
                                sample.order_item.primer_pair.rev_primer):
