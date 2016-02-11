@@ -1,4 +1,4 @@
-id,plate_id,plate_well_pk,type_id,date_created,operator_id,name,description,external_barcode
+id,plate_id,plate_well_code,type_id,date_created,operator_id,name,description,external_barcode
 GA_WARP1_TEST1_0001,SPLT_WARP1_TEST1,661440001,gene_assembly,1/17/16 0:00,cledogar,SRN_WARP1_TEST1 CLUST 0001,SRN_WARP1_TEST1 CLUST 0001,
 GA_WARP1_TEST1_0002,SPLT_WARP1_TEST1,661440002,gene_assembly,1/17/16 0:00,cledogar,SRN_WARP1_TEST1 CLUST 0002,SRN_WARP1_TEST1 CLUST 0002,
 GA_WARP1_TEST1_0003,SPLT_WARP1_TEST1,661440003,gene_assembly,1/17/16 0:00,cledogar,SRN_WARP1_TEST1 CLUST 0003,SRN_WARP1_TEST1 CLUST 0003,

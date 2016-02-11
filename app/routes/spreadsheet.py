@@ -341,10 +341,10 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         new_s = quick_copy(db_session, source_well_sample)
         new_s.id = new_id()
         new_s.plate_id = destination_plate.id
-        new_s.plate_well_pk = well.pk
+        new_s.plate_well_code = well.well_code
     else:
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
-                       plate_well_pk=well.pk,
+                       plate_well_code=well.well_code,
                        operator_id=current_user.operator_id)
     if source_well_sample:
         new_s.parent_sample_id = source_well_sample.id
