@@ -277,29 +277,6 @@ class TestCase(unittest.TestCase):
         self.client.delete(new_url)
         assert self.client.get(new_url).status_code == 404
 
-    def test_titin_plate(self):
-        """ should move to a different .py file """
-
-        uri = '/api/v1/basic-plate-info/SRN-WARP1-TEST1'
-        rv = self.client.get(uri,
-                             content_type="application/json")
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert "wells" in result
-        wells = result["wells"]
-
-        assert wells[6]['sample_id'] == 'GA_WARP1_TEST1_0007'
-        assert wells[6]['column_and_row'] == '7'
-
-        assert wells[383]['sample_id'] == 'GA_WARP1_TEST1_0384'
-        assert wells[383]['column_and_row'] == '384'
-
-        assert wells[384]['sample_id'] == 'GA_WARP1_TEST1_0385'
-        assert wells[384]['column_and_row'] == '385'
-
-        assert wells[6143]['sample_id'] == 'GA_WARP1_TEST1_6144'
-        assert wells[6143]['column_and_row'] == '6144'
-
 
 if __name__ == '__main__':
     unittest.main()
