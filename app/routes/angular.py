@@ -22,7 +22,7 @@ from app.models import create_destination_plate
 from app.routes.spreadsheet import create_step_record_adhoc
 
 from twistdb.sampletrack import TransferType, Plate, Transfer, \
-    TransferDetail, Sample, Aliquot
+    TransferDetail, Sample
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_col_and_row_for_well_id_96,
@@ -474,10 +474,10 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
     db_session.add(source_to_dest_well_transfer)
     db_session.flush()
 
-    aliquot = Aliquot(transfer_id=sample_transfer.id,
-                      source_well_sample_id=source_well_sample.id,
-                      destination_well_sample_id=destination_well_sample.id)
-    db_session.add(aliquot)
+    # aliquot = Aliquot(transfer_id=sample_transfer.id,
+    #                   source_well_sample_id=source_well_sample.id,
+    #                   destination_well_sample_id=destination_well_sample.id)
+    # db_session.add(aliquot)
     db_session.flush()
 
 
