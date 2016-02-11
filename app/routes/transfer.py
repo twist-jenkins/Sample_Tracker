@@ -270,6 +270,10 @@ def preview():
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
                 constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
+                constants.TRANS_TYPE_PCA_PREPLANNING,
+                constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
+                constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
+                constants.TRANS_TYPE_NGS_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
                 constants.TRANS_TYPE_PCA_PREPLANNING,
                 constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
@@ -340,24 +344,36 @@ def preview():
 
             elif transfer_type_id in (
                     constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "Thermocycling conditions",
-                        "data": "Thermocycling conditions here... maybe CSV format to render a table?"
-                    }
-                })
+                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
+                    constants.TRANS_TYPE_NGS_THERMOCYCLE):
 
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode",
-                        "title": "Thermocycler barcode",
-                        "forProperty": "thermocyclerBarcode"
-                    }
-                })
+                reqData = {};
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if reqData and "thermocyclerBarcode" in reqData:
+                    thermoBarcode = reqData["thermocyclerBarcode"]
+
+                    # TO DO  Actually derive the proper thermocycling conditions for presentation to the user
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Thermocycling conditions",
+                            "data": "Thermocycling conditions here... maybe CSV format to render a table?"
+                        }
+                    })
+                else:
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": "barcode",
+                            "title": "Thermocycler barcode",
+                            "forProperty": "thermocyclerBarcode"
+                        }
+                    })
 
             elif transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 responseCommands.append({
@@ -367,6 +383,39 @@ def preview():
                         "title": "Quantification Results",
                         "forProperty": "instrument_data",
                         "fileType": "quantification"
+                    }
+                })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
+
+                rows = [{}]
+
+
+                # TO DO   Generate worklist...
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "file-data",
+                        "title": "Worklist",
+                        "forProperty": "worklist",
+                        "fileType": "worklist"
+                    }
+                })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION:
+
+                rows = [{}]
+
+
+                # TO DO   Generate master mix instructions...
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "NGS Master Mix",
+                        "data": "Master mix data here... maybe CSV format to render a table?"
                     }
                 })
 
@@ -536,6 +585,131 @@ def preview():
                     "plates": destination_plates
                 })
 
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_NGS_POOLING:
+                
+                rows = [{}];
+                sequencer = None;
+
+                basePairMax = 0;
+                currentBasePairTotal = 0;
+                previousBasePairTotal = 0;
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": 'radio'
+                            ,"title": 'Select Sequencer:'
+                            ,"forProperty": 'sequencer'
+                            ,"data": [
+                                {"option": 'MiSeq'}
+                                ,{"option": 'NextSeq'}
+                            ]
+                        }
+                    })
+
+                sources = request.json['sources'];
+
+                sourcesSet = [];
+
+                for sourceIndex, source in enumerate(sources):
+                    sourcesSet.append({
+                        "type": "SPTT_0006"
+                        ,"details" : {
+                            "id" : source["details"]["id"]
+                        }
+                    });
+
+                if "sequencer" in reqData:
+                    # TO DO  Derive the max BP count for this sequencer
+                    #        AND
+                    #        Return total count of basepairs on source plate(s)
+                    basePairMax = 12500000;
+
+                    '''
+                    currentBasePairTotal = total of BPs in all source plates
+                    previousBasePairTotal = total BPS on all plates but the last one
+                    '''
+                    previousBasePairTotal = 500;
+                    currentBasePairTotal = basePairMax + 1;
+
+                    reponseTally = currentBasePairTotal
+
+                    if currentBasePairTotal < basePairMax:
+                        #and add another source input to indicate there's more room
+                        sourcesSet.append({
+                            "type": "SPTT_0006"
+                        });
+
+                    elif basePairMax and currentBasePairTotal == basePairMax:
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
+                                "data": "No more plates will fit in this run."
+                            }
+                        })
+
+                    else :
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
+                                "data": "Return plate <strong>" + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"] + "</strong> to the pooling bin." 
+                            }
+                        })
+
+                        reponseTally = previousBasePairTotal
+
+                        #remove the last added source from the list
+                        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Base Pair Tally",
+                            "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
+                        }
+                    })
+
+                responseCommands.append({
+                    "type": "SET_SOURCES",
+                    "plates": sourcesSet
+                })
+
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+
+                destinations_ready = True
+                if ("destinations" not in request.json or not len(request.json['destinations'])):
+                    destinations_ready = False
+
+                for dest_index, destination in enumerate(request.json['destinations']):
+                    if "id" not in destination["details"] or destination["details"]["id"] == "":
+                        destinations_ready = False
+
+                if (destinations_ready):
+                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "file-data",
+                            "title": "Echo worklist",
+                            "data": "echo worklist file contents...",
+                            "mimeType": "text/csv",
+                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+                        }
+
+                    })
+
             elif transfer_template_id in (
                     constants.TRANS_TPL_FRAG_ANALYZER,
                     constants.TRANS_TPL_NGS_QC_PASSING):  # , constants.TRANS_TPL_EXTRACTION_TITIN):
@@ -642,6 +816,18 @@ TRANSFER_MAP = loads("""
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": false
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"4": {  // keyed to sample_transfer_template_id in the database
+                    "description": "Multiplexed same-same"
+                    ,"type": "same-same"
+                    ,"source": {
+                        "plateCount": 4
+                        ,"variablePlateCount": true
                     }
                     ,"destination": {
                         "plateCount": 0
@@ -1713,6 +1899,18 @@ TRANSFER_MAP = loads("""
                 ,"29": {  // keyed to transfer_template_id in the database
                     "description": "Reformatting for Purification"
                     ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": true
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": true
+                    }
+                }
+                ,"31": {  // keyed to sample_transfer_template_id in the database
+                    "description": "NGS: Pooling"
+                    ,"type": "standard_template"
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": true
