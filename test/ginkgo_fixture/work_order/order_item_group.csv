@@ -1,0 +1,2 @@
+"id","_human_id","order_id","name","customer_priority","planning_rank","description"
+"WOG_56bc153f00bc15c389b790f0",1,"WOR_56bc153f00bc15c389b790ef","Default order item group",1,100,"Order based on FASTA file: /Users/jdiggans/tmp/ginkgo_score/ginkgo_score.fasta"
