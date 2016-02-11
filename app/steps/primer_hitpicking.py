@@ -96,12 +96,11 @@ def plate_to_custom_primers(db, plate):
     from twistdb.sampletrack import Sample
 
     primers, missing = defaultdict(int), set()
-
     for sample in db.query(Sample) \
                     .filter( Sample.plate == plate ) \
-                    .order_by( Sample.plate_well_id ):
+                    .order_by( Sample.plate_well_pk ):
         try:
-            if sample.order_item.cloning_process.vector.vector_type == 'custom':
+            if sample.order_item.primer_pair.primer_pair_type == 'custom':
                 primers[ sample.order_item.primer_pair ] += 1
         except AttributeError as e:
             missing.add( sample )
@@ -124,9 +123,8 @@ def primer_dict( db, plates ):
         for primer_name, lines in rows_for_custom_primers( primer_counts ):
             for wells in lines:
                 dd[primer_name].extend( wells )
-    d = dict( (primer_name, sorted(l)) for primer_name, l in dd.items() )
-    print '@@ primer_dict - keys:', sorted(d)
-    return d
+    return dict( (primer_name, sorted(l)) for primer_name, l in dd.items() )
+
 
 def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
     """
@@ -139,11 +137,9 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
     rows = []
     primer_ct = defaultdict(int)
     for plate in pca_plates:
-        print '@@ plate:', plate.id
         for sample in db.query(Sample) \
                       .filter( Sample.plate == plate ) \
-                      .order_by( Sample.plate_well_id ):
-            print '@@ sample:', sample.id
+                      .order_by( Sample.plate_well_pk ):
             if sample.order_item and sample.order_item.primer_pair:
                 for primer in (sample.order_item.primer_pair.fwd_primer,
                                sample.order_item.primer_pair.rev_primer):
@@ -214,14 +210,18 @@ def pca_plates_to_master_mixes( pca_plates ):
     returns a list of master-mixes for the given pca plates
     assumes that each plate has one and only one condition, which can be determined by looking @ the sample in well A1
     """
-    mixes = []
+    buff = StringIO()
+    c = csv.writer(buff)
+    c.writerow(('Plate','Master mix'))
     for plate in pca_plates:
         try:
             # FIXME: there's a million ways this can go wrong...
-            mixes.append( plate.samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix )
+            mix = plate.samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix
         except Exception as e:
-            mixes.append( 'ERROR: '+str(e) )
-    return mixes
+            mix = 'ERROR: '+str(e)
+        c.writerow( (plate.external_barcode, mix) )
+    buff.seek(0)
+    return buff.read()
 
 
 def bulk_barcode_to_mastermixes( db, bulk_barcode ):
