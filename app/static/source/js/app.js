@@ -2035,7 +2035,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.viewSpec = function (spec) {
-            $scope.selectedSpec = spec;
             $state.go('root.transform_specs.view_manage.view_spec', {
                 spec_id: spec.spec_id
             });
