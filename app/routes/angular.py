@@ -262,8 +262,6 @@ def create_step_record():
     data = request.json
     operator = g.user
 
-    raise NotImplementedError
-
     transfer_type_id = data["sampleTransferTypeId"]
     transfer_template_id = data["sampleTransferTemplateId"]
 
@@ -274,6 +272,8 @@ def create_step_record():
                                         transfer_map)
 
     else:
+        raise NotImplementedError("transferMap is required")
+
         source_barcodes = data["sourcePlates"]
         destination_barcodes = data["destinationPlates"]
 
