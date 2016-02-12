@@ -421,6 +421,7 @@ def preview():
                 # we need to add master mix needs info or tell the user we need all the PCA plates first
                 masterMixNeeds = ""
                 pcaPlates = None
+                dataType = "csv"
 
                 if "requestedData" in details:
                     pcaPlates = details["requestedData"]
@@ -440,7 +441,8 @@ def preview():
                     })
 
                 if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
-                    masterMixNeeds = "Please scan all 4 PCA plates to retrieve master mix needs."
+                    masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
+                    dataType = "text"
                 else:
                     # then all the plates had barcodes
                     # now we need to decide which master mixes are needed
@@ -450,7 +452,7 @@ def preview():
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "csv",
+                        "type": dataType,
                         "title": "Master Mix Needs",
                         "data": masterMixNeeds
                     }
@@ -632,7 +634,7 @@ def preview():
 
                     # DEV ONLY - remove when real basepair counting is done
                     previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax=1;
+                    currentBasePairTotal = basePairMax - 1;
 
                     reponseTally = currentBasePairTotal
 

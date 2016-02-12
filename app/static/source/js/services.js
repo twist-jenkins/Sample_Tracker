@@ -38,6 +38,7 @@ app = angular.module('twist.app')
             ,DATA_TYPE_ARRAY: 'array'
             ,DATA_TYPE_BARCODE: 'barcode'
             ,DATA_TYPE_RADIO: 'radio'
+            ,DATA_TYPE_CSV: 'csv'
             ,BARCODE_PREFIX_PLATE: 'PLT'
         };
     }]
