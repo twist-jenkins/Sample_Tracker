@@ -1695,11 +1695,11 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             /* create the data for the Hamilton Worklist dragout functionality */
             var now = (new Date()).toLocaleDateString().split('/').join('-');
-            var filename = 'worklist-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.txt';
+            var filename = 'worklist-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.csv';
             var afterProtocol = document.location.href.substring(document.location.href.indexOf('://') + 3);
             var server = afterProtocol.substring(0, afterProtocol.indexOf('/'));
 
-            var worklistUrl = document.location.href.substring(0, document.location.href.indexOf(':')) + '://' + server + '/api/v1/rest-ham/hamilton_worklist/' + $scope.savedSpecIdToFinish;
+            var worklistUrl = document.location.href.substring(0, document.location.href.indexOf(':')) + '://' + server + '/api/v1/rest/worklist/' + $scope.savedSpecIdToFinish;
 
             $scope.dragOutData = 'text/plain|' + filename + '|' + worklistUrl; //'text/plain|worklist.png|http://localhost/static/images/twist.png';
 
@@ -2035,7 +2035,6 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         };
 
         $scope.viewSpec = function (spec) {
-            $scope.selectedSpec = spec;
             $state.go('root.transform_specs.view_manage.view_spec', {
                 spec_id: spec.spec_id
             });
