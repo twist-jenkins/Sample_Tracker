@@ -634,7 +634,7 @@ def preview():
 
                     # DEV ONLY - remove when real basepair counting is done
                     previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax + 1;
+                    currentBasePairTotal = basePairMax - 1;
 
                     reponseTally = currentBasePairTotal
 
