@@ -38,7 +38,7 @@ class TestCase(unittest.TestCase):
         # os.unlink(FLASK_APP.config['DATABASE'])  # delete filesystem sqlite
         pass
 
-    def test_aliquot_standard_template_golden(self):
+    def xtest_aliquot_standard_template_golden(self):
         data = {"sampleTransferTypeId": 2,
                 "sampleTransferTemplateId": 1,
                 "sourcePlates": [self.root_plate_barcode],
@@ -50,7 +50,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-    def test_aliquot_standard_template_bad_source(self):
+    def xtest_aliquot_standard_template_bad_source(self):
         data = {"sampleTransferTypeId": 1,
                 "sampleTransferTemplateId": 1,  # ??
                 "sourcePlates": [self.root_plate_barcode + '_WALDO'],
@@ -74,7 +74,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-    def test_1_to_4_golden(self):
+    def xtest_1_to_4_golden(self):
         data = {"sampleTransferTypeId": 11,
                 "sampleTransferTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
@@ -86,7 +86,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-    def test_1_to_4_to_1_golden(self):
+    def xtest_1_to_4_to_1_golden(self):
         intermediate_plates = [rnd_bc(), rnd_bc(), rnd_bc(), rnd_bc()]
         data = {"sampleTransferTypeId": 11,
                 "sampleTransferTemplateId": 13,
@@ -108,7 +108,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-    def DISABLED_test_small_adhoc_golden(self):
+    def test_small_adhoc_golden(self):
         bc = rnd_bc()
         bc2 = rnd_bc()
         transfer_map = [{
