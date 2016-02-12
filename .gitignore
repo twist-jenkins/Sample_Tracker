@@ -1,20 +1,29 @@
+### Caches and Logs
 *.py[cod]
 .DS_Store
-pip-log.txt
-venv
-env
-.webassets-cache
-node_modules
-app/static/bower_components
-app/static/js/*
-app/static/fonts/*
-app/static/css/*
-app/static/images/*
-app/static/uploads/*
-app/static/exports/*
 .sass-cache/
+.webassets-cache
+pip-log.txt
+test/.cache/
+
+venv/
+env
+
+### Third-party Libraries
+node_modules/
+app/static/bower_components/
+
+### Build files
+app/static/css/*
+app/static/exports/*
+app/static/fonts/*
+app/static/images/*
+app/static/js/*
+app/static/uploads/*
 app/static/index.html
 app/static/source/jade/compiled_templates/
 app/static/source/js/templates.js
-test/.cache/
-test/.cache/v/cache/lastfailed
+
+### IDE-specific ignores
+/.idea/
+/sample_movement_tracker.iml
