@@ -253,6 +253,7 @@ class TransformSpecListResource(flask_restful.Resource):
                     .all()
                     )
             result = spec_schema.dump(rows, many=True).data
+            reduce_data_size(result)
             #    sess.expunge(rows)
             # print "^" * 10000
             # print str(result)
@@ -262,6 +263,11 @@ class TransformSpecListResource(flask_restful.Resource):
     def post(self):
         """creates new spec returning a nice geeky Location header"""
         return TransformSpecResource.create_or_replace('POST')
+
+
+def reduce_data_size(spec_list):
+    for spec in spec_list:
+        spec["operations"] = []
 
 
 def modify_before_insert(db_session, spec):

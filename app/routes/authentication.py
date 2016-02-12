@@ -46,7 +46,7 @@ def login_to_google(code, redirect_uri):
         grant_type='authorization_code',
         client_id=app.config['GOOGLE_LOGIN_CLIENT_ID'],
         client_secret=app.config['GOOGLE_LOGIN_CLIENT_SECRET'],
-    )).json()
+    )).json
     logger.info('@@ token: %s' % token)
 
     if not token or token.get('error'):
@@ -55,7 +55,7 @@ def login_to_google(code, redirect_uri):
 
     userinfo = requests.get(app.config['GOOGLE_OAUTH2_USERINFO_URL'], params=dict(
         access_token=token['access_token'],
-    )).json()
+    )).json
     if not userinfo or userinfo.get('error'):
         logger.error("Error requesting user info from Google")
         abort(400)

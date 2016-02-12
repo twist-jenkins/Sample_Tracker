@@ -78,12 +78,16 @@ def create_adhoc_sample_movement(db_session,
     order_number = 1
 
     for ix, well in enumerate(wells):
-        source_plate_barcode = well["source_plate_barcode"]
-        source_well_number = well['source_well_number']
-        destination_plate_barcode = well["destination_plate_barcode"]
-        destination_well_number = well['destination_well_number']
-        # destination_sample_id = well.get("destination_sample_id", None)
-        destination_plate_type = well['destination_plate_type']
+        try:
+            source_plate_barcode = well["source_plate_barcode"]
+            source_well_number = well['source_well_number']
+            destination_plate_barcode = well["destination_plate_barcode"]
+            destination_well_number = well['destination_well_number']
+            # destination_sample_id = well.get("destination_sample_id", None)
+            destination_plate_type = well['destination_plate_type']
+        except KeyError:
+            logging.error("Malformed well [%s]:", well)
+            raise
 
         logging.info("1. Obtain access to the source plate for this line item.")
         try:
