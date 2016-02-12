@@ -59,7 +59,7 @@ def merge_transform(sources, dests):
             raise WebError('multiple plates found with barcode %s' % barcode)
 
         for sample in db.session.query(Sample) \
-                .filter(Sample.plate == plate).order_by(Sample.plate_well_pk):
+                .filter(Sample.plate == plate).order_by(Sample.plate_well_code):
 
             if sample.well.well_number in seen:
                 raise WebError('multiple source plates have occupied wells at %s' %
@@ -69,7 +69,7 @@ def merge_transform(sources, dests):
             rows.append({'source_plate_barcode':         barcode,
                          'source_well_name':             sample.well.well_label,
                          'source_well_number':           sample.well.well_number,
-                         'source_well_pk':               sample.well.pk,
+                         'source_well_code':               sample.well.well_code,
                          'source_sample_id':             sample.id,
                          'destination_plate_barcode':    dest_barcode,
                          'destination_well_name':        sample.well.well_label,
@@ -164,7 +164,7 @@ def filter_transform(transfer_template_id, sources, dests):
         for well_number in sorted(well_to_passfail):
             sample = well_to_passfail[well_number]
             dest_plate_idx = dest_ctr / 96
-            dest_well = dest_ctr % 96
+            dest_well_number = dest_ctr % 96
             dest_ctr += 1
 
             if dest_plate_idx >= len(dest_barcodes):
@@ -174,11 +174,11 @@ def filter_transform(transfer_template_id, sources, dests):
             rows.append({'source_plate_barcode':           barcode,
                          'source_well_name':               sample.well.well_label,
                          'source_well_number':             sample.well.well_number,
-                         'source_well_pk':                 sample.well.pk,
+                         'source_well_code':                 sample.well.well_code,
                          'source_sample_id':               sample.id,
                          'destination_plate_barcode':      dest_barcodes[dest_plate_idx],
-                         'destination_well_name':          dest_type.get_well_name(dest_well),
-                         'destination_well_number':        dest_well,
+                         'destination_well_name':          dest_type.get_well_by_number(dest_well_number).well_label,
+                         'destination_well_number':        dest_well_number,
                          'destination_plate_type':         dest_type.type_id,
                          'destination_plate_well_count':   dest_type.layout.feature_count
                          })
@@ -247,8 +247,7 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
         db.session.add( bulk )
         db.session.commit()
 
-    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode,
-                                                    pca_plates )
+    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode, pca_plates )
     master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
     return master_mixes, rows
 
@@ -270,8 +269,11 @@ def preview():
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
                 constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
-                constants.TRANS_TYPE_UPLOAD_QUANT,
                 constants.TRANS_TYPE_PCA_PREPLANNING,
+                constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
+                constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
+                constants.TRANS_TYPE_NGS_THERMOCYCLE,
+                constants.TRANS_TYPE_UPLOAD_QUANT,
                 constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
                 # these are same to same transfers or data uploads
 
@@ -301,7 +303,7 @@ def preview():
                         rows.append({'source_plate_barcode':           barcode,
                                      'source_well_name':               sample.well.well_label,
                                      'source_well_number':             sample.well.well_number,
-                                     'source_well_pk':                 sample.well.pk,
+                                     'source_well_code':                 sample.well.well_code,
                                      'source_sample_id':               sample.id,
                                      'destination_plate_barcode':      barcode,
                                      'destination_well_name':          sample.well.well_label,
@@ -310,29 +312,27 @@ def preview():
                                      'destination_plate_well_count':   plate.plate_type.layout.feature_count
                                      })
 
-            if transfer_type_id == \
-                    constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
-                custom_primers = primer_hitpicking.primer_src_creation(
-                    db.session, request.json['sources'][0]['details']['id'])
+            if transfer_type_id == constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
+                bulk_barcode = request.json['sources'][0]['details']['id']
+                custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
 
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type": "csv",
                         "title": "Source Plate Map",
                         "data": custom_primers,
                     }
                 })
 
-            elif transfer_type_id == \
-                    constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
-                mixes = primer_hitpicking.bulk_barcode_to_mastermixes(
-                    db.session, request.json['sources'][0]['details']['id'])
+            elif transfer_type_id ==  constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+                bulk_barcode = request.json['sources'][0]['details']['id']
+                mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
 
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type":  "text",
+                        "type":  "csv",
                         "title": "PCA Master Mix",
                         "data":  mixes,
                     }
@@ -340,24 +340,36 @@ def preview():
 
             elif transfer_type_id in (
                     constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE):
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "Thermocycling conditions",
-                        "data": "Thermocycling conditions here... maybe CSV format to render a table?"
-                    }
-                })
+                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
+                    constants.TRANS_TYPE_NGS_THERMOCYCLE):
 
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode",
-                        "title": "Thermocycler barcode",
-                        "forProperty": "thermocyclerBarcode"
-                    }
-                })
+                reqData = {};
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if reqData and "thermocyclerBarcode" in reqData:
+                    thermoBarcode = reqData["thermocyclerBarcode"]
+
+                    # TO DO  Actually derive the proper thermocycling conditions for presentation to the user
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Thermocycling conditions",
+                            "data": "Thermocycling conditions here... maybe CSV format to render a table?"
+                        }
+                    })
+                else:
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": "barcode",
+                            "title": "Thermocycler barcode",
+                            "forProperty": "thermocyclerBarcode"
+                        }
+                    })
 
             elif transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 responseCommands.append({
@@ -370,12 +382,46 @@ def preview():
                     }
                 })
 
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
+
+                rows = [{}]
+
+
+                # TO DO   Generate worklist...
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "file-data",
+                        "title": "Worklist",
+                        "forProperty": "worklist",
+                        "fileType": "worklist"
+                    }
+                })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION:
+
+                rows = [{}]
+
+
+                # TO DO   Generate master mix instructions...
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "NGS Master Mix",
+                        "data": "Master mix data here... maybe CSV format to render a table?"
+                    }
+                })
+
             elif transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
                 rows = [{}]
 
                 # we need to add master mix needs info or tell the user we need all the PCA plates first
                 masterMixNeeds = ""
                 pcaPlates = None
+                dataType = "csv"
 
                 if "requestedData" in details:
                     pcaPlates = details["requestedData"]
@@ -395,18 +441,18 @@ def preview():
                     })
 
                 if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
-                    masterMixNeeds = "Please scan all 4 PCA plates to retrieve master mix needs."
+                    masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
+                    dataType = "text"
                 else:
                     # then all the plates had barcodes
                     # now we need to decide which master mixes are needed
                     # content like "Master Mix A x2\n\rMaster Mix B x3"
-                    masterMixNeeds, rows = pca_pre_planning( request.json['sources'][0]['details']['id'],
-                                                             pcaPlates )
-
+                    bulk_barcode = request.json['sources'][0]['details']['id']
+                    masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
-                        "type": "text",
+                        "type": dataType,
                         "title": "Master Mix Needs",
                         "data": masterMixNeeds
                     }
@@ -511,7 +557,7 @@ def preview():
 
                     for quadrant in group["quadrants"]:
                         for rowIndex, row in enumerate(quadrant):
-                            dest_well_id = \
+                            dest_well_number = \
                                 fourToOneMap[quadrantIndex % 4][rowIndex + 1]["destination_well_id"]
                             rows.append({
                                 'source_plate_barcode':           row["source_plate_barcode"],
@@ -519,8 +565,8 @@ def preview():
                                 'source_well_number':             row["source_well_number"],
                                 'source_sample_id':               row["source_sample_id"],
                                 'destination_plate_barcode':      dest_barcode,
-                                'destination_well_name':          dest_type.get_well_name(dest_well_id),
-                                'destination_well_number':        dest_well_id,
+                                'destination_well_name':          dest_type.get_well_by_number(dest_well_number).well_label,
+                                'destination_well_number':        dest_well_number,
                                 'destination_plate_type':         dest_type.type_id,
                                 'destination_plate_well_count':   dest_type.layout.feature_count
                             })
@@ -535,6 +581,133 @@ def preview():
                     "type": "SET_DESTINATIONS",
                     "plates": destination_plates
                 })
+
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_NGS_POOLING:
+
+                rows = [{}];
+                sequencer = None;
+
+                basePairMax = 0;
+                currentBasePairTotal = 0;
+                previousBasePairTotal = 0;
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": 'radio'
+                            ,"title": 'Select Sequencer:'
+                            ,"forProperty": 'sequencer'
+                            ,"data": [
+                                {"option": 'MiSeq'}
+                                ,{"option": 'NextSeq'}
+                            ]
+                        }
+                    })
+
+                sources = request.json['sources'];
+
+                sourcesSet = [];
+
+                for sourceIndex, source in enumerate(sources):
+                    sourcesSet.append({
+                        "type": "SPTT_0006"
+                        ,"details" : {
+                            "id" : source["details"]["id"]
+                        }
+                    });
+
+                if "sequencer" in reqData:
+                    # TO DO  Derive the max BP count for this sequencer
+                    #        AND
+                    #        Return total count of basepairs on source plate(s)
+                    basePairMax = 12500000;
+
+                    '''
+                    currentBasePairTotal = total of BPs in all source plates
+                    previousBasePairTotal = total BPS on all plates but the last one
+                    '''
+
+                    # DEV ONLY - remove when real basepair counting is done
+                    previousBasePairTotal = 500;
+                    currentBasePairTotal = basePairMax - 1;
+
+                    reponseTally = currentBasePairTotal
+
+                    if currentBasePairTotal < basePairMax:
+                        #and add another source input to indicate there's more room
+                        sourcesSet.append({
+                            "type": "SPTT_0006"
+                        });
+
+                    elif basePairMax and currentBasePairTotal == basePairMax:
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
+                                "data": "No more plates will fit in this run."
+                            }
+                        })
+
+                    else :
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
+                                "data": "Return plate <strong>" + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"] + "</strong> to the pooling bin."
+                            }
+                        })
+
+                        reponseTally = previousBasePairTotal
+
+                        #remove the last added source from the list
+                        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Base Pair Tally",
+                            "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
+                        }
+                    })
+
+                responseCommands.append({
+                    "type": "SET_SOURCES",
+                    "plates": sourcesSet
+                })
+
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+
+                destinations_ready = True
+                if ("destinations" not in request.json or not len(request.json['destinations'])):
+                    destinations_ready = False
+
+                for dest_index, destination in enumerate(request.json['destinations']):
+                    if "id" not in destination["details"] or destination["details"]["id"] == "":
+                        destinations_ready = False
+
+                if (destinations_ready):
+                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "file-data",
+                            "title": "Echo worklist",
+                            "data": "echo worklist file contents...",
+                            "mimeType": "text/csv",
+                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+                        }
+
+                    })
 
             elif transfer_template_id in (
                     constants.TRANS_TPL_FRAG_ANALYZER,
@@ -591,10 +764,10 @@ def preview():
                         rows.append({'source_plate_barcode': barcode,
                                      'source_well_name': sample.well.well_label,
                                      'source_well_number': sample.well.well_number,
-                                     'source_well_pk': sample.well.pk,
+                                     'source_well_code': sample.well.well_code,
                                      'source_sample_id': sample.id,
                                      'destination_plate_barcode': dest_barcode,
-                                     'destination_well_name': dest_plate_type.get_well_name(dest_well),
+                                     'destination_well_name': dest_plate_type.get_well_by_number(dest_well).well_label,
                                      'destination_well_number': dest_well,
                                      'destination_plate_type': dest_plate_type.type_id,
                                      'destination_plate_well_count': dest_plate_type.layout.feature_count
@@ -642,6 +815,18 @@ TRANSFER_MAP = loads("""
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": false
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"4": {  // keyed to sample_transfer_template_id in the database
+                    "description": "Multiplexed same-same"
+                    ,"type": "same-same"
+                    ,"source": {
+                        "plateCount": 4
+                        ,"variablePlateCount": true
                     }
                     ,"destination": {
                         "plateCount": 0
@@ -1713,6 +1898,18 @@ TRANSFER_MAP = loads("""
                 ,"29": {  // keyed to transfer_template_id in the database
                     "description": "Reformatting for Purification"
                     ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": true
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": true
+                    }
+                }
+                ,"31": {  // keyed to sample_transfer_template_id in the database
+                    "description": "NGS: Pooling"
+                    ,"type": "standard_template"
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": true

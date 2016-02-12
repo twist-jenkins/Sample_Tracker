@@ -28,6 +28,18 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
+                ,4: {  // keyed to transfer_template_id in the database
+                    description: 'Multiplexed same to same'
+                    ,type: 'same-same'
+                    ,source: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
                 ,13: {  // keyed to transfer_template_id in the database
                     description: '384 to 4x96'
                     ,type: 'standard_template'
@@ -1202,15 +1214,28 @@ app = angular.module('twist.app')
                     }
                 }
                 ,31: {  // keyed to transfer_template_id in the database
-                    description: 'NGS: sample sheet generation'
+                    description: 'NGS: Pooling'
                     ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 1
-                        ,variablePlateCount: false
+                        plateCount: 0
+                        ,variablePlateCount: true
+                    }
+                    ,details: {
+                        requestedData: [
+                            {
+                                type: 'radio'
+                                ,title: 'Select Sequencer:'
+                                ,forProperty: 'sequencer'
+                                ,data: [
+                                    {option: 'MiSeq'}
+                                    ,{option: 'NextSeq'}
+                                ]
+                            }
+                        ]
                     }
                 }
                 ,32: {  // keyed to transfer_template_id in the database

@@ -64,4 +64,12 @@ def fixtures():
     seed.seed_data(db.engine, fixture_root)
 
 
+@manager.command
+def fixture_ginkgo():
+    """ Add database fixtures with test data values from Ginkgo order."""
+    from twistdb.util import seed
+    fixture_root = "test/ginkgo_fixture"
+    seed.seed_data(db.engine, fixture_root)
+
+
 manager.run()

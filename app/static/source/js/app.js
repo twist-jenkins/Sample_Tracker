@@ -57,8 +57,21 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         $scope.transformSpec = TransformBuilder.newTransformSpec();
         $scope.transformSpec.setPlateStepDefaults();
 
-        $scope.selectStepType = function (option) {
+        var setTransformSpecDetails = function (option) {
             $scope.transformSpec.setTransformSpecDetails(option);
+
+            /* this could be a transform spec with requested by default so allow for that */
+            if ($scope.transformSpec.requestedDataItems && $scope.transformSpec.requestedDataItems.length) {
+                $scope.setShowPresentedRequestedData(true);
+            }
+        }
+
+        $scope.setShowPresentedRequestedData = function (what) {
+            $scope.showPresentedRequestedData = what;
+        }
+
+        $scope.selectStepType = function (option) {
+            setTransformSpecDetails(option);
             $scope.transformSpec.setTitle(option.text);
 
             var route = 'root.record_transform.step_type_selected.tab_selected';
@@ -83,10 +96,10 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
                 if (option.id == optionId) {
                     $scope.submissionResultMessage = '';
                     $scope.submissionResultVisible = 0;
-                    $scope.transformSpec.setTransformSpecDetails(option);
-                    $scope.transformSpec.setTitle(option.text);
+                    $scope.setShowPresentedRequestedData(false);
                     $scope.transformSpec.reset();
-                    $scope.showPresentedRequestedData = false;
+                    setTransformSpecDetails(option);
+                    $scope.transformSpec.setTitle(option.text);
                     $scope.stepTypeDropdownValue = $scope.transformSpec.details.text;
                     break;
                 }
@@ -190,7 +203,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             $scope.transformSpec = TransformBuilder.newTransformSpec();
             $scope.transformSpec.setPlateStepDefaults();
             $scope.templateTypeSelection = null;
-            $scope.showPresentedRequestedData = false;
+            $scope.setShowPresentedRequestedData(false);
             if (!skipGo) {
                 $state.go('root.record_transform');
             }
@@ -281,11 +294,24 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         /* refresh the current transfer plan based on changes to plates inputs or upload file */
         $scope.updateTransferPlan = function (val, which, itemIndex) {
             if (val && val.length > 5) {
-                if (which == Constants.PLATE_SOURCE) {
-                    $scope.transformSpec.addSource(itemIndex);
-                } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transformSpec.addDestination(itemIndex);
+
+                /* prevent a source or destination from being entered more than once */
+                if (checkDupeBarcode(val, which)) {
+                    $scope.transformSpec.notReady(which);
+                    var errMsg = 'A plate with barcode <strong>' + val + '</strong> is already a ' + which + ' plate.';
+                    if (which == Constants.PLATE_SOURCE) {
+                        $scope.transformSpec.sources[itemIndex].error = errMsg
+                    } else if (which == Constants.PLATE_DESTINATION) {
+                        $scope.transformSpec.destinations[itemIndex].error = errMsg;
+                    }
+                } else {
+                    if (which == Constants.PLATE_SOURCE) {
+                        $scope.transformSpec.addSource(itemIndex);
+                    } else if (which == Constants.PLATE_DESTINATION) {
+                        $scope.transformSpec.addDestination(itemIndex);
+                    }
                 }
+
             } else {
                 if (which == Constants.PLATE_SOURCE) {
                     $scope.transformSpec.checkSourcesReady(true);
@@ -308,17 +334,36 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
         
         $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
-                $scope.showPresentedRequestedData = true;
+                $scope.setShowPresentedRequestedData(true);
             }
         });
 
         $scope.$watch('transformSpec.requestedDataItems', function (newVal, oldVal) {
             if (newVal && newVal.length) {
-                if (!oldVal || oldVal.length != newVal.length) {
-                    $scope.showPresentedRequestedData = true;
-                }
+                $scope.setShowPresentedRequestedData(true);
             }
         });
+
+        var checkDupeBarcode = function (barcode, which) {
+            var plateArray = [];
+            if (which == Constants.PLATE_SOURCE) {
+                plateArray = $scope.transformSpec.sources;
+            } else if (which == Constants.PLATE_DESTINATION) {
+                plateArray = $scope.transformSpec.destinations;
+            }
+            var alreadyFound = false;
+            for (var i=0; i< plateArray.length; i++) {
+                var plate = plateArray[i];
+                if (plate.details.id == barcode) {
+                    if (alreadyFound) {
+                        return true;  
+                    } else {
+                        alreadyFound = true;
+                    }
+                }
+            }
+            return false;
+        }
 
         $scope.clearExcelUploadData = function () {
             $scope.excelFileStats = {};

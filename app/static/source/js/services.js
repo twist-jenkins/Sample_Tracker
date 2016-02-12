@@ -28,6 +28,7 @@ app = angular.module('twist.app')
             ,SHIPPING_TUBES_CARRIER_TYPE: 'SHIPPING_TUBES_CARRIER'
             ,SHIPPING_TUBE_PLATE_TYPE: 'SHIPPING_TUBE_PLATE'
             ,RESPONSE_COMMANDS_SET_DESTINATIONS: 'SET_DESTINATIONS'
+            ,RESPONSE_COMMANDS_SET_SOURCES: 'SET_SOURCES'
             ,RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL: 'ADD_TRANSFORM_SPEC_DETAIL'
             ,RESPONSE_COMMANDS_PRESENT_DATA: 'PRESENT_DATA'
             ,RESPONSE_COMMANDS_REQUEST_DATA: 'REQUEST_DATA'
@@ -36,6 +37,8 @@ app = angular.module('twist.app')
             ,DATA_TYPE_LINK: 'link'
             ,DATA_TYPE_ARRAY: 'array'
             ,DATA_TYPE_BARCODE: 'barcode'
+            ,DATA_TYPE_RADIO: 'radio'
+            ,DATA_TYPE_CSV: 'csv'
             ,BARCODE_PREFIX_PLATE: 'PLT'
         };
     }]
@@ -114,11 +117,6 @@ app = angular.module('twist.app')
             ,getBarcodes: function () {
                 var userReq = ApiRequestObj.getGet('sample-plate-barcodes');
                 return $http(userReq);
-            }
-            ,submitSampleStep: function (data) {
-                var submitReq = ApiRequestObj.getPost('track-sample-step');
-                submitReq.data = data;
-                return $http(submitReq);
             }
             ,getSamplePlatesList: function () {
                 var plateListReq = ApiRequestObj.getGet('sample-plates-list');
@@ -604,7 +602,7 @@ app = angular.module('twist.app')
 
                                     base.operations = operations;
                                     break;
-                                case 31:
+                            case 31:
                                     /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
                                     var operations = [];
 
@@ -640,7 +638,7 @@ app = angular.module('twist.app')
                 }
             };
 
-            var notReady = function (which) {
+            base.notReady = function (which) {
                 if (which == Constants.PLATE_SOURCE) {
                     base.sourcesReady = false;
                 } else if (which == Constants.PLATE_DESTINATION) {
@@ -710,12 +708,28 @@ app = angular.module('twist.app')
                     base.details.transfer_template_id == 27 || 
                     base.details.transfer_template_id == 28 || 
                     base.details.transfer_template_id == 29 || 
-                    base.details.transfer_template_id == 30 || 
-                    base.details.transfer_template_id == 31) {
+                    base.details.transfer_template_id == 30) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
                 }
+
+                /* and read in any configured requested/presented data */
+
+                if (base.map.details && base.map.details.requestedData) {
+
+                    var requestedData = [];
+
+                    for (var i=0; i< base.map.details.requestedData.length; i++) {
+                        requestedData.push({
+                            type: Constants.RESPONSE_COMMANDS_REQUEST_DATA
+                            ,item: base.map.details.requestedData[i]
+                        });
+                    }
+
+                    base.addRequestedDataItems(requestedData);
+                }
+
                 base.transferFromFile(false);
             }
 
@@ -786,10 +800,10 @@ app = angular.module('twist.app')
                 for (var i=0; i<base.sources.length; i++) {
 
                     if (!base.sources[i].loaded) {
-                        if (!base.sources[i].updating) { /* don't call notReady if the plate is still fetching its data */
+                        if (!base.sources[i].updating) { /* don't call base.notReady if the plate is still fetching its data */
                             delete base.sources[i].loaded
                             delete base.sources[i].error;
-                            notReady('source');
+                            base.notReady('source');
                             return false;
                         }
                     } else {
@@ -797,7 +811,7 @@ app = angular.module('twist.app')
                         if (base.sources[i].details.id == "") {
                             delete base.sources[i].loaded;
                             delete base.sources[i].error;
-                            notReady('source');
+                            base.notReady('source');
                             return false;
                         }
                     }
@@ -815,7 +829,7 @@ app = angular.module('twist.app')
                 /* TODO: add barcode format validation once we have it settled */
 
                 var onError = function (sourceItem, msg) {
-                    notReady('source');
+                    base.notReady('source');
                     sourceItem.loaded = false;
                     sourceItem.transferList = null;
                     sourceItem.error = msg;
@@ -883,7 +897,7 @@ app = angular.module('twist.app')
                 for (var i=0; i<base.destinations.length; i++) {
                     if (!base.destinations[i].details.id || (base.destinations[i].details.id && base.destinations[i].details.id.length < 6)) {
                         base.destinations[i].loaded = false;
-                        notReady('destination');
+                        base.notReady('destination');
                         return false;
                     }
                 }
@@ -895,7 +909,7 @@ app = angular.module('twist.app')
                 var barcode = destItem.details.id;
 
                 var onError = function (destItem, msg) {
-                    notReady('destination');
+                    base.notReady('destination');
                     if (msg) {
                         destItem.error = msg;
                     }
@@ -1117,7 +1131,7 @@ app = angular.module('twist.app')
                         case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
                             var plates = command.plates;
                             for (var j=0; j<plates.length;j++) {
-                                var plate = plates[i];
+                                var plate = plates[j];
                                 var dest = returnEmptyPlate();
                                 dest.details.type = plate.type;
                                 dest.details.title = plate.details.title;
@@ -1141,6 +1155,32 @@ app = angular.module('twist.app')
                                 base.destinations.splice(plates.length - base.destinations.length);
                             }
                             base.map.destination.plateCount = base.destinations.length;
+                            break;
+                        case Constants.RESPONSE_COMMANDS_SET_SOURCES:
+                            var plates = command.plates;
+                            for (var j=0; j<plates.length;j++) {
+                                var plate = plates[j];
+                                var source = returnEmptyPlate();
+
+                                source.details.type = plate.type;
+                                source.details.id = plate.details ? plate.details.id : null;
+                                
+                                if (base.sources[j]) {
+                                    if (base.sources[j].loaded || base.sources[j].updating) {
+                                        //do nothing - this destination was already entered
+                                    } else {
+                                        source.details.id = base.sources[j].details ? base.sources[j].details.id : null; 
+                                        base.sources[j] = dest;
+                                        base.addSource(j);
+                                    }
+                                } else {
+                                    base.sources[j] = source;
+                                }
+                            }
+                            if (base.sources.length > plates.length) {
+                                base.sources.splice(plates.length - base.sources.length);
+                            }
+                            base.map.source.plateCount = base.sources.length;
                             break;
                         case Constants.RESPONSE_COMMANDS_PRESENT_DATA:
                             // assemble the presented data

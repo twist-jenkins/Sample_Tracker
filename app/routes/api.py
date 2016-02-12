@@ -199,7 +199,7 @@ def sample_report(sample_id, format):
         Transfer.id == TransferDetail.transfer_id,
         Sample.plate_id == TransferDetail.destination_plate_id,
         Sample.id == TransferDetail.destination_sample_id,
-        Sample.plate_well_pk == TransferDetail.destination_well_id,
+        Sample.well.well_number == TransferDetail.destination_well_id,
         Plate.id == TransferDetail.destination_plate_id).all()
 
     report = []

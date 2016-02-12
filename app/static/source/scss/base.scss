@@ -234,6 +234,13 @@ strong {
     font-weight: bold;
 }
 
+.twst-error-text {
+    color: #933030;
+}
+
+.twst-warn-text {
+    color: #e07a14;
+}
 
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -528,6 +535,12 @@ strong {
 
         &.twst-data-readout-table-header {
             background-color: #ddd;
+        }
+    }
+
+    &.twst-smaller {
+        td {
+            padding: 0.25em 0.4em;
         }
     }
 }
@@ -1242,9 +1255,22 @@ strong {
 
             .twst-present-request-data-pane-content-left {
                 .twst-record-step-requested-item {
-                    input {
+                    input[type=text] {
                         width: 10em;
                         display: inline-block;
+                    }
+
+                    label {
+                        input[type=radio] {
+                            margin-left: 2em;
+                            margin-right: 0.3em;
+                        }
+
+                        &:first-child {
+                            input[type=radio] {
+                                margin-left: 0;
+                            }
+                        }
                     }
 
                     .twst-thumbs-validation-icon {
