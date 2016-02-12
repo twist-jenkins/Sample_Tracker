@@ -1697,7 +1697,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
 
             /* create the data for the Hamilton Worklist dragout functionality */
             var now = (new Date()).toLocaleDateString().split('/').join('-');
-            $scope.worklistFilename = 'worklist-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.csv';
+            $scope.worklistFilename = 'wrk-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.csv';
             var afterProtocol = document.location.href.substring(document.location.href.indexOf('://') + 3);
             var server = afterProtocol.substring(0, afterProtocol.indexOf('/'));
 
