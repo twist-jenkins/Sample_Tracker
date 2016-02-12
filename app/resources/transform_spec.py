@@ -267,7 +267,10 @@ class TransformSpecListResource(flask_restful.Resource):
 
 def reduce_data_size(spec_list):
     for spec in spec_list:
-        spec["operations"] = []
+        if "data_json" in spec:
+            data = spec["data_json"]
+            if "operations" in data:
+                data["operations"] = []
 
 
 def modify_before_insert(db_session, spec):
