@@ -1699,7 +1699,7 @@ app = angular.module('twist.app', ['ui.router', 'ui.bootstrap', 'ngSanitize', 't
             var afterProtocol = document.location.href.substring(document.location.href.indexOf('://') + 3);
             var server = afterProtocol.substring(0, afterProtocol.indexOf('/'));
 
-            var worklistUrl = document.location.href.substring(0, document.location.href.indexOf(':')) + '://' + server + '/api/v1/rest-ham/hamilton_worklist/' + $scope.savedSpecIdToFinish;
+            var worklistUrl = document.location.href.substring(0, document.location.href.indexOf(':')) + '://' + server + '//api/v1/rest/worklist/' + $scope.savedSpecIdToFinish;
 
             $scope.dragOutData = 'text/plain|' + filename + '|' + worklistUrl; //'text/plain|worklist.png|http://localhost/static/images/twist.png';
 
