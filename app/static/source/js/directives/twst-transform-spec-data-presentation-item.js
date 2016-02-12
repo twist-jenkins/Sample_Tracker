@@ -28,6 +28,26 @@ angular.module('twist.app').directive('twstTransformSpecDataPresentationItem', [
                         // assemble the presented data
                         ml += '<a ng-href="{{itemData.data}}" target="_blank">{{itemData.data}}</a>';
                         break;
+                    case Constants.DATA_TYPE_CSV:
+                        var rows = $scope.itemData.data.split('\r\n');
+
+                        ml += '<table class="twst-data-readout-table twst-smaller">';
+
+                        for (var i=0; i< rows.length; i++) {
+                            var thisRow = rows[i];
+                            if (thisRow && thisRow != '') {
+                                if (!i) {
+                                    //header
+                                    ml += '<tr><td class="twst-data-readout-table-header">' + thisRow.split(',').join('</td><td class="twst-data-readout-table-header">') + '</td></tr>';
+                                } else {
+                                    ml += '<tr><td>' + thisRow.split(',').join('</td><td>') + '</td></tr>';
+                                }
+                            }
+                        }
+
+                        ml += '</table>';
+
+                        break;
                     
                     default :
                         console.log('Error: Unrecognized response command type = [' + $scope.itemData.type + ']');

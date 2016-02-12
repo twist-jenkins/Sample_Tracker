@@ -537,6 +537,12 @@ strong {
             background-color: #ddd;
         }
     }
+
+    &.twst-smaller {
+        td {
+            padding: 0.25em 0.4em;
+        }
+    }
 }
 
 .twst-greyed-row {
