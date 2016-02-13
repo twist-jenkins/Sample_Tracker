@@ -121,7 +121,7 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                         var returnValidate = function () {
                             return function () {
                                 var val = $scope.transformSpec.details.requestedData[$scope.itemData.forProperty];
-                                //$scope.item.validData = 0;
+                                $scope.item.validData = 0;
                                 if (!val) {
                                     if (errorOnEmpty) {
                                         $scope.validation = false;
