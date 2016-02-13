@@ -51,14 +51,14 @@ angular.module('twist.app').controller('tabSelectedController', ['$scope', '$sta
         /* not necessarily the most elegant code but it works for updating the UI when
          *  the responseCommand data items are changed */
 
-        $scope.$watch('transformSpec.presentedDataItems', function (newVal, oldVal) {
-            if (newVal && newVal.length) {
+        $scope.$watch('transformSpec.presentedDataItems.length', function (newVal, oldVal) {
+            if (newVal) {
                 $scope.setShowPresentedRequestedData(true);
             }
         });
 
-        $scope.$watch('transformSpec.requestedDataItems', function (newVal, oldVal) {
-            if (newVal && newVal.length) {
+        $scope.$watch('transformSpec.requestedDataItems.length', function (newVal, oldVal) {
+            if (newVal) {
                 $scope.setShowPresentedRequestedData(true);
             }
         });

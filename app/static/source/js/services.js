@@ -678,8 +678,40 @@ app = angular.module('twist.app')
             };
 
             base.addRequestedDataItems = function (items) {
-                base.requestedDataItems = items;
+                //don't replace data requests we've already gotten/displayed
+                for (var i=0; i< items.length ;i++) {
+                    var newItem = items[i];
+                    var already = false;
+                    for (var j=0; j < base.requestedDataItems.length; j++) {
+                        currentItem = base.requestedDataItems[j];
+                        if (currentItem.item.forProperty == newItem.item.forProperty) {
+                            already = true;
+                        }
+                    }
+
+                    if (!already) {
+                        base.requestedDataItems.push(angular.copy(newItem));
+                    }
+                }
+
                 base.validateRequestedData = true;
+            }
+
+            base.addPresentedDataItems = function (items) {
+                for (var i=0; i< items.length ;i++) {
+                    var newItem = items[i];
+                    var already = false;
+                    for (var j=0; j < base.presentedDataItems.length; j++) {
+                        currentItem = base.presentedDataItems[j];
+                        if (currentItem.item.forProperty == newItem.item.forProperty) {
+                            already = true;
+                        }
+                    }
+
+                    if (!already) {
+                        base.presentedDataItems.push(angular.copy(newItem));
+                    }
+                }
             }
 
             base.getDestinationsHeader = function () {
@@ -1205,7 +1237,7 @@ app = angular.module('twist.app')
                 }
 
                 if (presentedDataItems.length) {
-                    base.presentedDataItems = presentedDataItems;
+                    base.addPresentedDataItems(presentedDataItems);
                 }
                 
             };
