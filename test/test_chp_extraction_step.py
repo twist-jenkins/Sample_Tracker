@@ -21,7 +21,7 @@ from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 
 
 def titin_extraction_spec():
-    dest_plate = rnd_bc()
+    dest_plate_rootname = rnd_bc()
     spec = {
         "plan": {
                 "destinations": [],
@@ -64,7 +64,9 @@ def titin_extraction_spec():
     }
 
     for extraction_num in range(16):
-        plate_name = "test002_%02d" % (extraction_num + 1)
+        if extraction_num % 4 != 0:  # only do 25% of the extractions
+            continue
+        plate_name = dest_plate_rootname + "_%02d" % (extraction_num + 1)
         detail = {
                         "details": {
                             "id": plate_name,
@@ -79,19 +81,19 @@ def titin_extraction_spec():
         spec["plan"]["destinations"].append(detail)
 
         for well_384_id in range(384):
+            if well_384_id % 100 != 0:  # only do 1% of the wells
+                continue
             well_6144_id = 384 * extraction_num + well_384_id + 1
             well_6144_code = 661440000 + well_6144_id
             operation = {
-                        "destination_plate_barcode": plate_name,
-                        "destination_plate_type": "SPTT_0006",
-                        "destination_plate_well_count": 384,
-                        # "destination_well_name": "P1",
-                        "destination_well_number": well_384_id,
-                        "source_plate_barcode": "SRN-WARP1-TEST1",
-                        "source_sample_id": "GA_WARP1_TEST1_%04d" % well_6144_id,
-                        "source_well_code": well_6144_code,
-                        # "source_well_name": "1",
-                        "source_well_number": well_6144_id
+                "destination_plate_barcode": plate_name,
+                "destination_plate_type": "SPTT_0006",
+                "destination_plate_well_count": 384,
+                "destination_well_number": well_384_id + 1,
+                "source_plate_barcode": "SRN-WARP1-TEST1",
+                "source_sample_id": "GA_WARP1_TEST1_%04d" % well_6144_id,
+                "source_well_code": well_6144_code,
+                "source_well_number": well_6144_id
             }
             spec["plan"]["operations"].append(operation)
 
@@ -137,6 +139,18 @@ class TestCase(unittest.TestCase):
 
         date_executed = data["date_executed"]
         assert date_executed is not None
+
+        dest_plate_names = [dest["details"]["id"]
+                            for dest in new_spec["plan"]["destinations"]]
+
+        for dest_plate_name in dest_plate_names:
+            rv = self.client.get('/api/v1/basic-plate-info/%s'
+                                 % dest_plate_name,
+                                 content_type='application/json')
+            assert rv.status_code == 200, rv.data
+            result = json.loads(rv.data)
+            print result
+            assert result["success"] is True
 
         # self.client.delete(new_url)
         # assert self.client.get(new_url).status_code == 404

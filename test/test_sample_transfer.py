@@ -109,10 +109,10 @@ class TestCase(unittest.TestCase):
         bc2 = rnd_bc()
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
-            "source_well_name": src_well_name,
+            # "source_well_name": src_well_name,
             "source_well_number": src_well_num,
             "destination_plate_barcode": dest_plate,
-            "destination_well_name": dest_well_name,
+            # "destination_well_name": dest_well_name,
             "destination_well_number": dest_well_num,
             "destination_plate_well_count": dest_well_count,
             "destination_plate_type": 'SPTT_0006',
