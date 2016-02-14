@@ -339,9 +339,12 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         well = db_session.query(PlateWell).\
             filter(PlateWell.layout == destination_plate.plate_type.layout,
                    PlateWell.well_number == destination_well_id).one()
+        """ TODO: allow caller to pass in PlateWellCode directly in the transform spec?  That would expose the coding though """
     except:
-        logger.error("Found too many wells for %s?" % destination_well_id)
-        return None
+        err = "Found too many wells for dest well_id [%s] type [%s]" \
+            % (destination_well_id, destination_plate.plate_type)
+        logger.error(err)
+        raise KeyError(err)
 
     if copy_metadata:
         # Copy all extant metadata
