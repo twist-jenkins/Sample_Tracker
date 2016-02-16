@@ -39,11 +39,11 @@ class SampleResource(flask_restful.Resource):
         """fetches a single sample"""
         with scoped_session(db.engine) as sess:
             sample = sess.query(Sample).filter(
-                Sample.sample_id == sample_id).first()
+                Sample.id == sample_id).first()
             if not sample:
                 abort(404, message="sample {} doesn't exist".format(sample_id))
             data = sample_schema.dump(sample).data
-            return data
+            return json_api_success(data, 200)
 
     def delete(self, sample_id):
         """deletes a single sample"""

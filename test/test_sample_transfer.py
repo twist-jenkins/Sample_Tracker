@@ -141,8 +141,10 @@ class TestCase(unittest.TestCase):
 
         bc = rnd_bc()
 
+        sample_1_id = 'GA_562a647b799305708a87985f'
+
         same2same = [
-            (1, 'GA_562a647b799305708a87985f', bc, 1, 48),
+            (1, sample_1_id, bc, 1, 48),
             (2, 'GA_562a647b799305708a87985d', bc, 2, 48),
             (7, 'GA_562a647b799305708a879867', bc, 7, 48),
             (8, 'GA_562a647b799305708a879865', bc, 8, 48),
@@ -187,6 +189,12 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200, rv.data
         result = json.loads(rv.data)
         assert result["success"] is True
+
+        rv = self.client.get('/api/v1/rest/sample/%s' % sample_1_id,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        assert result["errors"] == []
 
     def xtest_small_same_to_same_to_same_golden(self):
 
