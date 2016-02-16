@@ -21,12 +21,16 @@ api = flask_restful.Api(app)
 
 
 class SampleSchema(Schema):
-    sample_id = fields.Int()
-    type_id = fields.Int()
-    status = fields.Str()
+    id = fields.Int()
+    plate_id = fields.Str()
+    plate_well_code = fields.Int()
+    order_item_id = fields.Str()
+    parent_sample_id = fields.Str()
+    type_id = fields.Str()
     operator_id = fields.Str()
+    vector_id = fields.Str()
+    cloning_process_id = fields.Str()
     date_created = fields.Date()
-    date_executed = fields.Date()
 
 
 sample_schema = SampleSchema()

@@ -246,7 +246,7 @@ def plate_report_page(plate_barcode):
 
 api = flask_restful.Api(app)
 
-from app.resources import transform_spec, worklist, sample
+from app.resources import transform_spec, worklist, sample, plate_well
 
 api.add_resource(transform_spec.TransformSpecListResource,
                  '/api/v1/rest/transform-specs')
@@ -263,6 +263,9 @@ api.add_resource(worklist.WorklistResource,
 
 api.add_resource(sample.SampleResource,
                  '/api/v1/rest/sample/<sample_id>')
+
+api.add_resource(plate_well.PlateWellResource,
+                 '/api/v1/rest/plate/<plate_barcode>/well/<well_number>')
 
 
 # older REST API routes:

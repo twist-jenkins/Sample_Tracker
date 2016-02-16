@@ -139,30 +139,41 @@ class TestCase(unittest.TestCase):
 
     def test_small_same_to_same_golden(self):
 
-        bc = rnd_bc()
+        # verify initial sample
 
         sample_1_id = 'GA_562a647b799305708a87985f'
-
-        same2same = [
-            (1, sample_1_id, bc, 1, 48),
-            (2, 'GA_562a647b799305708a87985d', bc, 2, 48),
-            (7, 'GA_562a647b799305708a879867', bc, 7, 48),
-            (8, 'GA_562a647b799305708a879865', bc, 8, 48),
-            (13, 'GA_562a647b799305708a87981f', bc, 13, 48),
-            (14, 'GA_562a647b799305708a87981d', bc, 14, 48),
-        ]
+        order_item_id = 'WOI_56bc154100bc15c389b79190'
+        plate_well_number = 1
+        rv = self.client.get('/api/v1/rest/sample/%s' % sample_1_id,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        assert result["errors"] == []
+        assert result["data"]["order_item_id"] == order_item_id
 
         # stamp a test plate
+
+        plate_2_barcode = rnd_bc()
+
+        same2same = [
+            (1, sample_1_id, 1, 48),
+            (2, 'GA_562a647b799305708a87985d', 2, 48),
+            (7, 'GA_562a647b799305708a879867', 7, 48),
+            (8, 'GA_562a647b799305708a879865', 8, 48),
+            (13, 'GA_562a647b799305708a87981f', 13, 48),
+            (14, 'GA_562a647b799305708a87981d', 14, 48),
+        ]
+
         transfer_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_number": src_well_num,
-            "destination_plate_barcode": dest_plate,
+            "destination_plate_barcode": plate_2_barcode,
             "destination_well_number": dest_well_num,
             "destination_plate_well_count": dest_well_count,
             "destination_plate_type": 'SPTT_0004',
             "source_sample_id": src_sample_id
         } for (src_well_num, src_sample_id,
-               dest_plate, dest_well_num, dest_well_count) in same2same]
+               dest_well_num, dest_well_count) in same2same]
         data = {"sampleTransferTypeId": 13,
                 "sampleTransferTemplateId": 14,
                 "transferMap": transfer_map
@@ -174,10 +185,24 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
+        rv = self.client.get('/api/v1/rest/plate/%s/well/1' % plate_2_barcode,
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        assert result["errors"] == []
+        assert result["data"]["parent_sample_id"] == sample_1_id
+        assert result["data"]["plate_well_code"] == 300480001
+        assert result["data"]["order_item_id"] == order_item_id
+
+
         # then same2same the result
 
+        plate_3_barcode = rnd_bc()
+
         for op in transfer_map:
-            op["source_plate_barcode"] = bc
+            op["source_plate_barcode"] = plate_2_barcode
+            op["source_plate_barcode"] = plate_2_barcode
 
         data = {"sampleTransferTypeId": 62,  # "CHP Deprotection"
                 "sampleTransferTemplateId": 2,  # Same - Same
@@ -189,6 +214,8 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 200, rv.data
         result = json.loads(rv.data)
         assert result["success"] is True
+
+        # now verify the sample is intact
 
         rv = self.client.get('/api/v1/rest/sample/%s' % sample_1_id,
                              content_type='application/json')
