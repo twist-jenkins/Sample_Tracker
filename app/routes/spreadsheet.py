@@ -270,6 +270,8 @@ def create_adhoc_sample_movement(db_session,
                                  source_well_sample.well.well_number)
             }
 
+        assert source_well_sample is not None
+
         logging.info("4. Accession the new sample record for the well")
         copy_metadata = in_place_transform_flag or merge_transform_flag
         destination_sample = sample_handler(db_session,
@@ -300,7 +302,8 @@ def create_adhoc_sample_movement(db_session,
         # print "DESTINATION PLATE WELL: %s " % (str(destination_well_sample))
         # logging.info("DESTINATION PLATE WELL: %s ", destination_well_sample)
         logging.info("6. Create a row representing a transfer from a well in the 'source' plate to a well")
-        source_to_destination_well_transfer = TransferDetail(
+        assert destination_sample is not None
+        source_to_dest_well_transfer = TransferDetail(
             transfer_id=sample_transfer.id,
             source_plate_id=source_well_sample.plate_id,
             source_well_id=source_well_sample.well.well_number,
@@ -308,7 +311,7 @@ def create_adhoc_sample_movement(db_session,
             destination_plate_id=destination_sample.plate_id,
             destination_well_id=destination_sample.well.well_number,
             destination_sample_id=destination_sample.id)
-        db_session.add(source_to_destination_well_transfer)
+        db_session.add(source_to_dest_well_transfer)
         db_session.flush()
 
         # import ipdb; ipdb.set_trace()
@@ -336,9 +339,12 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         well = db_session.query(PlateWell).\
             filter(PlateWell.layout == destination_plate.plate_type.layout,
                    PlateWell.well_number == destination_well_id).one()
+        """ TODO: allow caller to pass in PlateWellCode directly in the transform spec?  That would expose the coding though """
     except:
-        logger.error("Found too many wells for %s?" % destination_well_id)
-        return None
+        err = "Found too many wells for dest well_id [%s] type [%s]" \
+            % (destination_well_id, destination_plate.plate_type)
+        logger.error(err)
+        raise KeyError(err)
 
     if copy_metadata:
         # Copy all extant metadata
@@ -395,12 +401,24 @@ def safe_sqlalchemy_copy(session, object_handle):
     return copy
 
 
+from sqlalchemy.orm import make_transient
+
+
+def transient_copy(session, inst):
+    session.expunge(inst)
+    make_transient(inst)
+    inst.id = None
+    session.add(inst)
+    session.flush()
+    return inst
+
+
 def quick_copy(session, orig_obj):
     """Copy a sample, quick fix"""
 
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description", ):
+                     "external_barcode", "name", "description"):
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
 

@@ -580,6 +580,9 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                           "sample_id": rec["id"]
                           })
 
+        """TODO: figure out a more orm-like version of this query
+        so the caller can iterate the result samples easily.  Might
+        need the method to be on Sample instead of Plate"""
         # rows = (db.session.query(Sample, PlateWell)
         #        .filter(Sample.plate_id == plate_id,
         #                Sample.plate_well_code == PlateWell.pk)
