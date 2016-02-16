@@ -401,12 +401,24 @@ def safe_sqlalchemy_copy(session, object_handle):
     return copy
 
 
+from sqlalchemy.orm import make_transient
+
+
+def transient_copy(session, inst):
+    session.expunge(inst)
+    make_transient(inst)
+    inst.id = None
+    session.add(inst)
+    session.flush()
+    return inst
+
+
 def quick_copy(session, orig_obj):
     """Copy a sample, quick fix"""
 
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description", ):
+                     "external_barcode", "name", "description"):
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
 
