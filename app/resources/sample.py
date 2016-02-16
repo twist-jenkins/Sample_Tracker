@@ -21,11 +21,12 @@ api = flask_restful.Api(app)
 
 
 class SampleSchema(Schema):
-    id = fields.Int()
+    id = fields.Str()
     plate_id = fields.Str()
     plate_well_code = fields.Int()
     order_item_id = fields.Str()
     parent_sample_id = fields.Str()
+    root_sample_id = fields.Str()
     type_id = fields.Str()
     operator_id = fields.Str()
     vector_id = fields.Str()

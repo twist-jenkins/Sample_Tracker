@@ -346,16 +346,21 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         logger.error(err)
         raise KeyError(err)
 
-    if copy_metadata:
+    if copy_metadata or True:  # FIXME -- debugging plate stamp transform
+        # import pdb
+        # pdb.set_trace()
         # Copy all extant metadata
         new_s = quick_copy(db_session, source_well_sample)
+        # logging.warn(new_s.parent_sample_id)
         new_s.id = new_id()
         new_s.plate_id = destination_plate.id
         new_s.plate_well_code = well.well_code
+        # logging.warn(new_s)
     else:
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
                        plate_well_code=well.well_code,
                        operator_id=current_user.operator_id)
+
     if source_well_sample:
         new_s.parent_sample_id = source_well_sample.id
 
@@ -418,7 +423,12 @@ def quick_copy(session, orig_obj):
 
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description"):
+                     "external_barcode", "name", "description",
+                     "primer_pk", "vector_id", "cloning_process_id",
+                     "mol_type", "is_circular", "is_clonal",
+                     "is_assembly", "is_external", "external_id",
+                     "host_cell_pk", "growth_medium", "i5_sequence_id",
+                     "i7_sequence_id"):
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
 
