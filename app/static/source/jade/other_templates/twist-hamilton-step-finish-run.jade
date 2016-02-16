@@ -16,7 +16,7 @@ div(class="twst-hamilton-step")
                         span Worklist
                 button(class="twst-button twst-blue-button twst-hamilton-wizard-finish-run-button" ng-class="{'twst-disabled-button': !savedSpecToFinish || !worklistFetched}" ng-click="runFinished()") Run Finished
             div(class="twst-hamilton-step-worklist-barcode-container")
-                barcode-svg(barcode="savedSpecToFinish.data_json.details.worklist.filename")
+                barcode-svg(barcode="worklistFilename")
             p Hamilton: 
                 strong {{savedSpecToFinish.data_json.details.hamilton.label}}
             p Worklist generated on: 
