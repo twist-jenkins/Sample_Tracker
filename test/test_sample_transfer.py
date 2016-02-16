@@ -137,19 +137,21 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
+    def DISABLED_test_initial_sample(self):
+
+        sample_1_id = 'GA_562a647b799305708a87985f'
+        order_item_id = 'WOI_56bc154100bc15c389b79190'
+        # plate_well_number = 1
+        rv = self.client.get('/api/v1/rest/sample/%s' % sample_1_id,
+                             content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        assert result["errors"] == []
+        assert result["data"]["order_item_id"] == order_item_id
+
     def test_small_same_to_same_golden(self):
 
-        # verify initial sample
-
-        # sample_1_id = 'GA_562a647b799305708a87985f'
-        # order_item_id = 'WOI_56bc154100bc15c389b79190'
-        # plate_well_number = 1
-        # rv = self.client.get('/api/v1/rest/sample/%s' % sample_1_id,
-        #                     content_type='application/json')
-        # assert rv.status_code == 200, rv.data
-        # result = json.loads(rv.data)
-        # assert result["errors"] == []
-        # assert result["data"]["order_item_id"] == order_item_id
+        # TODO: move the WOIs into test fixtures
 
         # stamp a test plate
 
@@ -231,13 +233,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-        # now verify the sample is intact
-
-        #rv = self.client.get('/api/v1/rest/sample/%s' % sample_1_id,
-        #                     content_type='application/json')
-        #assert rv.status_code == 200, rv.data
-        #result = json.loads(rv.data)
-        #assert result["errors"] == []
+        # now verify the samples are intact
 
         for (src_sample_id, src_plate_bc, well_num, woi) in transfer_2_data:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
