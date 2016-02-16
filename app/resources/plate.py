@@ -12,38 +12,12 @@ from flask_login import current_user
 from marshmallow import Schema, fields
 
 from app import app
-from app import db, constants, miseq
-from app.utils import scoped_session
-from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
-from app.routes.spreadsheet import create_adhoc_sample_movement
+from app import db, constants
+from app.utils import scoped_session, json_api_success
 
-from twistdb.sampletrack import Sample, Transfer, Plate
+from twistdb.sampletrack import Sample, Plate
 
 api = flask_restful.Api(app)
-
-logger = logging.getLogger()
-
-
-def json_api_success(data, status_code, headers=None):
-    json_api_response = {"data": data,
-                         "errors": [],
-                         "meta": {}
-                         }
-    if headers is None:
-        return json_api_response, status_code
-    else:
-        return json_api_response, status_code, headers
-
-# TODO:
-# def json_api_error(err_list, status_code, headers=None):
-#     json_api_response = {"data": {},
-#                          "errors": err_list,
-#                          "meta": {}
-#                          }
-#     if headers is None:
-#         return json_api_response, status_code
-#     else:
-#         return json_api_response, status_code, headers
 
 
 class PlateSchema(Schema):
@@ -91,7 +65,6 @@ class PlateResource(flask_restful.Resource):
             POST: create new, unknown id
             PUT: create new, known id, OR, replace existing, known id
         """
-        logger.debug('@@ create_or_replace')
         with scoped_session(db.engine) as sess:
             if method == 'POST':
                 assert plate_id is None
@@ -122,10 +95,6 @@ class PlateResource(flask_restful.Resource):
                                         cls.response_headers(plate))
             else:
                 raise ValueError(method, plate_id)
-        # TODO:
-        # sess.expunge(row)
-        # result = plate_schema.dump(row).data
-        # return result, 200 # ?? updated
 
 
 class PlateListResource(flask_restful.Resource):
@@ -140,11 +109,7 @@ class PlateListResource(flask_restful.Resource):
                     .all()
                     )
             result = plate_schema.dump(rows, many=True).data
-            #    sess.expunge(rows)
-            # print "^" * 10000
-            # print str(result)
         return json_api_success(result, 200)  # FIXME
-        # return result, 200
 
     def post(self):
         """creates new plate returning a nice geeky Location header"""
