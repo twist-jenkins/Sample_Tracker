@@ -193,7 +193,7 @@ def create_adhoc_sample_movement(db_session,
             }
 
         #
-        logging.info('4. Get the "source plate well"')
+        logging.info('3. Get the "source plate well"')
         #
 
         source_well_sample = db_session.query(Sample).\
@@ -347,15 +347,11 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         raise KeyError(err)
 
     if copy_metadata or True:  # FIXME -- debugging plate stamp transform
-        # import pdb
-        # pdb.set_trace()
         # Copy all extant metadata
         new_s = quick_copy(db_session, source_well_sample)
-        # logging.warn(new_s.parent_sample_id)
         new_s.id = new_id()
         new_s.plate_id = destination_plate.id
         new_s.plate_well_code = well.well_code
-        # logging.warn(new_s)
     else:
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
                        plate_well_code=well.well_code,

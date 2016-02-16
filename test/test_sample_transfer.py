@@ -241,18 +241,18 @@ class TestCase(unittest.TestCase):
 
         for (src_sample_id, src_plate_bc, well_num, woi) in transfer_2_data:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
-                                 (plate_2_barcode, well_num),
+                                 (plate_3_barcode, well_num),
                                  data=json.dumps(data),
                                  content_type='application/json')
             assert rv.status_code == 200, rv.data
             result = json.loads(rv.data)
             assert result["errors"] == []
             # assert result["data"]["root_sample_id"] == sample_1_id
-            # FIXME assert result["data"]["parent_sample_id"] == src_sample_id
+            assert result["data"]["parent_sample_id"] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
             assert result["data"]["order_item_id"] == woi
             plate_3_sample_id = result["data"]["id"]
-            # FIXME assert plate_3_sample_id != src_sample_id
+            assert plate_3_sample_id != src_sample_id
             next_map_data = (plate_3_sample_id, plate_3_barcode, well_num, woi)
 
 
