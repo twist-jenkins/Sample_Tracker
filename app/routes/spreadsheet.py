@@ -202,8 +202,9 @@ def create_adhoc_sample_movement(db_session,
                    PlateWell.well_number == source_well_number).first()
 
         # print "SOURCE PLATE WELL: %s " % str(source_well_sample)
-        logging.info("SOURCE WELL SAMPLE: %s (%s, %s) ", source_well_sample,
-                     source_plate.id, source_well_number)
+        logging.info("SOURCE WELL SAMPLE: %s (%s, %s, %s) ",
+                     source_well_sample, source_plate.id,
+                     source_well_number, source_well_sample.id)
 
         if not source_well_sample and not merge_transform_flag:
             # I think this was trying to confirm that the source_well_number
