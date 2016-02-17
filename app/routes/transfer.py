@@ -1968,7 +1968,7 @@ TRANSFER_MAP = loads("""
 """)
 
 
-def transfer_map_step_34_titin_6144():
+def transfer_map_TRANS_TPL_EXTRACTION_TITIN():
     result = {}
     for dest_plate_number_0based in range(16):
         for dest_well_id_0based in range(384):
@@ -1983,4 +1983,5 @@ def transfer_map_step_34_titin_6144():
             }
     return [result]
 
-TRANSFER_MAP["34"]["plateWellToWellMaps"] = transfer_map_step_34_titin_6144()
+TRANSFER_MAP[str(constants.TRANS_TPL_EXTRACTION_TITIN)] \
+    ["plateWellToWellMaps"] = transfer_map_TRANS_TPL_EXTRACTION_TITIN()

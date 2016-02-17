@@ -11,15 +11,13 @@ from flask_login import current_user
 
 from marshmallow import Schema, fields
 
-from app import app
+from app import api
 from app import db, constants, miseq
 from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
 from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
-
-api = flask_restful.Api(app)
 
 logger = logging.getLogger()
 
