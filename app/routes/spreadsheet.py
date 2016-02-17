@@ -193,7 +193,7 @@ def create_adhoc_sample_movement(db_session,
             }
 
         #
-        logging.info('4. Get the "source plate well"')
+        logging.info('3. Get the "source plate well"')
         #
 
         source_well_sample = db_session.query(Sample).\
@@ -202,8 +202,9 @@ def create_adhoc_sample_movement(db_session,
                    PlateWell.well_number == source_well_number).first()
 
         # print "SOURCE PLATE WELL: %s " % str(source_well_sample)
-        logging.info("SOURCE WELL SAMPLE: %s (%s, %s) ", source_well_sample,
-                     source_plate.id, source_well_number)
+        logging.info("SOURCE WELL SAMPLE: %s (%s, %s, %s) ",
+                     source_well_sample, source_plate.id,
+                     source_well_number, source_well_sample.id)
 
         if not source_well_sample and not merge_transform_flag:
             # I think this was trying to confirm that the source_well_number
@@ -346,7 +347,7 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         logger.error(err)
         raise KeyError(err)
 
-    if copy_metadata:
+    if copy_metadata or True:  # FIXME -- debugging plate stamp transform
         # Copy all extant metadata
         new_s = quick_copy(db_session, source_well_sample)
         new_s.id = new_id()
@@ -356,6 +357,7 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
                        plate_well_code=well.well_code,
                        operator_id=current_user.operator_id)
+
     if source_well_sample:
         new_s.parent_sample_id = source_well_sample.id
 
@@ -418,7 +420,12 @@ def quick_copy(session, orig_obj):
 
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description"):
+                     "external_barcode", "name", "description",
+                     "primer_pk", "vector_id", "cloning_process_id",
+                     "mol_type", "is_circular", "is_clonal",
+                     "is_assembly", "is_external", "external_id",
+                     "host_cell_pk", "growth_medium", "i5_sequence_id",
+                     "i7_sequence_id"):
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
 
