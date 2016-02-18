@@ -116,10 +116,10 @@ class TransformSpecResource(flask_restful.Resource):
             spec = sess.query(TransformSpec).filter(
                 TransformSpec.spec_id == spec_id).first()
             if spec:
-                transfer = sess.query(Transform).filter(
+                transform = sess.query(Transform).filter(
                     Transform.transform_spec_id == spec_id).first()
-                if transfer:
-                    transfer.transform_spec_id = None
+                if transform:
+                    transform.transform_spec_id = None
                     sess.flush()
                 sess.delete(spec)
                 sess.flush()
@@ -210,15 +210,15 @@ class TransformSpecResource(flask_restful.Resource):
         details = spec.data_json["details"]
         logger.debug('@@ executing - details:' % details)
         try:
-            transfer_type_id = details["transfer_type_id"]
+            transform_type_id = details["transform_type_id"]
         except:
-            transfer_type_id = details["id"]  # FIXME: REMOVE SHIM
-        transfer_template_id = details["transfer_template_id"]
+            transform_type_id = details["id"]  # FIXME: REMOVE SHIM
+        transform_template_id = details["transform_template_id"]
         operations = spec.data_json["operations"]
         wells = operations  # (??)
 
         if 'requestedData' in spec.data_json['details'].keys():
-            if transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+            if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
                 quant_data = spec.data_json['details']['requestedData']['instrument_data']
                 result = store_quant_data(sess, aliquot_plate, quant_data)
@@ -227,8 +227,8 @@ class TransformSpecResource(flask_restful.Resource):
 
         else:
             result = create_adhoc_sample_movement(sess,
-                                                  transfer_type_id,
-                                                  transfer_template_id,
+                                                  transform_type_id,
+                                                  transform_template_id,
                                                   wells,
                                                   transform_spec_id=spec.spec_id)
             if not result:
@@ -283,15 +283,15 @@ def modify_before_insert(db_session, spec):
 
     # if not "ngs barcoding" or one of the hamilton worklist steps, do nothing
     details = spec.data_json["details"]
-    if "transfer_type_id" in details:
-        if details["transfer_type_id"] not in (
+    if "transform_type_id" in details:
+        if details["transform_type_id"] not in (
                 constants.TRANS_TYPE_NGS_HITPICK_INDEXING,
                 constants.TRANS_TYPE_POST_PCA_NORM):
             return False
 
-    if details["transfer_type_id"] == constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
+    if details["transform_type_id"] == constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
         res = alter_spec_ngs_barcodes(db_session, spec)
-    elif details["transfer_type_id"] == constants.TRANS_TYPE_POST_PCA_NORM:
+    elif details["transform_type_id"] == constants.TRANS_TYPE_POST_PCA_NORM:
         res = alter_spec_post_pca_hamilton_worklist(db_session, spec)
 
     return res
