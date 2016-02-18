@@ -716,6 +716,15 @@ def preview():
                 rows = filter_transform(transfer_template_id, request.json['sources'],
                                         request.json['destinations'])
 
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_PCA_PCR_PURIFICATION:
+                    '''
+                        Kieran or Charlie please handle this.
+                        Sources and destinations should be processed pairwise (paired by index)
+                        in a same-to-same-playout transfer from source to destination
+                    '''
+                    rows = [{}]
+
             else:
                 if transfer_template_id in (
                         constants.TRANS_TPL_SAME_TO_SAME,
@@ -1961,6 +1970,20 @@ TRANSFER_MAP = loads("""
                     ,"destination": {
                         "plateCount": 4
                         ,"variablePlateCount": true
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                }
+                ,"42": {  // keyed to transfer_template_id in the database
+                    "description": "PCA/PCR Purification"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 2
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 2
+                        ,"variablePlateCount": false
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
