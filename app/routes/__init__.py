@@ -7,7 +7,7 @@ from authentication import login, user_missing_from_operator_table, oauth2callba
 #
 # Route handlers for the pages of the application.
 #
-from pages import home, sample_transforms_page, edit_sample_plate, sample_report_page, plate_report_page
+# from pages import home, sample_transforms_page, edit_sample_plate, sample_report_page, plate_report_page
 
 #
 # The REST API used by the web pages.
