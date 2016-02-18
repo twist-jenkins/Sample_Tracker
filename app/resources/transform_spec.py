@@ -17,7 +17,7 @@ from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
-from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
+from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate
 
 logger = logging.getLogger()
 
@@ -116,8 +116,8 @@ class TransformSpecResource(flask_restful.Resource):
             spec = sess.query(TransformSpec).filter(
                 TransformSpec.spec_id == spec_id).first()
             if spec:
-                transfer = sess.query(Transfer).filter(
-                    Transfer.transform_spec_id == spec_id).first()
+                transfer = sess.query(Transform).filter(
+                    Transform.transform_spec_id == spec_id).first()
                 if transfer:
                     transfer.transform_spec_id = None
                     sess.flush()

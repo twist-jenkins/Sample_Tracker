@@ -137,12 +137,6 @@ def static_from_root():
     return send_from_directory(app.static_folder, request.path[1:])
 
 
-@app.route('/download_empty_spreadsheet/<filename>')
-def download_empty_spreadsheet(filename):
-    return send_from_directory(app.static_folder, "sampleTransferSpreadsheet.xlsx")
-
-
-
 # ==========================
 #
 # "Authentication" Routes

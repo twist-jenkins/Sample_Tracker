@@ -13,7 +13,7 @@ import datetime
 from flask import g, make_response, request, Response, jsonify
 
 from sqlalchemy.orm import subqueryload
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm.exc import NoResultFound  # , MultipleResultsFound
 
 from app.utils import scoped_session
 from app import app, db, googlelogin, constants
@@ -21,8 +21,8 @@ from app.plate_to_plate_maps import maps_json
 from app.models import create_destination_plate
 from app.routes.spreadsheet import create_step_record_adhoc
 
-from twistdb.sampletrack import TransferType, Plate, Transfer, \
-    TransferDetail, Sample, PlateWell
+from twistdb.sampletrack import TransformType, Plate, Transform, \
+    TransformDetail, Sample
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_col_and_row_for_well_id_96,
@@ -119,11 +119,14 @@ def google_login():
 
 
 def sample_transfer_types():
-    sample_transfer_types2 = db.session.query(TransferType).\
-        order_by(TransferType.menu_ordering)
+    sample_transfer_types2 = db.session.query(TransformType).\
+        order_by(TransformType.menu_ordering)
     simplified_results = []
     for row in sample_transfer_types2:
-        simplified_results.append({"text": row.name, "id": row.id, "source_plate_count": row.source_plate_count, "destination_plate_count": row.destination_plate_count, "transfer_template_id": row.transfer_template_id})
+        simplified_results.append({"text": row.name, "id": row.id,
+                                   "source_plate_count": row.source_plate_count,
+                                   "destination_plate_count": row.destination_plate_count,
+                                   "transfer_template_id": row.transfer_template_id})
     returnData = {
         "success": True, "results": simplified_results
     }
@@ -185,15 +188,15 @@ def sample_transfers(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
 
     qry = (
         db.session.query(
-            Transfer,
-            TransferDetail
+            Transform,
+            TransformDetail
         )
-        .options(subqueryload(TransferDetail.source_plate))
-        .options(subqueryload(TransferDetail.destination_plate))
-        .options(subqueryload(Transfer.transfer_type))
-        .options(subqueryload(Transfer.operator))
-        .filter(TransferDetail.transfer_id == Transfer.id)
-        .order_by(Transfer.date_transfer.desc())
+        .options(subqueryload(TransformDetail.source_plate))
+        .options(subqueryload(TransformDetail.destination_plate))
+        .options(subqueryload(Transform.transfer_type))
+        .options(subqueryload(Transform.operator))
+        .filter(TransformDetail.transfer_id == Transform.id)
+        .order_by(Transform.date_transfer.desc())
     )
     if limit is None:
         rows = qry.all()
@@ -262,13 +265,13 @@ def create_step_record():
     data = request.json
     operator = g.user
 
-    transfer_type_id = data["sampleTransferTypeId"]
-    transfer_template_id = data["sampleTransferTemplateId"]
+    transform_type_id = data["sampleTransformTypeId"]
+    transform_template_id = data["sampleTransformTemplateId"]
 
     if "transferMap" in data:
         transfer_map = data["transferMap"]
-        return create_step_record_adhoc(transfer_type_id,
-                                        transfer_template_id,
+        return create_step_record_adhoc(transform_type_id,
+                                        transform_template_id,
                                         transfer_map)
 
     else:
@@ -282,11 +285,11 @@ def create_step_record():
 
         json_maps = maps_json()
 
-        if transfer_template_id in json_maps["transfer_maps"]:
-            templateData = json_maps["transfer_maps"][transfer_template_id]
+        if transform_template_id in json_maps["transfer_maps"]:
+            templateData = json_maps["transfer_maps"][transform_template_id]
         else:
-            errmsg = "A template for this transfer type (%s) could not be found."
-            return error_response(404, errmsg % transfer_template_id)
+            errmsg = "A template for this transform type (%s) could not be found."
+            return error_response(404, errmsg % transform_template_id)
 
         # validate that the plate counts/barcodes expected for a given template are present
         source_barcodes_count = len(source_barcodes)
@@ -305,10 +308,10 @@ def create_step_record():
 
         with scoped_session(db.engine) as db_session:
 
-            # Create a "sample_transfer" row representing this entire transfer.
-            sample_transfer = Transfer(transfer_type_id=transfer_type_id,
-                                       operator_id=operator.operator_id)
-            db_session.add(sample_transfer)
+            # Create a transform row representing this entire transform.
+            sample_transform = Transform(transform_type_id=transform_type_id,
+                                         operator_id=operator.operator_id)
+            db_session.add(sample_transform)
 
             for barcode in source_barcodes:
                 # load our source plates into an array for looping
@@ -316,12 +319,13 @@ def create_step_record():
                 if not source_plate:
                     errmsg = "There is no source plate with the barcode: %s"
                     errmsg %= barcode
-                    logger.info(" %s encountered error creating sample transfer: " % g.user.first_and_last_name + errmsg)
+                    logger.info(" %s encountered error creating transform: " %
+                                g.user.first_and_last_name + errmsg)
                     return error_response(404, errmsg)
                 source_plates.append(source_plate)
 
             # the easy case: source and destination plates have same layout and there's only 1 of each
-            if transfer_template_id == 1:
+            if transform_template_id == 1:
 
                 order_number = 1
                 source_plate = source_plates[0]
@@ -332,7 +336,7 @@ def create_step_record():
                                                  destination_barcodes[0],
                                                  source_plate.type_id,
                                                  source_plate.storage_location,
-                                                 transfer_template_id)
+                                                 transform_template_id)
                 destination_plates.append(plate)
                 db_session.flush()
 
@@ -344,7 +348,7 @@ def create_step_record():
 
                     try:
                         create_well_transfer(
-                            db_session, operator, sample_transfer,
+                            db_session, operator, sample_transform,
                             order_number, source_plate, source_plate_well,
                             destination_plate, destination_plate_well_id,
                             source_plate_well.row, source_plate_well.column
@@ -366,7 +370,7 @@ def create_step_record():
                                                      destination_barcode,
                                                      target_plate_type_id,
                                                      storage_location,
-                                                     transfer_template_id)
+                                                     transform_template_id)
                     destination_plates.append(plate)
 
                 db_session.flush()
@@ -400,7 +404,7 @@ def create_step_record():
 
                         try:
                             create_well_transfer(
-                                db_session, operator, sample_transfer,
+                                db_session, operator, sample_transform,
                                 order_number, source_plate, source_plate_well,
                                 destination_plate, destination_plate_well_id,
                                 row_and_column["row"], row_and_column["column"]
@@ -465,8 +469,9 @@ def create_well_transfer(db_session, operator, sample_transfer, order_number,
 
     # Create a row representing a transfer from a well in
     # the "source" plate to a well in the "destination" plate.
-    source_to_dest_well_transfer = TransferDetail(
-        transfer_id=sample_transfer.id,  # item_order_number=order_number,
+    # FIXME change to model just the parent/child relationship
+    source_to_dest_well_transfer = TransformDetail(
+        transfer_id=sample_transform.id,  # item_order_number=order_number,
         source_plate_id=source_plate.id,
         source_well_id=source_plate_well.well_id,
         source_sample_id=source_plate_well.sample_id,
@@ -515,9 +520,10 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     #    384: get_col_and_row_for_well_id_384
     # }.get(number_clusters, lambda well_id: "missing map")
 
-    rows = db.session.query(Plate, TransferDetail).filter(
-        TransferDetail.destination_plate_id == plate_id,
-        Plate.id == TransferDetail.source_plate_id).all()
+    # FIXME query for the underlying samples
+    rows = db.session.query(Plate, TransformDetail).filter(
+        TransformDetail.destination_plate_id == plate_id,
+        Plate.id == TransformDetail.source_plate_id).all()
 
     parent_to_this_task_name = None
     seen = []
@@ -533,18 +539,19 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             })
             parent_to_this_task_name = details.sample_transfer.transfer_type.name
 
+    # FIXME join in TransformDetail should only look at samples?
     rows = (
         db.session.query(
             Plate,
-            Transfer,
-            TransferDetail
+            Transform,
+            TransformDetail
         )
-        .filter(TransferDetail.source_plate_id == plate_id)
+        .filter(TransformDetail.source_plate_id == plate_id)
         .filter(Plate.id ==
-                TransferDetail.destination_plate_id)
-        .filter(TransferDetail.transfer_id == Transfer.id)
-        .options(subqueryload(Transfer.transfer_type))
-        # .options(subqueryload(Transfer.operator))
+                TransformDetail.destination_plate_id)
+        .filter(TransformDetail.transfer_id == Transform.id)
+        .options(subqueryload(Transform.transfer_type))
+        # .options(subqueryload(Transform.operator))
         .all()
     )
 
@@ -1100,7 +1107,7 @@ def process_hamilton_sources(transform_type_id):
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS",
-                "plates": [ # front end just uses length of plates array
+                "plates": [  # front end just uses length of plates array
                     {"type": "SHIPPING_TUBE_PLATE"},
                     {"type": "SHIPPING_TUBE_PLATE"},
                     {"type": "SHIPPING_TUBE_PLATE"}
