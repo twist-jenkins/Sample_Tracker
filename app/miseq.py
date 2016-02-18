@@ -1,7 +1,6 @@
 import csv
 import StringIO
 import logging
-import json
 from datetime import datetime
 
 from app import db
@@ -128,62 +127,62 @@ def miseq_csv_template(rows, run_id):
     return csvout
 
 
-def sample_map_template(rows):
-
-    sio = StringIO.StringIO()
-    book = twist_excel.workbook.TwistExcelWorkbook(sio)
-
-    book.format.gray.set_align('center')
-    book.format.gray.set_align('vcenter')
-    book.format.gray.set_text_wrap()
-    book.format.gray.set_bold()
-
-    book.fields = (
-        book.Field("sample_num_on_run", 20, book.format.gray,
-                   "Sample Number On Run (For FASTQ Naming)"),
-        book.Field("sample_id", 10, book.format.gray,
-                   "Sample ID"),
-        book.Field("i5_sequence_id", 15, book.format.gray,
-                   "I5 Barcode Sequence ID (From Barcode Sequence table)"),
-        book.Field("i7_sequence_id", 15, book.format.gray,
-                   "I7 Barcode Sequence ID (From Barcode Sequence table)"),
-        book.Field("description", 60, book.format.gray,
-                   "Expected result description, notes about why on run, "
-                   "prep-related notes, which samples are controls, etc"),
-        book.Field("var_prep_type", 15, book.format.lime,
-                   "Variable: Prep"),
-        book.Field("var_parent_type ", 10, book.format.lime,
-                   "Variable: Parent type"),
-        book.Field("var_flag", 5, book.format.lime,
-                   "Variable: Flag"),
-    )
-
-    sheet = book.workbook.add_worksheet("NGS Run Map")
-    sheet.write('A1', ':table')
-    sheet.write('B1', "sample_map")
-    sheet.write('A3', 'Maps each sample on run to barcodes and one or more '
-                'variables under study. You can add as many categories '
-                '(columns) as you like, just match the var_xxx format '
-                'in row 6 (row 5 is ignored). Variables that do not start '
-                'with "var_" are ignored in row 6 -- do not use spaces.')
-    sheet.set_row(4, 72)
-    book.write_to(sheet, book.fields)
-
-    row_format = book.format.regular
-    for row_ix, row in enumerate(rows):
-        position = book.cell_position(row_ix)
-        col_vals = [
-            row_ix + 1,
-            row.parent_sample_id,  # CS_00233
-            row.i5_sequence_id,
-            row.i7_sequence_id,
-            strip_forbidden_chars(row.parent_description),
-            "Automated",
-            "Colony"
-        ]
-        sheet.write_row(position, col_vals, row_format)
-
-    return sio
+# def sample_map_template(rows):
+#
+#     sio = StringIO.StringIO()
+#     book = twist_excel.workbook.TwistExcelWorkbook(sio)
+#
+#     book.format.gray.set_align('center')
+#     book.format.gray.set_align('vcenter')
+#     book.format.gray.set_text_wrap()
+#     book.format.gray.set_bold()
+#
+#     book.fields = (
+#         book.Field("sample_num_on_run", 20, book.format.gray,
+#                    "Sample Number On Run (For FASTQ Naming)"),
+#         book.Field("sample_id", 10, book.format.gray,
+#                    "Sample ID"),
+#         book.Field("i5_sequence_id", 15, book.format.gray,
+#                    "I5 Barcode Sequence ID (From Barcode Sequence table)"),
+#         book.Field("i7_sequence_id", 15, book.format.gray,
+#                    "I7 Barcode Sequence ID (From Barcode Sequence table)"),
+#         book.Field("description", 60, book.format.gray,
+#                    "Expected result description, notes about why on run, "
+#                    "prep-related notes, which samples are controls, etc"),
+#         book.Field("var_prep_type", 15, book.format.lime,
+#                    "Variable: Prep"),
+#         book.Field("var_parent_type ", 10, book.format.lime,
+#                    "Variable: Parent type"),
+#         book.Field("var_flag", 5, book.format.lime,
+#                    "Variable: Flag"),
+#     )
+#
+#     sheet = book.workbook.add_worksheet("NGS Run Map")
+#     sheet.write('A1', ':table')
+#     sheet.write('B1', "sample_map")
+#     sheet.write('A3', 'Maps each sample on run to barcodes and one or more '
+#                 'variables under study. You can add as many categories '
+#                 '(columns) as you like, just match the var_xxx format '
+#                 'in row 6 (row 5 is ignored). Variables that do not start '
+#                 'with "var_" are ignored in row 6 -- do not use spaces.')
+#     sheet.set_row(4, 72)
+#     book.write_to(sheet, book.fields)
+#
+#     row_format = book.format.regular
+#     for row_ix, row in enumerate(rows):
+#         position = book.cell_position(row_ix)
+#         col_vals = [
+#             row_ix + 1,
+#             row.parent_sample_id,  # CS_00233
+#             row.i5_sequence_id,
+#             row.i7_sequence_id,
+#             strip_forbidden_chars(row.parent_description),
+#             "Automated",
+#             "Colony"
+#         ]
+#         sheet.write_row(position, col_vals, row_format)
+#
+#     return sio
 
 
 def nps_id_details(db_session, nps_ids):
