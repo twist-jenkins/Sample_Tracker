@@ -262,8 +262,6 @@ def create_step_record():
     data = request.json
     operator = g.user
 
-    raise NotImplementedError
-
     transfer_type_id = data["sampleTransferTypeId"]
     transfer_template_id = data["sampleTransferTemplateId"]
 
@@ -274,6 +272,8 @@ def create_step_record():
                                         transfer_map)
 
     else:
+        raise NotImplementedError("transferMap is required")
+
         source_barcodes = data["sourcePlates"]
         destination_barcodes = data["destinationPlates"]
 
@@ -580,6 +580,9 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                           "sample_id": rec["id"]
                           })
 
+        """TODO: figure out a more orm-like version of this query
+        so the caller can iterate the result samples easily.  Might
+        need the method to be on Sample instead of Plate"""
         # rows = (db.session.query(Sample, PlateWell)
         #        .filter(Sample.plate_id == plate_id,
         #                Sample.plate_well_code == PlateWell.pk)

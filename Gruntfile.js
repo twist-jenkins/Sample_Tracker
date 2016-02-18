@@ -52,7 +52,12 @@ module.exports = function(grunt) {
             twist_app: {
                 files: {
                     'app/static/js/twist-app<%= githash.main.short %>.js': [
-                        ['app/static/source/js/*.js', 'app/static/source/js/directives/*.js']
+                        [
+                            'app/static/source/js/*.js'
+                            ,'app/static/source/js/directives/*.js'
+                            ,'app/static/source/js/controllers/*.js'
+                            ,'app/static/source/js/services/*.js'
+                        ]
                     ]
                 }
             }

@@ -13,6 +13,8 @@ import logging
 
 from flask import Flask, request, send_from_directory
 from flask_assets import Environment
+import flask_restful
+
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from twistdb.db import SQLAlchemyX
 #from flask.ext.sqlalchemy import SQLAlchemy
@@ -123,8 +125,6 @@ login_manager.login_view = "login"
 
 from app import routes
 from app.routes import transfer
-from app import rest
-
 
 # ==========================
 #
@@ -243,19 +243,29 @@ def plate_report_page(plate_barcode):
 # ==========================
 
 # newer REST API routes:
-rest.api.add_resource(rest.TransformSpecListResource,
-                      '/api/v1/rest/transform-specs')
+
+api = flask_restful.Api(app)
+
+from app.resources import transform_spec, worklist, sample, plate_well
+
+api.add_resource(transform_spec.TransformSpecListResource,
+                 '/api/v1/rest/transform-specs')
 
 # 1. POST: Save new spec (returns ID)
 # 2. POST: Save new spec and execute (returns ID):
 #          uses HTTP header Transform-Execution: Immediate
 # 3. PUT: Execute existing spec
-rest.api.add_resource(rest.TransformSpecResource,
-                      '/api/v1/rest/transform-specs/<spec_id>')
+api.add_resource(transform_spec.TransformSpecResource,
+                 '/api/v1/rest/transform-specs/<spec_id>')
 
-rest.api.add_resource(rest.WorklistResource,
-                      '/api/v1/rest/worklist/<spec_id>')
+api.add_resource(worklist.WorklistResource,
+                 '/api/v1/rest/worklist/<spec_id>')
 
+api.add_resource(sample.SampleResource,
+                 '/api/v1/rest/sample/<sample_id>')
+
+api.add_resource(plate_well.PlateWellResource,
+                 '/api/v1/rest/plate/<plate_barcode>/well/<well_number>')
 
 
 # older REST API routes:
@@ -376,8 +386,7 @@ def sample_plate_barcodes():
 
 @app.route('/api/v1/track-sample-step', methods=['POST'])
 def track_sample_step():
-    raise NotImplementedError
-    # return routes.create_step_record()
+    return routes.create_step_record()
 
 @app.route('/api/v1/sample-plates-list', methods=['GET'])
 def sample_plates_list():
