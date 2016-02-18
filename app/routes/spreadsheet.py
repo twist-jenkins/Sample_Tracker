@@ -359,6 +359,7 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
                        operator_id=current_user.operator_id)
 
     if source_well_sample:
+        # TODO: handle new sample DAG
         new_s.parent_sample_id = source_well_sample.id
 
     if transfer_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
@@ -421,7 +422,7 @@ def quick_copy(session, orig_obj):
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
                      "external_barcode", "name", "description",
-                     "primer_pk", "vector_id", "cloning_process_id",
+                     "primer_pk", "cloning_process_id",
                      "mol_type", "is_circular", "is_clonal",
                      "is_assembly", "is_external", "external_id",
                      "host_cell_pk", "growth_medium", "i5_sequence_id",
