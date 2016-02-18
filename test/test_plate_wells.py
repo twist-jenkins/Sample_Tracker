@@ -1,9 +1,8 @@
 #!/bin/env python
 
-import unittest
 import json
-import os
 import logging
+import unittest
 logging.basicConfig(level=logging.INFO)
 
 # os.environ["WEBSITE_ENV"] = "Local"
@@ -12,10 +11,9 @@ logging.basicConfig(level=logging.INFO)
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
 from app import app
-from app import db
 from app import login_manager
 
-from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
+from test_flask_app import AutomatedTestingUser
 
 
 class TestCase(unittest.TestCase):

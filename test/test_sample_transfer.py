@@ -198,7 +198,7 @@ class TestCase(unittest.TestCase):
             result = json.loads(rv.data)
             assert result["errors"] == []
             # assert result["data"]["root_sample_id"] == sample_1_id
-            assert result["data"]["parent_sample_id"] == src_sample_id
+            assert result["data"]["parents"][0] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
             assert result["data"]["order_item_id"] == woi
             # logging.warn("((((()))))) %s", result["data"])
@@ -244,7 +244,7 @@ class TestCase(unittest.TestCase):
             result = json.loads(rv.data)
             assert result["errors"] == []
             # assert result["data"]["root_sample_id"] == sample_1_id
-            assert result["data"]["parent_sample_id"] == src_sample_id
+            assert result["data"]["parents"][0] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
             assert result["data"]["order_item_id"] == woi
             plate_3_sample_id = result["data"]["id"]

@@ -197,7 +197,7 @@ def create_adhoc_sample_movement(db_session,
         #
 
         source_well_sample = db_session.query(Sample).\
-            join(PlateWell).\
+            join(PlateWell, Sample.well).\
             filter(Sample.plate_id == source_plate.id,
                    PlateWell.well_number == source_well_number).first()
 
@@ -244,7 +244,8 @@ def create_adhoc_sample_movement(db_session,
         logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",
                      destination_plate.external_barcode, dest_plate_type.name)
 
-        existing_plate_layout = db_session.query(Sample).join(PlateWell).\
+        existing_plate_layout = db_session.query(Sample).\
+            join(PlateWell, Sample.well).\
             filter(Sample.plate_id == destination_plate.id,
                    PlateWell.well_number == destination_well_number).first()
 
@@ -283,46 +284,6 @@ def create_adhoc_sample_movement(db_session,
                                             destination_well_number)
         db_session.flush()
 
-        #
-        # 5. Create a row representing a well in the desination plate.
-        #
-        # if in_place_transform_flag or merge_transform_flag:
-        #     destination_well_sample = existing_plate_layout
-        #     if destination_well_sample.id != destination_sample_id:
-        #         destination_well_sample.id = destination_sample_id  # TODO: is this even necessary orm-wise?
-        #     destination_well_sample.operator_id = operator.operator_id  # unfortunately this will wipe out the old operator_id
-        # else:
-        #     destination_well_sample = Sample(plate_id=destination_plate.id,
-        #                                      id=destination_sample_id,
-        #                                      well_id=destination_well_number,
-        #                                      operator_id=operator.operator_id,
-        #                                      row=source_well_sample.row,
-        #                                      column=source_well_sample.column)
-        #     db_session.add(destination_well_sample)
-
-        # print "DESTINATION PLATE WELL: %s " % (str(destination_well_sample))
-        # logging.info("DESTINATION PLATE WELL: %s ", destination_well_sample)
-        logging.info("6. Create a row representing a transform from a well in the 'source' plate to a well")
-        assert destination_sample is not None
-        # FIXME this needs to write to Sample and TransformDetail instead
-        source_to_dest_well_transform = TransformDetail(
-            transform_id=sample_transform.id,
-            source_plate_id=source_well_sample.plate_id,
-            source_well_id=source_well_sample.well.well_number,
-            source_sample_id=source_well_sample.id,
-            destination_plate_id=destination_sample.plate_id,
-            destination_well_id=destination_sample.well.well_number,
-            destination_sample_id=destination_sample.id)
-        db_session.add(source_to_dest_well_transform)
-        db_session.flush()
-
-        # import ipdb; ipdb.set_trace()
-        # aliquot = Aliquot(transform_id=sample_transform.id,
-        #                   source_well_sample_id=source_well_sample.id,
-        #                   destination_well_sample_id=destination_sample.id)
-        # db_session.add(aliquot)
-        db_session.flush()
-
         order_number += 1
 
     db_session.commit()
@@ -359,8 +320,14 @@ def sample_handler(db_session, copy_metadata, transform_type_id,
                        plate_well_code=well.well_code,
                        operator_id=current_user.operator_id)
 
+    db_session.add(new_s)
+
     if source_well_sample:
-        new_s.parent_sample_id = source_well_sample.id
+        source_to_dest_well_transform = TransformDetail(
+            parent_sample_id=source_well_sample.id,
+            child_sample_id=new_s.id
+        )
+        db_session.add(source_to_dest_well_transform)
 
     if transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
                              constants.TRANS_TYPE_QPIX_TO_384_WELL):
@@ -370,7 +337,7 @@ def sample_handler(db_session, copy_metadata, transform_type_id,
         # this from the A/B rebatching metadata somehow (@sucheta!)
         new_s.cloning_process_id = 'CLO_564c1af300bc150fa632c63d'
 
-    db_session.add(new_s)
+    db_session.flush()
     return new_s
 
 
@@ -422,7 +389,8 @@ def quick_copy(session, orig_obj):
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
                      "external_barcode", "name", "description",
-                     "primer_pk", "vector_id", "cloning_process_id",
+                     "work_order_id", "synthesis_run_pk", "cluster_num",
+                     "primer_pk", "cloning_process_id",
                      "mol_type", "is_circular", "is_clonal",
                      "is_assembly", "is_external", "external_id",
                      "host_cell_pk", "growth_medium", "i5_sequence_id",
