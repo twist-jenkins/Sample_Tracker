@@ -29,9 +29,9 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
 
             var whichTab = Constants.STANDARD_TEMPLATE;
 
-            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFORM_TYPE) {
                 whichTab = Constants.FILE_UPLOAD;
-            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
+            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFORM_TYPE) {
                 whichTab = Constants.HAMILTON_OPERATION;
             }
 
@@ -56,9 +56,9 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
                 }
             }
 
-            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFORM_TYPE) {
                 $scope.templateTypeSelection = Constants.FILE_UPLOAD;
-            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
+            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFORM_TYPE) {
                 $scope.templateTypeSelection = Constants.HAMILTON_OPERATION;
             } else {
                 $scope.templateTypeSelection = Constants.STANDARD_TEMPLATE;

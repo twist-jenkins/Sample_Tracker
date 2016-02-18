@@ -8,8 +8,8 @@ b, u, i, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
     margin: 0;
@@ -20,7 +20,7 @@ time, mark, audio, video {
     vertical-align: baseline;
 }
 /* HTML5 display-role reset for older browsers */
-article, aside, details, figcaption, figure, 
+article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
     display: block;
 }
@@ -227,7 +227,7 @@ body {
 
 .twst-block-header {
     margin-bottom: 0.3em;
-    color: #aaa;    
+    color: #aaa;
 }
 
 strong {
@@ -423,12 +423,12 @@ strong {
 .twst-drag-n-drop-upload-area {
     padding: 3em;
     text-align: center;
-    border: 5px dotted $twst-medium-green; 
+    border: 5px dotted $twst-medium-green;
 
     .twst-thumbs-validation-icon {
         display: block;
         margin: 0 auto;
-    }   
+    }
 }
 
 
@@ -520,7 +520,7 @@ strong {
 
     tr:first-child {
         td {
-            border-top: $twst-common-border; 
+            border-top: $twst-common-border;
         }
     }
 
@@ -612,7 +612,7 @@ strong {
 
 .twst-child-page {
     padding-top: 2em;
-    
+
     h1 {
         font-size: 2em;
         padding-bottom: 0.3em;
@@ -652,7 +652,7 @@ strong {
     z-index: 1;
 
     .twst-plate-view-header {
-        margin: 0.5em 0; 
+        margin: 0.5em 0;
         strong {
             padding-left: 2em;
 
@@ -697,13 +697,13 @@ strong {
 
         .twst-click-highlighted-well {
             fill: #F59C9C;
-        } 
+        }
 
         .twst-trashed-well {
             fill: #000 !important;
             stroke: red;
         }
-    }  
+    }
 }
 
 /* plate tooltips get appended to the body so the style cannot be sub-classed */
@@ -741,7 +741,7 @@ strong {
             }
         }
 
-        
+
     }
 }
 
@@ -905,7 +905,7 @@ strong {
 /*****************************/
 
 /**********************************/
-/*** TRANSFER PLANNER FORM ***/
+/*** TRANSFORM PLANNER FORM ***/
 /**********************************/
 
 .twst-record-step-form {
@@ -1088,7 +1088,7 @@ strong {
                         list-style-type: disc;
                     }
                 }
-                
+
             }
 
             .twst-record-step-excel-upload-summary-ok {
@@ -1124,8 +1124,8 @@ strong {
             }
         }
 
-        .twst-transform-spec-transfers-list {
-            .twst-record-step-download-transfer-plan-excel {
+        .twst-transform-spec-transforms-list {
+            .twst-record-step-download-transform-plan-excel {
                     position: absolute;
                     top: 0.5em;
                     left: 20em;
@@ -1138,7 +1138,7 @@ strong {
             }
         }
 
-        .twst-transform-spec-transfers-list-empty-msg, .twst-transform-spec-sources-empty-msg {
+        .twst-transform-spec-transforms-list-empty-msg, .twst-transform-spec-sources-empty-msg {
             margin-top: 1em;
             color: $twst-dark-red;
         }
@@ -1154,7 +1154,7 @@ strong {
             }
 
             .twst-transform-spec-sources-data-table {
-                
+
 
             }
         }
@@ -1309,7 +1309,7 @@ strong {
 }
 
 /**********************************/
-/*** END TRANSFER PLANNER FORM ***/
+/*** END TRANSFORM PLANNER FORM ***/
 /**********************************/
 
 /**********************************/
@@ -1563,7 +1563,7 @@ strong {
         margin-bottom: 1em;
     }
 
-    .twst-record-step-transfer-toggle-controls {
+    .twst-record-step-transform-toggle-controls {
         display: block;
         clear: both;
         font-size: 1.2em;
@@ -1622,7 +1622,7 @@ strong {
         .dropdown-menu {
             padding: 0;
 
-            > li { 
+            > li {
 
                 &.twst-record-step-option-group-1, &.twst-record-step-option-group-5, &.twst-record-step-option-group-9 {
                     background-color: rgba(239, 201, 239, 0.6);
@@ -1693,7 +1693,7 @@ strong {
 /******************************************************************************************************************************************************/
 
 .twst-edit-barcode-main {
-    
+
     .twst-edit-barcode-main-inputs {
         display: table;
         width: 100%;
@@ -1788,7 +1788,7 @@ strong {
 /******************************************************************************************************************************************************/
 
 .twst-view-steps-main {
-    
+
     .twst-plate-steps-rows {
         padding: 0 2em;
 
@@ -1814,7 +1814,7 @@ strong {
 /******************************************************************************************************************************************************/
 
 .twst-plate-details-main {
-    
+
     .twst-plate-details-main-inputs {
         display: table;
         width: 100%;
@@ -1898,7 +1898,7 @@ strong {
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
-/******* TRANSFER PLANS
+/******* TRANSFORM PLANS
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -2070,14 +2070,14 @@ strong {
         }
     }
 
-    .twst-create-edit-transfer-plans-main {
+    .twst-create-edit-transform-plans-main {
         @include bootstrapOverride;
     }
 
     .twst-record-step-plate-barcodes {
         display: table;
     }
-    
+
 }
 
 /******************************************************************************************************************************************************/
@@ -2102,13 +2102,13 @@ strong {
     overflow: hidden;
 
     &.twst-hamilton-wizard-thumbs-up-transparent {
-        opacity: 0; 
+        opacity: 0;
     }
 
     &.twst-hamilton-wizard-thumbs-up-medallion-rise {
         .twst-hamilton-wizard-thumbs-up-medallion-inner {
             top: 0;
-        } 
+        }
     }
 
     .twst-hamilton-wizard-thumbs-up-medallion-inner {
@@ -2206,7 +2206,7 @@ strong {
             position: relative;
             top: 0.4em;
         }
-        
+
         .twst-hamilton-step-direction-heading {
             display: block;
             padding: 0.5em 0 0 0.5em;
@@ -2486,7 +2486,7 @@ strong {
 
         .twst-hamilton-wizard-deck-contents {
             position: relative;
-            height: 22em; 
+            height: 22em;
             margin: 0 auto 2em auto;
             z-index: 2;
 
@@ -2612,11 +2612,11 @@ strong {
                 }
 
                 &:first-child {
-                    border-right: $twst-common-border;   
+                    border-right: $twst-common-border;
                 }
 
                 &:last-child {
-                    border: $twst-common-border;   
+                    border: $twst-common-border;
                 }
 
                 &.twst-hamilton-wizard-carrier-active-contents {
@@ -2755,7 +2755,7 @@ strong {
                 }
 
                 .twst-hamilton-wizard-carrier-scan-label {
-                    
+
                 }
 
                 .twst-hamilton-wizard-carrier-scanned-label {
@@ -3133,7 +3133,7 @@ strong {
     }
 
     .twst-trash-samples-by-transform-spec-main {
-    
+
         .twst-trash-samples-by-transform-spec-controls {
 
             h2 {
@@ -3158,7 +3158,7 @@ strong {
                 display: table;
                 width: 70%;
                 margin-top: 1em;
-            
+
                 .twst-trash-samples-spec-plate-list-sources, .twst-trash-samples-spec-plate-list-destinations {
                     display: table-cell;
                     width: 50%;
@@ -3241,5 +3241,5 @@ strong {
                 }
             }
         }
-    } 
+    }
 }

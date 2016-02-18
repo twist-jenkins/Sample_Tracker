@@ -19,8 +19,8 @@ from app.models import create_destination_plate
 from app.dbmodels import NGS_BARCODE_PLATE  # , NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
-from twistdb.sampletrack import (Sample, Plate, PlateWell, Transfer,
-                                 PlateType, TransferDetail)
+from twistdb.sampletrack import (Sample, Plate, PlateWell, Transform,
+                                 PlateType, TransformDetail)
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
 
@@ -34,19 +34,19 @@ def error_response(status_code, message):
     return response
 
 #
-# If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
+# If the user uploaded a spreadsheet with each row representing a well-to-well transform, this is where we
 # process that spreadsheet data.
 #
 
 
-def create_step_record_adhoc(transfer_type_id,
-                             transfer_template_id,
+def create_step_record_adhoc(transform_type_id,
+                             transform_template_id,
                              wells):
 
     with scoped_session(db.engine) as db_session:
         result = create_adhoc_sample_movement(db_session,
-                                              transfer_type_id,
-                                              transfer_template_id,
+                                              transform_type_id,
+                                              transform_template_id,
                                               wells)
         if result["success"]:
             return jsonify({
@@ -57,23 +57,23 @@ def create_step_record_adhoc(transfer_type_id,
 
 
 def create_adhoc_sample_movement(db_session,
-                                 transfer_type_id,
-                                 transfer_template_id, wells,
+                                 transform_type_id,
+                                 transform_template_id, wells,
                                  transform_spec_id=None):
     #
-    # FIRST. Create a "sample_transfer" row representing this row's transfer.
+    # FIRST. Create a "sample_transform" row representing this row's transform.
     #
     operator = g.user
-    sample_transfer = Transfer(transfer_type_id=transfer_type_id,
-                               transform_spec_id=transform_spec_id,
-                               operator_id=operator.operator_id)
-    db_session.add(sample_transfer)
+    sample_transform = Transform(transform_type_id=transform_type_id,
+                                 transform_spec_id=transform_spec_id,
+                                 operator_id=operator.operator_id)
+    db_session.add(sample_transform)
     db_session.flush()
 
     destination_plates_by_barcode = {}
 
     #
-    # NEXT: Now, do the transfer for each source-plate-well to each destination-plate-well...
+    # NEXT: Now, do the transform for each source-plate-well to each destination-plate-well...
     #
     order_number = 1
 
@@ -94,7 +94,7 @@ def create_adhoc_sample_movement(db_session,
             source_plate = db_session.query(Plate).\
                 filter(Plate.external_barcode == source_plate_barcode).one()
         except:
-            logging.warn(" %s encountered error creating sample transfer. "
+            logging.warn(" %s encountered error creating sample transform. "
                          "There is no source plate with the barcode: [%s]",
                          g.user.first_and_last_name, source_plate_barcode)
             return {
@@ -115,7 +115,7 @@ def create_adhoc_sample_movement(db_session,
             get(destination_plate_type)
         if not dest_plate_type:
             logging.info(" %s encountered error creating sample "
-                         "transfer. There are no sample plates with "
+                         "transform. There are no sample plates with "
                          "the type: [%s]",
                          g.user.first_and_last_name,
                          destination_plate_type)
@@ -126,7 +126,7 @@ def create_adhoc_sample_movement(db_session,
 
         #
         # 3. Obtain (or create if we haven't yet added a row for it in the database) the row for this well-to-well
-        # transfer's destination plate.
+        # transform's destination plate.
         # - It may be new, in which case we create a new plate orm object.
         # - We may have created it on a previous loop iteration.
         # - It may already exist in the database, if in_place_transform.
@@ -146,7 +146,7 @@ def create_adhoc_sample_movement(db_session,
                     destination_plate = db_session.query(Plate).\
                         filter(Plate.external_barcode == destination_plate_barcode).one()
                 except:
-                    logging.warn(" %s encountered error creating sample transfer. "
+                    logging.warn(" %s encountered error creating sample transform. "
                                  "There is no destination plate with the barcode: [%s]",
                                  g.user.first_and_last_name, destination_plate_barcode)
                     return {
@@ -158,7 +158,7 @@ def create_adhoc_sample_movement(db_session,
             elif in_place_transform_flag:
                 # BUGFIX 11/17/2015: for in-place transforms,
                 # don't create a new plate!
-                # TODO: clarify same-same transfer destination plate.
+                # TODO: clarify same-same transform destination plate.
                 destination_plate = source_plate
 
             else:
@@ -170,11 +170,11 @@ def create_adhoc_sample_movement(db_session,
                         destination_plate_barcode,
                         dest_plate_type.type_id,
                         "Unknown location",  # FIXME find a better default for this
-                        transfer_template_id)
+                        transform_template_id)
                     db_session.flush()
                 except IndexError:
                     err_msg = ("Encountered error creating sample "
-                               "transfer. Could not create destination plate: [%s]"
+                               "transform. Could not create destination plate: [%s]"
                                )
                     logging.info(err_msg, destination_plate_barcode)
                     return {
@@ -277,7 +277,7 @@ def create_adhoc_sample_movement(db_session,
         copy_metadata = in_place_transform_flag or merge_transform_flag
         destination_sample = sample_handler(db_session,
                                             copy_metadata,
-                                            transfer_type_id,
+                                            transform_type_id,
                                             source_well_sample,
                                             destination_plates_by_barcode[destination_plate_barcode],
                                             destination_well_number)
@@ -302,21 +302,22 @@ def create_adhoc_sample_movement(db_session,
 
         # print "DESTINATION PLATE WELL: %s " % (str(destination_well_sample))
         # logging.info("DESTINATION PLATE WELL: %s ", destination_well_sample)
-        logging.info("6. Create a row representing a transfer from a well in the 'source' plate to a well")
+        logging.info("6. Create a row representing a transform from a well in the 'source' plate to a well")
         assert destination_sample is not None
-        source_to_dest_well_transfer = TransferDetail(
-            transfer_id=sample_transfer.id,
+        # FIXME this needs to write to Sample and TransformDetail instead
+        source_to_dest_well_transform = TransformDetail(
+            transform_id=sample_transform.id,
             source_plate_id=source_well_sample.plate_id,
             source_well_id=source_well_sample.well.well_number,
             source_sample_id=source_well_sample.id,
             destination_plate_id=destination_sample.plate_id,
             destination_well_id=destination_sample.well.well_number,
             destination_sample_id=destination_sample.id)
-        db_session.add(source_to_dest_well_transfer)
+        db_session.add(source_to_dest_well_transform)
         db_session.flush()
 
         # import ipdb; ipdb.set_trace()
-        # aliquot = Aliquot(transfer_id=sample_transfer.id,
+        # aliquot = Aliquot(transform_id=sample_transform.id,
         #                   source_well_sample_id=source_well_sample.id,
         #                   destination_well_sample_id=destination_sample.id)
         # db_session.add(aliquot)
@@ -331,7 +332,7 @@ def create_adhoc_sample_movement(db_session,
     }
 
 
-def sample_handler(db_session, copy_metadata, transfer_type_id,
+def sample_handler(db_session, copy_metadata, transform_type_id,
                    source_well_sample, destination_plate,
                    destination_well_id):
 
@@ -361,8 +362,8 @@ def sample_handler(db_session, copy_metadata, transfer_type_id,
     if source_well_sample:
         new_s.parent_sample_id = source_well_sample.id
 
-    if transfer_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
-                            constants.TRANS_TYPE_QPIX_TO_384_WELL):
+    if transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
+                             constants.TRANS_TYPE_QPIX_TO_384_WELL):
         # We just cloned this so it's clonal
         new_s.is_clonal = True
         # FIXME hardcoding this for Warp2 for now - should derive
@@ -428,4 +429,3 @@ def quick_copy(session, orig_obj):
                      "i7_sequence_id"):
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
-

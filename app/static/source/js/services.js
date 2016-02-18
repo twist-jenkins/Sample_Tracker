@@ -11,14 +11,14 @@ app = angular.module('twist.app')
             PLATE_SOURCE: 'source'
             ,PLATE_DESTINATION: 'destination'
             ,STEP_TYPE_DROPDOWN_LABEL: 'Select a Step'
-            ,USER_SPECIFIED_TRANSFER_TYPE: 'user_specified'
+            ,USER_SPECIFIED_TRANSFORM_TYPE: 'user_specified'
             ,STANDARD_TEMPLATE: 'standard_template'
             ,FILE_UPLOAD: 'file_upload'
             ,TRANSFORM_SPEC_TYPE_PLATE_PLANNING: 'PLATE_PLANNING'
             ,TRANSFORM_SPEC_TYPE_PLATE_STEP: 'plate_step'
             ,SOURCE_TYPE_PLATE: 'plate'
             ,HAMILTON_OPERATION: 'hamilton'
-            ,HAMILTON_TRANSFER_TYPE: 'hamilton'
+            ,HAMILTON_TRANSFORM_TYPE: 'hamilton'
             ,HAMILTON_CARRIER_BARCODE_PREFIX: 'CARR'
             ,HAMILTON_CARRIER_POSITION_BARCODE_PREFIX: 'CARP'
             ,HAMILTON_PLATE_BARCODE_PREFIX: 'PLT'
@@ -110,8 +110,8 @@ app = angular.module('twist.app')
     function (ApiRequestObj, $http) {
 
         return {
-            getSampleTransferTypes: function () {
-                var userReq = ApiRequestObj.getGet('sample-transfer-types');
+            getSampleTransformTypes: function () {
+                var userReq = ApiRequestObj.getGet('sample-transform-types');
                 return $http(userReq);
             }
             ,getBarcodes: function () {
@@ -135,8 +135,8 @@ app = angular.module('twist.app')
                 return $http(updatePlateReq);
             }
             ,getPlateSteps: function () {
-                var transfersReq = ApiRequestObj.getGet('sample-transfers');
-                return $http(transfersReq);
+                var transformsReq = ApiRequestObj.getGet('sample-transforms');
+                return $http(transformsReq);
             }
             ,getPlateDetails: function (barcode, format) {
                 var plateDetailsReq = ApiRequestObj.getGet('plate-barcodes/' + barcode + (format ? '/' + format : ''));
@@ -200,7 +200,7 @@ app = angular.module('twist.app')
             }
             ,previewTransformation: function(sources, destinations, details ) {
                 // kieran
-                var preview = ApiRequestObj.getPost('transfer-preview');
+                var preview = ApiRequestObj.getPost('transform-preview');
                 preview.data = {
                     sources: sources,
                     destinations: destinations,
@@ -356,7 +356,7 @@ app = angular.module('twist.app')
     }]
 )
 
-.factory('TransformBuilder', ['Api', 'Maps', 'Constants', 
+.factory('TransformBuilder', ['Api', 'Maps', 'Constants',
     function (Api, Maps, Constants) {
 
         var TransformSpec = function () {
@@ -398,7 +398,7 @@ app = angular.module('twist.app')
                     }
 
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
-                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
+                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transform_template_id >= 25 && base.details.transform_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
                             // kieran
                             Api.previewTransformation( base.sources, base.destinations, base.details )
@@ -433,7 +433,7 @@ app = angular.module('twist.app')
                                 }).error(function(data) {
                                     console.log('Error retrieving transform preview.');
                                 });
-                        
+
                         } else {
                             base.clearOperationsList();
                             if (toggleUpdating) {
@@ -444,11 +444,11 @@ app = angular.module('twist.app')
                         // "rebatching for transformation"
 
                         if (base.sourcesReady) {
-                            
-                            var templateId = base.details.transfer_template_id;
+
+                            var templateId = base.details.transform_template_id;
 
                             switch (templateId) {
-                                /*** 
+                                /***
                                 * moved to backend
 
                                 case 25:
@@ -490,7 +490,7 @@ app = angular.module('twist.app')
                                     console.log(destinationQuadrants);
 
                                     // use the 4-to-1 combine map to write the quadrants to 384 well plates
-                                    var theMap = Maps.transferTemplates[18];
+                                    var theMap = Maps.transformTemplates[18];
 
                                     // configure the ultimate destination plates - 384 wells
                                     for (group in destinationQuadrants) {
@@ -537,7 +537,7 @@ app = angular.module('twist.app')
                                                 if (base.destinations[plateIndex].loaded || base.destinations[plateIndex].updating) {
                                                     //do nothing - this destination was already entered
                                                 } else {
-                                                    dest.details.id = base.destinations[plateIndex].details.id; 
+                                                    dest.details.id = base.destinations[plateIndex].details.id;
                                                     base.destinations[plateIndex] = dest;
                                                     base.addDestination(plateIndex);
                                                 }
@@ -545,12 +545,12 @@ app = angular.module('twist.app')
                                                 base.destinations[plateIndex] = dest;
                                                 base.addDestination(plateIndex);
                                             }
-                                            
+
                                         }
-                                    } 
+                                    }
 
                                     if (base.destinationsReady) {
-                                        
+
                                         var operations = [];
 
                                         var destPlateIndex = 0;
@@ -679,7 +679,7 @@ app = angular.module('twist.app')
                     header = 'Plate Barcode';
                     header+= base.sources.length > 1 ? 's' :'';
                     if (base.destinations.length) {
-                        header = 'Source ' + header; 
+                        header = 'Source ' + header;
                     }
                 } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                     header = 'Source(s)'
@@ -744,14 +744,14 @@ app = angular.module('twist.app')
 
             base.setTransformSpecDetails = function (typeObj) {
                 base.details = typeObj;
-                base.details['transfer_type_id'] = typeObj.id;
-                base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
-                if (base.details.transfer_template_id == 25 || 
-                    base.details.transfer_template_id == 26 || 
-                    base.details.transfer_template_id == 27 || 
-                    base.details.transfer_template_id == 28 || 
-                    base.details.transfer_template_id == 29 || 
-                    base.details.transfer_template_id == 30) {
+                base.details['transform_type_id'] = typeObj.id;
+                base.setTransformMap(Maps.transformTemplates[base.details.transform_template_id]);
+                if (base.details.transform_template_id == 25 ||
+                    base.details.transform_template_id == 26 ||
+                    base.details.transform_template_id == 27 ||
+                    base.details.transform_template_id == 28 ||
+                    base.details.transform_template_id == 29 ||
+                    base.details.transform_template_id == 30) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
@@ -773,10 +773,10 @@ app = angular.module('twist.app')
                     base.addRequestedDataItems(requestedData);
                 }
 
-                base.transferFromFile(false);
+                base.transformFromFile(false);
             }
 
-            base.setTransferMap = function (map) {
+            base.setTransformMap = function (map) {
                 base.map = angular.copy(map);
                 base.updateInputs();
             };
@@ -825,7 +825,7 @@ app = angular.module('twist.app')
 
             base.removePlateInput = function (which, plateIndex) {
                 base.map[which].plateCount--;
-                
+
                 var newSources = [];
                 var plates = base[which + 's'];
                 for (var i=0; i<plates.length; i++) {
@@ -860,7 +860,7 @@ app = angular.module('twist.app')
                     }
 
                 }
-                return true;    
+                return true;
             }
 
             base.addSource = function (sourceIndex) {
@@ -874,7 +874,7 @@ app = angular.module('twist.app')
                 var onError = function (sourceItem, msg) {
                     base.notReady('source');
                     sourceItem.loaded = false;
-                    sourceItem.transferList = null;
+                    sourceItem.transformList = null;
                     sourceItem.error = msg;
                     sourceItem.updating = false;
                     ready();
@@ -892,7 +892,7 @@ app = angular.module('twist.app')
                 plateDetailsFetcher(barcode).success(function (data) {
                     if (data.success) {
                         if (base.map.source.create) {
-                            //then the source plate will be created in this step and should not exist - this success is actually an error  
+                            //then the source plate will be created in this step and should not exist - this success is actually an error
                             onError(sourceItem, 'Error: An plate with barcocde <strong>#' + barcode + '</strong> already exists.');
                         } else {
 
@@ -910,7 +910,7 @@ app = angular.module('twist.app')
                                     base.sourcesReady = true;
                                 } else {
                                     return;
-                                } 
+                                }
                                 base.updateOperationsList();
                             }
                             ready();
@@ -918,7 +918,7 @@ app = angular.module('twist.app')
                         sourceItem.updating = false;
                     } else {
                         onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
-                    }  
+                    }
                 }).error(function (data) {
                     // if this transform expects source plates to be created in this step, then they won't already exist
                     // and this is an expected error
@@ -944,7 +944,7 @@ app = angular.module('twist.app')
                         return false;
                     }
                 }
-                return true;    
+                return true;
             }
 
             base.addDestination = function (destIndex) {
@@ -991,7 +991,7 @@ app = angular.module('twist.app')
                             base.destinationsReady = true;
                             base.updateOperationsList();
                         }
-                        ready(); 
+                        ready();
                     }).error(function (data) {
                         onError(destItem, 'The server returned an error while checking information about the destination plate.');
                     });
@@ -1006,10 +1006,10 @@ app = angular.module('twist.app')
                 base.autoUpdateSpec = !planFromFile;
             }
 
-            base.transferFromFile = function (engaged, resultData) {
+            base.transformFromFile = function (engaged, resultData) {
                 base.setPlanFromFile(engaged);
                 if (engaged) {
-                    base.operations = resultData.transferJSON;
+                    base.operations = resultData.transformJSON;
                     if (resultData.stats.sources.length) {
                         base.sources = [];
                         for (var i=0; i<resultData.stats.sources.length;i++) {
@@ -1017,7 +1017,7 @@ app = angular.module('twist.app')
                             source.details.id = resultData.stats.sources[i];
                             base.sources.push(source);
                             base.addSource(base.sources.length - 1);
-                        } 
+                        }
                     }
 
                     if (resultData.stats.destinations.length) {
@@ -1088,7 +1088,7 @@ app = angular.module('twist.app')
                 }
 
                 var wb = new Workbook();
-                wb.SheetNames.push('Twist Transfer Plan');
+                wb.SheetNames.push('Twist Transform Plan');
 
                 var ws = {};
                 writeHeaderRow();
@@ -1114,7 +1114,7 @@ app = angular.module('twist.app')
                 ];
                 ws['!cols'] = wscols;
 
-                wb.Sheets['Twist Transfer Plan'] = ws;
+                wb.Sheets['Twist Transform Plan'] = ws;
                 var wbout = XLSX.write(wb, {bookType:'xlsx', bookSST:true, type: 'binary'});
 
                 var s2ab = function (s) {
@@ -1123,7 +1123,7 @@ app = angular.module('twist.app')
                     for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
                     return buf;
                 }
-                
+
                 /*  saveAs is a global method supported natively or with FileSaver */
                 saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
             };
@@ -1180,12 +1180,12 @@ app = angular.module('twist.app')
                                 dest.details.title = plate.details.title;
                                 dest.details.id = plate.details.id;
                                 dest.first_in_group = plate.first_in_group;
-                                
+
                                 if (base.destinations[j]) {
                                     if (base.destinations[j].loaded || base.destinations[j].updating) {
                                         //do nothing - this destination was already entered
                                     } else {
-                                        dest.details.id = base.destinations[j].details.id; 
+                                        dest.details.id = base.destinations[j].details.id;
                                         base.destinations[j] = dest;
                                         base.addDestination(j);
                                     }
@@ -1207,12 +1207,12 @@ app = angular.module('twist.app')
 
                                 source.details.type = plate.type;
                                 source.details.id = plate.details ? plate.details.id : null;
-                                
+
                                 if (base.sources[j]) {
                                     if (base.sources[j].loaded || base.sources[j].updating) {
                                         //do nothing - this destination was already entered
                                     } else {
-                                        source.details.id = base.sources[j].details ? base.sources[j].details.id : null; 
+                                        source.details.id = base.sources[j].details ? base.sources[j].details.id : null;
                                         base.sources[j] = dest;
                                         base.addSource(j);
                                     }
@@ -1233,13 +1233,13 @@ app = angular.module('twist.app')
                             // assemble the presented data
                             requestedDataItems.push(command);
                             break;
-                        
+
                         default :
                             console.log('Error: Unrecognized response command type = [' + command.type + ']');
                             break;
                     }
 
-                    
+
                 }
 
                 // present and request data after all other commands (such as SET_DESTINATIONS) are complete
@@ -1250,7 +1250,7 @@ app = angular.module('twist.app')
                 if (presentedDataItems.length) {
                     base.addPresentedDataItems(presentedDataItems);
                 }
-                
+
             };
 
             base.serialize = function () {
@@ -1294,7 +1294,7 @@ app = angular.module('twist.app')
                 }
 
                 /* for NGS barcoding transforms, we need to add the source plate as the destination */
-                if (base.details.transfer_template_id == 30) {
+                if (base.details.transform_template_id == 30) {
                     obj.destinations = angular.copy(base.sources);
                 }
 
@@ -1327,7 +1327,7 @@ app = angular.module('twist.app')
                         title: ''
                     }
                     break;
-                
+
                 default :
                     console.log('Error: Unrecognized kind = [' + kind + ']');
                     break;
@@ -1354,7 +1354,7 @@ app = angular.module('twist.app')
     }
 ])
 
-.factory('FileParser',['Maps', '$q', 'Api',  
+.factory('FileParser',['Maps', '$q', 'Api',
     function (Maps, $q, Api) {
 
         var getNormalRowColumnFromQPix = function (rowColumn, plateType) {
@@ -1374,12 +1374,12 @@ app = angular.module('twist.app')
             return 'ERROR: Could not map ' + rowColumn + ' to human well id.';
         };
 
-        var getTransferRowsFromFile = function (fileData, transformSpec) {
+        var getTransformRowsFromFile = function (fileData, transformSpec) {
 
             var map = transformSpec.map;
-            var transferTypeData = transformSpec.transferTypeData;
+            var transformTypeData = transformSpec.transformTypeData;
 
-            var transferJSON = [];
+            var transformJSON = [];
             var thisRow = {};
             var firstRow = true;
             var srcPlates = {};
@@ -1398,7 +1398,7 @@ app = angular.module('twist.app')
                 }
 
                 fileStats.sourceRowCounts = srcPlates;
-            
+
                 var count = 0;
                 var plates = [];
                 for (plate in srcPlates) {
@@ -1413,7 +1413,7 @@ app = angular.module('twist.app')
                 }
 
                 if (validateStats && !transformSpec.map.source.variablePlateCount && count != transformSpec.map.source.plateCount) {
-                    fileErrors.push('This transfer expects ' + transformSpec.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
+                    fileErrors.push('This transform expects ' + transformSpec.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
                 }
                 count = 0;
                 plates = [];
@@ -1429,14 +1429,14 @@ app = angular.module('twist.app')
                 }
 
                 if (validateStats && !transformSpec.map.destination.variablePlateCount && count != transformSpec.map.destination.plateCount) {
-                    if (transformSpec.details.transfer_template_id == 2) {
+                    if (transformSpec.details.transform_template_id == 2) {
                         if (count != 1) {
-                            fileErrors.push('This transfer expects the same source and destination plate but found ' + count + ' destination plates in the file');
+                            fileErrors.push('This transform expects the same source and destination plate but found ' + count + ' destination plates in the file');
                         }
                     } else {
-                        fileErrors.push('This transfer expects ' + transformSpec.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
+                        fileErrors.push('This transform expects ' + transformSpec.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
                     }
-                    
+
                 }
 
                 fileStats.sourcePlateRows = srcPlates;
@@ -1444,25 +1444,25 @@ app = angular.module('twist.app')
 
             if ( fileData.substring(0, 8) == 'Run Date') {
                 /* this is a csv log file from qpix */
-                var transferTypeId = transformSpec.details.transfer_template_id;
-                if (transferTypeId != 16 && transferTypeId != 21 && transferTypeId != 22) {
-                    fileErrors.push('This transfer type (' + transferTypeId + ') does not expect a log file as input.');
+                var transformTypeId = transformSpec.details.transform_template_id;
+                if (transformTypeId != 16 && transformTypeId != 21 && transformTypeId != 22) {
+                    fileErrors.push('This transform type (' + transformTypeId + ') does not expect a log file as input.');
                     var result = {
                         errors: fileErrors
                         ,stats: fileStats
-                        ,transferJSON: transferJSON
+                        ,transformJSON: transformJSON
                     };
                     asyncReturn.reject(result);
                 } else {
                     var fileData = fileData.split('\r');
 
-                    var transferStartIndex = fileData.length;
+                    var transformStartIndex = fileData.length;
 
                     for (var i=0; i<fileData.length; i++) {
                         var row = fileData[i].trim();
                         if (row.trim() == 'Source Barcode,Source Region,Feature Position X,Feature Position Y,Destination Barcode,Destination Well') {
-                            transferStartIndex = i + 1;
-                        } else if (i >= transferStartIndex && row != '') {
+                            transformStartIndex = i + 1;
+                        } else if (i >= transformStartIndex && row != '') {
                             var rowBits = row.split(',');
 
                             var sourceBarcode = rowBits[0];
@@ -1485,14 +1485,14 @@ app = angular.module('twist.app')
                                 ,destination_well_name: destinationWellName
                                 ,destination_plate_well_count: destinationPlateTypeInfo.wellCount
                             }
-                            transferJSON.push(thisRow);
+                            transformJSON.push(thisRow);
                         }
                     }
 
                     setStats(false, true);
-                    
+
                 }
-                
+
             } else {
                 /* then we assume this is an excel file */
                 var workbook = XLSX.read(fileData, {type: 'binary'});
@@ -1518,7 +1518,7 @@ app = angular.module('twist.app')
                             break;
                         case 'B':
                             thisRow.source_well_name = val;
-                            break;    
+                            break;
                         case 'C':
                             thisRow.destination_plate_barcode = val;
                             if (!firstRow) {
@@ -1538,7 +1538,7 @@ app = angular.module('twist.app')
                     }
                     if (col == 'E') {
                         if (!firstRow) {
-                            transferJSON.push(thisRow);
+                            transformJSON.push(thisRow);
                         }
                         firstRow = false;
                         thisRow = {};
@@ -1553,7 +1553,7 @@ app = angular.module('twist.app')
                 var result = {
                     errors: fileErrors
                     ,stats: fileStats
-                    ,transferJSON: transferJSON
+                    ,transformJSON: transformJSON
                 };
 
                 asyncReturn.resolve(result);
@@ -1564,11 +1564,11 @@ app = angular.module('twist.app')
                 if (thisError) {
                     fileErrors.push(thisError);
                 } else {
-                    for (var i=0; i< transferJSON.length; i++) {
-                        var row = transferJSON[i];
+                    for (var i=0; i< transformJSON.length; i++) {
+                        var row = transformJSON[i];
                         var sourceBarcode = row.source_plate_barcode;
                         var sourcePlateWellData = respData.plateWellData[sourceBarcode];
-                        transferJSON[i]['source_sample_id'] = sourcePlateWellData.wells[row.source_well_name] ? sourcePlateWellData.wells[row.source_well_name]['sample_id'] : 'empty';
+                        transformJSON[i]['source_sample_id'] = sourcePlateWellData.wells[row.source_well_name] ? sourcePlateWellData.wells[row.source_well_name]['sample_id'] : 'empty';
                     }
                 }
 
@@ -1592,7 +1592,7 @@ app = angular.module('twist.app')
 
                     if (sourceData.success) {
 
-                        if (transformSpec.details.transfer_template_id != 2) {
+                        if (transformSpec.details.transform_template_id != 2) {
                             /* this is NOT a same-plate step, check that the destination plate is not already in the db */
                             Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
                                 if (!data.success) {
@@ -1609,7 +1609,7 @@ app = angular.module('twist.app')
                             /* this is a same-plate step so the dest plate will already exist - no need to check for it */
                             decorateResponse(sourceData);
                         }
-                        
+
                     } else {
                         decorateResponse(sourceData, sourceData.errorMessage);
                     }
@@ -1617,11 +1617,11 @@ app = angular.module('twist.app')
                     decorateResponse(data, 'Sample information could not be retrieved for these source plates.');
                 });
             }
-                
+
             return asyncReturn.promise;
         }
         return {
-            getTransferRowsFromFile: getTransferRowsFromFile
+            getTransformRowsFromFile: getTransformRowsFromFile
         };
     }]
 )

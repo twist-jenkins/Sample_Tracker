@@ -32,7 +32,7 @@ from well_mappings import (get_col_and_row_for_well_id_48,
 from logging_wrapper import get_logger
 logger = get_logger(__name__)
 
-MAX_SAMPLE_TRANSFER_QUERY_ROWS = 100000
+MAX_SAMPLE_TRANSFORM_QUERY_ROWS = 100000
 
 SAMPLE_VIEW_ATTRS = (
     'sample_type',
@@ -184,7 +184,7 @@ def update_plate_barcode():
     return jsonify(response)
 
 
-def sample_transforms(limit=MAX_SAMPLE_TRANSFER_QUERY_ROWS):
+def sample_transforms(limit=MAX_SAMPLE_TRANSFORM_QUERY_ROWS):
 
     qry = (
         db.session.query(
