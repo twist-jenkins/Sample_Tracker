@@ -19,6 +19,9 @@ angular.module('twist.app').controller('transformSpecViewSpecController', ['$sco
         if (!$scope.selectedSpec) {
             $scope.specLoading = true;
             Api.getTransformSpec(specId).success(function (data) {
+
+                console.log(data.data);
+
                 $scope.specLoading = false;
                 var thisSpec = data.data;
                 thisSpec.plan = thisSpec.data_json;
