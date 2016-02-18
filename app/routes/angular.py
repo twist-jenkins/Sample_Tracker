@@ -570,15 +570,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                  .filter(Plate.id == plate_id)
                  ).one()
 
-        # pandas stuff
-        records = plate.current_well_contents.to_dict('records')
-        wells = []
-        for rec in records:
-            well = plate.get_well_by_code(rec["plate_well_code"])
-            wells.append({"well_id": well.well_number,
-                          "column_and_row": well.well_label,
-                          "sample_id": rec["id"]
-                          })
+        wells = [{"well_id": sample.well.well_number,
+                  "column_and_row": sample.well.well_label,
+                  "sample_id": sample.id
+                  }
+                  for sample in plate.current_well_contents]
 
         """TODO: figure out a more orm-like version of this query
         so the caller can iterate the result samples easily.  Might
@@ -590,11 +586,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         #        .all())
         #
         # for sample, well in rows:
-        #    wells.append({
-        #        "well_id": well.well_number,
-        #        "column_and_row": well.well_label,
-        #        "sample_id": sample.id
-        #    })
+        #    wells.append()
 
     else:
         raise NotImplementedError
