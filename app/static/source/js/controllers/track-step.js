@@ -116,7 +116,8 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
                 $scope.transformSpec.details.transfer_template_id == 29 ||
                 $scope.transformSpec.details.transfer_template_id == 30 ||
                 $scope.transformSpec.details.transfer_template_id == 31 ||
-                $scope.transformSpec.details.transfer_template_id == 35) {
+                $scope.transformSpec.details.transfer_template_id == 35 ||
+                $scope.transformSpec.details.transfer_type_id == 84) {
                 executeNow = false;
             }
 

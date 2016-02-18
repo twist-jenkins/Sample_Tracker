@@ -274,7 +274,8 @@ def preview():
                 constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
                 constants.TRANS_TYPE_NGS_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
-                constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
+                constants.TRANS_TYPE_PCR_PRIMER_HITPICK,
+                constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER):
                 # these are same to same transfers or data uploads
 
             if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
@@ -488,6 +489,70 @@ def preview():
                         }
 
                     })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+
+                rows = [{}]
+
+
+                # TO DO   based on source barcode, present the target sequencer
+
+                #DEV Only remove when code exists to set sequencer
+                sequencer = "MiSeq";
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "Target Sequencer",
+                        "data": "<strong>" + sequencer + "</strong>"
+                    }
+                })
+
+                reqData = {
+                    "sequencerBarcode": None,
+                    "inputCartridgeBarcode": None,
+                    "flowCellBarcode": None
+                }
+
+                if "requestedData" in details:
+                    data = details["requestedData"]
+                    if "sequencerBarcode" in data:
+                        reqData["sequencerBarcode"] = data["sequencerBarcode"]
+                    if "inputCartridgeBarcode" in data:
+                        reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
+                    if "flowCellBarcode" in data:
+                        reqData["flowCellBarcode"] = data["flowCellBarcode"]
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Sequencer Barcode",
+                        "forProperty": "sequencerBarcode",
+                        #"value": reqData["sequencerBarcode"]
+                    }
+                })
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Input Cartridge Barcode",
+                        "forProperty": "inputCartridgeBarcode",
+                        #"value": reqData["inputCartridgeBarcode"]
+                    }
+                })
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Flowcell Barcode",
+                        "forProperty": "flowCellBarcode",
+                        #"value": reqData["flowCellBarcode"]
+                    }
+                })
 
             else:
                 rows = []
