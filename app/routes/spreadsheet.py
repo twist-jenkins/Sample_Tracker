@@ -78,6 +78,11 @@ def create_adhoc_sample_movement(db_session,
     order_number = 1
 
     for ix, well in enumerate(wells):
+
+        # handle empty objects -- {}
+        if not well:
+            continue
+
         source_plate_barcode = well["source_plate_barcode"]
         source_well_number = well['source_well_number']
         destination_plate_barcode = well["destination_plate_barcode"]

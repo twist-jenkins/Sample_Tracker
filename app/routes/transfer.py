@@ -315,7 +315,7 @@ def preview():
             if transfer_type_id == constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
                 bulk_barcode = request.json['sources'][0]['details']['id']
                 custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
-
+                rows = [{}]
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
@@ -328,7 +328,7 @@ def preview():
             elif transfer_type_id ==  constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
                 bulk_barcode = request.json['sources'][0]['details']['id']
                 mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
-
+                rows = [{}]
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {
@@ -443,12 +443,14 @@ def preview():
                 if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
                     masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
                     dataType = "text"
+
                 else:
                     # then all the plates had barcodes
                     # now we need to decide which master mixes are needed
                     # content like "Master Mix A x2\n\rMaster Mix B x3"
                     bulk_barcode = request.json['sources'][0]['details']['id']
                     masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
+
                 responseCommands.append({
                     "type": "PRESENT_DATA",
                     "item": {

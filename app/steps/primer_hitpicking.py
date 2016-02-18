@@ -8,6 +8,7 @@ import datetime
 import math
 import csv
 from cStringIO import StringIO
+from app import constants
 
 
 SEARCH_LAST_N_DAYS = 2
@@ -164,14 +165,17 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
 
 def bulk_barcode_to_pca_plates( db, bulk_barcode ):
     from twistdb.sampletrack import Plate, TransformSpec
+    from app.constants import TRANS_TYPE_PCA_PREPLANNING as PCA_PREPLANNING
 
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
     dest_barcodes = {}
     for spec in db.query(TransformSpec) \
                   .filter(TransformSpec.date_created >= N_days_ago):
         srcs = spec.data_json['sources']
+
         if ( len(srcs) == 1
-             and srcs[0]['details']['id'] == bulk_barcode ):
+             and srcs[0]['details']['id'] == bulk_barcode
+             and spec.data_json['details']['transfer_type_id'] == PCA_PREPLANNING ):
 
             # we must maintain ordering
             for i, op in enumerate( spec.data_json['operations'] ):
@@ -194,6 +198,7 @@ def primer_src_creation( db, bulk_barcode ):
     # hacky, but we currently just look @ all transforms from the last few days
     pca_plates = bulk_barcode_to_pca_plates( db, bulk_barcode )
     buff = StringIO()
+    exists = False
     c = csv.writer(buff)
     c.writerow( ('Primer','Destination_Row') )
     for plate in pca_plates:
@@ -204,9 +209,13 @@ def primer_src_creation( db, bulk_barcode ):
         for primer_name, lines in rows_for_custom_primers( primer_counts ):
             for wells in lines:
                 for well in wells:
+                    exists = True
                     c.writerow( (primer_name, well) )
-    buff.seek(0)
-    return buff.read()
+    if exists:
+        buff.seek(0)
+        return buff.read()
+    else:
+        return '[No custom primers required]'
 
 
 def pca_plates_to_master_mixes( pca_plates ):
@@ -244,21 +253,25 @@ def munge_echo_worklist( db, bulk_barcode, temp_plate_barcodes ):
     """
     from twistdb.sampletrack import Plate, TransformSpec
     from app.miseq import echo_csv
+    from app.constants import TRANS_TYPE_PCA_PREPLANNING as PCA_PREPLANNING
 
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
-    specs = []
+    specjs = []
     for spec in db.query(TransformSpec) \
-                  .filter(TransformSpec.date_created >= N_days_ago):
+                  .filter( TransformSpec.date_created >= N_days_ago ):
         srcs = spec.data_json['sources']
+
         if ( len(srcs) == 1
-             and srcs[0]['details']['id'] == bulk_barcode ):
-            specs.append( spec.data_json )
+             and srcs[0]['details']['id'] == bulk_barcode
+             and spec.data_json['details']['transfer_type_id'] == PCA_PREPLANNING ):
+
+            specjs.append( spec.data_json )
 
     # there should only be one:
-    [spec] = specs
+    [specj] = specjs
 
     dest_barcodes = {}
-    for i, op in enumerate( spec['operations'] ):
+    for i, op in enumerate( specj['operations'] ):
         if op['destination_plate_barcode'] not in dest_barcodes:
             dest_barcodes[ op['destination_plate_barcode'] ] = i
 
@@ -266,7 +279,7 @@ def munge_echo_worklist( db, bulk_barcode, temp_plate_barcodes ):
     dest_barcodes = sorted( dest_barcodes.keys(), key=lambda s: dest_barcodes[s] )
 
     renaming = dict( zip( dest_barcodes, temp_plate_barcodes ))
-    for op in spec['operations']:
+    for op in specj['operations']:
         op['destination_plate_barcode'] = renaming[ op['destination_plate_barcode'] ]
 
-    return echo_csv( spec['operations'], XFER_VOL )
+    return echo_csv( specj['operations'], XFER_VOL )
