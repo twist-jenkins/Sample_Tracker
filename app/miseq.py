@@ -230,26 +230,27 @@ def miseq_csv_response(nps_detail_rows, fname=None):
     return response
 
 
-def sample_map_response(nps_detail_rows, fname=None):
-    """Sample Map XLSX"""
-    xlsx_out = sample_map_template(nps_detail_rows)
-    logging.info(" %s downloaded the SAMPLE MAP REPORT",
-                 current_user.first_and_last_name)
-    xlsx_out.seek(0)
-    mimt = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    response = make_response(xlsx_out.read())
-    response.mimetype = mimt
-    if fname is None:
-        datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
-        fname = "ngs_sample_map_%s.xlsx" % datestr
-    response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
-    return response
+# def sample_map_response(nps_detail_rows, fname=None):
+#     """Sample Map XLSX"""
+#     xlsx_out = sample_map_template(nps_detail_rows)
+#     logging.info(" %s downloaded the SAMPLE MAP REPORT",
+#                  current_user.first_and_last_name)
+#     xlsx_out.seek(0)
+#     mimt = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#     response = make_response(xlsx_out.read())
+#     response.mimetype = mimt
+#     if fname is None:
+#         datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+#         fname = "ngs_sample_map_%s.xlsx" % datestr
+#     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
+#     return response
 
 def echo_csv( operations, transfer_volume ):
     """
     generates string containing CSV in Echo format
     see echo_csv_for_nps()
     """
+    # FIXME shouldn't this be somewhere else if it's general echo worklist generation??
     si = StringIO.StringIO()
     cw = csv.writer(si)
 
