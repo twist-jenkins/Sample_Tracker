@@ -274,10 +274,14 @@ def preview():
                 constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
                 constants.TRANS_TYPE_NGS_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
-                constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
+                constants.TRANS_TYPE_PCR_PRIMER_HITPICK,
+                constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER):
                 # these are same to same transfers or data uploads
 
-            if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+            if transfer_type_id in (
+                constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
+                constants.TRANS_TYPE_PCA_PREPLANNING):
+            
                 src_plate_type = "SPTT_0006"
                 dest_plate_type = src_plate_type
 
@@ -488,6 +492,70 @@ def preview():
                         }
 
                     })
+
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+
+                rows = [{}]
+
+
+                # TO DO   based on source barcode, present the target sequencer
+
+                #DEV Only remove when code exists to set sequencer
+                sequencer = "MiSeq";
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "Target Sequencer",
+                        "data": "<strong>" + sequencer + "</strong>"
+                    }
+                })
+
+                reqData = {
+                    "sequencerBarcode": None,
+                    "inputCartridgeBarcode": None,
+                    "flowCellBarcode": None
+                }
+
+                if "requestedData" in details:
+                    data = details["requestedData"]
+                    if "sequencerBarcode" in data:
+                        reqData["sequencerBarcode"] = data["sequencerBarcode"]
+                    if "inputCartridgeBarcode" in data:
+                        reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
+                    if "flowCellBarcode" in data:
+                        reqData["flowCellBarcode"] = data["flowCellBarcode"]
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Sequencer Barcode",
+                        "forProperty": "sequencerBarcode",
+                        #"value": reqData["sequencerBarcode"]
+                    }
+                })
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Input Cartridge Barcode",
+                        "forProperty": "inputCartridgeBarcode",
+                        #"value": reqData["inputCartridgeBarcode"]
+                    }
+                })
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Flowcell Barcode",
+                        "forProperty": "flowCellBarcode",
+                        #"value": reqData["flowCellBarcode"]
+                    }
+                })
 
             else:
                 rows = []
@@ -715,6 +783,15 @@ def preview():
 
                 rows = filter_transform(transfer_template_id, request.json['sources'],
                                         request.json['destinations'])
+
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_PCA_PCR_PURIFICATION:
+                    '''
+                        Kieran or Charlie please handle this.
+                        Sources and destinations should be processed pairwise (paired by index)
+                        in a same-to-same-playout transfer from source to destination
+                    '''
+                    rows = [{}]
 
             else:
                 if transfer_template_id in (
@@ -1961,6 +2038,20 @@ TRANSFER_MAP = loads("""
                     ,"destination": {
                         "plateCount": 4
                         ,"variablePlateCount": true
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                }
+                ,"42": {  // keyed to transfer_template_id in the database
+                    "description": "PCA/PCR Purification"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 2
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 2
+                        ,"variablePlateCount": false
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }

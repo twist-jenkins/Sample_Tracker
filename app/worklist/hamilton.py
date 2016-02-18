@@ -16,7 +16,7 @@ def post_pca_normalization_worklist(db, plate_id):
 
     worklist = WORKLIST_HEADERS + plate_id + ",\n"
     try:
-        plate = db.query(Plate).filter(Plate.id == plate_id).one()
+        plate = db.query(Plate).filter(Plate.external_barcode == plate_id).one()
     except:
         return {
             "success": False,
