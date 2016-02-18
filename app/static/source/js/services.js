@@ -390,8 +390,12 @@ app = angular.module('twist.app')
                 return new TransformSpecSource(Constants.SOURCE_TYPE_PLATE);
             };
 
-            base.updateOperationsList = function () {
+            base.updateOperationsList = function (toggleUpdating) {
                 if (base.autoUpdateSpec) {
+
+                    if (toggleUpdating) {
+                        updating();
+                    }
 
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
                         (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
@@ -422,12 +426,19 @@ app = angular.module('twist.app')
                                     } else {
                                         base.error_message = result.message;
                                     }
+
+                                    if (toggleUpdating) {
+                                        ready();
+                                    }
                                 }).error(function(data) {
                                     console.log('Error retrieving transform preview.');
                                 });
                         
                         } else {
                             base.clearOperationsList();
+                            if (toggleUpdating) {
+                                ready();
+                            }
                         }
                     } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                         // "rebatching for transformation"

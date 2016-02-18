@@ -278,7 +278,10 @@ def preview():
                 constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER):
                 # these are same to same transfers or data uploads
 
-            if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+            if transfer_type_id in (
+                constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
+                constants.TRANS_TYPE_PCA_PREPLANNING):
+            
                 src_plate_type = "SPTT_0006"
                 dest_plate_type = src_plate_type
 
