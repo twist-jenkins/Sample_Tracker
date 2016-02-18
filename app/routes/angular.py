@@ -423,9 +423,9 @@ def create_step_record():
 
 
 def create_well_transform(db_session, operator, sample_transform, order_number,
-                         source_plate, source_plate_well,
-                         destination_plate, destination_plate_well_id,
-                         row, column):
+                          source_plate, source_plate_well,
+                          destination_plate, destination_plate_well_id,
+                          row, column):
     """helper function for create_step_record"""
 
     try:
@@ -498,12 +498,10 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         errmsg = "There is no plate with the barcode: [%s]"
         return error_response(404, errmsg % sample_plate_barcode)
 
-    plate_id = sample_plate.id
-
-    if fmt == 'csv':
-        # FIXME: frontend should call different methods for Download Excel
-        # (csv) vs. check existence (name check)
-        basic_data_only = False
+    # if fmt == 'csv':
+    #     # FIXME: frontend should call different methods for Download Excel
+    #     # (csv) vs. check existence (name check)
+    #     basic_data_only = False
 
     if not sample_plate.plate_type:
         response = {
@@ -512,120 +510,51 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         }
         return jsonify(response)
 
-    # number_clusters = sample_plate.plate_type.layout.feature_count
-    #
-    # well_to_col_and_row_mapping_fn = {
-    #     48: get_col_and_row_for_well_id_48,
-    #    96: get_col_and_row_for_well_id_96,
-    #    384: get_col_and_row_for_well_id_384
-    # }.get(number_clusters, lambda well_id: "missing map")
-
-    # FIXME query for the underlying samples
-    rows = db.session.query(Plate, TransformDetail).filter(
-        TransformDetail.destination_plate_id == plate_id,
-        Plate.id == TransformDetail.source_plate_id).all()
-
-    parent_to_this_task_name = None
-    seen = []
-    parent_plates = []
-    for parent_plate, details in rows:
-        if parent_plate.id not in seen:
-            seen.append(parent_plate.id)
-            parent_plates.append({
-                "externalBarcode": parent_plate.external_barcode,
-                "dateCreated": str(parent_plate.date_created),
-                "dateCreatedFormatted":
-                    sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
-            })
-            parent_to_this_task_name = details.sample_transform.transform_type.name
-
-    # FIXME join in TransformDetail should only look at samples?
-    rows = (
-        db.session.query(
-            Plate,
-            Transform,
-            TransformDetail
-        )
-        .filter(TransformDetail.source_plate_id == plate_id)
-        .filter(Plate.id ==
-                TransformDetail.destination_plate_id)
-        .filter(TransformDetail.transform_id == Transform.id)
-        .options(subqueryload(Transform.transform_type))
-        # .options(subqueryload(Transform.operator))
-        .all()
-    )
-
-    this_to_child_task_name = None
-    seen = []
-    child_plates = []
-    for child_plate, transform, details in rows:
-        if child_plate.id not in seen:
-            seen.append(child_plate.id)
-            child_plates.append({
-                "externalBarcode": child_plate.external_barcode,
-                "dateCreated": str(child_plate.date_created),
-                "dateCreatedFormatted":
-                    sample_plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
-            })
-            this_to_child_task_name = details.sample_transform.transform_type.name
+    # ORIGINAL QUERY
+    # rows = db.session.query(Plate, TransformDetail).filter(
+    #     TransformDetail.destination_plate_id == plate_id,
+    #     Plate.id == TransformDetail.source_plate_id).all()
 
     wells = []
+    child_plates = []
+    parent_plates = []
+    seen_parents = []
+    seen_children = []
+    this_to_child_task_name = None
+    parent_to_this_task_name = None
+    for s in sample_plate.current_well_contents:
+        wells.append({"well_id": s.well.well_number,
+                      "column_and_row": s.well.well_label,
+                      "sample_id": s.id
+                      })
 
-    if basic_data_only:
+        for parent in s.parents:
+            # Look at all the parent plates for this sample
+            if parent.plate.id not in seen_parents:
+                seen_parents.append(parent.plate.id)
+                parent_plates.append({
+                    "externalBarcode": parent.plate.external_barcode,
+                    "dateCreated": str(parent.plate.date_created),
+                    "dateCreatedFormatted":
+                        parent.plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+                })
 
-        plate = (db.session.query(Plate)
-                 .filter(Plate.id == plate_id)
-                 ).one()
+                if s.transform:
+                    parent_to_this_task_name = s.transform.transform_type.name
 
-        # pandas stuff
-        records = plate.current_well_contents.to_dict('records')
-        wells = []
-        for rec in records:
-            well = plate.get_well_by_code(rec["plate_well_code"])
-            wells.append({"well_id": well.well_number,
-                          "column_and_row": well.well_label,
-                          "sample_id": rec["id"]
-                          })
+        for child in s.children:
+            # Look at all the child plates for this sample
+            if child.plate.id not in seen_children:
+                seen_children.append(child.plate.id)
+                child_plates.append({
+                    "externalBarcode": child.plate.external_barcode,
+                    "dateCreated": str(child.plate.date_created),
+                    "dateCreatedFormatted":
+                        child.plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+                })
 
-        """TODO: figure out a more orm-like version of this query
-        so the caller can iterate the result samples easily.  Might
-        need the method to be on Sample instead of Plate"""
-        # rows = (db.session.query(Sample, PlateWell)
-        #        .filter(Sample.plate_id == plate_id,
-        #                Sample.plate_well_code == PlateWell.pk)
-        #        .order_by(Sample.plate_well_code)
-        #        .all())
-        #
-        # for sample, well in rows:
-        #    wells.append({
-        #        "well_id": well.well_number,
-        #        "column_and_row": well.well_label,
-        #        "sample_id": sample.id
-        #    })
-
-    else:
-        raise NotImplementedError
-
-        # db.session.query(
-        #         WellSample,
-        #         SampleView
-        #     ).filter(WellSample.sample_id == SampleView.c.sample_id)
-        # )
-        # qry = dbq.filter_by(plate_id=plate_id).order_by(WellSample.well_id)
-        # rows = qry.all()
-        #
-        # for well, ga in rows:
-        #     well_dict = {
-        #         "well_id": well.well_id,
-        #         "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-        #         "sample_id": well.sample_id
-        #     }
-        #     for attr_name in SAMPLE_VIEW_ATTRS:
-        #         val = getattr(ga, attr_name, None)
-        #         if val is not None:
-        #             val = str(val)
-        #         well_dict[attr_name] = val
-        #     wells.append(well_dict)
+                if child.transform:
+                    this_to_child_task_name = child.transform.transform_type.name
 
     report = {
         "success": True,
