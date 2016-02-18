@@ -3,7 +3,7 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
 
         $scope.Constants = Constants;
 
-        $scope.selectTransferTemplateType = function (which, skipGo) {
+        $scope.selectTransformTemplateType = function (which, skipGo) {
             if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep()) {
                 return false;
             } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
@@ -16,7 +16,7 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
             }
         };
 
-        $scope.setTransferTemplate = function (which) {
+        $scope.setTransformTemplate = function (which) {
             $scope.templateTypeSelection = which;
         };
 
@@ -28,7 +28,7 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
         }
 
         var selectedTranferTypeId;
-        $scope.initTransferTypes.success(function (data) {
+        scope.initTransformTypes.success(function (data) {
             selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
             $scope.setSelectedOption(selectedTranferTypeId);
         });
