@@ -574,7 +574,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                   "column_and_row": sample.well.well_label,
                   "sample_id": sample.id
                   }
-                 for sample in plate.current_well_contents]
+                 for sample in plate.current_well_contents(db.session)]
 
     else:
         raise NotImplementedError
