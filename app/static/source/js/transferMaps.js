@@ -1770,6 +1770,20 @@ app = angular.module('twist.app')
                         ,plateTitles: ['Destination&nbsp;A:&nbsp;', 'Destination&nbsp;B:&nbsp;']
                     }
                 }
+                ,43: {  // keyed to transfer_template_id in the database
+                    description: 'Source Plate Creation'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                        ,create: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
 
             }
             ,rowColumnMaps: {

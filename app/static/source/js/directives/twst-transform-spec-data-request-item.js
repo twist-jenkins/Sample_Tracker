@@ -86,7 +86,7 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                     } else {
                                         $scope.item.validData = 0;
                                     }
-                                    $scope.transformSpec.updateOperationsList();
+                                    $scope.transformSpec.updateOperationsList(true);
                                 }
                             }
 
@@ -139,7 +139,7 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                     $scope.item.validData = true;
                                 }
 
-                                $scope.transformSpec.updateOperationsList();
+                                $scope.transformSpec.updateOperationsList(true);
                             }
                         }
 
@@ -199,7 +199,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                     $scope.validate = function (errorOnEmpty) {
                         $scope.item.validData = true;
-                        $timeout($scope.transformSpec.updateOperationsList, 0);
+                        $timeout(function () {
+                            $scope.transformSpec.updateOperationsList(true)
+                        }, 0);
                     }
 
                 } else {
