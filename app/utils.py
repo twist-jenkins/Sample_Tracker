@@ -78,6 +78,29 @@ def write_delimited(filename, data, delimiter='\t'):
             f.write(delimiter.join('{!s}'.format(i) for i in row) + '\n')
 
 
+def json_api_success(data, status_code, headers=None):
+    json_api_response = {"data": data,
+                         "errors": [],
+                         "meta": {}
+                         }
+    if headers is None:
+        return json_api_response, status_code
+    else:
+        return json_api_response, status_code, headers
+
+
+# TODO:
+# def json_api_error(err_list, status_code, headers=None):
+#     json_api_response = {"data": {},
+#                          "errors": err_list,
+#                          "meta": {}
+#                          }
+#     if headers is None:
+#         return json_api_response, status_code
+#     else:
+#         return json_api_response, status_code, headers
+
+
 cached_session_factory = None
 
 

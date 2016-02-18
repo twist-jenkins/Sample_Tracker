@@ -262,8 +262,6 @@ def create_step_record():
     data = request.json
     operator = g.user
 
-    raise NotImplementedError
-
     transfer_type_id = data["sampleTransferTypeId"]
     transfer_template_id = data["sampleTransferTemplateId"]
 
@@ -274,6 +272,8 @@ def create_step_record():
                                         transfer_map)
 
     else:
+        raise NotImplementedError("transferMap is required")
+
         source_barcodes = data["sourcePlates"]
         destination_barcodes = data["destinationPlates"]
 
@@ -570,28 +570,11 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                  .filter(Plate.id == plate_id)
                  ).one()
 
-        # pandas stuff
-        records = plate.current_well_contents.to_dict('records')
-        wells = []
-        for rec in records:
-            well = plate.get_well_by_code(rec["plate_well_code"])
-            wells.append({"well_id": well.well_number,
-                          "column_and_row": well.well_label,
-                          "sample_id": rec["id"]
-                          })
-
-        # rows = (db.session.query(Sample, PlateWell)
-        #        .filter(Sample.plate_id == plate_id,
-        #                Sample.plate_well_code == PlateWell.pk)
-        #        .order_by(Sample.plate_well_code)
-        #        .all())
-        #
-        # for sample, well in rows:
-        #    wells.append({
-        #        "well_id": well.well_number,
-        #        "column_and_row": well.well_label,
-        #        "sample_id": sample.id
-        #    })
+        wells = [{"well_id": sample.well.well_number,
+                  "column_and_row": sample.well.well_label,
+                  "sample_id": sample.id
+                  }
+                 for sample in plate.current_well_contents]
 
     else:
         raise NotImplementedError

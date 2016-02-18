@@ -11,15 +11,13 @@ from flask_login import current_user
 
 from marshmallow import Schema, fields
 
-from app import app
+from app import api
 from app import db, constants, miseq
 from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
 from twistdb.sampletrack import Sample, TransformSpec, Transfer, Plate
-
-api = flask_restful.Api(app)
 
 logger = logging.getLogger()
 
@@ -253,6 +251,7 @@ class TransformSpecListResource(flask_restful.Resource):
                     .all()
                     )
             result = spec_schema.dump(rows, many=True).data
+            reduce_data_size(result)
             #    sess.expunge(rows)
             # print "^" * 10000
             # print str(result)
@@ -262,6 +261,14 @@ class TransformSpecListResource(flask_restful.Resource):
     def post(self):
         """creates new spec returning a nice geeky Location header"""
         return TransformSpecResource.create_or_replace('POST')
+
+
+def reduce_data_size(spec_list):
+    for spec in spec_list:
+        if "data_json" in spec:
+            data = spec["data_json"]
+            if "operations" in data:
+                data["operations"] = []
 
 
 def modify_before_insert(db_session, spec):

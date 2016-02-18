@@ -38,6 +38,7 @@ app = angular.module('twist.app')
             ,DATA_TYPE_ARRAY: 'array'
             ,DATA_TYPE_BARCODE: 'barcode'
             ,DATA_TYPE_RADIO: 'radio'
+            ,DATA_TYPE_CSV: 'csv'
             ,BARCODE_PREFIX_PLATE: 'PLT'
         };
     }]
@@ -389,8 +390,12 @@ app = angular.module('twist.app')
                 return new TransformSpecSource(Constants.SOURCE_TYPE_PLATE);
             };
 
-            base.updateOperationsList = function () {
+            base.updateOperationsList = function (toggleUpdating) {
                 if (base.autoUpdateSpec) {
+
+                    if (toggleUpdating) {
+                        updating();
+                    }
 
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
                         (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
@@ -421,12 +426,19 @@ app = angular.module('twist.app')
                                     } else {
                                         base.error_message = result.message;
                                     }
+
+                                    if (toggleUpdating) {
+                                        ready();
+                                    }
                                 }).error(function(data) {
                                     console.log('Error retrieving transform preview.');
                                 });
                         
                         } else {
                             base.clearOperationsList();
+                            if (toggleUpdating) {
+                                ready();
+                            }
                         }
                     } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                         // "rebatching for transformation"
@@ -677,8 +689,40 @@ app = angular.module('twist.app')
             };
 
             base.addRequestedDataItems = function (items) {
-                base.requestedDataItems = items;
+                //don't replace data requests we've already gotten/displayed
+                for (var i=0; i< items.length ;i++) {
+                    var newItem = items[i];
+                    var already = false;
+                    for (var j=0; j < base.requestedDataItems.length; j++) {
+                        currentItem = base.requestedDataItems[j];
+                        if (currentItem.item.forProperty == newItem.item.forProperty) {
+                            already = true;
+                        }
+                    }
+
+                    if (!already) {
+                        base.requestedDataItems.push(angular.copy(newItem));
+                    }
+                }
+
                 base.validateRequestedData = true;
+            }
+
+            base.addPresentedDataItems = function (items) {
+                for (var i=0; i< items.length ;i++) {
+                    var newItem = items[i];
+                    var already = false;
+                    for (var j=0; j < base.presentedDataItems.length; j++) {
+                        currentItem = base.presentedDataItems[j];
+                        if (currentItem.item.forProperty == newItem.item.forProperty) {
+                            already = true;
+                        }
+                    }
+
+                    if (!already) {
+                        base.presentedDataItems.push(angular.copy(newItem));
+                    }
+                }
             }
 
             base.getDestinationsHeader = function () {
@@ -1204,7 +1248,7 @@ app = angular.module('twist.app')
                 }
 
                 if (presentedDataItems.length) {
-                    base.presentedDataItems = presentedDataItems;
+                    base.addPresentedDataItems(presentedDataItems);
                 }
                 
             };
