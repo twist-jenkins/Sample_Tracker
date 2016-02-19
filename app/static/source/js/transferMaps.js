@@ -1102,7 +1102,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': { // Jupiter 2
+                        'iHAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1144,7 +1144,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         },
-                        'HAM01': { // Galactica
+                        'iHAM01': { // Galactica
                             'main': {
                                 carriers: [
                                     {
@@ -1250,7 +1250,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': { // Jupiter 2
+                        'iHAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1371,7 +1371,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': { // Jupiter 2
+                        'iHAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1389,7 +1389,7 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 22
                                         ,index: 2
-                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
+                                        ,type: '96_TUBE'
                                         ,plates: [
                                             {plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 1, dataIndex: 1}
                                             ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 2, dataIndex: 2}
@@ -1492,7 +1492,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         },
-                        'HAM01': { // Galactica
+                        'iHAM01': { // Galactica
                             'main': {
                                 carriers: [
                                     {
@@ -1510,7 +1510,7 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 39
                                         ,index: 2
-                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
+                                        ,type: '96_TUBE'
                                         ,plates: [
                                             {plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 1, dataIndex: 1}
                                             ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 2, dataIndex: 2}
@@ -1688,13 +1688,13 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM0Y': { // Millenium Falcon
+                        'iHAM0Y': { // Millenium Falcon
                             'main': {
                                 carriers: [
                                     {
                                         startTrack: 25
                                         ,index: 1
-                                        ,type: '384wPCR'
+                                        ,type: 'PCR_L5_384'
                                         ,plates: [
                                             {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
                                             ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
@@ -1706,7 +1706,7 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 31
                                         ,index: 2
-                                        ,type: '384wPCR'
+                                        ,type: 'PCR_L5_384'
                                         ,plates: [
                                             {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
                                             ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
@@ -1733,7 +1733,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM0Y': { // Millenium Falcon
+                        'iHAM0Y': { // Millenium Falcon
                             'main': {
                                 carriers: [
                                     {
@@ -2397,11 +2397,11 @@ app = angular.module('twist.app')
                     label: 'Five 96-well plates'
                     ,trackWidth: 6
                 }
-                ,'384wPCR': {
+                ,'PCR_L5_384': {
                     label: 'Fice 384-well plates'
                     ,trackWidth: 6
                 }
-                ,'SHIPPING_TUBES_CARRIER': {
+                ,'96_TUBE': {
                     label: 'Carrier to hold shipping tubes plate (this is a virtual carrier - ie, the tubes rack sits right on the deck)'
                     ,trackWidth: 9
                 }

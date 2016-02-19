@@ -2321,7 +2321,7 @@ ul.twst-spec-requested-items {
             .twst-hamilton-wizard-deck-visualizer {
                 .twst-hamilton-wizard-deck-contents {
                     .twst-hamilton-wizard-carrier {
-                        &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                        &.twst-hamilton-wizard-carrier-96_TUBE {
                             .twst-hamilton-wizard-carrier-inner {
                                 top: -5em;
                                 left: -12em;
@@ -2336,7 +2336,7 @@ ul.twst-spec-requested-items {
             .twst-hamilton-wizard-deck-visualizer {
                 .twst-hamilton-wizard-deck-contents {
                     .twst-hamilton-wizard-carrier {
-                        &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                        &.twst-hamilton-wizard-carrier-96_TUBE {
                             .twst-hamilton-wizard-carrier-inner {
                                 top: -5em;
                                 left: -2.5em;
@@ -2366,7 +2366,7 @@ ul.twst-spec-requested-items {
                         }
                     }
 
-                    &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                    &.twst-hamilton-wizard-carrier-96_TUBE {
                         .twst-hamilton-wizard-carrier-inner {
                             font-size: 2.5em;
                             background: #fff;
@@ -2646,7 +2646,7 @@ ul.twst-spec-requested-items {
                 cursor: pointer;
                 background: rgba(255, 0, 0, 0.1);
 
-                &.twst-hamilton-wizard-carrier-L5AC, &.twst-hamilton-wizard-carrier-384wPCR {
+                &.twst-hamilton-wizard-carrier-L5AC, &.twst-hamilton-wizard-carrier-PCR_L5_384 {
                     height: 22em;
 
                     .twst-hamilton-wizard-carrier-inner {
@@ -2654,7 +2654,7 @@ ul.twst-spec-requested-items {
                     }
                 }
 
-                &.twst-hamilton-wizard-carrier-SHIPPING_TUBES_CARRIER {
+                &.twst-hamilton-wizard-carrier-96_TUBE {
                     height: 8.5em;
                     top: 10em;
 
