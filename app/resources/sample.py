@@ -35,6 +35,10 @@ class SampleSchema(Schema):
     vector_id = fields.Str()
     cloning_process_id = fields.Str()
     date_created = fields.Date()
+    conc_ng_ul = fields.Float()
+    external_id = fields.Str()
+    i5_sequence_id = fields.Str()
+    i7_sequence_id = fields.Str()
 
     def get_parent_ids(self, obj):
         """Convert list of parent Sample instances to parent sample IDs."""
