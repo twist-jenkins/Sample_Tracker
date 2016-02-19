@@ -373,7 +373,7 @@ angular.module('twist.app').controller('hamiltonWizardController', ['$scope', '$
                         barcodeFinishedTimeout = $timeout(function () {
                             $scope.confirmingPlate = true;
                             if ($scope.highlightedPlate.plateFor == Constants.PLATE_SOURCE) {
-                                Api.confirmPlateReadyForTransform($scope.highlightedPlate.barcode, $scope.transformSpec.details.transfer_type_id).success(function (data) {
+                                Api.confirmPlateReadyForTransform($scope.highlightedPlate.barcode, $scope.transformSpec.details.transform_type_id).success(function (data) {
                                     $scope.confirmingPlate = false;
                                     $scope.clearScannedItemErrorMessage();
                                     $scope.flashHamiltonThumbsUp();

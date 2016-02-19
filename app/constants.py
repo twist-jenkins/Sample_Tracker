@@ -1,7 +1,7 @@
 """Constants used in the Sample Tracker application."""
 
 # ------------------------------
-# Transfer template IDs
+# Transform template IDs
 # ------------------------------
 TRANS_TPL_SAME_TO_SAME = 1
 TRANS_TPL_SAME_PLATE = 2
@@ -17,7 +17,7 @@ TRANS_TPL_NGS_POOLING = 31
 TRANS_TPL_PCA_PCR_PURIFICATION = 42
 
 # ------------------------------
-# Transfer type IDs
+# Transform type IDs
 # ------------------------------
 TRANS_TYPE_CLO_INSERT_HITPICK = 2
 

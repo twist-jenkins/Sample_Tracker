@@ -100,14 +100,12 @@ def test_primer_hitpicking_src():
                            cycling_conditions=99, master_mix='fake master mix')
         db.add(bg)
         db.commit()
-        
 
     cluster = db.query(ClusterDesign).get('CLD_kieran')
     if cluster is None:
         cluster = ClusterDesign(id='CLD_kieran', design=design, batching_group=bg )
         db.add(cluster)
         db.commit()
-
 
     for ch in "4321":
         ext_bc = 'PLT_kierantest' + ch
@@ -121,10 +119,10 @@ def test_primer_hitpicking_src():
     print '@@ plate:', plate.id
 
     try:
-        sample = db.query(Sample).filter(Sample.order_item == g ).one()
+        sample = db.query(Sample).filter(Sample.order_item == g).one()
     except NoResultFound:
-        sample = Sample( order_item=g, name=desc, description=desc, operator_id=operator_id,
-                         plate=plate, well=plate.get_well_by_number(1) )
+        sample = Sample(order_item=g, name=desc, description=desc, operator_id=operator_id,
+                        plate=plate, well=plate.get_well_by_number(1) )
         db.add(sample)
         db.commit()
 

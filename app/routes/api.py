@@ -13,20 +13,16 @@ import os
 import csv
 import time
 import json
-import xlrd  # FIXME if this isn't actually used, we should remove
+import xlrd
 import StringIO
 
-from math import floor
 from flask import g, make_response, request, Response, jsonify
-
-from sqlalchemy import and_
 
 from werkzeug import secure_filename
 
 from app import app, db
 
-from twistdb import create_unique_id
-from twistdb.sampletrack import Plate, Transfer, TransferDetail, Sample
+from twistdb.sampletrack import Plate, Transform, TransformDetail, Sample
 
 from well_mappings import (get_col_and_row_for_well_id_48,
                            get_col_and_row_for_well_id_96,
@@ -49,6 +45,10 @@ def dragndrop():
     The route to which the web page posts the spreadsheet
     detailing the well-to-well movements of samples.
     """
+
+    # FIXME is this method still relevant?
+    raise DeprecationWarning
+
     file = request.files['file']
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
@@ -66,15 +66,6 @@ def dragndrop():
         task_items = []
         while curr_row < num_rows:
             curr_row += 1
-
-            """
-            source_col_and_row = worksheet.cell_value(curr_row,2)
-            if source_col_and_row
-
-            destination_col_and_row = worksheet.cell_value(curr_row,6)
-            """
-
-
             task_item = {
                 "source_plate_barcode":worksheet.cell_value(curr_row,0),
                 #"source_well_id":worksheet.cell_value(curr_row,1),
@@ -93,11 +84,9 @@ def dragndrop():
             "task_items":task_items
         }
 
-        logger.info(" %s uploaded a spreadsheet into the sample transfer form" % (g.user.first_and_last_name))
-
+        logger.info(" %s uploaded a spreadsheet into the sample transform form" % (g.user.first_and_last_name))
 
     return jsonify(response)
-
 
 
 def sample_plate_external_barcode(plate_id):
@@ -134,7 +123,7 @@ def sample_plate_external_barcode(plate_id):
         sample_plate_with_this_barcode = db.session.query(Plate).filter_by(external_barcode=external_barcode).first()
         if sample_plate_with_this_barcode and sample_plate_with_this_barcode.plate_id != sample_plate.id:
             logger.info(" %s encountered an error trying to update the plate with id [%s]. The barcode [%s] is already assigned to the plate with id: [%s]" %
-                (g.user.first_and_last_name,plate_id,external_barcode,sample_plate_with_this_barcode.plate_id))
+                        (g.user.first_and_last_name,plate_id,external_barcode,sample_plate_with_this_barcode.plate_id))
             response = {
                 "success": False,
                 "errorMessage": "The barcode [%s] is already assigned to the plate with id: [%s]" % (external_barcode,sample_plate_with_this_barcode.plate_id)
@@ -164,18 +153,18 @@ def sample_report(sample_id, format):
         }
         return jsonify(response)
 
-    rows = db.session.query(Transfer, TransferDetail, Sample, Plate).filter(
-        TransferDetail.source_sample_id == sample_id,
-        Transfer.id == TransferDetail.transfer_id,
-        Sample.plate_id == TransferDetail.source_plate_id,
-        Sample.sample_id == TransferDetail.source_sample_id,
-        Sample.well_id == TransferDetail.source_well_id,
-        Plate.id == TransferDetail.source_plate_id).all()
+    rows = db.session.query(Transform, TransformDetail, Sample, Plate).filter(
+        TransformDetail.source_sample_id == sample_id,
+        Transform.id == TransformDetail.transform_id,
+        Sample.plate_id == TransformDetail.source_plate_id,
+        Sample.sample_id == TransformDetail.source_sample_id,
+        Sample.well_id == TransformDetail.source_well_id,
+        Plate.id == TransformDetail.source_plate_id).all()
 
     first_row = None
 
     if len(rows) > 0:
-        transfer, transfer_detail, well, plate = rows[0]
+        transform, transform_detail, well, plate = rows[0]
 
         number_clusters = plate.plate_type.layout.feature_count
 
@@ -194,16 +183,16 @@ def sample_report(sample_id, format):
             "task": ""
         }
 
-    rows = db.session.query(Transfer, TransferDetail, Sample, Plate).filter(
-        TransferDetail.destination_sample_id == sample_id,
-        Transfer.id == TransferDetail.transfer_id,
-        Sample.plate_id == TransferDetail.destination_plate_id,
-        Sample.id == TransferDetail.destination_sample_id,
-        Sample.well.well_number == TransferDetail.destination_well_id,
-        Plate.id == TransferDetail.destination_plate_id).all()
+    rows = db.session.query(Transform, TransformDetail, Sample, Plate).filter(
+        TransformDetail.destination_sample_id == sample_id,
+        Transform.id == TransformDetail.transform_id,
+        Sample.plate_id == TransformDetail.destination_plate_id,
+        Sample.id == TransformDetail.destination_sample_id,
+        Sample.well.well_number == TransformDetail.destination_well_id,
+        Plate.id == TransformDetail.destination_plate_id).all()
 
     report = []
-    for transfer, transfer_detail, well, plate in rows:
+    for transform, transform_detail, well, plate in rows:
 
         number_clusters = plate.plate_type.layout.feature_count
 
@@ -219,7 +208,7 @@ def sample_report(sample_id, format):
             "destination_plate_barcode": plate.external_barcode,
             "well_id": well.well_id,
             "column_and_row": well_to_col_and_row_mapping_fn(well.well_id),
-            "task": transfer.transfer_type.name
+            "task": transform.transform_type.name
         }
         report.append(row)
 
@@ -275,11 +264,11 @@ def plate_report(sample_plate_barcode, format):
     raise DeprecationWarning
 
 
-def create_sample_movement_from_spreadsheet_data(operator, transfer_type_id,
+def create_sample_movement_from_spreadsheet_data(operator, transform_type_id,
                                                  wells):
     """
     If the user uploaded a spreadsheet with each row representing a
-    well-to-well transfer, this is where we process that spreadsheet data.
+    well-to-well transform, this is where we process that spreadsheet data.
     """
     raise DeprecationWarning
 
@@ -324,31 +313,30 @@ def get_samples_list():
 
 
 def create_sample_movement():
-    """This creates a new "sample movement" or "sample transfer."""
+    """This creates a new "sample movement" or "sample transform."""
     raise DeprecationWarning
 
     data = request.json
 
     operator = g.user
-    transfer_type_id = data["sampleTransferTypeId"]
+    transform_type_id = data["sampleTransformTypeId"]
 
-    if "sampleTransferTemplateId" in data:
-        transfer_template_id = data["sampleTransferTemplateId"]
+    if "sampleTransformTemplateId" in data:
+        transform_template_id = data["sampleTransformTemplateId"]
     else:
-        transfer_template_id = 1
+        transform_template_id = 1
 
     wells = data.get("wells",None)
 
     #
-    # If the user uploaded a spreadsheet with each row representing a well-to-well transfer, this is where we
+    # If the user uploaded a spreadsheet with each row representing a well-to-well transform, this is where we
     # process that spreadsheet data.
     #
     if wells:
-        response = create_sample_movement_from_spreadsheet_data(operator,transfer_type_id,wells)
+        response = create_sample_movement_from_spreadsheet_data(operator,transform_type_id,wells)
 
         if response["success"]:
             logger.info(" %s created a new sample movement using spreadsheet data." % (g.user.first_and_last_name))
-
 
     #
     # If the user simply entered a "source plate" barcode and a "destination plate" barcode, we assume all wells in
@@ -358,16 +346,12 @@ def create_sample_movement():
 
         source_barcodes = [data["sourceBarcodeId"]]
         destination_barcodes = [data["destinationBarcodeId"]]
+        # FIXME this must never be used b/c that method doesn't exist locally? So confused.
+        raise DeprecationWarning
+        response = create_plate_sample_movement(operator,transform_type_id,source_barcodes,
+                                                destination_barcodes,transform_template_id)
 
-        response = create_plate_sample_movement(operator,transfer_type_id,source_barcodes,destination_barcodes,transfer_template_id)
-
-        #if response["success"]:
-            #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcode))
-            #logger.info(" %s created a new sample one-plate-to-one-plate sample movement from plate [%s] to new plate [%s]." % (g.user.first_and_last_name,source_barcode,destination_barcodes))
-
-    return Response(response=json.dumps(response),
-        status=200, \
-        mimetype="application/json")
+    return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
 
 #
@@ -382,9 +366,7 @@ def get_sample_plates_list():
 
     plate_ids = [plate.id for plate in plates]
 
-    resp = Response(response=json.dumps(plate_ids),
-        status=200, \
-        mimetype="application/json")
+    resp = Response(response=json.dumps(plate_ids), status=200, mimetype="application/json")
     return(resp)
 
 #
@@ -414,7 +396,5 @@ def get_sample_plate(plate_id):
        "externalBarcode":sample_plate.external_barcode,
     }
 
-    resp = Response(response=json.dumps(sample_plate_dict),
-        status=200, \
-        mimetype="application/json")
+    resp = Response(response=json.dumps(sample_plate_dict), status=200, mimetype="application/json")
     return(resp)

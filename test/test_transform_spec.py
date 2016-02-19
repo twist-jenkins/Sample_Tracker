@@ -58,8 +58,8 @@ def example_spec_random_dest_plate():
             "destination_plate_type": "SPTT_0006",
             "destination_plate_well_count": 384}
             ],
-            "details": {"transfer_template_id": 1,
-                        "transfer_type_id": 1,
+            "details": {"transform_template_id": 1,
+                        "transform_type_id": 1,
                         "text": "Aliquoting for Quantification (384 plate)",
                         "source_plate_count": 1,
                         "id": 1,

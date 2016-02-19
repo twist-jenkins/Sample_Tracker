@@ -9,28 +9,9 @@
 #
 ######################################################################################
 
-import os, sys
+from flask import g, render_template
 
-import time
-
-import hashlib
-
-import random
-
-import xlrd
-
-import collections
-
-import json
-
-from flask import g, Flask, render_template, make_response, request, Response, redirect, url_for, abort, session, send_from_directory, jsonify
-
-from sqlalchemy import and_
-
-from app import app, db
-
-# from twistdb.sampletrack import Transfer, TransferType, TransferDetail
-from twistdb.public import Operator
+from app import db
 
 #
 # This is the "home" page, which is actually the "enter a sample movement" page.
@@ -89,4 +70,3 @@ def sample_report_page(sample_id):
 def plate_report_page(plate_barcode):
     raise DeprecationWarning
     return render_template('plate_report.html',plate_barcode=plate_barcode,current_user_first_and_last=g.user.first_and_last_name)
-
