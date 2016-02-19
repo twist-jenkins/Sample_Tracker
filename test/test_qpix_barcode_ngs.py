@@ -318,7 +318,6 @@ class TestCase(unittest.TestCase):
         print result
         assert result["success"] is True
 
-
     def test_small_ngs_barcoding_spec_golden(self):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
