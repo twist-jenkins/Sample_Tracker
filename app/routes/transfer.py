@@ -31,6 +31,30 @@ class WebError(Exception):
     """
 
 
+def to_resp(f):
+    """
+    decorator for functions converting from (rows, respCommands) tuple to a Response object
+    """
+    def f2(*args, **kwargs):
+        try:
+            rows, responseCommands = f(*args, **kwargs)
+            
+        except WebError as e:
+            return Response( response=json.dumps({'success': False,
+                                                  'message': str(e),
+                                                  'data': None}),
+                             status=200,
+                             mimetype="application/json")
+        else:
+            return Response( response=json.dumps({'success': True,
+                                                  'message': '',
+                                                  'data': rows,
+                                                  'responseCommands': responseCommands}),
+                             status=200,
+                             mimetype="application/json")
+    return f2
+
+
 def merge_transform(sources, dests):
     """
     Merge plates.
@@ -252,8 +276,53 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
     return master_mixes, rows
 
 
-def preview():
+@to_resp
+def primer_preplanning( type_id, templ_id ):
+    return [], cmds
+
+
+@to_resp
+def primer_create_src( type_id, templ_id ):
+    bulk_barcode = request.json['sources'][0]['details']['id']
+    custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
+
+    cmds = [{
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Source Plate Map",
+            "data": custom_primers,
+        }
+    }]
+    return [], cmds
+
+
+@to_resp
+def primer_master_mix( type_id, templ_id ):
+    bulk_barcode = request.json['sources'][0]['details']['id']
+    mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
+
+    cmds = [{
+        "type": "PRESENT_DATA",
+        "item": {
+            "type":  "csv",
+            "title": "PCA Master Mix",
+            "data":  mixes,
+        }
+    }]
+    return [], cmds
+
+
+@to_resp
+def thermocycle( type_id, templ_id ):
+    pass
+
+
+def preview(transfer_type_id=None, transfer_template_id =None):
     """Called by the UI to generate a draft transform spec before execution."""
+
+    print '@@ transfer_type_id=%s, transfer_template_id=%s' % (transfer_type_id, transfer_template_id)
+    
     assert request.method == 'POST'
 
     details = request.json["details"]

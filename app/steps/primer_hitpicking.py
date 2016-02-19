@@ -270,3 +270,5 @@ def munge_echo_worklist( db, bulk_barcode, temp_plate_barcodes ):
         op['destination_plate_barcode'] = renaming[ op['destination_plate_barcode'] ]
 
     return echo_csv( spec['operations'], XFER_VOL )
+
+    

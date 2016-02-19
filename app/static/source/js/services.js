@@ -200,7 +200,8 @@ app = angular.module('twist.app')
             }
             ,previewTransformation: function(sources, destinations, details ) {
                 // kieran
-                var preview = ApiRequestObj.getPost('transfer-preview');
+                var url = "transfer-preview/type-" + details.transfer_type_id + "/template-"+details.transfer_template_id;
+                var preview = ApiRequestObj.getPost(url);
                 preview.data = {
                     sources: sources,
                     destinations: destinations,

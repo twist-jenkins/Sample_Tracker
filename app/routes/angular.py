@@ -569,12 +569,12 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
         plate = (db.session.query(Plate)
                  .filter(Plate.id == plate_id)
                  ).one()
-
+        print '@@ plate.current_well_contents:', plate.current_well_contents
         wells = [{"well_id": sample.well.well_number,
                   "column_and_row": sample.well.well_label,
                   "sample_id": sample.id
                   }
-                 for sample in plate.current_well_contents(db.session)]
+        for sample in plate.current_well_contents]
 
     else:
         raise NotImplementedError
