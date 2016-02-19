@@ -1,7 +1,6 @@
 #!/bin/env python
 
 import unittest
-import json
 import os
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -29,17 +28,17 @@ class TestCase(unittest.TestCase):
 
     def disabled_test_bug_flusherror(self):
         """ needs something other than an empty db """
-        payload = {"sampleTransferTypeId":17,
-                "sampleTransferTemplateId":18,
-                "sourcePlates":["kipptest52",
-                                "kipptest53",
-                                "kipptest54",
-                                "kipptest55"],
-                "destinationPlates":["charlie7"]}
+        payload = {"sampleTransformTypeId":17,
+                   "sampleTransformTemplateId":18,
+                   "sourcePlates":["kipptest52",
+                                   "kipptest53",
+                                   "kipptest54",
+                                   "kipptest55"],
+                   "destinationPlates":["charlie7"]}
         rv = self.client.post('/api/v1/track-sample-step', data=payload)
         assert rv.status_code == 404
         """ was getting:     state_str(existing)))
-FlushError: New instance <TransferDetail at 0x112848990> with identity key (<class 'app.dbmodels.TransferDetail'>, (186, 1)) conflicts with persistent instance <TransferDetail at 0x11be20ed0>"""
+FlushError: New instance <TransformDetail at 0x112848990> with identity key (<class 'app.dbmodels.TransformDetail'>, (186, 1)) conflicts with persistent instance <TransformDetail at 0x11be20ed0>"""
 
     def disabled_test_get_samples(self):
         rv = self.client.get('/samples')

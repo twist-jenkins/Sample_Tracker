@@ -17,26 +17,11 @@ import flask_restful
 
 from webassets.loaders import PythonLoader as PythonAssetsLoader
 from twistdb.db import SQLAlchemyX
-#from flask.ext.sqlalchemy import SQLAlchemy
 
 import assets
 
-#logfile_handler = logging.FileHandler('app.log')
-
-## old papertrail setup ##
-##  rootlogger = logging.getLogger()
-##  from logging.handlers import SysLogHandler
-##  syslog = SysLogHandler(address=('logs3.papertrailapp.com', 47028))
-##  rootlogger.addHandler(syslog)
-##  formatter = logging.Formatter('%(name)s : %(levelname)s - %(message)s')
-##  #formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(##  message)s')
-##  #formatter = logging.Formatter('%(name)s : %(message)s')
-##
-##  formatter = logging.Formatter('[%(name)s : %(levelname)s] %(message)s')
-##  syslog.setFormatter(formatter)
-
 logging.basicConfig(level=logging.INFO)
-SHOW_SQLALCHEMY_ECHO_TRACE = False # True
+SHOW_SQLALCHEMY_ECHO_TRACE = False  # True
 if SHOW_SQLALCHEMY_ECHO_TRACE:
     logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -54,7 +39,7 @@ print "Using configuration environment [%s] and config object [%s]" % (env,confi
 app.config.from_object(config_object_name)
 app.config['ENV'] = env
 app.debug = True
-#app.logger.addHandler(logfile_handler)
+# app.logger.addHandler(logfile_handler)
 
 ######################################################################################
 #
@@ -70,11 +55,10 @@ print "USING DATABASE: ", app.config['SQLALCHEMY_DATABASE_URI']
 from twistdb.db import initdb
 
 # initialize database engine:
-initdb(engine_url = app.config['SQLALCHEMY_DATABASE_URI'])
+initdb(engine_url=app.config['SQLALCHEMY_DATABASE_URI'])
 
 UPLOAD_FOLDER = 'app/static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
 
 
 ######################################################################################
@@ -115,7 +99,6 @@ googlelogin = GoogleLogin(app, login_manager)
 login_manager.login_view = "login"
 
 
-
 ######################################################################################
 #
 # All "Routes" Defined here.
@@ -124,7 +107,7 @@ login_manager.login_view = "login"
 
 
 from app import routes
-from app.routes import transfer
+from app.routes import transform
 
 # ==========================
 #
@@ -135,12 +118,6 @@ from app.routes import transfer
 @app.route('/robots.txt')
 def static_from_root():
     return send_from_directory(app.static_folder, request.path[1:])
-
-
-@app.route('/download_empty_spreadsheet/<filename>')
-def download_empty_spreadsheet(filename):
-    return send_from_directory(app.static_folder, "sampleTransferSpreadsheet.xlsx")
-
 
 
 # ==========================
@@ -197,13 +174,12 @@ def home():
     return routes.home()
 """
 #
-# The list of sample transfers
+# The list of sample transforms
 #
-@app.route('/sample_transfers')
+@app.route('/sample_transforms')
 @login_required
-def sample_transfers_page():
-    return routes.sample_transfers_page()
-
+def sample_transforms_page():
+    return routes.sample_transforms_page()
 
 
 #
@@ -232,8 +208,6 @@ def sample_report_page(sample_id):
 @login_required
 def plate_report_page(plate_barcode):
     return routes.plate_report_page(plate_barcode)
-
-
 
 
 # ==========================
@@ -312,7 +286,7 @@ def plate_report(sample_plate_barcode,format):
 
 
 #
-# This creates a new "sample movement" or "sample transfer."
+# This creates a new "sample movement" or "sample transform."
 #
 @app.route('/sample_movements', methods=['POST'])
 def create_sample_movement():
@@ -343,12 +317,10 @@ def get_samples_list():
     return routes.get_samples_list()
 
 
-
-
 #######################################################################################################################################
 #######################################################################################################################################
 #######################################################################################################################################
-######## ANGULAR APP ROUTES
+# ####### ANGULAR APP ROUTES
 #######################################################################################################################################
 #######################################################################################################################################
 #######################################################################################################################################
@@ -362,7 +334,7 @@ def new_home():
 
 
 ########################################################
-#### api routes
+# ### api routes
 ########################################################
 
 #
@@ -376,9 +348,9 @@ def user_data():
 def google_login():
     return routes.google_login()
 
-@app.route('/api/v1/sample-transfer-types', methods=['GET'])
-def sample_transfer_types():
-    return routes.sample_transfer_types()
+@app.route('/api/v1/sample-transform-types', methods=['GET'])
+def sample_transform_types():
+    return routes.sample_transform_types()
 
 @app.route('/api/v1/sample-plate-barcodes', methods=['GET'])
 def sample_plate_barcodes():
@@ -400,9 +372,9 @@ def plate_info(plate_id):
 def update_barcode():
     return routes.update_plate_barcode()
 
-@app.route('/api/v1/sample-transfers', methods=['GET'])
-def sample_transfers():
-    return routes.sample_transfers()
+@app.route('/api/v1/sample-transforms', methods=['GET'])
+def sample_transforms():
+    return routes.sample_transforms()
 
 @app.route('/api/v1/plate-barcodes/<sample_plate_barcode>/<fmt>',
            methods=['GET'])
@@ -424,9 +396,9 @@ def source_plate_well_data():
 def check_plates_are_new():
     return routes.check_plates_are_new()
 
-@app.route('/api/v1/transfer-preview', methods=('POST',))
-def transfer_params():
-    return transfer.preview()
+@app.route('/api/v1/transform-preview', methods=('POST',))
+def transform_params():
+    return transform.preview()
 
 # hamilton operation routes
 
