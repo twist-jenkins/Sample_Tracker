@@ -1,7 +1,7 @@
 var api_base_url = '/api/v1/';
 var server_url = twist_api_url;
 
-angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',  
+angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
     function (Maps, $q, Api) {
 
         var getNormalRowColumnFromQPix = function (rowColumn, plateType) {
@@ -21,12 +21,12 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
             return 'ERROR: Could not map ' + rowColumn + ' to human well id.';
         };
 
-        var getTransferRowsFromFile = function (fileData, transformSpec) {
+        var getTransformRowsFromFile = function (fileData, transformSpec) {
 
             var map = transformSpec.map;
-            var transferTypeData = transformSpec.transferTypeData;
+            var transformTypeData = transformSpec.transformTypeData;
 
-            var transferJSON = [];
+            var transformJSON = [];
             var thisRow = {};
             var firstRow = true;
             var srcPlates = {};
@@ -45,7 +45,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                 }
 
                 fileStats.sourceRowCounts = srcPlates;
-            
+
                 var count = 0;
                 var plates = [];
                 for (plate in srcPlates) {
@@ -60,7 +60,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                 }
 
                 if (validateStats && !transformSpec.map.source.variablePlateCount && count != transformSpec.map.source.plateCount) {
-                    fileErrors.push('This transfer expects ' + transformSpec.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
+                    fileErrors.push('This transform expects ' + transformSpec.map.source.plateCount + ' source plate(s) but found ' + count + ' in the file');
                 }
                 count = 0;
                 plates = [];
@@ -76,14 +76,14 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                 }
 
                 if (validateStats && !transformSpec.map.destination.variablePlateCount && count != transformSpec.map.destination.plateCount) {
-                    if (transformSpec.details.transfer_template_id == 2) {
+                    if (transformSpec.details.transform_template_id == 2) {
                         if (count != 1) {
-                            fileErrors.push('This transfer expects the same source and destination plate but found ' + count + ' destination plates in the file');
+                            fileErrors.push('This transform expects the same source and destination plate but found ' + count + ' destination plates in the file');
                         }
                     } else {
-                        fileErrors.push('This transfer expects ' + transformSpec.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
+                        fileErrors.push('This transform expects ' + transformSpec.map.destination.plateCount + ' destination plate(s) but found ' + count + ' in the file');
                     }
-                    
+
                 }
 
                 fileStats.sourcePlateRows = srcPlates;
@@ -91,25 +91,25 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
 
             if ( fileData.substring(0, 8) == 'Run Date') {
                 /* this is a csv log file from qpix */
-                var transferTypeId = transformSpec.details.transfer_template_id;
-                if (transferTypeId != 16 && transferTypeId != 21 && transferTypeId != 22) {
-                    fileErrors.push('This transfer type (' + transferTypeId + ') does not expect a log file as input.');
+                var transformTypeId = transformSpec.details.transform_template_id;
+                if (transformTypeId != 16 && transformTypeId != 21 && transformTypeId != 22) {
+                    fileErrors.push('This transform type (' + transformTypeId + ') does not expect a log file as input.');
                     var result = {
                         errors: fileErrors
                         ,stats: fileStats
-                        ,transferJSON: transferJSON
+                        ,transformJSON: transformJSON
                     };
                     asyncReturn.reject(result);
                 } else {
                     var fileData = fileData.split('\r');
 
-                    var transferStartIndex = fileData.length;
+                    var transformStartIndex = fileData.length;
 
                     for (var i=0; i<fileData.length; i++) {
                         var row = fileData[i].trim();
                         if (row.trim() == 'Source Barcode,Source Region,Feature Position X,Feature Position Y,Destination Barcode,Destination Well') {
-                            transferStartIndex = i + 1;
-                        } else if (i >= transferStartIndex && row != '') {
+                            transformStartIndex = i + 1;
+                        } else if (i >= transformStartIndex && row != '') {
                             var rowBits = row.split(',');
 
                             var sourceBarcode = rowBits[0];
@@ -132,14 +132,14 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                                 ,destination_well_name: destinationWellName
                                 ,destination_plate_well_count: destinationPlateTypeInfo.wellCount
                             }
-                            transferJSON.push(thisRow);
+                            transformJSON.push(thisRow);
                         }
                     }
 
                     setStats(false, true);
-                    
+
                 }
-                
+
             } else {
                 /* then we assume this is an excel file */
                 var workbook = XLSX.read(fileData, {type: 'binary'});
@@ -165,7 +165,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                             break;
                         case 'B':
                             thisRow.source_well_name = val;
-                            break;    
+                            break;
                         case 'C':
                             thisRow.destination_plate_barcode = val;
                             if (!firstRow) {
@@ -185,7 +185,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                     }
                     if (col == 'E') {
                         if (!firstRow) {
-                            transferJSON.push(thisRow);
+                            transformJSON.push(thisRow);
                         }
                         firstRow = false;
                         thisRow = {};
@@ -200,7 +200,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                 var result = {
                     errors: fileErrors
                     ,stats: fileStats
-                    ,transferJSON: transferJSON
+                    ,transformJSON: transformJSON
                 };
 
                 asyncReturn.resolve(result);
@@ -211,11 +211,11 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                 if (thisError) {
                     fileErrors.push(thisError);
                 } else {
-                    for (var i=0; i< transferJSON.length; i++) {
-                        var row = transferJSON[i];
+                    for (var i=0; i< transformJSON.length; i++) {
+                        var row = transformJSON[i];
                         var sourceBarcode = row.source_plate_barcode;
                         var sourcePlateWellData = respData.plateWellData[sourceBarcode];
-                        transferJSON[i]['source_sample_id'] = sourcePlateWellData.wells[row.source_well_name] ? sourcePlateWellData.wells[row.source_well_name]['sample_id'] : 'empty';
+                        transformJSON[i]['source_sample_id'] = sourcePlateWellData.wells[row.source_well_name] ? sourcePlateWellData.wells[row.source_well_name]['sample_id'] : 'empty';
                     }
                 }
 
@@ -239,7 +239,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
 
                     if (sourceData.success) {
 
-                        if (transformSpec.details.transfer_template_id != 2) {
+                        if (transformSpec.details.transform_template_id != 2) {
                             /* this is NOT a same-plate step, check that the destination plate is not already in the db */
                             Api.checkDestinationPlatesAreNew(destination_barcodes).success(function (data) {
                                 if (!data.success) {
@@ -256,7 +256,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                             /* this is a same-plate step so the dest plate will already exist - no need to check for it */
                             decorateResponse(sourceData);
                         }
-                        
+
                     } else {
                         decorateResponse(sourceData, sourceData.errorMessage);
                     }
@@ -264,11 +264,11 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                     decorateResponse(data, 'Sample information could not be retrieved for these source plates.');
                 });
             }
-                
+
             return asyncReturn.promise;
         }
         return {
-            getTransferRowsFromFile: getTransferRowsFromFile
+            getTransformRowsFromFile: getTransformRowsFromFile
         };
     }]
 );

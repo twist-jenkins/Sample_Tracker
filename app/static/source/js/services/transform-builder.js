@@ -1,7 +1,7 @@
 var api_base_url = '/api/v1/';
 var server_url = twist_api_url;
 
-angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constants', 
+angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constants',
     function (Api, Maps, Constants) {
 
         var TransformSpec = function () {
@@ -35,11 +35,15 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 return new TransformSpecSource(Constants.SOURCE_TYPE_PLATE);
             };
 
-            base.updateOperationsList = function () {
+            base.updateOperationsList = function (toggleUpdating) {
                 if (base.autoUpdateSpec) {
 
+                    if (toggleUpdating) {
+                        updating();
+                    }
+
                     if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
-                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transfer_template_id >= 25 && base.details.transfer_template_id <=29) ) {
+                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transform_template_id >= 25 && base.details.transform_template_id <=29) ) {
                         if (base.sourcesReady && base.destinationsReady) {
                             // kieran
                             Api.previewTransformation( base.sources, base.destinations, base.details )
@@ -67,22 +71,29 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                     } else {
                                         base.error_message = result.message;
                                     }
+
+                                    if (toggleUpdating) {
+                                        ready();
+                                    }
                                 }).error(function(data) {
                                     console.log('Error retrieving transform preview.');
                                 });
-                        
+
                         } else {
                             base.clearOperationsList();
+                            if (toggleUpdating) {
+                                ready();
+                            }
                         }
                     } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                         // "rebatching for transformation"
 
                         if (base.sourcesReady) {
-                            
-                            var templateId = base.details.transfer_template_id;
+
+                            var templateId = base.details.transform_template_id;
 
                             switch (templateId) {
-                                /*** 
+                                /***
                                 * moved to backend
 
                                 case 25:
@@ -124,7 +135,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                     console.log(destinationQuadrants);
 
                                     // use the 4-to-1 combine map to write the quadrants to 384 well plates
-                                    var theMap = Maps.transferTemplates[18];
+                                    var theMap = Maps.transformTemplates[18];
 
                                     // configure the ultimate destination plates - 384 wells
                                     for (group in destinationQuadrants) {
@@ -171,7 +182,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                                 if (base.destinations[plateIndex].loaded || base.destinations[plateIndex].updating) {
                                                     //do nothing - this destination was already entered
                                                 } else {
-                                                    dest.details.id = base.destinations[plateIndex].details.id; 
+                                                    dest.details.id = base.destinations[plateIndex].details.id;
                                                     base.destinations[plateIndex] = dest;
                                                     base.addDestination(plateIndex);
                                                 }
@@ -179,12 +190,12 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                                 base.destinations[plateIndex] = dest;
                                                 base.addDestination(plateIndex);
                                             }
-                                            
+
                                         }
-                                    } 
+                                    }
 
                                     if (base.destinationsReady) {
-                                        
+
                                         var operations = [];
 
                                         var destPlateIndex = 0;
@@ -313,7 +324,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     header = 'Plate Barcode';
                     header+= base.sources.length > 1 ? 's' :'';
                     if (base.destinations.length) {
-                        header = 'Source ' + header; 
+                        header = 'Source ' + header;
                     }
                 } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
                     header = 'Source(s)'
@@ -323,8 +334,40 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             };
 
             base.addRequestedDataItems = function (items) {
-                base.requestedDataItems = items;
+                //don't replace data requests we've already gotten/displayed
+                for (var i=0; i< items.length ;i++) {
+                    var newItem = items[i];
+                    var already = false;
+                    for (var j=0; j < base.requestedDataItems.length; j++) {
+                        currentItem = base.requestedDataItems[j];
+                        if (currentItem.item.forProperty == newItem.item.forProperty) {
+                            already = true;
+                        }
+                    }
+
+                    if (!already) {
+                        base.requestedDataItems.push(angular.copy(newItem));
+                    }
+                }
+
                 base.validateRequestedData = true;
+            }
+
+            base.addPresentedDataItems = function (items) {
+                for (var i=0; i< items.length ;i++) {
+                    var newItem = items[i];
+                    var already = false;
+                    for (var j=0; j < base.presentedDataItems.length; j++) {
+                        currentItem = base.presentedDataItems[j];
+                        if (currentItem.item.forProperty == newItem.item.forProperty) {
+                            already = true;
+                        }
+                    }
+
+                    if (!already) {
+                        base.presentedDataItems.push(angular.copy(newItem));
+                    }
+                }
             }
 
             base.getDestinationsHeader = function () {
@@ -346,14 +389,14 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
             base.setTransformSpecDetails = function (typeObj) {
                 base.details = typeObj;
-                base.details['transfer_type_id'] = typeObj.id;
-                base.setTransferMap(Maps.transferTemplates[base.details.transfer_template_id]);
-                if (base.details.transfer_template_id == 25 || 
-                    base.details.transfer_template_id == 26 || 
-                    base.details.transfer_template_id == 27 || 
-                    base.details.transfer_template_id == 28 || 
-                    base.details.transfer_template_id == 29 || 
-                    base.details.transfer_template_id == 30) {
+                base.details['transform_type_id'] = typeObj.id;
+                base.setTransformMap(Maps.transformTemplates[base.details.transform_template_id]);
+                if (base.details.transform_template_id == 25 ||
+                    base.details.transform_template_id == 26 ||
+                    base.details.transform_template_id == 27 ||
+                    base.details.transform_template_id == 28 ||
+                    base.details.transform_template_id == 29 ||
+                    base.details.transform_template_id == 30) {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING);
                 } else {
                     base.setType(Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP);
@@ -375,10 +418,10 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     base.addRequestedDataItems(requestedData);
                 }
 
-                base.transferFromFile(false);
+                base.transformFromFile(false);
             }
 
-            base.setTransferMap = function (map) {
+            base.setTransformMap = function (map) {
                 base.map = angular.copy(map);
                 base.updateInputs();
             };
@@ -427,7 +470,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
             base.removePlateInput = function (which, plateIndex) {
                 base.map[which].plateCount--;
-                
+
                 var newSources = [];
                 var plates = base[which + 's'];
                 for (var i=0; i<plates.length; i++) {
@@ -462,7 +505,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     }
 
                 }
-                return true;    
+                return true;
             }
 
             base.addSource = function (sourceIndex) {
@@ -476,7 +519,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 var onError = function (sourceItem, msg) {
                     base.notReady('source');
                     sourceItem.loaded = false;
-                    sourceItem.transferList = null;
+                    sourceItem.transformList = null;
                     sourceItem.error = msg;
                     sourceItem.updating = false;
                     ready();
@@ -494,7 +537,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 plateDetailsFetcher(barcode).success(function (data) {
                     if (data.success) {
                         if (base.map.source.create) {
-                            //then the source plate will be created in this step and should not exist - this success is actually an error  
+                            //then the source plate will be created in this step and should not exist - this success is actually an error
                             onError(sourceItem, 'Error: An plate with barcocde <strong>#' + barcode + '</strong> already exists.');
                         } else {
 
@@ -512,7 +555,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                     base.sourcesReady = true;
                                 } else {
                                     return;
-                                } 
+                                }
                                 base.updateOperationsList();
                             }
                             ready();
@@ -520,7 +563,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         sourceItem.updating = false;
                     } else {
                         onError(sourceItem, 'Error: Plate info for ' + barcode + ' could not be found.');
-                    }  
+                    }
                 }).error(function (data) {
                     // if this transform expects source plates to be created in this step, then they won't already exist
                     // and this is an expected error
@@ -546,7 +589,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         return false;
                     }
                 }
-                return true;    
+                return true;
             }
 
             base.addDestination = function (destIndex) {
@@ -593,7 +636,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                             base.destinationsReady = true;
                             base.updateOperationsList();
                         }
-                        ready(); 
+                        ready();
                     }).error(function (data) {
                         onError(destItem, 'The server returned an error while checking information about the destination plate.');
                     });
@@ -608,10 +651,10 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 base.autoUpdateSpec = !planFromFile;
             }
 
-            base.transferFromFile = function (engaged, resultData) {
+            base.transformFromFile = function (engaged, resultData) {
                 base.setPlanFromFile(engaged);
                 if (engaged) {
-                    base.operations = resultData.transferJSON;
+                    base.operations = resultData.transformJSON;
                     if (resultData.stats.sources.length) {
                         base.sources = [];
                         for (var i=0; i<resultData.stats.sources.length;i++) {
@@ -619,7 +662,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                             source.details.id = resultData.stats.sources[i];
                             base.sources.push(source);
                             base.addSource(base.sources.length - 1);
-                        } 
+                        }
                     }
 
                     if (resultData.stats.destinations.length) {
@@ -690,7 +733,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 }
 
                 var wb = new Workbook();
-                wb.SheetNames.push('Twist Transfer Plan');
+                wb.SheetNames.push('Twist Transform Plan');
 
                 var ws = {};
                 writeHeaderRow();
@@ -716,7 +759,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 ];
                 ws['!cols'] = wscols;
 
-                wb.Sheets['Twist Transfer Plan'] = ws;
+                wb.Sheets['Twist Transform Plan'] = ws;
                 var wbout = XLSX.write(wb, {bookType:'xlsx', bookSST:true, type: 'binary'});
 
                 var s2ab = function (s) {
@@ -725,7 +768,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
                     return buf;
                 }
-                
+
                 /*  saveAs is a global method supported natively or with FileSaver */
                 saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
             };
@@ -782,12 +825,12 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 dest.details.title = plate.details.title;
                                 dest.details.id = plate.details.id;
                                 dest.first_in_group = plate.first_in_group;
-                                
+
                                 if (base.destinations[j]) {
                                     if (base.destinations[j].loaded || base.destinations[j].updating) {
                                         //do nothing - this destination was already entered
                                     } else {
-                                        dest.details.id = base.destinations[j].details.id; 
+                                        dest.details.id = base.destinations[j].details.id;
                                         base.destinations[j] = dest;
                                         base.addDestination(j);
                                     }
@@ -809,12 +852,12 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
                                 source.details.type = plate.type;
                                 source.details.id = plate.details ? plate.details.id : null;
-                                
+
                                 if (base.sources[j]) {
                                     if (base.sources[j].loaded || base.sources[j].updating) {
                                         //do nothing - this destination was already entered
                                     } else {
-                                        source.details.id = base.sources[j].details ? base.sources[j].details.id : null; 
+                                        source.details.id = base.sources[j].details ? base.sources[j].details.id : null;
                                         base.sources[j] = dest;
                                         base.addSource(j);
                                     }
@@ -835,13 +878,13 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                             // assemble the presented data
                             requestedDataItems.push(command);
                             break;
-                        
+
                         default :
                             console.log('Error: Unrecognized response command type = [' + command.type + ']');
                             break;
                     }
 
-                    
+
                 }
 
                 // present and request data after all other commands (such as SET_DESTINATIONS) are complete
@@ -850,9 +893,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 }
 
                 if (presentedDataItems.length) {
-                    base.presentedDataItems = presentedDataItems;
+                    base.addPresentedDataItems(presentedDataItems);
                 }
-                
+
             };
 
             base.serialize = function () {
@@ -896,7 +939,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 }
 
                 /* for NGS barcoding transforms, we need to add the source plate as the destination */
-                if (base.details.transfer_template_id == 30) {
+                if (base.details.transform_template_id == 30) {
                     obj.destinations = angular.copy(base.sources);
                 }
 
@@ -929,7 +972,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         title: ''
                     }
                     break;
-                
+
                 default :
                     console.log('Error: Unrecognized kind = [' + kind + ']');
                     break;

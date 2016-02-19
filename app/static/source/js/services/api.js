@@ -5,8 +5,8 @@ angular.module('twist.app').factory('Api',['ApiRequestObj', '$http',
     function (ApiRequestObj, $http) {
 
         return {
-            getSampleTransferTypes: function () {
-                var userReq = ApiRequestObj.getGet('sample-transfer-types');
+            getSampleTransformTypes: function () {
+                var userReq = ApiRequestObj.getGet('sample-transform-types');
                 return $http(userReq);
             }
             ,getBarcodes: function () {
@@ -30,8 +30,8 @@ angular.module('twist.app').factory('Api',['ApiRequestObj', '$http',
                 return $http(updatePlateReq);
             }
             ,getPlateSteps: function () {
-                var transfersReq = ApiRequestObj.getGet('sample-transfers');
-                return $http(transfersReq);
+                var transformsReq = ApiRequestObj.getGet('sample-transforms');
+                return $http(transformsReq);
             }
             ,getPlateDetails: function (barcode, format) {
                 var plateDetailsReq = ApiRequestObj.getGet('plate-barcodes/' + barcode + (format ? '/' + format : ''));
@@ -95,7 +95,7 @@ angular.module('twist.app').factory('Api',['ApiRequestObj', '$http',
             }
             ,previewTransformation: function(sources, destinations, details ) {
                 // kieran
-                var preview = ApiRequestObj.getPost('transfer-preview');
+                var preview = ApiRequestObj.getPost('transform-preview');
                 preview.data = {
                     sources: sources,
                     destinations: destinations,
