@@ -382,16 +382,26 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
         raise KeyError("ngs_barcode_pair_index %s not found"
                        % ngs_barcode_pair_index)
 
+    # Refer to source sample instances
+    source_cs_sample = db_session.query(Sample).get(source_sample_id)
+    i5_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
+    i5_sample = db_session.query(Sample).get(i5_sample_id)
+    i7_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
+    i7_sample = db_session.query(Sample).get(i7_sample_id)
+
     # Create NPS
     nps_id = create_unique_id("NPS_")()
     description = 'SMT - well %s' % destination_well_id  # TODO: add plate
     nps_sample = Sample(id=nps_id,
-                        parent_sample_id=source_sample_id,
                         name=nps_id,
                         description=description,
                         i5_sequence_id=ngs_pair.i5_sequence_id,
                         i7_sequence_id=ngs_pair.i7_sequence_id,
                         operator_id=current_user.operator_id)
+
+    nps_sample.parents.append(source_cs_sample)
+    nps_sample.parents.append(i5_sample)
+    nps_sample.parents.append(i7_sample)
 
     logging.debug('NPS_ID %s for %s assigned [%s, %s]',
                   nps_id, source_sample_id,
