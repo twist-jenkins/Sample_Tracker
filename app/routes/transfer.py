@@ -274,10 +274,14 @@ def preview():
                 constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
                 constants.TRANS_TYPE_NGS_THERMOCYCLE,
                 constants.TRANS_TYPE_UPLOAD_QUANT,
-                constants.TRANS_TYPE_PCR_PRIMER_HITPICK):
+                constants.TRANS_TYPE_PCR_PRIMER_HITPICK,
+                constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER):
                 # these are same to same transfers or data uploads
 
-            if transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+            if transfer_type_id in (
+                constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
+                constants.TRANS_TYPE_PCA_PREPLANNING):
+
                 src_plate_type = "SPTT_0006"
                 dest_plate_type = src_plate_type
 
@@ -489,6 +493,70 @@ def preview():
 
                     })
 
+            elif transfer_type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+
+                rows = [{}]
+
+
+                # TO DO   based on source barcode, present the target sequencer
+
+                #DEV Only remove when code exists to set sequencer
+                sequencer = "MiSeq";
+
+                responseCommands.append({
+                    "type": "PRESENT_DATA",
+                    "item": {
+                        "type": "text",
+                        "title": "Target Sequencer",
+                        "data": "<strong>" + sequencer + "</strong>"
+                    }
+                })
+
+                reqData = {
+                    "sequencerBarcode": None,
+                    "inputCartridgeBarcode": None,
+                    "flowCellBarcode": None
+                }
+
+                if "requestedData" in details:
+                    data = details["requestedData"]
+                    if "sequencerBarcode" in data:
+                        reqData["sequencerBarcode"] = data["sequencerBarcode"]
+                    if "inputCartridgeBarcode" in data:
+                        reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
+                    if "flowCellBarcode" in data:
+                        reqData["flowCellBarcode"] = data["flowCellBarcode"]
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Sequencer Barcode",
+                        "forProperty": "sequencerBarcode",
+                        #"value": reqData["sequencerBarcode"]
+                    }
+                })
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Input Cartridge Barcode",
+                        "forProperty": "inputCartridgeBarcode",
+                        #"value": reqData["inputCartridgeBarcode"]
+                    }
+                })
+
+                responseCommands.append({
+                    "type": "REQUEST_DATA",
+                    "item": {
+                        "type": "barcode",
+                        "title": "Flowcell Barcode",
+                        "forProperty": "flowCellBarcode",
+                        #"value": reqData["flowCellBarcode"]
+                    }
+                })
+
             else:
                 rows = []
 
@@ -634,7 +702,7 @@ def preview():
 
                     # DEV ONLY - remove when real basepair counting is done
                     previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax - 1;
+                    currentBasePairTotal = basePairMax - 3 + len(sources);
 
                     reponseTally = currentBasePairTotal
 
@@ -716,6 +784,15 @@ def preview():
                 rows = filter_transform(transfer_template_id, request.json['sources'],
                                         request.json['destinations'])
 
+            elif transfer_template_id == \
+                    constants.TRANS_TPL_PCA_PCR_PURIFICATION:
+                    '''
+                        Kieran or Charlie please handle this.
+                        Sources and destinations should be processed pairwise (paired by index)
+                        in a same-to-same-playout transfer from source to destination
+                    '''
+                    rows = [{}]
+
             else:
                 if transfer_template_id in (
                         constants.TRANS_TPL_SAME_TO_SAME,
@@ -756,9 +833,8 @@ def preview():
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for sample in db.session.query(Sample) \
-                            .filter(Sample.plate == plate).join(PlateWell)\
-                            .order_by(PlateWell.well_number):
+                    for sample in plate.current_well_contents(db.session):
+
                         dest_barcode, dest_well = dest_lookup(src_idx, sample.well.well_number)
 
                         rows.append({'source_plate_barcode': barcode,
@@ -1964,11 +2040,25 @@ TRANSFER_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
+                ,"42": {  // keyed to transfer_template_id in the database
+                    "description": "PCA/PCR Purification"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 2
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 2
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                }
             }
 """)
 
 
-def transfer_map_step_34_titin_6144():
+def transfer_map_TRANS_TPL_EXTRACTION_TITIN():
     result = {}
     for dest_plate_number_0based in range(16):
         for dest_well_id_0based in range(384):
@@ -1983,4 +2073,5 @@ def transfer_map_step_34_titin_6144():
             }
     return [result]
 
-TRANSFER_MAP["34"]["plateWellToWellMaps"] = transfer_map_step_34_titin_6144()
+TRANSFER_MAP[str(constants.TRANS_TPL_EXTRACTION_TITIN)] \
+    ["plateWellToWellMaps"] = transfer_map_TRANS_TPL_EXTRACTION_TITIN()
