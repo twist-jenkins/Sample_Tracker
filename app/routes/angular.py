@@ -771,8 +771,8 @@ def check_plates_are_new():
 # ### Hamailton operation endpoints
 ##################
 
-hamiltons = Constants.HAMILTONS
-carriers = Constants.CARRIERS
+hamiltons = constants.HAMILTONS
+carriers = constants.CARRIERS
 
 
 def get_hamilton_by_barcode(hamilton_barcode):
