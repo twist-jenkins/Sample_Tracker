@@ -124,13 +124,14 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                     $scope.validation = null;
                     $scope.error = null;
 
+                    var barcodeType = $scope.itemData.type.split('.')[1];
+
                     if (!$scope.readOnly) {
                         ml +=   '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" ng-blur="validate(true);"/>' +
                                 '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon>';
                     } else {
                         ml += '<p><strong>' + $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] + '</strong></p>';
                     }
-
 
                     $scope.validate = function (errorOnEmpty) {
                         var returnValidate = function () {
