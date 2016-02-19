@@ -396,9 +396,42 @@ def source_plate_well_data():
 def check_plates_are_new():
     return routes.check_plates_are_new()
 
-@app.route('/api/v1/transform-preview', methods=('POST',))
-def transform_params():
-    return transform.preview()
+
+@app.route('/api/v1/transfer-preview/type-<int:transfer_type_id>/template-<int:transfer_template_id>', methods=('POST',))
+def transfer_params( transfer_type_id, transfer_template_id  ):
+    from app.routes import transfer
+
+    print '@@ transfer_type_id:%s, transfer_template_id:%s' % (transfer_type_id, transfer_template_id)
+
+    from constants import ( TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
+                            TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
+                            TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
+                            TRANS_TPL_SAME_PLATE as SAME_PLATE,
+                            TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
+                            TRANS_TYPE_PCA_THERMOCYCLE as PRIMER_THERMO_T,
+                            TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
+                            TRANS_TPL_PCA_PREPLANNING as PRIMER_PREPLANNING,
+                            TRANS_TYPE_NGS_THERMOCYCLE as NGS_THERO_T,
+                            TRANS_TYPE_PCA_THERMOCYCLE as PCA_THERMO_T,
+                            TRANS_TYPE_PCA_PCR_THERMOCYCLE as PCR_THERMO_T,
+                            TRANS_TPL_REBATCH_FOR_TRANSFORM as REBATCH_XFORM,
+                            TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T,
+                            )
+
+    return {(PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transfer.primer_preplanning,
+            (PRIMER_CREATE_SRC_T, SAME_PLATE):           transfer.primer_create_src,
+            (PRIMER_MASTER_T, SAME_PLATE):               transfer.primer_master_mix,
+            (PRIMER_THERMO_T, SAME_PLATE):               transfer.thermocycle,
+            (NGS_THERO_T, ):            transfer.thermocycle,
+            (PCA_THERMO_T, ):           transfer.thermocycle,
+            (PCR_THERMO_T, ):           transfer.thermocycle,
+            (REBATCH_XFORM_T, REBATCH_XFORM):  transfer.rebatch_transform,
+            
+    }[(transfer_type_id, transfer_template_id)](transfer_type_id, transfer_template_id)
+
+    return transfer.preview( transfer_type_id, transfer_template_id  )
+
+
 
 # hamilton operation routes
 
