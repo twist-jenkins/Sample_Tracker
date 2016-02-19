@@ -4,6 +4,7 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
             scope: {
                 transformSpec: '='
                 ,item: '='
+                ,readOnly: '=?'
             }
             ,restrict: 'E'
             ,link: function($scope, element, attrs) {
@@ -20,7 +21,10 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                 if (! $scope.transformSpec.details.requestedData) {
                     $scope.transformSpec.details.requestedData = {};
+                    $scope.transformSpec.details.dataRequests = {};
                 }
+
+                $scope.transformSpec.details.dataRequests[$scope.itemData.forProperty] = $scope.item;
 
                 if ($scope.itemData.title) {
                     ml += '<h4>{{itemData.title}}</h4>';
@@ -32,14 +36,20 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                     $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = new Array(4);
 
+
                     $scope.validations = new Array(4);
                     $scope.errors = new Array(4);
 
                     for (var i=0; i < arrayCount; i++) {
-                        ml +=   '<p>' +
-                                    '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\'][' + i + ']" ng-blur="validate(' + i + ', true);"/>' +
-                                    '<twst-thumb-validation-icon validation="validations[' + i + ']" error="errors[' + i + ']"></twst-thumb-validation-icon>' +
-                                '</p>';
+                        if (!$scope.readOnly) {
+                            ml +=   '<p>' +
+                                        '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\'][' + i + ']" ng-blur="validate(' + i + ', true);"/>' +
+                                        '<twst-thumb-validation-icon validation="validations[' + i + ']" error="errors[' + i + ']"></twst-thumb-validation-icon>' +
+                                    '</p>';
+                        } else {
+                            ml += '<p><strong>' + $scope.transformSpec.details.requestedData[$scope.itemData.forProperty][i] + '</strong></p>';
+                        }
+                        
                     }
 
                     $scope.validate = function (arrayIndex, errorOnEmpty) {
@@ -113,9 +123,15 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                 } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_BARCODE) == 0) {
                     $scope.validation = null;
                     $scope.error = null;
-                    ml +=   '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" ng-blur="validate(true);"/>' +
-                            '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon>';
 
+                    var barcodeType = $scope.itemData.type.split('.')[1];
+
+                    if (!$scope.readOnly) {
+                        ml +=   '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" ng-blur="validate(true);"/>' +
+                                '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon>';
+                    } else {
+                        ml += '<p><strong>' + $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] + '</strong></p>';
+                    }
 
                     $scope.validate = function (errorOnEmpty) {
                         var returnValidate = function () {
@@ -150,8 +166,17 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                 } else if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_FILE_DATA) == 0) {
                     $scope.validation = null;
                     $scope.error = null;
-                    ml +=   '<div class="twst-drag-n-drop-upload-area" twst-drop-target="catchFileUpload"> Drop a file here to upload ' +
-                            '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon></div>';
+                    if (!$scope.readOnly) {
+                        ml +=   '<div class="twst-drag-n-drop-upload-area" twst-drop-target="catchFileUpload"> Drop a file here to upload ' +
+                                '<twst-thumb-validation-icon validation="validation" error="error"></twst-thumb-validation-icon></div>';
+                    } else {
+                        ml += '<button class="twst-button twst-download-button">Download</button>';
+                    }
+
+                    $scope.downloadFile = function (fileData) {
+                        var fileBlob = new Blob([fileData], {type: ""});
+                        saveAs(fileBlob, $scope.itemData.fileName);
+                    }
                     
                     $scope.catchFileUpload = function (data, error) {
                         if (error) {
@@ -189,13 +214,18 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                     var options = $scope.itemData.data;
 
-                    ml += '<div>';
+                    if (!$scope.readOnly) {
 
-                    for (var i=0; i < options.length; i++) {
-                        ml +=   '<label><input type="radio" name="sequencerSelection" ng-mouseup="validate()" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" value="' + options[i].option + '"> ' + (options[i].label ? options[i].label : options[i].option) + '</label>';
+                        ml += '<div>';
+
+                        for (var i=0; i < options.length; i++) {
+                            ml +=   '<label><input type="radio" name="sequencerSelection" ng-mouseup="validate()" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" value="' + options[i].option + '"> ' + (options[i].label ? options[i].label : options[i].option) + '</label>';
+                        }
+
+                        ml += '</div>';
+                    } else {
+                        ml += '<p><strong>' + $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] + '</strong></p>';
                     }
-
-                    ml += '</div>';
 
                     $scope.validate = function (errorOnEmpty) {
                         $scope.item.validData = true;

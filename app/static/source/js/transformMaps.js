@@ -3,8 +3,8 @@ app = angular.module('twist.app')
 .factory('Maps', ['Constants',
     function (Constants) {
         return {
-            transferTemplates: {
-                1: {  // keyed to transfer_template_id in the database
+            transformTemplates: {
+                1: {  // keyed to transform_template_id in the database
                     description: 'Source and destination have SAME LAYOUT'
                     ,type: 'same-same'
                     ,source: {
@@ -16,7 +16,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,2: {  // keyed to transfer_template_id in the database
+                ,2: {  // keyed to transform_template_id in the database
                     description: 'Source and destination plate are SAME PLATE'
                     ,type: 'same-same'
                     ,source: {
@@ -28,7 +28,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,4: {  // keyed to transfer_template_id in the database
+                ,4: {  // keyed to transform_template_id in the database
                     description: 'Multiplexed same to same'
                     ,type: 'same-same'
                     ,source: {
@@ -40,7 +40,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,13: {  // keyed to transfer_template_id in the database
+                ,13: {  // keyed to transform_template_id in the database
                     description: '384 to 4x96'
                     ,type: 'standard_template'
                     ,source: {
@@ -445,7 +445,7 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
-                ,14: {  // keyed to transfer_template_id in the database
+                ,14: {  // keyed to transform_template_id in the database
                     description: '96 to 2x48'
                     ,type: 'standard_template'
                     ,source: {
@@ -562,7 +562,7 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
-                ,16: {  // keyed to transfer_template_id in the database
+                ,16: {  // keyed to transform_template_id in the database
                     description: 'Manual picking to nx 96'
                     ,type: 'user_specified'
                     ,source: {
@@ -576,7 +576,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,18: {  // keyed to transfer_template_id in the database
+                ,18: {  // keyed to transform_template_id in the database
                     description: '4x96 to 384'
                     ,type: 'standard_template'
                     ,source: {
@@ -987,7 +987,7 @@ app = angular.module('twist.app')
                         }
                     ]
                 }
-                ,20: {  // keyed to transfer_template_id in the database
+                ,20: {  // keyed to transform_template_id in the database
                     description: 'Hitpick for shipping'
                     ,type: 'user_specified'
                     ,source: {
@@ -1000,7 +1000,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,21: {  // keyed to transfer_template_id in the database
+                ,21: {  // keyed to transform_template_id in the database
                     description: 'Qpix Log Reading to nx 96'
                     ,type: 'user_specified'
                     ,source: {
@@ -1014,7 +1014,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,22: {  // keyed to transfer_template_id in the database
+                ,22: {  // keyed to transform_template_id in the database
                     description: 'Qpix Log Reading to nx 384'
                     ,type: 'user_specified'
                     ,source: {
@@ -1028,7 +1028,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,23: {  // keyed to transfer_template_id in the database
+                ,23: {  // keyed to transform_template_id in the database
                     description: 'Plate Merge'
                     ,type: 'standard_template'
                     ,source: {
@@ -1040,7 +1040,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,24: {  // keyed to transfer_template_id in the database
+                ,24: {  // keyed to transform_template_id in the database
                     description: 'Generic Transform'
                     ,type: 'user_specified'
                     ,source: {
@@ -1052,7 +1052,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,25: {  // keyed to transfer_template_id in the database
+                ,25: {  // keyed to transform_template_id in the database
                     description: 'Rebatching for Transformation'
                     ,type: 'standard_template'
                     ,source: {
@@ -1066,7 +1066,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                     }
                 }
-                ,26: {  // keyed to transfer_template_id in the database
+                ,26: {  // keyed to transform_template_id in the database
                     description: 'Fragment Analyzer'
                     ,type: 'standard_template'
                     ,source: {
@@ -1078,7 +1078,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,27: {  // keyed to transfer_template_id in the database
+                ,27: {  // keyed to transform_template_id in the database
                     description: 'NGS QC Pass'
                     ,type: 'standard_template'
                     ,source: {
@@ -1090,7 +1090,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,28: {  // keyed to transfer_template_id in the database
+                ,28: {  // keyed to transform_template_id in the database
                     description: 'Hitpicking for shipping in plates'
                     ,type: 'hamilton'
                     ,source: {
@@ -1102,7 +1102,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': { // Jupiter 2
+                        'iHAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1144,7 +1144,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         },
-                        'HAM01': { // Galactica
+                        'iHAM01': { // Galactica
                             'main': {
                                 carriers: [
                                     {
@@ -1189,7 +1189,7 @@ app = angular.module('twist.app')
 
                     }
                 }
-                ,29: {  // keyed to transfer_template_id in the database
+                ,29: {  // keyed to transform_template_id in the database
                     description: 'Reformatting for Purification'
                     ,type: 'standard_template'
                     ,source: {
@@ -1201,7 +1201,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                 }
-                ,30: {  // keyed to transfer_template_id in the database
+                ,30: {  // keyed to transform_template_id in the database
                     description: 'NGS Barcoding'
                     ,type: 'standard_template'
                     ,source: {
@@ -1213,7 +1213,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,31: {  // keyed to transfer_template_id in the database
+                ,31: {  // keyed to transform_template_id in the database
                     description: 'NGS: Pooling'
                     ,type: 'standard_template'
                     ,source: {
@@ -1238,7 +1238,7 @@ app = angular.module('twist.app')
                         ]
                     }
                 }
-                ,32: {  // keyed to transfer_template_id in the database
+                ,32: {  // keyed to transform_template_id in the database
                     description: 'Hitpicking for miniprep'
                     ,type: 'hamilton'
                     ,source: {
@@ -1250,7 +1250,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': { // Jupiter 2
+                        'iHAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1359,7 +1359,7 @@ app = angular.module('twist.app')
 
                     }
                 }
-                ,33: {  // keyed to transfer_template_id in the database
+                ,33: {  // keyed to transform_template_id in the database
                     description: 'Hitpicking for shipping in tubes'
                     ,type: 'hamilton'
                     ,source: {
@@ -1371,7 +1371,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM04': { // Jupiter 2
+                        'iHAM04': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1389,7 +1389,7 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 22
                                         ,index: 2
-                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
+                                        ,type: '96_TUBE'
                                         ,plates: [
                                             {plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 1, dataIndex: 1}
                                             ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 2, dataIndex: 2}
@@ -1492,7 +1492,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         },
-                        'HAM01': { // Galactica
+                        'iHAM01': { // Galactica
                             'main': {
                                 carriers: [
                                     {
@@ -1510,7 +1510,7 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 39
                                         ,index: 2
-                                        ,type: Constants.SHIPPING_TUBES_CARRIER_TYPE
+                                        ,type: '96_TUBE'
                                         ,plates: [
                                             {plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 1, dataIndex: 1}
                                             ,{plateFor: 'destination', type: Constants.SHIPPING_TUBE_PLATE_TYPE, localIndex: 2, dataIndex: 2}
@@ -1616,7 +1616,7 @@ app = angular.module('twist.app')
 
                     }
                 }
-                ,34: {  // keyed to transfer_template_id in the database
+                ,34: {  // keyed to transform_template_id in the database
                     description: 'Titin Extraction'
                     ,type: 'standard_template'
                     ,source: {
@@ -1648,7 +1648,7 @@ app = angular.module('twist.app')
                         ]
                     }
                 }
-                ,35: {  // keyed to transfer_template_id in the database
+                ,35: {  // keyed to transform_template_id in the database
                     description: 'PCA Pre-Planning'
                     ,type: 'PLATE_PLANNING'
                     ,source: {
@@ -1662,7 +1662,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,36: {  // keyed to transfer_template_id in the database
+                ,36: {  // keyed to transform_template_id in the database
                     description: 'PCR Primer Hitpicking'
                     ,type: 'standard_template'
                     ,source: {
@@ -1676,7 +1676,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: false
                     }
                 }
-                ,37: {  // keyed to transfer_template_id in the database
+                ,37: {  // keyed to transform_template_id in the database
                     description: 'PCA/PCR Master Mix Addition'
                     ,type: 'hamilton'
                     ,source: {
@@ -1688,13 +1688,13 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM0Y': { // Millenium Falcon
+                        'iHAM0Y': { // Millenium Falcon
                             'main': {
                                 carriers: [
                                     {
                                         startTrack: 25
                                         ,index: 1
-                                        ,type: '384wPCR'
+                                        ,type: 'PCR_L5_384'
                                         ,plates: [
                                             {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
                                             ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
@@ -1706,7 +1706,7 @@ app = angular.module('twist.app')
                                     ,{
                                         startTrack: 31
                                         ,index: 2
-                                        ,type: '384wPCR'
+                                        ,type: 'PCR_L5_384'
                                         ,plates: [
                                             {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
                                             ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
@@ -1718,10 +1718,10 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
-                ,38: {  // keyed to transfer_template_id in the database
+                ,38: {  // keyed to transform_template_id in the database
                     description: 'Normalization'
                     ,type: 'hamilton'
                     ,source: {
@@ -1733,7 +1733,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'HAM0Y': { // Millenium Falcon
+                        'iHAM0Y': { // Millenium Falcon
                             'main': {
                                 carriers: [
                                     {
@@ -1751,10 +1751,10 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
-                        
+
                     }
                 }
-                ,42: {  // keyed to transfer_template_id in the database
+                ,42: {  // keyed to transform_template_id in the database
                     description: 'PCR/PCR Purification'
                     ,type: 'standard_template'
                     ,source: {
@@ -1770,7 +1770,7 @@ app = angular.module('twist.app')
                         ,plateTitles: ['Destination&nbsp;A:&nbsp;', 'Destination&nbsp;B:&nbsp;']
                     }
                 }
-                ,43: {  // keyed to transfer_template_id in the database
+                ,43: {  // keyed to transform_template_id in the database
                     description: 'Source Plate Creation'
                     ,type: 'standard_template'
                     ,source: {
@@ -2397,11 +2397,11 @@ app = angular.module('twist.app')
                     label: 'Five 96-well plates'
                     ,trackWidth: 6
                 }
-                ,'384wPCR': {
+                ,'PCR_L5_384': {
                     label: 'Fice 384-well plates'
                     ,trackWidth: 6
                 }
-                ,'SHIPPING_TUBES_CARRIER': {
+                ,'96_TUBE': {
                     label: 'Carrier to hold shipping tubes plate (this is a virtual carrier - ie, the tubes rack sits right on the deck)'
                     ,trackWidth: 9
                 }
@@ -5350,4 +5350,3 @@ app = angular.module('twist.app')
         }
     }
 ]);
-

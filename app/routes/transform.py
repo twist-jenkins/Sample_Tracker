@@ -83,7 +83,7 @@ def merge_transform(sources, dests):
     return rows
 
 
-def filter_transform(transfer_template_id, sources, dests):
+def filter_transform(transform_template_id, sources, dests):
     """Filter plate contents based on some step-specific analytical result."""
     # current constraints:
     #   1. source plates are 384 well plates full of CS's
@@ -94,7 +94,7 @@ def filter_transform(transfer_template_id, sources, dests):
     dest_type = db.session.query(PlateType).get('SPTT_0005')  # FIXME: hard-coded to 96 well
     dest_ctr = 1
 
-    if transfer_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
+    if transform_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells(barcode):
             well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
@@ -123,7 +123,7 @@ def filter_transform(transfer_template_id, sources, dests):
                     well_to_passfail[well_id] = d['well']
             return well_to_passfail
 
-    elif transfer_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
+    elif transform_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
         # NGS pass/fail
         def filter_wells(barcode):
             well_to_passfail = {}
@@ -149,14 +149,14 @@ def filter_transform(transfer_template_id, sources, dests):
 
             return well_to_passfail
 
-    elif transfer_template_id == constants.TRANS_TPL_PCA_PREPLANNING:
+    elif transform_template_id == constants.TRANS_TPL_PCA_PREPLANNING:
         return [{}]
 
-    elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+    elif transform_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
         return [{}]
 
     else:
-        raise WebError("What transform id is %s??" % transfer_template_id)
+        raise WebError("What transform id is %s??" % transform_template_id)
 
     rows = []
     for src in sources:
@@ -188,9 +188,9 @@ def filter_transform(transfer_template_id, sources, dests):
     return rows
 
 
-def sample_data_determined_transform(transfer_template_id, sources, dests):
+def sample_data_determined_transform(transform_template_id, sources, dests):
     """Rebatching by antibiotic prior to transformation."""
-    assert transfer_template_id == constants.TRANS_TPL_REBATCH_FOR_TRANSFORM
+    assert transform_template_id == constants.TRANS_TPL_REBATCH_FOR_TRANSFORM
 
     by_marker = defaultdict(list)
     for src in sources:
@@ -264,14 +264,14 @@ def preview():
     assert request.method == 'POST'
 
     details = request.json["details"]
-    transfer_template_id = details["transfer_template_id"]
-    transfer_type_id = details["transfer_type_id"]
+    transform_template_id = details["transform_template_id"]
+    transform_type_id = details["transform_type_id"]
 
     responseCommands = []
     rows = []
 
     try:
-        if transfer_type_id in (
+        if transform_type_id in (
                 constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
                 constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
                 constants.TRANS_TYPE_PCA_THERMOCYCLE,
@@ -283,12 +283,12 @@ def preview():
                 constants.TRANS_TYPE_UPLOAD_QUANT,
                 constants.TRANS_TYPE_PCR_PRIMER_HITPICK,
                 constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER):
-                # these are same to same transfers or data uploads
+                # these are same to same transforms or data uploads
 
-            if transfer_type_id in (
-                constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
-                constants.TRANS_TYPE_PCA_PREPLANNING):
-            
+            if transform_type_id in (
+                    constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
+                    constants.TRANS_TYPE_PCA_PREPLANNING):
+
                 src_plate_type = "SPTT_0006"
                 dest_plate_type = src_plate_type
 
@@ -307,7 +307,7 @@ def preview():
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for sample in db.session.query(Sample).join(PlateWell) \
+                    for sample in db.session.query(Sample).join(PlateWell, Sample.well) \
                             .filter(Sample.plate == plate) \
                             .order_by(PlateWell.well_number):
 
@@ -323,7 +323,7 @@ def preview():
                                      'destination_plate_well_count':   plate.plate_type.layout.feature_count
                                      })
 
-            if transfer_type_id == constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
+            if transform_type_id == constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
                 bulk_barcode = request.json['sources'][0]['details']['id']
                 custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
 
@@ -336,7 +336,7 @@ def preview():
                     }
                 })
 
-            elif transfer_type_id ==  constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
+            elif transform_type_id == constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
                 bulk_barcode = request.json['sources'][0]['details']['id']
                 mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
 
@@ -349,12 +349,12 @@ def preview():
                     }
                 })
 
-            elif transfer_type_id in (
+            elif transform_type_id in (
                     constants.TRANS_TYPE_PCA_THERMOCYCLE,
                     constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
                     constants.TRANS_TYPE_NGS_THERMOCYCLE):
 
-                reqData = {};
+                reqData = {}
 
                 if "requestedData" in details:
                     reqData = details["requestedData"]
@@ -376,13 +376,13 @@ def preview():
                     responseCommands.append({
                         "type": "REQUEST_DATA",
                         "item": {
-                            "type": "barcode",
+                            "type": "barcode.THERMOCYCLER",
                             "title": "Thermocycler barcode",
                             "forProperty": "thermocyclerBarcode"
                         }
                     })
 
-            elif transfer_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+            elif transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
@@ -393,10 +393,9 @@ def preview():
                     }
                 })
 
-            elif transfer_type_id == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
+            elif transform_type_id == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
 
                 rows = [{}]
-
 
                 # TO DO   Generate worklist...
 
@@ -410,10 +409,9 @@ def preview():
                     }
                 })
 
-            elif transfer_type_id == constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION:
+            elif transform_type_id == constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION:
 
                 rows = [{}]
-
 
                 # TO DO   Generate master mix instructions...
 
@@ -426,7 +424,7 @@ def preview():
                     }
                 })
 
-            elif transfer_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
+            elif transform_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
                 rows = [{}]
 
                 # we need to add master mix needs info or tell the user we need all the PCA plates first
@@ -445,7 +443,7 @@ def preview():
                         "type": "REQUEST_DATA",
                         "item": {
                             "type": "array.4",
-                            "dataType": "barcode",
+                            "dataType": "barcode.PLATE",
                             "title": "Associated PCA Plate Barcodes",
                             "forProperty": "associatedPcaPlates"
                         }
@@ -469,6 +467,7 @@ def preview():
                     }
                 })
 
+<<<<<<< HEAD:app/routes/transfer.py
             elif transfer_template_id == constants.TRANS_TPL_REBATCH_FOR_TRANSFORM :
                 amp_d={}
                 kan_d={}
@@ -507,6 +506,9 @@ def preview():
 
 
             elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+=======
+            elif transform_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
+>>>>>>> develop:app/routes/transform.py
 
 
 
@@ -520,7 +522,7 @@ def preview():
                         destinations_ready = False
 
                 if destinations_ready:
-                    rows = filter_transform(transfer_template_id,
+                    rows = filter_transform(transform_template_id,
                                             request.json['sources'],
                                             request.json['destinations'] )
 
@@ -540,15 +542,14 @@ def preview():
 
                     })
 
-            elif transfer_type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+            elif transform_type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
 
                 rows = [{}]
 
-
                 # TO DO   based on source barcode, present the target sequencer
 
-                #DEV Only remove when code exists to set sequencer
-                sequencer = "MiSeq";
+                # DEV Only remove when code exists to set sequencer
+                sequencer = "MiSeq"
 
                 responseCommands.append({
                     "type": "PRESENT_DATA",
@@ -577,30 +578,30 @@ def preview():
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
-                        "type": "barcode",
+                        "type": "barcode.SEQUENCER",
                         "title": "Sequencer Barcode",
                         "forProperty": "sequencerBarcode",
-                        #"value": reqData["sequencerBarcode"]
+                        # "value": reqData["sequencerBarcode"]
                     }
                 })
 
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
-                        "type": "barcode",
+                        "type": "barcode.CARTRIDGE",
                         "title": "Input Cartridge Barcode",
                         "forProperty": "inputCartridgeBarcode",
-                        #"value": reqData["inputCartridgeBarcode"]
+                        # "value": reqData["inputCartridgeBarcode"]
                     }
                 })
 
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
-                        "type": "barcode",
+                        "type": "barcode.FLOWCELL",
                         "title": "Flowcell Barcode",
                         "forProperty": "flowCellBarcode",
-                        #"value": reqData["flowCellBarcode"]
+                        # "value": reqData["flowCellBarcode"]
                     }
                 })
 
@@ -609,13 +610,13 @@ def preview():
 
         else:
 
-            if str(transfer_template_id) not in TRANSFER_MAP:
-                raise WebError('Unknown transfer template id: %s' %
-                               transfer_template_id)
+            if str(transform_template_id) not in TRANSFORM_MAP:
+                raise WebError('Unknown transform template id: %s' %
+                               transform_template_id)
 
-            xfer = TRANSFER_MAP[str(transfer_template_id)]
+            xfer = TRANSFORM_MAP[str(transform_template_id)]
 
-            if transfer_template_id == \
+            if transform_template_id == \
                     constants.TRANS_TPL_SAME_PLATE:
                 # identity function
                 dest_barcodes = [x['details'].get('id', '') for x in request.json['sources']]
@@ -625,7 +626,7 @@ def preview():
                 # FIXME: NGS_HITPICK_INDEXING and NGS_THERMOCYCLING demand 0 destination plates
                 # (was '26' and '27' but these match up to the above in constants; oddly
                 # neither of them is in this if block?)
-                if transfer_template_id not in (
+                if transform_template_id not in (
                         constants.TRANS_TPL_REBATCH_FOR_TRANSFORM,
                         constants.TRANS_TPL_FRAG_ANALYZER,
                         constants.TRANS_TPL_NGS_QC_PASSING,
@@ -636,21 +637,21 @@ def preview():
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-            if transfer_template_id == \
+            if transform_template_id == \
                     constants.TRANS_TPL_PLATE_MERGE:
                 # merge source plate(s) into single destination plate
                 rows = merge_transform(request.json['sources'], request.json['destinations'])
 
-            elif transfer_template_id == \
+            elif transform_template_id == \
                     constants.TRANS_TPL_REBATCH_FOR_TRANSFORM:
                 groups = sample_data_determined_transform(
-                    transfer_template_id, request.json['sources'], request.json['destinations'])
+                    transform_template_id, request.json['sources'], request.json['destinations'])
 
                 # to do: create the dest
 
                 destination_plates = []
                 dest_type = db.session.query(PlateType).get('SPTT_0006')
-                fourToOneMap = maps_json()["transfer_maps"][constants.TRANS_TPL_96_TO_384]["plate_well_to_well_maps"]
+                fourToOneMap = maps_json()["transform_maps"][constants.TRANS_TPL_96_TO_384]["plate_well_to_well_maps"]
                 dest_plate_index = 0
 
                 for group in groups:
@@ -697,15 +698,15 @@ def preview():
                     "plates": destination_plates
                 })
 
-            elif transfer_template_id == \
+            elif transform_template_id == \
                     constants.TRANS_TPL_NGS_POOLING:
 
-                rows = [{}];
-                sequencer = None;
+                rows = [{}]
+                sequencer = None
 
-                basePairMax = 0;
-                currentBasePairTotal = 0;
-                previousBasePairTotal = 0;
+                basePairMax = 0
+                currentBasePairTotal = 0
+                previousBasePairTotal = 0
 
                 if "requestedData" in details:
                     reqData = details["requestedData"]
@@ -724,9 +725,9 @@ def preview():
                         }
                     })
 
-                sources = request.json['sources'];
+                sources = request.json['sources']
 
-                sourcesSet = [];
+                sourcesSet = []
 
                 for sourceIndex, source in enumerate(sources):
                     sourcesSet.append({
@@ -734,13 +735,13 @@ def preview():
                         ,"details" : {
                             "id" : source["details"]["id"]
                         }
-                    });
+                    })
 
                 if "sequencer" in reqData:
                     # TO DO  Derive the max BP count for this sequencer
                     #        AND
                     #        Return total count of basepairs on source plate(s)
-                    basePairMax = 12500000;
+                    basePairMax = 12500000
 
                     '''
                     currentBasePairTotal = total of BPs in all source plates
@@ -748,16 +749,16 @@ def preview():
                     '''
 
                     # DEV ONLY - remove when real basepair counting is done
-                    previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax - 3 + len(sources);
+                    previousBasePairTotal = 500
+                    currentBasePairTotal = basePairMax - 3 + len(sources)
 
                     reponseTally = currentBasePairTotal
 
                     if currentBasePairTotal < basePairMax:
-                        #and add another source input to indicate there's more room
+                        # and add another source input to indicate there's more room
                         sourcesSet.append({
                             "type": "SPTT_0006"
-                        });
+                        })
 
                     elif basePairMax and currentBasePairTotal == basePairMax:
                         responseCommands.append({
@@ -781,7 +782,7 @@ def preview():
 
                         reponseTally = previousBasePairTotal
 
-                        #remove the last added source from the list
+                        # remove the last added source from the list
                         sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
 
                     responseCommands.append({
@@ -798,7 +799,7 @@ def preview():
                     "plates": sourcesSet
                 })
 
-            elif transfer_template_id == \
+            elif transform_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
 
                 destinations_ready = True
@@ -810,7 +811,7 @@ def preview():
                         destinations_ready = False
 
                 if (destinations_ready):
-                    rows = filter_transform(transfer_template_id, request.json['sources'], request.json['destinations'] )
+                    rows = filter_transform(transform_template_id, request.json['sources'], request.json['destinations'] )
 
                     responseCommands.append({
                         "type": "PRESENT_DATA",
@@ -824,24 +825,24 @@ def preview():
 
                     })
 
-            elif transfer_template_id in (
+            elif transform_template_id in (
                     constants.TRANS_TPL_FRAG_ANALYZER,
                     constants.TRANS_TPL_NGS_QC_PASSING):  # , constants.TRANS_TPL_EXTRACTION_TITIN):
 
-                rows = filter_transform(transfer_template_id, request.json['sources'],
+                rows = filter_transform(transform_template_id, request.json['sources'],
                                         request.json['destinations'])
 
-            elif transfer_template_id == \
+            elif transform_template_id == \
                     constants.TRANS_TPL_PCA_PCR_PURIFICATION:
                     '''
                         Kieran or Charlie please handle this.
                         Sources and destinations should be processed pairwise (paired by index)
-                        in a same-to-same-playout transfer from source to destination
+                        in a same-to-same-playout transform from source to destination
                     '''
                     rows = [{}]
 
             else:
-                if transfer_template_id in (
+                if transform_template_id in (
                         constants.TRANS_TPL_SAME_TO_SAME,
                         constants.TRANS_TPL_SAME_PLATE):
                     src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
@@ -880,7 +881,7 @@ def preview():
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for sample in plate.current_well_contents:
+                    for sample in plate.current_well_contents(db.session):
 
                         dest_barcode, dest_well = dest_lookup(src_idx, sample.well.well_number)
 
@@ -918,9 +919,9 @@ def save():
 def execute():
     pass
 
-TRANSFER_MAP = loads("""
+TRANSFORM_MAP = loads("""
 {
-                "1": {  // keyed to transfer_template_id in the database
+                "1": {  // keyed to transform_template_id in the database
                     "description": "Source and destination have SAME LAYOUT"
                     ,"type": "same-same"
                     ,"source": {
@@ -932,7 +933,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"2": {  // keyed to transfer_template_id in the database
+                ,"2": {  // keyed to transform_template_id in the database
                     "description": "Source and destination plate are SAME PLATE"
                     ,"type": "same-same"
                     ,"source": {
@@ -944,7 +945,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"4": {  // keyed to sample_transfer_template_id in the database
+                ,"4": {  // keyed to sample_transform_template_id in the database
                     "description": "Multiplexed same-same"
                     ,"type": "same-same"
                     ,"source": {
@@ -956,7 +957,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"13": {  // keyed to transfer_template_id in the database
+                ,"13": {  // keyed to transform_template_id in the database
                     "description": "384 to 4x96"
                     ,"type": "standard"
                     ,"source": {
@@ -1361,7 +1362,7 @@ TRANSFER_MAP = loads("""
                         }
                     ]
                 }
-                ,"14": {  // keyed to transfer_template_id in the database
+                ,"14": {  // keyed to transform_template_id in the database
                     "description": "96 to 2x48"
                     ,"type": "standard"
                     ,"source": {
@@ -1478,7 +1479,7 @@ TRANSFER_MAP = loads("""
                         }
                     ]
                 }
-                ,"16": {  // keyed to transfer_template_id in the database
+                ,"16": {  // keyed to transform_template_id in the database
                     "description": "Manual picking to nx 96"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1492,7 +1493,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"18": {  // keyed to transfer_template_id in the database
+                ,"18": {  // keyed to transform_template_id in the database
                     "description": "4x96 to 384"
                     ,"type": "standard"
                     ,"source": {
@@ -1903,7 +1904,7 @@ TRANSFER_MAP = loads("""
                         }
                     ]
                 }
-                ,"20": {  // keyed to transfer_template_id in the database
+                ,"20": {  // keyed to transform_template_id in the database
                     "description": "Hitpick for shipping"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1916,7 +1917,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"21": {  // keyed to transfer_template_id in the database
+                ,"21": {  // keyed to transform_template_id in the database
                     "description": "Qpix Log Reading to nx 96"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1930,7 +1931,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"22": {  // keyed to transfer_template_id in the database
+                ,"22": {  // keyed to transform_template_id in the database
                     "description": "Qpix Log Reading to nx 384"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1944,7 +1945,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"23": {  // keyed to transfer_template_id in the database
+                ,"23": {  // keyed to transform_template_id in the database
                     "description": "Plate Merge"
                     ,"type": "standard"
                     ,"source": {
@@ -1956,7 +1957,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": false
                     }
                 }
-                ,"24": {  // keyed to transfer_template_id in the database
+                ,"24": {  // keyed to transform_template_id in the database
                     "description": "Generic Transform"
                     ,"type": "user_specified"
                     ,"source": {
@@ -1968,7 +1969,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"25": {  // keyed to transfer_template_id in the database
+                ,"25": {  // keyed to transform_template_id in the database
                     "description": "Rebatching for Transformation"
                     ,"type": "standard"
                     ,"source": {
@@ -1982,7 +1983,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
-                ,"26": {  // keyed to transfer_template_id in the database
+                ,"26": {  // keyed to transform_template_id in the database
                     "description": "Fragment Analyzer"
                     ,"type": "standard"
                     ,"source": {
@@ -1994,7 +1995,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"27": {  // keyed to transfer_template_id in the database
+                ,"27": {  // keyed to transform_template_id in the database
                     "description": "NGS QC Pass"
                     ,"type": "standard"
                     ,"source": {
@@ -2006,7 +2007,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"28": {  // keyed to transfer_template_id in the database
+                ,"28": {  // keyed to transform_template_id in the database
                     "description": "Shipping"
                     ,"type": "standard"
                     ,"source": {
@@ -2018,7 +2019,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"29": {  // keyed to transfer_template_id in the database
+                ,"29": {  // keyed to transform_template_id in the database
                     "description": "Reformatting for Purification"
                     ,"type": "standard"
                     ,"source": {
@@ -2030,7 +2031,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"31": {  // keyed to sample_transfer_template_id in the database
+                ,"31": {  // keyed to sample_transform_template_id in the database
                     "description": "NGS: Pooling"
                     ,"type": "standard_template"
 
@@ -2044,7 +2045,7 @@ TRANSFER_MAP = loads("""
                         ,"variablePlateCount": true
                     }
                 }
-                ,"34": {  // keyed to transfer_template_id in the database
+                ,"34": {  // keyed to transform_template_id in the database
                     "description": "1x6144 to 16x384"
                     ,"type": "standard"
                     ,"source": {
@@ -2061,7 +2062,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;","Quadrant&nbsp;5:&nbsp;","Quadrant&nbsp;6:&nbsp;","Quadrant&nbsp;7:&nbsp;","Quadrant&nbsp;8:&nbsp;","Quadrant&nbsp;9:&nbsp;","Quadrant&nbsp;10:&nbsp;","Quadrant&nbsp;11:&nbsp;","Quadrant&nbsp;12:&nbsp;","Quadrant&nbsp;13:&nbsp;","Quadrant&nbsp;14:&nbsp;","Quadrant&nbsp;15:&nbsp;","Quadrant&nbsp;16:&nbsp;"]
                     }
                 }
-                ,"35": {  // keyed to transfer_template_id in the database
+                ,"35": {  // keyed to transform_template_id in the database
                     "description": "PCA Pre-Planning"
                     ,"type": "standard"
                     ,"source": {
@@ -2075,7 +2076,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
-                ,"36": {  // keyed to transfer_template_id in the database
+                ,"36": {  // keyed to transform_template_id in the database
                     "description": "PCR Primer Hitpicking"
                     ,"type": "standard"
                     ,"source": {
@@ -2089,7 +2090,7 @@ TRANSFER_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
-                ,"42": {  // keyed to transfer_template_id in the database
+                ,"42": {  // keyed to transform_template_id in the database
                     "description": "PCA/PCR Purification"
                     ,"type": "standard"
                     ,"source": {
@@ -2107,7 +2108,7 @@ TRANSFER_MAP = loads("""
 """)
 
 
-def transfer_map_TRANS_TPL_EXTRACTION_TITIN():
+def transform_map_TRANS_TPL_EXTRACTION_TITIN():
     result = {}
     for dest_plate_number_0based in range(16):
         for dest_well_id_0based in range(384):
@@ -2122,5 +2123,5 @@ def transfer_map_TRANS_TPL_EXTRACTION_TITIN():
             }
     return [result]
 
-TRANSFER_MAP[str(constants.TRANS_TPL_EXTRACTION_TITIN)] \
-    ["plateWellToWellMaps"] = transfer_map_TRANS_TPL_EXTRACTION_TITIN()
+TRANSFORM_MAP[str(constants.TRANS_TPL_EXTRACTION_TITIN)] \
+    ["plateWellToWellMaps"] = transform_map_TRANS_TPL_EXTRACTION_TITIN()

@@ -3,7 +3,7 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
 
         $scope.Constants = Constants;
 
-        $scope.selectTransferTemplateType = function (which, skipGo) {
+        $scope.selectTransformTemplateType = function (which, skipGo) {
             if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep()) {
                 return false;
             } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
@@ -16,21 +16,21 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
             }
         };
 
-        $scope.setTransferTemplate = function (which) {
+        $scope.setTransformTemplate = function (which) {
             $scope.templateTypeSelection = which;
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTranferTypeId == 39 || selectedTranferTypeId == 48 || selectedTranferTypeId == 51) {
+            if (selectedTransformTypeId == 39 || selectedTransformTypeId == 48 || selectedTransformTypeId == 51) {
                 return true;
             }
             return false;
-        }
+        };
 
-        var selectedTranferTypeId;
-        $scope.initTransferTypes.success(function (data) {
-            selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
-            $scope.setSelectedOption(selectedTranferTypeId);
+        var selectedTransformTypeId;
+        $scope.initTransformTypes.success(function (data) {
+            selectedTransformTypeId = $stateParams.selected_step_type_id.split('-')[0];
+            $scope.setSelectedOption(selectedTransformTypeId);
         });
 
         $scope.$on('$destroy', function () {
