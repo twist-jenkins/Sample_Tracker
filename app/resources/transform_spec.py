@@ -384,8 +384,12 @@ def store_quant_data(db, plate_id, quant_str):
 
         if curr_s:
             curr_s.conc_ng_ul = conc[2]
-            # Then update the concentration of its parent too
-            curr_s.parent.conc_ng_ul = conc[2]
+            # Store concentration for now to all parent samples
+            # FIXME this is DUMB for blended samples; we should ideally here
+            # check to see which parent came from whatever transfer ID is
+            # from the aliquot for quant step but who has the time for that?!?
+            for psample in curr_s.parents:
+                psample.conc_ng_ul = conc[2]
 
     logger.info("Flushing updates for parsed concentration data")
     db.flush()

@@ -300,7 +300,7 @@ def preview():
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for sample in db.session.query(Sample).join(PlateWell) \
+                    for sample in db.session.query(Sample).join(PlateWell, Sample.well) \
                             .filter(Sample.plate == plate) \
                             .order_by(PlateWell.well_number):
 

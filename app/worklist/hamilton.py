@@ -33,11 +33,12 @@ def post_pca_normalization_worklist(db, plate_id):
 
     # We double the 1:N row count so that later we can move through by
     # 2s so that we wrap back around to the even rows.
-    row_skip_order = range(1, plate.layout.row_count) * 2
+    row_skip_order = range(1, plate.plate_type.layout.row_count + 1) + \
+        range(2, plate.plate_type.layout.row_count + 1)
 
-    for curr_col in xrange(plate.layout.col_count):
+    for curr_col in xrange(plate.plate_type.layout.col_count):
         for curr_row in row_skip_order[::2]:  # skip a column each time
-            wlabel = chr(curr_row - 1 + ord('A')) + str(curr_col)
+            wlabel = chr(curr_row - 1 + ord('A')) + str(curr_col + 1)
             sample = sdict[wlabel]
 
             row = sample.well.well_label + ","
