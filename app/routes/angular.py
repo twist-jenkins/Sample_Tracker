@@ -522,7 +522,7 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     seen_children = []
     this_to_child_task_name = None
     parent_to_this_task_name = None
-    for s in sample_plate.current_well_contents:
+    for s in sample_plate.current_well_contents(db.session):
         wells.append({"well_id": s.well.well_number,
                       "column_and_row": s.well.well_label,
                       "sample_id": s.id

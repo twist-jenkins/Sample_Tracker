@@ -830,9 +830,8 @@ def preview():
                     except MultipleResultsFound:
                         raise WebError('multiple plates found with barcode %s' % barcode)
 
-                    for sample in db.session.query(Sample) \
-                            .filter(Sample.plate == plate).join(PlateWell)\
-                            .order_by(PlateWell.well_number):
+                    for sample in plate.current_well_contents(db.session):
+
                         dest_barcode, dest_well = dest_lookup(src_idx, sample.well.well_number)
 
                         rows.append({'source_plate_barcode': barcode,
