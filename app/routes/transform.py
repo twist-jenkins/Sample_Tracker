@@ -369,7 +369,7 @@ def preview():
                     responseCommands.append({
                         "type": "REQUEST_DATA",
                         "item": {
-                            "type": "barcode",
+                            "type": "barcode.THERMOCYCLER",
                             "title": "Thermocycler barcode",
                             "forProperty": "thermocyclerBarcode"
                         }
@@ -436,7 +436,7 @@ def preview():
                         "type": "REQUEST_DATA",
                         "item": {
                             "type": "array.4",
-                            "dataType": "barcode",
+                            "dataType": "barcode.PLATE",
                             "title": "Associated PCA Plate Barcodes",
                             "forProperty": "associatedPcaPlates"
                         }
@@ -527,7 +527,7 @@ def preview():
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
-                        "type": "barcode",
+                        "type": "barcode.SEQUENCER",
                         "title": "Sequencer Barcode",
                         "forProperty": "sequencerBarcode",
                         # "value": reqData["sequencerBarcode"]
@@ -537,7 +537,7 @@ def preview():
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
-                        "type": "barcode",
+                        "type": "barcode.CARTRIDGE",
                         "title": "Input Cartridge Barcode",
                         "forProperty": "inputCartridgeBarcode",
                         # "value": reqData["inputCartridgeBarcode"]
@@ -547,7 +547,7 @@ def preview():
                 responseCommands.append({
                     "type": "REQUEST_DATA",
                     "item": {
-                        "type": "barcode",
+                        "type": "barcode.FLOWCELL",
                         "title": "Flowcell Barcode",
                         "forProperty": "flowCellBarcode",
                         # "value": reqData["flowCellBarcode"]

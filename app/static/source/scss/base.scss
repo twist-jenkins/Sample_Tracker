@@ -1161,8 +1161,8 @@ ul.twst-spec-requested-items {
             }
         }
 
-        .twst-transform-spec-transfers-list {
-            .twst-record-step-download-transfer-plan-excel {
+        .twst-transform-specs-list {
+            .twst-record-step-download-transform-plan-excel {
                     position: absolute;
                     top: 0.5em;
                     left: 20em;
@@ -1175,7 +1175,7 @@ ul.twst-spec-requested-items {
             }
         }
 
-        .twst-transform-spec-transfers-list-empty-msg, .twst-transform-spec-sources-empty-msg {
+        .twst-transform-specs-list-empty-msg, .twst-transform-spec-sources-empty-msg {
             margin-top: 1em;
             color: $twst-dark-red;
         }
@@ -1567,7 +1567,7 @@ ul.twst-spec-requested-items {
         margin-bottom: 1em;
     }
 
-    .twst-record-step-transfer-toggle-controls {
+    .twst-record-step-transform-toggle-controls {
         display: block;
         clear: both;
         font-size: 1.2em;
@@ -2078,7 +2078,7 @@ ul.twst-spec-requested-items {
         }
     }
 
-    .twst-create-edit-transfer-plans-main {
+    .twst-create-edit-transform-specs-main {
         @include bootstrapOverride;
     }
 
@@ -2317,7 +2317,7 @@ ul.twst-spec-requested-items {
 
     &.twst-hamilton-wizard-guided-placement-scan-mode {
 
-        &.twst-hamilton-wizard-HAM01 {
+        &.twst-hamilton-wizard-iHAM01 {
             .twst-hamilton-wizard-deck-visualizer {
                 .twst-hamilton-wizard-deck-contents {
                     .twst-hamilton-wizard-carrier {
@@ -2332,7 +2332,7 @@ ul.twst-spec-requested-items {
             }
         }
 
-        &.twst-hamilton-wizard-HAM04 {
+        &.twst-hamilton-wizard-iHAM04 {
             .twst-hamilton-wizard-deck-visualizer {
                 .twst-hamilton-wizard-deck-contents {
                     .twst-hamilton-wizard-carrier {
