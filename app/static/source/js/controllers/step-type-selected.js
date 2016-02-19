@@ -21,16 +21,16 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTranferTypeId == 39 || selectedTranferTypeId == 48 || selectedTranferTypeId == 51) {
+            if (selectedTransformTypeId == 39 || selectedTransformTypeId == 48 || selectedTransformTypeId == 51) {
                 return true;
             }
             return false;
-        }
+        };
 
-        var selectedTranferTypeId;
-        scope.initTransformTypes.success(function (data) {
-            selectedTranferTypeId = $stateParams.selected_step_type_id.split('-')[0];
-            $scope.setSelectedOption(selectedTranferTypeId);
+        var selectedTransformTypeId;
+        $scope.initTransformTypes.success(function (data) {
+            selectedTransformTypeId = $stateParams.selected_step_type_id.split('-')[0];
+            $scope.setSelectedOption(selectedTransformTypeId);
         });
 
         $scope.$on('$destroy', function () {
