@@ -10,7 +10,7 @@ from flask.ext.restful import abort
 from flask_login import current_user
 
 from dbmodels import MiSeqSampleView
-from twistdb.sampletrack import Sample
+from twistdb.sampletrack import Sample, TransformDetail
 from twistdb.ngs import NGSBarcodePair
 from twistdb import create_unique_id
 
@@ -383,11 +383,9 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
                        % ngs_barcode_pair_index)
 
     # Refer to source sample instances
-    source_cs_sample = db_session.query(Sample).get(source_sample_id)
+    # FIXME: this hardcodes a relationship between sequence and sample
     i5_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
-    i5_sample = db_session.query(Sample).get(i5_sample_id)
-    i7_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
-    i7_sample = db_session.query(Sample).get(i7_sample_id)
+    i7_sample_id = ngs_pair.i7_sequence_id.replace("BC_", "BCS_")
 
     # Create NPS
     nps_id = create_unique_id("NPS_")()
@@ -399,16 +397,24 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
                         i7_sequence_id=ngs_pair.i7_sequence_id,
                         operator_id=current_user.operator_id)
 
-    nps_sample.parents.append(source_cs_sample)
-    nps_sample.parents.append(i5_sample)
-    nps_sample.parents.append(i7_sample)
+    db_session.add(nps_sample)
+
+    # Create parent-child relationships.
+    # TODO: consider getting rid of the barcode relationships here.
+    # They're probably superfluous, since we have 4 columns at the
+    # child sample level to track i5 and i7 barcoding.
+    for parent_sample_id in (source_sample_id, i5_sample_id, i7_sample_id):
+        xform = TransformDetail(
+            parent_sample_id=parent_sample_id,
+            child_sample_id=nps_id
+        )
+        db_session.add(xform)
 
     logging.debug('NPS_ID %s for %s assigned [%s, %s]',
                   nps_id, source_sample_id,
                   ngs_pair.i5_sequence_id,
                   ngs_pair.i7_sequence_id)
 
-    db_session.add(nps_sample)
     db_session.flush()
 
     return nps_id, ngs_pair

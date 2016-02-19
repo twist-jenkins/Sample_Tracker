@@ -421,7 +421,7 @@ class TestCase(unittest.TestCase):
             assert "data" in result
             dat = result["data"]
             print "$" * 80, dat
-            assert dat["parents"] == [root_cs_id]
+            assert root_cs_id in dat["parents"]
             if ix % 2:
                 assert dat["i5_sequence_id"] == barcode_sequence_id
             else:
