@@ -28,7 +28,7 @@ class TestCase(unittest.TestCase):
     def tearDownClass(cls):
         pass
 
-    def test_titin_plate(self):
+    def DISABLED_TOO_SLOW_test_titin_plate(self):
         """ assumes some stuff about fixtures """
 
         uri = '/api/v1/basic-plate-info/SRN-WARP1-TEST1'
