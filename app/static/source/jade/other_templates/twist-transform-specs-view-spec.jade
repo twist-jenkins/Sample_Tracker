@@ -32,8 +32,17 @@ div(class="twst-view-transform-spec-main")
                         li(ng-repeat="destination in selectedSpec.plan.destinations") {{destination.details.id}}
 
             // button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
-            h3 Operations:
-            table(class="twst-data-readout-table twst-transform-spec-preview-table")
+            div(ng-if="selectedSpec.data_json.details.requestedData") 
+                h3 Requested Data:
+                    ul(class="twst-spec-requested-items")
+                        li(class="twst-record-step-requested-item" ng-repeat="item in selectedSpec.data_json.details.dataRequests")
+                            twst-transform-spec-data-request-item(transform-spec="selectedSpec.data_json" item="item" read-only="true")
+
+            h3(class="twst-transform-spec-show-btn" ng-click="showOperations = !showOperations")
+                div(class="twst-custom-radio twst-selected-{{showOperations}} twst-custom-radio-as-checkbox" val="show")
+                span(class="twst-custom-radio-label") Show Operations
+
+            table(class="twst-data-readout-table twst-transform-spec-preview-table" ng-show="showOperations")
                 tr
                     td(class="twst-data-readout-table-header") Sample Id
                     td(class="twst-data-readout-table-header") Source Plate

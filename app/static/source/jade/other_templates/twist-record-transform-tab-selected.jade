@@ -63,7 +63,7 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
                 h3
                     strong Requested
                     span Items:
-                ul(class="twst-record-step-requested-items")
+                ul(class="twst-spec-requested-items")
                     li(class="twst-record-step-requested-item" ng-repeat="item in transformSpec.requestedDataItems")
                         twst-transform-spec-data-request-item(transform-spec="transformSpec" item="item")
             div(class="twst-present-request-data-pane-content-divider" ng-if="transformSpec.presentedDataItems.length && transformSpec.requestedDataItems.length")

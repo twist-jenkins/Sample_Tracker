@@ -286,9 +286,13 @@ app = angular.module('twist.app')
             ,stripNonAlphaNumeric: function (str, dashOk, replaceWithSpace) {
                 return stripNonAlphaNumeric(str, dashOk, replaceWithSpace);
             },
-            getPrettyDateString: function (dateString) {
+            getPrettyDateString: function (dateString, shortYear) {
                 var d = new Date(dateString);
-                return d.toLocaleString();
+                var date = d.toLocaleString();
+                if (shortYear) {
+                    date = date.substring(0, date.lastIndexOf('/') + 1) + date.substring(date.lastIndexOf('/') + 3);
+                }
+                return date;
             }
             ,addLeadingZero: function (number, finalLength) {
 
