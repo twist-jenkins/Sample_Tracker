@@ -12,11 +12,11 @@ os.environ["WEBSITE_ENV"] = "Local"
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
 from app import app
-from app import db
 from app import login_manager
 
 from test_flask_app import AutomatedTestingUser, rnd_bc
 # from test_flask_app import RootPlate
+
 
 class TestCase(unittest.TestCase):
 
@@ -35,8 +35,8 @@ class TestCase(unittest.TestCase):
         pass
 
     def DEPRECATED_test_aliquot_standard_template_golden(self):
-        data = {"sampleTransferTypeId": 2,
-                "sampleTransferTemplateId": 1,
+        data = {"sampleTransformTypeId": 2,
+                "sampleTransformTemplateId": 1,
                 "sourcePlates": [self.root_plate_barcode],
                 "destinationPlates": [rnd_bc(), ]}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -47,8 +47,8 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def DEPRECATED_test_aliquot_standard_template_bad_source(self):
-        data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplateId": 1,  # ??
+        data = {"sampleTransformTypeId": 1,
+                "sampleTransformTemplateId": 1,  # ??
                 "sourcePlates": [self.root_plate_barcode + '_WALDO'],
                 "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -59,8 +59,8 @@ class TestCase(unittest.TestCase):
         assert result["success"] is False
 
     def FUTURE_test_aliquot_user_defined_template_golden(self):
-        data = {"sampleTransferTypeId": 1,
-                "sampleTransferTemplate": {"foo": 3},  # ??
+        data = {"sampleTransformTypeId": 1,
+                "sampleTransformTemplate": {"foo": 3},  # ??
                 "sourcePlates": [self.root_plate_barcode],
                 "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -71,8 +71,8 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
     def DEPRECATED_test_1_to_4_golden(self):
-        data = {"sampleTransferTypeId": 11,
-                "sampleTransferTemplateId": 13,
+        data = {"sampleTransformTypeId": 11,
+                "sampleTransformTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
                 "destinationPlates": [rnd_bc(), rnd_bc(), rnd_bc(), rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -84,8 +84,8 @@ class TestCase(unittest.TestCase):
 
     def DEPRECATED_test_1_to_4_to_1_golden(self):
         intermediate_plates = [rnd_bc(), rnd_bc(), rnd_bc(), rnd_bc()]
-        data = {"sampleTransferTypeId": 11,
-                "sampleTransferTemplateId": 13,
+        data = {"sampleTransformTypeId": 11,
+                "sampleTransformTemplateId": 13,
                 "sourcePlates": [self.root_plate_barcode],
                 "destinationPlates": intermediate_plates}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -93,8 +93,8 @@ class TestCase(unittest.TestCase):
                               content_type='application/json')
         assert rv.status_code == 200
 
-        data = {"sampleTransferTypeId": 17,
-                "sampleTransferTemplateId": 18,
+        data = {"sampleTransformTypeId": 17,
+                "sampleTransformTemplateId": 18,
                 "sourcePlates": intermediate_plates,
                 "destinationPlates": [rnd_bc()]}
         rv = self.client.post('/api/v1/track-sample-step',
@@ -107,7 +107,7 @@ class TestCase(unittest.TestCase):
     def test_small_adhoc_golden(self):
         bc = rnd_bc()
         bc2 = rnd_bc()
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             # "source_well_name": src_well_name,
             "source_well_number": src_well_num,
@@ -126,9 +126,9 @@ class TestCase(unittest.TestCase):
             ('C1', 13, 'GA_562a647b799305708a87981f', bc2, 'L1', 265, 384),
             ('C2', 14, 'GA_562a647b799305708a87981d', bc2, 'L12', 276, 384),
         ]]
-        data = {"sampleTransferTypeId": 13,
-                "sampleTransferTemplateId": 14,
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 13,
+                "sampleTransformTemplateId": 14,
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -168,7 +168,7 @@ class TestCase(unittest.TestCase):
             ('S_WARP2_0007', 'PLT_WARP2.1', 7, 'WOI_56bc154100bc15c389b791b0'),
         ]
 
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": src_plate_bc,
             "source_well_number": well_num,
             "destination_plate_barcode": plate_2_barcode,
@@ -177,9 +177,9 @@ class TestCase(unittest.TestCase):
             "destination_plate_type": plate_2_type,
             "source_sample_id": src_sample_id
         } for (src_sample_id, src_plate_bc, well_num, woi) in stamp_data]
-        data = {"sampleTransferTypeId": 13,  # ?
-                "sampleTransferTemplateId": 14,  # ?
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 13,  # ?
+                "sampleTransformTemplateId": 14,  # ?
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -188,7 +188,7 @@ class TestCase(unittest.TestCase):
         result = json.loads(rv.data)
         assert result["success"] is True
 
-        transfer_2_data = []
+        transform_2_data = []
         for (src_sample_id, src_plate_bc, well_num, woi) in stamp_data:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
                                  (plate_2_barcode, well_num),
@@ -198,14 +198,14 @@ class TestCase(unittest.TestCase):
             result = json.loads(rv.data)
             assert result["errors"] == []
             # assert result["data"]["root_sample_id"] == sample_1_id
-            assert result["data"]["parent_sample_id"] == src_sample_id
+            assert result["data"]["parents"][0] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
             assert result["data"]["order_item_id"] == woi
             # logging.warn("((((()))))) %s", result["data"])
             plate_2_sample_id = result["data"]["id"]
             assert plate_2_sample_id != src_sample_id
             next_map_data = (plate_2_sample_id, plate_2_barcode, well_num, woi)
-            transfer_2_data.append(next_map_data)
+            transform_2_data.append(next_map_data)
 
         # then same2same the result
 
@@ -220,11 +220,11 @@ class TestCase(unittest.TestCase):
             "destination_plate_well_count": plate_3_well_count,
             "destination_plate_type": plate_3_type,
             "source_sample_id": src_sample_id
-        } for (src_sample_id, src_plate_bc, well_num, woi) in transfer_2_data]
+        } for (src_sample_id, src_plate_bc, well_num, woi) in transform_2_data]
 
-        data = {"sampleTransferTypeId": 62,  # "CHP Deprotection"
-                "sampleTransferTemplateId": 2,  # Same - Same
-                "transferMap": same2same_map
+        data = {"sampleTransformTypeId": 62,  # "CHP Deprotection"
+                "sampleTransformTemplateId": 2,  # Same - Same
+                "transformMap": same2same_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -235,7 +235,7 @@ class TestCase(unittest.TestCase):
 
         # now verify the samples are intact
 
-        for (src_sample_id, src_plate_bc, well_num, woi) in transfer_2_data:
+        for (src_sample_id, src_plate_bc, well_num, woi) in transform_2_data:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
                                  (plate_3_barcode, well_num),
                                  data=json.dumps(data),
@@ -244,13 +244,12 @@ class TestCase(unittest.TestCase):
             result = json.loads(rv.data)
             assert result["errors"] == []
             # assert result["data"]["root_sample_id"] == sample_1_id
-            assert result["data"]["parent_sample_id"] == src_sample_id
+            assert result["data"]["parents"][0] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
             assert result["data"]["order_item_id"] == woi
             plate_3_sample_id = result["data"]["id"]
             assert plate_3_sample_id != src_sample_id
             next_map_data = (plate_3_sample_id, plate_3_barcode, well_num, woi)
-
 
     def xtest_small_same_to_same_to_same_golden(self):
 
@@ -266,7 +265,7 @@ class TestCase(unittest.TestCase):
         ]
 
         # stamp a test plate
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_number": src_well_num,
             "destination_plate_barcode": dest_plate,
@@ -276,9 +275,9 @@ class TestCase(unittest.TestCase):
             "source_sample_id": src_sample_id
         } for (src_well_num, src_sample_id,
                dest_plate, dest_well_num, dest_well_count) in same2same]
-        data = {"sampleTransferTypeId": 13,
-                "sampleTransferTemplateId": 14,
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 13,
+                "sampleTransformTemplateId": 14,
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -289,12 +288,12 @@ class TestCase(unittest.TestCase):
 
         # then same2same the result a few times
 
-        for op in transfer_map:
+        for op in transform_map:
             op["source_plate_barcode"] = bc
 
-        data = {"sampleTransferTypeId": 62,  # "CHP Deprotection"
-                "sampleTransferTemplateId": 2,  # Same - Same
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 62,  # "CHP Deprotection"
+                "sampleTransformTemplateId": 2,  # Same - Same
+                "transformMap": transform_map
                 }
 
         for n in range(3):
@@ -304,7 +303,6 @@ class TestCase(unittest.TestCase):
             assert rv.status_code == 200, rv.data
             result = json.loads(rv.data)
             assert result["success"] is True
-
 
 
 if __name__ == '__main__':

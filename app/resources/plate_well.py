@@ -29,7 +29,7 @@ class PlateWellResource(flask_restful.Resource):
         with scoped_session(db.engine) as sess:
             sample = (sess.query(Sample)
                       .join(Plate)
-                      .join(PlateWell)
+                      .join(PlateWell, Sample.well)
                       .filter(Plate.external_barcode == plate_barcode,
                               PlateWell.well_number == well_number)
                       .first())

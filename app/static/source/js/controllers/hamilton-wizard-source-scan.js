@@ -30,7 +30,7 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
 
                 $scope.processingSources = true;
 
-                Api.processHamiltonSources(scannedPlateBarcodes, $scope.transformSpec.details.transfer_type_id).success(function (data) {
+                Api.processHamiltonSources(scannedPlateBarcodes, $scope.transformSpec.details.transform_type_id).success(function (data) {
                     console.log(data);
                     $scope.processingSources = false;
                     var responseCommands =  data.responseCommands;
@@ -87,7 +87,7 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
                             }
                         }
 
-                        switch ($scope.transformSpec.details.transfer_type_id) {
+                        switch ($scope.transformSpec.details.transform_type_id) {
                             case 39:
                             case 48:
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
@@ -99,7 +99,7 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_placement_and_scan');
                                 break;
                             default:
-                                console.log('Unexpected transfer_type_id = [' + $scope.transformSpec.details.transfer_type_id + ']');
+                                console.log('Unexpected transform_type_id = [' + $scope.transformSpec.details.transform_type_id + ']');
                                 break;
 
                         }
