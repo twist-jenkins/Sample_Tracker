@@ -10,8 +10,8 @@ angular.module('twist.app').controller('tabSelectedController', ['$scope', '$sta
 
         $scope.cachedFileData = null;
 
-        /* refresh the current transfer plan based on changes to plates inputs or upload file */
-        $scope.updateTransferPlan = function (val, which, itemIndex) {
+        /* refresh the current transform plan based on changes to plates inputs or upload file */
+        $scope.updateTransformPlan = function (val, which, itemIndex) {
             if (val && val.length > 5) {
 
                 /* prevent a source or destination from being entered more than once */
@@ -44,7 +44,7 @@ angular.module('twist.app').controller('tabSelectedController', ['$scope', '$sta
             if (newVal == Constants.FILE_UPLOAD && $scope.cachedFileData) {
                 $scope.catchFile();
             } else if (newVal == Constants.STANDARD_TEMPLATE) {
-                $scope.transformSpec.transferFromFile(false);
+                $scope.transformSpec.transformFromFile(false);
             }
         });
 
@@ -109,12 +109,12 @@ angular.module('twist.app').controller('tabSelectedController', ['$scope', '$sta
                         $scope.cachedFileData = fileData;
                     };
 
-                    FileParser.getTransferRowsFromFile(fileData, $scope.transformSpec).then(function (resultData) {
+                    FileParser.getTransformRowsFromFile(fileData, $scope.transformSpec).then(function (resultData) {
                         $scope.excelFileStats = resultData.stats;
                         $scope.fileErrors = resultData.errors;
 
                         if (!resultData.errors.length) {
-                            $scope.transformSpec.transferFromFile(true, resultData);
+                            $scope.transformSpec.transformFromFile(true, resultData);
                         } else {
                             $scope.transformSpec.clearOperationsList();
                         }
@@ -150,6 +150,6 @@ angular.module('twist.app').controller('tabSelectedController', ['$scope', '$sta
         }
 
         $scope.selected_tab = $stateParams.selected_tab;
-        $scope.setTransferTemplate($scope.selected_tab);
+        $scope.setTransformTemplate($scope.selected_tab);
     }]
 )

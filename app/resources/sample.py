@@ -24,8 +24,11 @@ class SampleSchema(Schema):
     id = fields.Str()
     plate_id = fields.Str()
     plate_well_code = fields.Int()
+    work_order_id = fields.Str()
     order_item_id = fields.Str()
-    parent_sample_id = fields.Str()
+    parents = fields.List(fields.Str())
+    parents = fields.Method("get_parent_ids")
+    children = fields.Method("get_child_ids")
     root_sample_id = fields.Str()
     type_id = fields.Str()
     operator_id = fields.Str()
@@ -36,6 +39,14 @@ class SampleSchema(Schema):
     external_id = fields.Str()
     i5_sequence_id = fields.Str()
     i7_sequence_id = fields.Str()
+
+    def get_parent_ids(self, obj):
+        """Convert list of parent Sample instances to parent sample IDs."""
+        return [x.id for x in obj.parents]
+
+    def get_child_ids(self, obj):
+        """Convert list of child Sample instances to child sample IDs."""
+        return [x.id for x in obj.children]
 
 
 sample_schema = SampleSchema()
@@ -125,4 +136,3 @@ class SampleListResource(flask_restful.Resource):
         """creates new sample returning a nice geeky Location header"""
         raise NotImplementedError
         return SampleResource.create_or_replace('POST')
-
