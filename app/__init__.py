@@ -32,7 +32,8 @@ if SHOW_SQLALCHEMY_ECHO_TRACE:
 #
 ######################################################################################
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='ui')
+
 env = os.environ.get('WEBSITE_ENV', 'dev')
 config_object_name = 'app.config.%sConfig' % env.capitalize()
 print "Using configuration environment [%s] and config object [%s]" % (env,config_object_name)
@@ -57,7 +58,7 @@ from twistdb.db import initdb
 # initialize database engine:
 initdb(engine_url=app.config['SQLALCHEMY_DATABASE_URI'])
 
-UPLOAD_FOLDER = 'app/static/uploads'
+UPLOAD_FOLDER = 'app/ui/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
@@ -328,10 +329,14 @@ def get_samples_list():
 #
 # This is the new app - single page "home"
 #
-@app.route('/')
-def new_home():
-    return routes.new_home()
-
+@app.route('/', defaults={'path': 'index.html'})
+@app.route('/<path>')
+def new_root(path):
+    from flask import request
+    print request.url
+    print path
+    import urllib
+    return urllib.urlopen('http://localhost:9001/%s' % path).read()
 
 ########################################################
 # ### api routes

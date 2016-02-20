@@ -81,11 +81,6 @@ SAMPLE_VIEW_ATTRS = (
 )
 
 
-def new_home():
-    """This is the "home" page, which is actually the "enter a sample movement" page."""
-    return app.send_static_file('index.html')
-
-
 def error_response(status_code, message):
     response = jsonify({'success': False, 'message': message})
     response.status_code = status_code

@@ -27,7 +27,7 @@ from api import ( dragndrop, get_sample_plate, sample_plate_external_barcode, sa
 
 # Route handlers for the pages of the application.
 #
-from angular import ( new_home, user_data, google_login, sample_transform_types, sample_plate_barcodes, update_plate_barcode,
+from angular import ( user_data, google_login, sample_transform_types, sample_plate_barcodes, update_plate_barcode,
                       sample_transforms, create_step_record, plate_details, source_plate_well_data, check_plates_are_new,
                       get_hamilton_by_barcode, get_carrier_by_barcode,get_plate_ready_for_step, process_hamilton_sources, trash_samples, get_worklist, get_date_time)
 
