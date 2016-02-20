@@ -1,5 +1,5 @@
-angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout',   
-    function($compile, Constants, $timeout) {
+angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout', 'BarcodeManager',   
+    function($compile, Constants, $timeout, BarcodeManager) {
         return {
             scope: {
                 transformSpec: '='
@@ -56,7 +56,10 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                         var returnValidate = function (arrInd) {
 
-                            if ($scope.itemData.dataType = Constants.DATA_TYPE_BARCODE) {
+                            if ($scope.itemData.dataType.indexOf(Constants.DATA_TYPE_BARCODE) == 0) {
+
+                                var barcodeType = $scope.itemData.dataType.split('.')[1];
+                                var barcodeTargetType = $scope.itemData.dataType.split('.')[2];
 
                                 var val = $scope.transformSpec.details.requestedData[$scope.itemData.forProperty][arrInd];
 
@@ -70,9 +73,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                             $scope.validations[arrInd] = null;
                                             $scope.errors[arrInd] = null;
                                         }
-                                    } else if (val.indexOf(Constants.BARCODE_PREFIX_PLATE) != 0) {
+                                    } else if (!(BarcodeManager.validateType(val, barcodeType))) {
                                         $scope.validations[arrInd] = false;
-                                        $scope.errors[arrInd] = 'Value is not a recognized plate barcode';
+                                        $scope.errors[arrInd] = 'Scanned barcode is not of type: ' + barcodeType;
                                     } else if (val && val.length) {
 
                                         //check that we haven't already scanned this one
@@ -80,6 +83,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                         if (allVals.indexOf('|' + val + '|') != allVals.lastIndexOf('|' + val + '|')) {
                                             $scope.validations[arrInd] = false;
                                             $scope.errors[arrInd] = 'This barcode has already been entered.';
+                                        } else if (barcodeTargetType && val.substring(1).indexOf(barcodeTargetType) != 0) {
+                                            $scope.validations[arrInd] = false;
+                                            $scope.errors[arrInd] = 'This plate appears to be from the wrong step. Expected type was: ' + barcodeTargetType + '.';
                                         } else {
 
                                             // TODO  We ALSO need to validate the PCA barcodes that were included against the db are real PCA plate barcodes

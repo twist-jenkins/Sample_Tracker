@@ -436,7 +436,7 @@ def preview():
                         "type": "REQUEST_DATA",
                         "item": {
                             "type": "array.4",
-                            "dataType": "barcode.PLATE",
+                            "dataType": "barcode.PLATE.PCAx",
                             "title": "Associated PCA Plate Barcodes",
                             "forProperty": "associatedPcaPlates"
                         }
