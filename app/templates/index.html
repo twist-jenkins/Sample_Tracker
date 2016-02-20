@@ -15,8 +15,8 @@
       {% endassets %}
 {% endblock %}
 
-{% block page_id %}recordSampleTransfer{% endblock %}
- 
+{% block page_id %}recordSampleTransform{% endblock %}
+
 {% block page_main_content %}
 
 
@@ -47,22 +47,22 @@
 
 
     <form>
-        <legend>Record Sample Transfer</legend>
+        <legend>Record Sample Transform</legend>
 
       <div class="form-group">
-        <label for="exampleInputEmail1">Sample Transfer Task Type</label>
-        
-<div id="sampleTransferTypeDropDown" class="dropdown">
-  
+        <label for="exampleInputEmail1">Sample Transform Task Type</label>
+
+<div id="sampleTransformTypeDropDown" class="dropdown">
+
    <input class="selectedItemId" type="hidden" />
   <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-    <span class="label">What type of transfer task are you performing?</span>
+    <span class="label">What type of transform task are you performing?</span>
     <span class="caret"></span>
   </button>
   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
 
-{% for sample_transfer_type in sample_transfer_types %}
-   <li data-sample-transfer-type-id="{{sample_transfer_type.id}}"><a href="JavaScript:void(0);">{{sample_transfer_type.name}}</a></li>
+{% for sample_transform_type in sample_transform_types %}
+   <li data-sample-transform-type-id="{{sample_transform_type.id}}"><a href="JavaScript:void(0);">{{sample_transform_type.name}}</a></li>
 {% endfor %}
 
 
@@ -83,7 +83,7 @@
          <em>- or -</em>
 
          <div id="dropzone">
-            Drop your sample transfer description file here.
+            Drop your sample transform description file here.
          </div>
 
 
@@ -99,20 +99,20 @@
                     <td>Destination Well Id</td>
                     <td>Destination Col &amp; Row</td>
                 </tr>
-            </thead>   
+            </thead>
             <tbody>
-                
+
             </tbody>
          </table>
 
       </div>
-     
-      
+
+
       <div class="form-group buttonsholder">
-        
+
          <button type="button" class="reset btn btn-default btn-lg">Reset</button>
          <button type="button" class="submit btn btn-primary btn-lg">Submit</button>
-       
+
       </div>
 
     </form>
@@ -126,5 +126,3 @@
 
 
 {% endblock %}
-
-      

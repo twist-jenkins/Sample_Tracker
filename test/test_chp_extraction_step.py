@@ -30,8 +30,8 @@ def titin_extraction_spec(src_plate_name, src_sample_prefix,
                     "id": 52,
                     "source_plate_count": 1,
                     "text": "CHP Extraction - Titin",
-                    "transfer_template_id": 34,
-                    "transfer_type_id": 52,
+                    "transform_template_id": 34,
+                    "transform_type_id": 52,
                     "uid_group": 1
                 },
                 "operations": [
@@ -111,8 +111,8 @@ def chp_deprotection_spec(src_plate_name, src_sample_prefix):
                     "id": 452,
                     "source_plate_count": 1,
                     "text": "CHP Deprotection",
-                    "transfer_template_id": 2,
-                    "transfer_type_id": 62,  # "CHP Deprotection",
+                    "transform_template_id": 2,
+                    "transform_type_id": 62,  # "CHP Deprotection",
                     "uid_group": 1
                 },
                 "operations": [

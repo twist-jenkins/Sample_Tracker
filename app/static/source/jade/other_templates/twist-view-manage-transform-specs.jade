@@ -26,14 +26,14 @@ div(class="twst-view-manage-transform-specs-main" ui-view)
                         span {{::$index < spec.destinations.length-1 ? ', ': ''}}
                 td(class="twst-source_operator") {{spec.operator_id}}
                 td {{::getPrettyDateString(spec.date_created, true)}}
-                td 
+                td
                     strong {{spec.date_executed ? 'executed' : 'saved'}}
                     span(ng-if="spec.date_executed")
                         br
                         span {{getPrettyDateString(spec.date_executed, true)}}
                 td
                     button(class="twst-button" ng-click="viewSpec(spec)") view
-                    button(class="twst-button twst-blue-button" ng-click="executeSpec(spec)" ng-if="!spec.date_executed && spec.data_json.details.transfer_type_id != 50") execute
+                    button(class="twst-button twst-blue-button" ng-click="executeSpec(spec)" ng-if="!spec.date_executed && spec.data_json.details.transform_type_id != 50") execute
                     // button(class="twst-button" ng-click="editTransformSpec(spec)") edit
                     button(class="twst-button twst-red-button" ng-click="deleteSpec(spec)" ng-if="!spec.date_executed") delete
             tr(ng-if="!transformSpecs.length")
