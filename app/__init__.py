@@ -403,6 +403,7 @@ def transfer_params( transfer_type_id, transfer_template_id  ):
 
     print '@@ transfer_type_id:%s, transfer_template_id:%s' % (transfer_type_id, transfer_template_id)
 
+    # shorter names!
     from constants import ( TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
                             TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
                             TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
@@ -416,16 +417,18 @@ def transfer_params( transfer_type_id, transfer_template_id  ):
                             TRANS_TYPE_PCA_PCR_THERMOCYCLE as PCR_THERMO_T,
                             TRANS_TPL_REBATCH_FOR_TRANSFORM as REBATCH_XFORM,
                             TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T,
-                            )
+                            TRANS_TYPE_UPLOAD_QUANT as UPLOAD_QUANT_T,
+    )
 
     return {(PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transfer.primer_preplanning,
             (PRIMER_CREATE_SRC_T, SAME_PLATE):           transfer.primer_create_src,
             (PRIMER_MASTER_T, SAME_PLATE):               transfer.primer_master_mix,
             (PRIMER_THERMO_T, SAME_PLATE):               transfer.thermocycle,
-            (NGS_THERO_T, ):            transfer.thermocycle,
-            (PCA_THERMO_T, ):           transfer.thermocycle,
-            (PCR_THERMO_T, ):           transfer.thermocycle,
-            (REBATCH_XFORM_T, REBATCH_XFORM):  transfer.rebatch_transform,
+            (NGS_THERO_T, SAME_PLATE):                   transfer.thermocycle,
+            (PCA_THERMO_T, SAME_PLATE):                  transfer.thermocycle,
+            (PCR_THERMO_T, SAME_PLATE):                  transfer.thermocycle,
+            (REBATCH_XFORM_T, REBATCH_XFORM):            transfer.rebatch_transform,
+            (UPLOAD_QUANT_T, SAME_PLATE):                transfer.quant_upload,
             
     }[(transfer_type_id, transfer_template_id)](transfer_type_id, transfer_template_id)
 
