@@ -95,7 +95,8 @@ angular.module('twist.app').factory('Api',['ApiRequestObj', '$http',
             }
             ,previewTransformation: function(sources, destinations, details ) {
                 // kieran
-                var preview = ApiRequestObj.getPost('transform-preview');
+                var url = "transform-preview/type-" + details.transform_type_id + "/template-"+details.transform_template_id;
+                var preview = ApiRequestObj.getPost(url);
                 preview.data = {
                     sources: sources,
                     destinations: destinations,
