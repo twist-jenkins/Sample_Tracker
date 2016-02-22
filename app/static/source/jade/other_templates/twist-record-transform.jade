@@ -1,5 +1,5 @@
 div(class="twst-record-step-main twst-child-page")
-    a(class="twst-record-step-main-download-link" ng-href="static/sampleTransferSpreadsheet.xlsx") Download blank transfer template
+    a(class="twst-record-step-main-download-link" ng-href="static/sampleTransformSpreadsheet.xlsx") Download blank transform template
     h1 Record Transform
     div(class="twst-spinner" ng-if="!stepTypeOptions")
     form(class="twst-record-step-main-inputs" ng-show="stepTypeOptions")
@@ -18,5 +18,3 @@ div(class="twst-record-step-main twst-child-page")
             div(class="twst-spinner twst-step-submitting-spinner" ng-if="submittingStep")
             button(class="twst-button twst-blue-button" ng-class="{'twst-disabled-button' : !sampleTrackFormReady()}" ng-click="submitStep()") Submit
             a(class="twst-record-step-clear-btn" ng-click="clearForm()") clear form
-            
-

@@ -1,7 +1,6 @@
 import csv
 import StringIO
 import logging
-import json
 from datetime import datetime
 
 from app import db
@@ -11,7 +10,7 @@ from flask.ext.restful import abort
 from flask_login import current_user
 
 from dbmodels import MiSeqSampleView
-from twistdb.sampletrack import Sample
+from twistdb.sampletrack import Sample, TransformDetail
 from twistdb.ngs import NGSBarcodePair
 from twistdb import create_unique_id
 
@@ -128,62 +127,62 @@ def miseq_csv_template(rows, run_id):
     return csvout
 
 
-def sample_map_template(rows):
-
-    sio = StringIO.StringIO()
-    book = twist_excel.workbook.TwistExcelWorkbook(sio)
-
-    book.format.gray.set_align('center')
-    book.format.gray.set_align('vcenter')
-    book.format.gray.set_text_wrap()
-    book.format.gray.set_bold()
-
-    book.fields = (
-        book.Field("sample_num_on_run", 20, book.format.gray,
-                   "Sample Number On Run (For FASTQ Naming)"),
-        book.Field("sample_id", 10, book.format.gray,
-                   "Sample ID"),
-        book.Field("i5_sequence_id", 15, book.format.gray,
-                   "I5 Barcode Sequence ID (From Barcode Sequence table)"),
-        book.Field("i7_sequence_id", 15, book.format.gray,
-                   "I7 Barcode Sequence ID (From Barcode Sequence table)"),
-        book.Field("description", 60, book.format.gray,
-                   "Expected result description, notes about why on run, "
-                   "prep-related notes, which samples are controls, etc"),
-        book.Field("var_prep_type", 15, book.format.lime,
-                   "Variable: Prep"),
-        book.Field("var_parent_type ", 10, book.format.lime,
-                   "Variable: Parent type"),
-        book.Field("var_flag", 5, book.format.lime,
-                   "Variable: Flag"),
-    )
-
-    sheet = book.workbook.add_worksheet("NGS Run Map")
-    sheet.write('A1', ':table')
-    sheet.write('B1', "sample_map")
-    sheet.write('A3', 'Maps each sample on run to barcodes and one or more '
-                'variables under study. You can add as many categories '
-                '(columns) as you like, just match the var_xxx format '
-                'in row 6 (row 5 is ignored). Variables that do not start '
-                'with "var_" are ignored in row 6 -- do not use spaces.')
-    sheet.set_row(4, 72)
-    book.write_to(sheet, book.fields)
-
-    row_format = book.format.regular
-    for row_ix, row in enumerate(rows):
-        position = book.cell_position(row_ix)
-        col_vals = [
-            row_ix + 1,
-            row.parent_sample_id,  # CS_00233
-            row.i5_sequence_id,
-            row.i7_sequence_id,
-            strip_forbidden_chars(row.parent_description),
-            "Automated",
-            "Colony"
-        ]
-        sheet.write_row(position, col_vals, row_format)
-
-    return sio
+# def sample_map_template(rows):
+#
+#     sio = StringIO.StringIO()
+#     book = twist_excel.workbook.TwistExcelWorkbook(sio)
+#
+#     book.format.gray.set_align('center')
+#     book.format.gray.set_align('vcenter')
+#     book.format.gray.set_text_wrap()
+#     book.format.gray.set_bold()
+#
+#     book.fields = (
+#         book.Field("sample_num_on_run", 20, book.format.gray,
+#                    "Sample Number On Run (For FASTQ Naming)"),
+#         book.Field("sample_id", 10, book.format.gray,
+#                    "Sample ID"),
+#         book.Field("i5_sequence_id", 15, book.format.gray,
+#                    "I5 Barcode Sequence ID (From Barcode Sequence table)"),
+#         book.Field("i7_sequence_id", 15, book.format.gray,
+#                    "I7 Barcode Sequence ID (From Barcode Sequence table)"),
+#         book.Field("description", 60, book.format.gray,
+#                    "Expected result description, notes about why on run, "
+#                    "prep-related notes, which samples are controls, etc"),
+#         book.Field("var_prep_type", 15, book.format.lime,
+#                    "Variable: Prep"),
+#         book.Field("var_parent_type ", 10, book.format.lime,
+#                    "Variable: Parent type"),
+#         book.Field("var_flag", 5, book.format.lime,
+#                    "Variable: Flag"),
+#     )
+#
+#     sheet = book.workbook.add_worksheet("NGS Run Map")
+#     sheet.write('A1', ':table')
+#     sheet.write('B1', "sample_map")
+#     sheet.write('A3', 'Maps each sample on run to barcodes and one or more '
+#                 'variables under study. You can add as many categories '
+#                 '(columns) as you like, just match the var_xxx format '
+#                 'in row 6 (row 5 is ignored). Variables that do not start '
+#                 'with "var_" are ignored in row 6 -- do not use spaces.')
+#     sheet.set_row(4, 72)
+#     book.write_to(sheet, book.fields)
+#
+#     row_format = book.format.regular
+#     for row_ix, row in enumerate(rows):
+#         position = book.cell_position(row_ix)
+#         col_vals = [
+#             row_ix + 1,
+#             row.parent_sample_id,  # CS_00233
+#             row.i5_sequence_id,
+#             row.i7_sequence_id,
+#             strip_forbidden_chars(row.parent_description),
+#             "Automated",
+#             "Colony"
+#         ]
+#         sheet.write_row(position, col_vals, row_format)
+#
+#     return sio
 
 
 def nps_id_details(db_session, nps_ids):
@@ -231,26 +230,27 @@ def miseq_csv_response(nps_detail_rows, fname=None):
     return response
 
 
-def sample_map_response(nps_detail_rows, fname=None):
-    """Sample Map XLSX"""
-    xlsx_out = sample_map_template(nps_detail_rows)
-    logging.info(" %s downloaded the SAMPLE MAP REPORT",
-                 current_user.first_and_last_name)
-    xlsx_out.seek(0)
-    mimt = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    response = make_response(xlsx_out.read())
-    response.mimetype = mimt
-    if fname is None:
-        datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
-        fname = "ngs_sample_map_%s.xlsx" % datestr
-    response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
-    return response
+# def sample_map_response(nps_detail_rows, fname=None):
+#     """Sample Map XLSX"""
+#     xlsx_out = sample_map_template(nps_detail_rows)
+#     logging.info(" %s downloaded the SAMPLE MAP REPORT",
+#                  current_user.first_and_last_name)
+#     xlsx_out.seek(0)
+#     mimt = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#     response = make_response(xlsx_out.read())
+#     response.mimetype = mimt
+#     if fname is None:
+#         datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+#         fname = "ngs_sample_map_%s.xlsx" % datestr
+#     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
+#     return response
 
 def echo_csv( operations, transfer_volume ):
     """
     generates string containing CSV in Echo format
     see echo_csv_for_nps()
     """
+    # FIXME shouldn't this be somewhere else if it's general echo worklist generation??
     si = StringIO.StringIO()
     cw = csv.writer(si)
 
@@ -382,23 +382,39 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
         raise KeyError("ngs_barcode_pair_index %s not found"
                        % ngs_barcode_pair_index)
 
+    # Refer to source sample instances
+    # FIXME: this hardcodes a relationship between sequence and sample
+    i5_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
+    i7_sample_id = ngs_pair.i7_sequence_id.replace("BC_", "BCS_")
+
     # Create NPS
     nps_id = create_unique_id("NPS_")()
     description = 'SMT - well %s' % destination_well_id  # TODO: add plate
     nps_sample = Sample(id=nps_id,
-                        parent_sample_id=source_sample_id,
                         name=nps_id,
                         description=description,
                         i5_sequence_id=ngs_pair.i5_sequence_id,
                         i7_sequence_id=ngs_pair.i7_sequence_id,
                         operator_id=current_user.operator_id)
 
+    db_session.add(nps_sample)
+
+    # Create parent-child relationships.
+    # TODO: consider getting rid of the barcode relationships here.
+    # They're probably superfluous, since we have 4 columns at the
+    # child sample level to track i5 and i7 barcoding.
+    for parent_sample_id in (source_sample_id, i5_sample_id, i7_sample_id):
+        xform = TransformDetail(
+            parent_sample_id=parent_sample_id,
+            child_sample_id=nps_id
+        )
+        db_session.add(xform)
+
     logging.debug('NPS_ID %s for %s assigned [%s, %s]',
                   nps_id, source_sample_id,
                   ngs_pair.i5_sequence_id,
                   ngs_pair.i7_sequence_id)
 
-    db_session.add(nps_sample)
     db_session.flush()
 
     return nps_id, ngs_pair

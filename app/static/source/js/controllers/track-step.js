@@ -29,9 +29,9 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
 
             var whichTab = Constants.STANDARD_TEMPLATE;
 
-            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFORM_TYPE) {
                 whichTab = Constants.FILE_UPLOAD;
-            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
+            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFORM_TYPE) {
                 whichTab = Constants.HAMILTON_OPERATION;
             }
 
@@ -56,9 +56,9 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
                 }
             }
 
-            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFER_TYPE) {
+            if ($scope.transformSpec.map.type == Constants.USER_SPECIFIED_TRANSFORM_TYPE) {
                 $scope.templateTypeSelection = Constants.FILE_UPLOAD;
-            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFER_TYPE) {
+            } else if ($scope.transformSpec.map.type == Constants.HAMILTON_TRANSFORM_TYPE) {
                 $scope.templateTypeSelection = Constants.HAMILTON_OPERATION;
             } else {
                 $scope.templateTypeSelection = Constants.STANDARD_TEMPLATE;
@@ -89,11 +89,11 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
 
         var getSampleTrackSubmitData = function () {
             var data = {
-                sampleTransferTypeId: $scope.transformSpec.details.id
-                ,sampleTransferTemplateId: $scope.transformSpec.details.transfer_template_id
+                sampleTransformTypeId: $scope.transformSpec.details.id
+                ,sampleTransformTemplateId: $scope.transformSpec.details.transform_template_id
             };
 
-            data.transferMap = $scope.transformSpec.operations;
+            data.transformMap = $scope.transformSpec.operations;
 
             return data;
         };
@@ -109,15 +109,15 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
             var executeNow = true;
 
             //the newer specs are the ones that save the transform but do not execute it immediately
-            if ($scope.transformSpec.details.transfer_template_id == 25 ||
-                $scope.transformSpec.details.transfer_template_id == 26 ||
-                $scope.transformSpec.details.transfer_template_id == 27 ||
-                $scope.transformSpec.details.transfer_template_id == 28 ||
-                $scope.transformSpec.details.transfer_template_id == 29 ||
-                $scope.transformSpec.details.transfer_template_id == 30 ||
-                $scope.transformSpec.details.transfer_template_id == 31 ||
-                $scope.transformSpec.details.transfer_template_id == 35 ||
-                $scope.transformSpec.details.transfer_type_id == 84) {
+            if ($scope.transformSpec.details.transform_template_id == 25 ||
+                $scope.transformSpec.details.transform_template_id == 26 ||
+                $scope.transformSpec.details.transform_template_id == 27 ||
+                $scope.transformSpec.details.transform_template_id == 28 ||
+                $scope.transformSpec.details.transform_template_id == 29 ||
+                $scope.transformSpec.details.transform_template_id == 30 ||
+                $scope.transformSpec.details.transform_template_id == 31 ||
+                $scope.transformSpec.details.transform_template_id == 35 ||
+                $scope.transformSpec.details.transform_type_id == 84) {
                 executeNow = false;
             }
 
@@ -162,8 +162,8 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
         };
 
         /* populate the sample types pulldown */
-        $scope.initTransferTypes = Api.getSampleTransferTypes();
-        $scope.initTransferTypes.success(function (data) {
+        $scope.initTransformTypes = Api.getSampleTransformTypes();
+        $scope.initTransformTypes.success(function (data) {
             if (data.success) {
 
                 var stepTypeOptions = data.results;

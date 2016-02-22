@@ -12,7 +12,6 @@ os.environ["WEBSITE_ENV"] = "Local"
 # directive in the api code, importing the flask app must happen AFTER
 # the os.environ Config above.
 from app import app
-from app import db
 from app import login_manager
 
 from test_flask_app import AutomatedTestingUser, rnd_bc
@@ -31,10 +30,9 @@ EXAMPLE_NGS_BARCODING_SPEC = {
                 "type":"SPTT_0006",
                 "createdBy":"Charlie Ledogar",
                 "dateCreated":"2015-11-08 14:47:55.714115"
-                }
             }
         }
-    ],
+    }],
     "destinations":[],
     "operations":[
         {
@@ -60,11 +58,11 @@ EXAMPLE_NGS_BARCODING_SPEC = {
         }
     ],
     "details":{
-        "transfer_template_id":2,
+        "transform_template_id":2,
         "text":"NGS prep: barcode hitpicking",
         "source_plate_count":1,"id":26,
         "destination_plate_count":0,
-        "transfer_type_id":26
+        "transform_type_id":26
     }
 }
 
@@ -115,12 +113,12 @@ EXAMPLE_ALIQUOT_SPEC = {
         }
     ],
     "details":{
-        "transfer_template_id":1,
+        "transform_template_id":1,
         "text":"Aliquoting for Quantification (384 plate)",
         "source_plate_count":1,
         "id":1,
         "destination_plate_count":1,
-        "transfer_type_id":1
+        "transform_type_id":1
     }
 }
 
@@ -136,7 +134,7 @@ class TestCase(unittest.TestCase):
         assert 'postgres' in app.config['SQLALCHEMY_DATABASE_URI']
         # db.create_all()
         cls.root_plate_barcode = 'SRN 000577 SM-30'  # qtray
-        #cls.root_plate_barcode = RootPlate().create_in_db("XFER_ROOT",
+        # cls.root_plate_barcode = RootPlate().create_in_db("XFER_ROOT",
         #                                                  db.engine)
 
     @classmethod
@@ -149,7 +147,7 @@ class TestCase(unittest.TestCase):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
         dest_plate_2_barcode = rnd + '_2'
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "source_well_number": src_number,
@@ -166,9 +164,9 @@ class TestCase(unittest.TestCase):
             ('B1', 25, dest_plate_2_barcode, 'A1', 1, 96),
             ('B1', 25, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
-        data = {"sampleTransferTypeId": 15,  # QPix To 96 plates
-                "sampleTransferTemplateId": 21,
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 15,  # QPix To 96 plates
+                "sampleTransformTemplateId": 21,
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -189,7 +187,7 @@ class TestCase(unittest.TestCase):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
         dest_plate_2_barcode = rnd + '_2'
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "source_well_number": src_number,
@@ -207,9 +205,9 @@ class TestCase(unittest.TestCase):
             ('B1', 13, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
 
-        data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
-                "sampleTransferTemplateId": 21,
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 26,  # NGS Prep: Barcode Hitpicking
+                "sampleTransformTemplateId": 21,
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -226,7 +224,7 @@ class TestCase(unittest.TestCase):
         print result
         assert result["success"] is True
 
-    def disabled_test_v2_ngs_prep_golden(self):
+    def test_v2_ngs_prep_golden(self):
         """ This test should:
         1. create a new pair of CS plates using Qpix as above
         2. using special barcode plate as source, and
@@ -241,23 +239,27 @@ class TestCase(unittest.TestCase):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
         dest_plate_2_barcode = rnd + '_2'
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
+            "source_well_number": src_number,
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
+            "destination_plate_type": "SPTT_0005",
             "destination_plate_well_count": dest_well_count
-        } for (src_well, dest_plate, dest_well, dest_well_count) in [
-            ('A1', dest_plate_1_barcode, 'A1', 96),
-            ('A1', dest_plate_1_barcode, 'A2', 96),
-            ('A2', dest_plate_1_barcode, 'B1', 96),
-            ('B1', dest_plate_2_barcode, 'A1', 96),
-            ('B1', dest_plate_2_barcode, 'A2', 96),
+        } for (src_well, src_number, dest_plate, dest_well,
+               dest_number, dest_well_count) in [
+            ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
+            ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
+            ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
+            ('B1', 13, dest_plate_2_barcode, 'A1', 1, 96),
+            ('B1', 13, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
 
-        data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
-                "sampleTransferTemplateId": 21,
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 26,  # NGS Prep: Barcode Hitpicking
+                "sampleTransformTemplateId": 21,
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -279,7 +281,7 @@ class TestCase(unittest.TestCase):
         dest_plate_1_barcode = rnd + '_1'
         dest_plate_2_barcode = rnd + '_2'
 
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "source_well_number": src_number,
@@ -297,9 +299,9 @@ class TestCase(unittest.TestCase):
             ('B1', 13, dest_plate_2_barcode, 'A2', 2, 96),
         ]]
 
-        data = {"sampleTransferTypeId": 26,  # NGS Prep: Barcode Hitpicking
-                "sampleTransferTemplateId": 21,
-                "transferMap": transfer_map
+        data = {"sampleTransformTypeId": 26,  # NGS Prep: Barcode Hitpicking
+                "sampleTransformTemplateId": 21,
+                "transformMap": transform_map
                 }
         rv = self.client.post('/api/v1/track-sample-step',
                               data=json.dumps(data),
@@ -316,75 +318,16 @@ class TestCase(unittest.TestCase):
         print result
         assert result["success"] is True
 
-    def NEEDS_REFACTOR_TRACK_SAMPLE_STEP_test_small_aliquot_spec_golden(self):
-        spec = EXAMPLE_ALIQUOT_SPEC.copy()
-        rnd = rnd_bc()
-        dest_plate_barcode = rnd + '_1'
-        transfer_map = [{
-            "source_plate_barcode": self.root_plate_barcode,
-            "source_well_name": src_well,
-            "source_well_number": src_number,
-            "destination_plate_barcode": dest_plate,
-            "destination_well_name": dest_well,
-            "destination_well_number": dest_number,
-            "destination_plate_well_count": dest_well_count,
-            "destination_plate_type": "SPTT_0004",
-            "source_sample_id": "CS_563bff9150a77622447fc8f5"
-        } for (src_well, src_number, dest_plate, dest_well,
-               dest_number, dest_well_count) in [
-            ('A1', 1, dest_plate_barcode, 'A1', 1, 48),
-            ('A2', 2, dest_plate_barcode, 'A2', 2, 48),
-            ('B1', 25, dest_plate_barcode, 'B1', 7, 48),
-            ('B2', 26, dest_plate_barcode, 'B2', 8, 48),
-            ('C1', 49, dest_plate_barcode, 'C1', 13, 48),
-        ]]
-        spec["operations"] = transfer_map
-
-        # post the spec -- this replaces post('/api/v1/track-sample-step')
-
-        headers = [("Transform-Execution", "Immediate")]
-        rv = self.client.post('/api/v1/rest/transform-specs',
-                              data=json.dumps({"plan": spec}),
-                              content_type='application/json',
-                              headers=headers)
-        assert rv.status_code == 201, rv.data
-
-        # the spec should now exist but not be executed yet
-
-        result = json.loads(rv.data)
-        assert "data" in result
-        assert "data_json" in result["data"]
-        assert result["data"]["date_executed"] is not None
-
-        # there should be a plate already
-
-        rv = self.client.get('/api/v1/basic-plate-info/%s'
-                             % dest_plate_barcode,
-                             content_type='application/json')
-        assert rv.status_code == 200, rv.data
-        result = json.loads(rv.data)
-        print result
-        assert result["success"] is True
-
-    def NEEDS_REFACTOR_TRACK_SAMPLE_STEP_test_small_ngs_barcoding_spec_golden(self):
+    def test_small_ngs_barcoding_spec_golden(self):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
+        root_cs_id = "CS_563bff9150a77622447fc8f5"
 
-        # 1. create a target plate
-        data = {"sampleTransferTypeId": 2,
-                "sampleTransferTemplateId": 1,
-                "sourcePlates": [self.root_plate_barcode],
-                "destinationPlates": [dest_plate_1_barcode]}
-        rv = self.client.post('/api/v1/track-sample-step',
-                              data=json.dumps(data),
-                              content_type='application/json')
-        assert rv.status_code == 200
-        result = json.loads(rv.data)
-        assert result["success"] is True
+        # 1. Skip creating the target plate
 
         # 2. create an ngs barcoding spec (type 26)
         spec = EXAMPLE_NGS_BARCODING_SPEC.copy()
-        transfer_map = [{
+        transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
             "source_well_number": src_number,
@@ -393,20 +336,20 @@ class TestCase(unittest.TestCase):
             "destination_well_number": dest_number,
             "destination_plate_well_count": dest_well_count,
             "destination_plate_type": "SPTT_0005",
-            "source_sample_id": "CS_563bff9150a77622447fc8f5"
+            "source_sample_id": root_cs_id
         } for (src_well, src_number, dest_plate, dest_well, dest_number, dest_well_count) in [
             ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
             ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
             ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
         ]]
-        spec["operations"] = transfer_map
+        spec["operations"] = transform_map
         spec["details"] = {
-            "transfer_template_id": 2,  # 21?
+            "transform_template_id": 2,  # 21?
             "text": "NGS prep: barcode hitpicking",
             "source_plate_count": 1,
             "id": 26,
             "destination_plate_count": 0,
-            "transfer_type_id": 26
+            "transform_type_id": 26
         }
 
         # 3. post the spec -- this replaces post('/api/v1/track-sample-step')
@@ -432,6 +375,16 @@ class TestCase(unittest.TestCase):
             assert well["destination_sample_id"][0:4] == "NPS_"
 
         # 7. We should be able to get an echo worklist
+        echo_url = new_spec_url + ".echo.csv"
+        rv = self.client.get(echo_url,
+                             content_type="application/json")
+        assert rv.status_code == 200
+        import csv
+        echo_csv = list(csv.DictReader(rv.data.splitlines()))
+        assert len(echo_csv) == len(transform_map) * 2
+        for line in echo_csv:
+            assert line["Source Plate Barcode"] == "NGS_BARCODE_PLATE_TEST1"
+            assert line["Destination Plate Barcode"] == dest_plate_1_barcode
 
         # 8. Now execute
 
@@ -446,14 +399,37 @@ class TestCase(unittest.TestCase):
         execute_url = new_spec_url + ".execute"
         rv = self.client.get(execute_url,
                              content_type="application/json")
-
         assert rv.status_code == 200
         result = json.loads(rv.data)
         data = result["data"]
-
         date_executed = data["date_executed"]
         assert date_executed is not None
 
+        # 9. Now make sure the samples are barcoded
+        from collections import defaultdict
+        bc_pairs = defaultdict(int)
+        for ix, well in enumerate(operations):
+            target_id = well["destination_sample_id"]
+            assert target_id[0:4] == "NPS_"
+            barcode_sample_id = well["source_sample_id"]
+            assert barcode_sample_id[0:4] == "BCS_"
+            barcode_sequence_id = 'BC_' + barcode_sample_id[4:]
+            rv = self.client.get('/api/v1/rest/sample/%s' % target_id,
+                                 content_type='application/json')
+            assert rv.status_code == 200, rv.data
+            result = json.loads(rv.data)
+            assert "data" in result
+            dat = result["data"]
+            print "$" * 80, dat
+            assert root_cs_id in dat["parents"]
+            if ix % 2:
+                assert dat["i5_sequence_id"] == barcode_sequence_id
+            else:
+                assert dat["i7_sequence_id"] == barcode_sequence_id
+                bc_pairs[(dat["i5_sequence_id"], dat["i7_sequence_id"])] += 1
+
+        # 10. Make sure there are the expected number of unique pairs
+        assert len(bc_pairs) == len(transform_map)
 
 if __name__ == '__main__':
     unittest.main()
