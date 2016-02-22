@@ -145,8 +145,8 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                 for primer in (sample.order_item.primer_pair.fwd_primer,
                                sample.order_item.primer_pair.rev_primer):
                     loc = pd[ primer.name ][ primer_ct[ primer.name ] // ALIQ_PER_WELL ]
-                    db.query
                     primer_ct[ primer.name ] += 1
+
                     rows.append( {
                         'source_plate_barcode':         bulk_plate_barcode,
                         'source_well_name':             loc,

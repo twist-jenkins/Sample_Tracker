@@ -422,9 +422,16 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TYPE_NGS_MASTERMIX_ADDITION as NGS_MASTERMIX_T,
                             TRANS_TPL_PCR_PRIMER_HITPICK as PCR_PRIMER_HITPICK,
                             TRANS_TYPE_NGS_LOAD_ON_SEQUENCER as NGS_LOAD,
+                            TRANS_TPL_NGS_POOLING as NGS_POOLING,
+                            TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK,
+                            TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC as VECTOR_CREATE_SRC_T,
+                            TRANS_TPL_VECTOR_CREATE_SRC as VECTOR_CREATE_SRC,
     )
 
-    f = {(PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transform.primer_preplanning,
+    f = {(62, SAME_PLATE):                    transform.generic_same_to_same,  # 62 is "CHP Deprotection"
+         (VECTOR_HITPICK, SAME_PLATE):        transform.vector_hitpicking,
+         (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):    transform.vector_create_src,
+         (PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transform.primer_preplanning,
          (PRIMER_CREATE_SRC_T, SAME_PLATE):           transform.primer_create_src,
          (PRIMER_MASTER_T, SAME_PLATE):               transform.primer_master_mix,
          (PRIMER_THERMO_T, SAME_PLATE):               transform.thermocycle,
@@ -438,6 +445,7 @@ def transform_params( transform_type_id, transform_template_id  ):
          (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
          (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
          (NGS_LOAD, ):                     transform.ngs_load,
+         (NGS_POOLING, ):    transform.ngs_pooling,
     }.get( (transform_type_id, transform_template_id), transform.preview )
 
     print '@@ transform_type_id:%s, transform_template_id:%s -> %s' \
