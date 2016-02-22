@@ -19,6 +19,7 @@ from app import app
 from app import db
 from app.utils import scoped_session
 from json_tricks.nonp import loads
+from collections import defaultdict
 
 from twistdb.sampletrack import Plate
 from twistdb.sampletrack import Sample
@@ -47,22 +48,40 @@ class TestCase(unittest.TestCase):
             kan_d={}
             chlor_d={}
             unknown={}
+            by_marker = defaultdict(list)
 
             samples= db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_WARP2.1').one().current_well_contents(db.session)
-            #print len(samples)
+            print len(samples)
             for sample in samples:
                 concentration = sample.conc_ng_ul
                 cloning_process= sample.order_item.cloning_process
                 #print cloning_process ,'cloning_process'
                 sequence = sample.order_item.sequence
                 #print sequence
+                amp_d.update({"sample1":"volume"});
+                amp_d.update({"sample2":"volume"});
+                amp_d.update({"sample3":"volume"});
+
+                kan_d.update({"sample4":"volume"});
+                kan_d.update({"sample5":"volume"});
+                kan_d.update({"sample6":"volume"});
+                kan_d.update({"sample7":"volume"});
+                kan_d.update({"sample8":"volume"});
+                kan_d.update({"sample18":"volume"});
+
+                unknown.update({"sample15":"volume"});
+                unknown.update({"sample52":"volume"});
+                unknown.update({"sample53":"volume"});
+                unknown.update({"sample54":"volume"});
+                unknown.update({"sample55":"volume"});
+
+
                 if len(sequence) < 200 and (concentration is not  None) :
                     fmol = 13*5
                     volume = (fmol/concentration)
                 elif len(sequence) >= 200 and (concentration is not  None) :
                     fmol = 13*2
                     volume = (fmol/concentration)
-                    #print volume
 
                     if cloning_process is not None :
                         marker = cloning_process.resistance_marker.code
@@ -79,12 +98,33 @@ class TestCase(unittest.TestCase):
                             unknown.update(sample.volume);
                             print 'unknown'
 
-            number= sum([len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown)])
-            print amp_d.keys(),kan_d.keys() ,chlor_d.keys()
-            #transform_spec(amp_d,kan_d,chlor_d,unknown,(number/48)+1)
-            print (number/48) +1
 
-            wells = self.test_create_worklist
+
+
+            by_marker['AMP'].append(amp_d)
+            by_marker['KAN'].append(kan_d)
+            by_marker['CHLOR'].append(chlor_d)
+            by_marker['UNKNOWN'].append(unknown)
+
+            print (len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown))
+
+            for k in sorted(by_marker, key=lambda k: len(by_marker[k], reverse=True):
+                print k
+
+
+            #print (len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown))
+
+            number= sum([len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown)])
+            #print amp_d.keys(),kan_d.keys() ,chlor_d.keys()
+            #transform_spec(amp_d,kan_d,chlor_d,unknown,(number/48)+1)
+            number_of_plates=(number/48) +1
+            for plate_index in range(number_of_plates):
+                thisPlate = {"type": "SPTT_0006",
+                                 "first_in_group": plate_index,
+                                 "details": {
+                                     "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
+                                              (by_marker[marker], (plateIndex), int(how_many_for_group))
+                                 }}
 
             #for x in am_d:
 
@@ -125,8 +165,8 @@ class TestCase(unittest.TestCase):
 
             lookup48to384[(qpix_plate + 1, x_48_well)] = x_384_well_id
             lookup384to48[x_384_well_id] = (qpix_plate + 1, x_48_well)
-            print (qpix_plate + 1, x_48_well), ':', x_384_well_id
-        
+            #print (qpix_plate + 1, x_48_well), ':', x_384_well_id
+
 
 
 

@@ -40,7 +40,7 @@ def to_resp(f):
     def f2(*args, **kwargs):
         try:
             rows, responseCommands = f(*args, **kwargs)
-            
+
         except WebError as e:
             return Response( response=json.dumps({'success': False,
                                                   'message': str(e),
@@ -329,7 +329,7 @@ def preview(transfer_type_id=None, transfer_template_id =None):
     """Called by the UI to generate a draft transform spec before execution."""
 
     print '@@ transfer_type_id=%s, transfer_template_id=%s' % (transfer_type_id, transfer_template_id)
-    
+
     assert request.method == 'POST'
 
     details = request.json["details"]
@@ -536,48 +536,8 @@ def preview(transfer_type_id=None, transfer_template_id =None):
                     }
                 })
 
-<<<<<<< HEAD:app/routes/transfer.py
-            elif transfer_template_id == constants.TRANS_TPL_REBATCH_FOR_TRANSFORM :
-                amp_d={}
-                kan_d={}
-                chlor_d={}
-                unknown={}
-
-                 dest_type = db.session.query(PlateType).get('SPTT_0006')
-                for src in enumerate(request.json['sources']) :
-                plate_barcode = src['details']['id']
-                samples =get_samples_fromeach_384well_plate(plate_barcode)
-
-                for sample in samples:
-                    concentration = sample.conc_ng_ul
-                    cloning_process= sample.order_item.cloning_process
-                    sequence = sample.order_item.sequence
-                    if len(sequence) < 200 and (concentration is not  None):
-                        fmol = 13*5
-                        volume = (fmol/concentration)
-                    elif len(sequence) >= 200 and (concentration is not  None) :
-                        fmol = 13*2
-                        volume = (fmol/concentration)
-
-                        if cloning_process is not None :
-                            marker = cloning_process.resistance_marker.code
-                            if(marker == "AMP") :
-                                amp_d.update({sample:volume});
-                            elif(marker == "KAN")  :
-                               kan_d.update({sample,volume});
-                            elif(marker == 'CHLOR') :
-                               chlor_d.update({sample,volume});
-                            elif (marker is None) :
-                                unknown.update(sample.volume);
-
-            number= sum([len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown)])
-            number_of_plates= (number/48) +1
-
-
             elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
-=======
-            elif transform_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
->>>>>>> develop:app/routes/transform.py
+
 
 
 
