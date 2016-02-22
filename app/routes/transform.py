@@ -570,15 +570,19 @@ def ngs_load( type_id, templ_id ):
 
 
 @to_resp
-def ngs_tagmentation( type_id, templ_id ):
-    rows, cmds = [{}], []
+def ngs_tagmentation(type_id, templ_id):
+    # Should this be a same-to-same transform?
+    cmds = []
+    rows = plates_to_rows(request.json['sources'])
     return rows, cmds
 
 
-def ngs_pooling(details):
+def ngs_pooling():
     """TRANS_TPL_NGS_POOLING"""
 
     rows, cmds = [{}], []
+
+    details = request.json["details"]
 
     sequencer = None;
 
@@ -787,7 +791,7 @@ def preview( transform_type_id, transform_template_id ):
 
             elif transform_template_id == \
                     constants.TRANS_TPL_NGS_POOLING:
-                rows, responseCommands = ngs_pooling(details)
+                rows, responseCommands = ngs_pooling()
 
             elif transform_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
