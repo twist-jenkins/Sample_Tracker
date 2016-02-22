@@ -19,8 +19,7 @@ from app.models import create_destination_plate
 from app.dbmodels import NGS_BARCODE_PLATE  # , NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
-from twistdb.sampletrack import (Sample, Plate, PlateWell, Transform,
-                                 TransformDetail)
+from twistdb.sampletrack import (Sample, Plate, Transform, TransformDetail)
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
 
@@ -278,12 +277,13 @@ def create_adhoc_sample_movement(db_session,
         assert src_s is not None
 
         copy_metadata = in_place_transform_flag or merge_transform_flag
-        objs = sample_handler(db_session, copy_metadata, transform_type_id,
-                              well_cache, src_s, dplate,
-                              destination_well_number, dest_s)
-        new_rows = new_rows + objs
+        s = sample_handler(db_session, copy_metadata, sample_transform,
+                           well_cache, src_s, dplate,
+                           destination_well_number, dest_s)
+        new_rows.append(s)
 
     logging.info("Bulk inserting samples and relationships.")
+
     db_session.bulk_save_objects(new_rows)
     db_session.commit()
 
@@ -294,7 +294,7 @@ def create_adhoc_sample_movement(db_session,
     }
 
 
-def sample_handler(db_session, copy_metadata, transform_type_id, well_cache,
+def sample_handler(db_session, copy_metadata, transform, well_cache,
                    source_well_sample, destination_plate,
                    destination_well_id, destination_sample=None):
 
@@ -317,33 +317,47 @@ def sample_handler(db_session, copy_metadata, transform_type_id, well_cache,
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
                        plate_well_code=well.well_code,
                        operator_id=current_user.operator_id)
+    new_s.transform_id = transform.id
 
-    if transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
-                             constants.TRANS_TYPE_QPIX_TO_384_WELL):
+    if transform.transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
+                                       constants.TRANS_TYPE_QPIX_TO_384_WELL):
         # We just cloned this so it's clonal
         new_s.is_clonal = True
         # FIXME hardcoding this for Warp2 for now - should derive
         # this from the A/B rebatching metadata somehow (@sucheta!)
         new_s.cloning_process_id = 'CLO_564c1af300bc150fa632c63d'
 
-    new_objs = [new_s]
+    # new_objs = [new_s]
 
     # Link up the source sample as parent
     source_to_dest_well_transform = TransformDetail(
+        transform=transform,
         parent_sample_id=source_well_sample.id,
         child_sample_id=new_s.id
     )
-    new_objs.append(source_to_dest_well_transform)
+    # new_objs.append(source_to_dest_well_transform)
+    # NOTE that we don't have to explicitly return the TransformDetail instances
+    # created because they are linked to the new_s Sample instance by virtue
+    # of setting new_s.id as the child ID. I tried to actually return these
+    # instances directly and commit them in the bulk commit and that ended up
+    # double-adding rows for each TransformDetail, one with the transform ID
+    # properly populated and one without. Strange!
+    #
+    # I also verified that even though nothing is technically *done* with the
+    # instance variables source_to_dest_well_transform and
+    # dest_well_parent_transform that it *is* necessary to create them like
+    # this to properly populated the TransformDetail table. SQLAlchemy magic.
 
     if destination_sample:
         # This is also a parent since we are merging samples
         dest_well_parent_transform = TransformDetail(
+            transform=transform,
             parent_sample_id=destination_sample.id,
             child_sample_id=new_s.id
         )
-        new_objs.append(dest_well_parent_transform)
+        # new_objs.append(dest_well_parent_transform)
 
-    return new_objs
+    return new_s
 
 
 def safe_sqlalchemy_copy(session, object_handle):
