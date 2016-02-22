@@ -6,7 +6,7 @@ import logging
 
 from app import db
 from app import constants
-from app.steps import primer_hitpicking
+from app.steps import primer_hitpicking, vector_hitpicking
 from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
@@ -693,14 +693,11 @@ def vector_create_src( type_id, templ_id ):
     """
     generate echo worklists
     """
-    rows, cmds = [], []
     # source plate shouldn't exist, but *must* appear in a previous transform spec
     if len(request.json['sources']) != 1:
         raise WebError("expected 1 source plate, found %d" % len(request.json['sources']))
-    print '@@ dest:', request.json['destinations']
-    print '@@ src:', 
 
-    return rows, cmds
+    return vector_hitpicking.create_src( db.session, request.json['sources']['details']['id'] )
 
 
 @to_resp
