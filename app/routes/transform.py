@@ -52,6 +52,7 @@ def to_resp(f):
                                                   'responseCommands': responseCommands}),
                              status=200,
                              mimetype="application/json")
+    f2.__name__ = f.__name__
     return f2
 
 
@@ -324,7 +325,6 @@ def primer_preplanning( type_id, templ_id ):
     # we need to add master mix needs info or tell the user we need all the PCA plates first
     masterMixNeeds = ""
     pcaPlates = None
-    dataType = "csv"
 
     if "requestedData" in details:
         pcaPlates = details["requestedData"]
@@ -342,7 +342,7 @@ def primer_preplanning( type_id, templ_id ):
                 "forProperty": "associatedPcaPlates"
             }
         })
-
+    
     if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
         masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
         dataType = "text"
@@ -352,6 +352,7 @@ def primer_preplanning( type_id, templ_id ):
         # content like "Master Mix A x2\n\rMaster Mix B x3"
         bulk_barcode = request.json['sources'][0]['details']['id']
         masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
+        dataType = 'csv'
 
     cmds.append({
         "type": "PRESENT_DATA",
@@ -361,7 +362,6 @@ def primer_preplanning( type_id, templ_id ):
             "data": masterMixNeeds
         }
     })
-
     return rows, cmds
 
 

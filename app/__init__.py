@@ -439,6 +439,10 @@ def transform_params( transform_type_id, transform_template_id  ):
          (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
          (NGS_LOAD, ):                     transform.ngs_load,
     }.get( (transform_type_id, transform_template_id), transform.preview )
+
+    print '@@ transform_type_id:%s, transform_template_id:%s -> %s' \
+        % (transform_type_id, transform_template_id, f.__name__)
+
     return f(transform_type_id, transform_template_id)
 
 
