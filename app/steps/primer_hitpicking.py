@@ -63,7 +63,7 @@ MASTER_MIX_TEMPLATE = {
     'B9': 'Uni13_F_ex',
 }
 
-XFER_VOL = 0.1 # [ul]
+XFER_VOL = 100 # [nl]
 
 
 def populate_row( starting_row, target_ct ):
