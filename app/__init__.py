@@ -397,11 +397,11 @@ def check_plates_are_new():
     return routes.check_plates_are_new()
 
 
-@app.route('/api/v1/transfer-preview/type-<int:transfer_type_id>/template-<int:transfer_template_id>', methods=('POST',))
-def transfer_params( transfer_type_id, transfer_template_id  ):
-    from app.routes import transfer
+@app.route('/api/v1/transform-preview/type-<int:transform_type_id>/template-<int:transform_template_id>', methods=('POST',))
+def transform_params( transform_type_id, transform_template_id  ):
+    from app.routes import transform
 
-    print '@@ transfer_type_id:%s, transfer_template_id:%s' % (transfer_type_id, transfer_template_id)
+    print '@@ transform_type_id:%s, transform_template_id:%s' % (transform_type_id, transform_template_id)
 
     # shorter names!
     from constants import ( TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
@@ -418,21 +418,28 @@ def transfer_params( transfer_type_id, transfer_template_id  ):
                             TRANS_TPL_REBATCH_FOR_TRANSFORM as REBATCH_XFORM,
                             TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T,
                             TRANS_TYPE_UPLOAD_QUANT as UPLOAD_QUANT_T,
+                            TRANS_TYPE_NGS_INDEX_HITPICKING as NGS_HITPICKING_T,
+                            TRANS_TYPE_NGS_MASTERMIX_ADDITION as NGS_MASTERMIX_T,
+                            TRANS_TPL_PCR_PRIMER_HITPICK as PCR_PRIMER_HITPICK,
+                            TRANS_TYPE_NGS_LOAD_ON_SEQUENCER as NGS_LOAD,
     )
 
-    return {(PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transfer.primer_preplanning,
-            (PRIMER_CREATE_SRC_T, SAME_PLATE):           transfer.primer_create_src,
-            (PRIMER_MASTER_T, SAME_PLATE):               transfer.primer_master_mix,
-            (PRIMER_THERMO_T, SAME_PLATE):               transfer.thermocycle,
-            (NGS_THERO_T, SAME_PLATE):                   transfer.thermocycle,
-            (PCA_THERMO_T, SAME_PLATE):                  transfer.thermocycle,
-            (PCR_THERMO_T, SAME_PLATE):                  transfer.thermocycle,
-            (REBATCH_XFORM_T, REBATCH_XFORM):            transfer.rebatch_transform,
-            (UPLOAD_QUANT_T, SAME_PLATE):                transfer.quant_upload,
-            
-    }[(transfer_type_id, transfer_template_id)](transfer_type_id, transfer_template_id)
-
-    return transfer.preview( transfer_type_id, transfer_template_id  )
+    f = {(PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transform.primer_preplanning,
+         (PRIMER_CREATE_SRC_T, SAME_PLATE):           transform.primer_create_src,
+         (PRIMER_MASTER_T, SAME_PLATE):               transform.primer_master_mix,
+         (PRIMER_THERMO_T, SAME_PLATE):               transform.thermocycle,
+         (NGS_THERO_T, SAME_PLATE):                   transform.thermocycle,
+         (PCA_THERMO_T, SAME_PLATE):                  transform.thermocycle,
+         (PCR_THERMO_T, SAME_PLATE):                  transform.thermocycle,
+         (REBATCH_XFORM_T, REBATCH_XFORM):            transform.rebatch_transform,
+         (UPLOAD_QUANT_T, SAME_PLATE):                transform.quant_upload,
+         (NGS_HITPICKING_T, ):             transform.ngs_hitpicking,
+         (25, SAME_PLATE):                 transform.ngs_tagmentation, # ?? no type constant?
+         (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
+         (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
+         (NGS_LOAD, ):                     transform.ngs_load,
+    }.get( (transform_type_id, transform_template_id), transform.preview )
+    return f(transform_type_id, transform_template_id)
 
 
 
