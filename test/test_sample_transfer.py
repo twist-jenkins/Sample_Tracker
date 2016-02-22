@@ -159,14 +159,28 @@ class TestCase(unittest.TestCase):
         plate_2_well_count = 48
         plate_2_barcode = rnd_bc()
 
-        stamp_data = [
-            ('S_WARP2_0001', 'PLT_WARP2.1', 1, 'WOI_56bc154000bc15c389b79133'),
-            ('S_WARP2_0002', 'PLT_WARP2.1', 2, 'WOI_56bc154000bc15c389b79152'),
-            ('S_WARP2_0003', 'PLT_WARP2.1', 3, 'WOI_56bc154000bc15c389b79133'),
-            ('S_WARP2_0005', 'PLT_WARP2.1', 5, 'WOI_56bc154100bc15c389b791b0'),
-            ('S_WARP2_0006', 'PLT_WARP2.1', 6, 'WOI_56bc154200bc15c389b79226'),
-            ('S_WARP2_0007', 'PLT_WARP2.1', 7, 'WOI_56bc154100bc15c389b791b0'),
-        ]
+        # Retrieve the current HEAD sample ID for targeted plate/wells
+        stamp_data = []
+        src_plate = 'PLT_WARP2.1'
+        src_wells = [1,3,5,6,7]
+        for well_num in src_wells:
+            rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
+                                 (src_plate, well_num),
+                                 content_type='application/json')
+            assert rv.status_code == 200, rv.data
+            result = json.loads(rv.data)
+            assert result["errors"] == []
+            stamp_data.append((result['data']['id'], src_plate, well_num))
+        #
+        #
+        # stamp_data = [
+        #     ('S_WARP2_0001', 'PLT_WARP2.1', 1),
+        #     ('S_WARP2_0002', 'PLT_WARP2.1', 2),
+        #     ('S_WARP2_0003', 'PLT_WARP2.1', 3),
+        #     ('S_WARP2_0005', 'PLT_WARP2.1', 5),
+        #     ('S_WARP2_0006', 'PLT_WARP2.1', 6),
+        #     ('S_WARP2_0007', 'PLT_WARP2.1', 7),
+        # ]
 
         transform_map = [{
             "source_plate_barcode": src_plate_bc,
@@ -176,7 +190,7 @@ class TestCase(unittest.TestCase):
             "destination_plate_well_count": plate_2_well_count,
             "destination_plate_type": plate_2_type,
             "source_sample_id": src_sample_id
-        } for (src_sample_id, src_plate_bc, well_num, woi) in stamp_data]
+        } for (src_sample_id, src_plate_bc, well_num) in stamp_data]
         data = {"sampleTransformTypeId": 13,  # ?
                 "sampleTransformTemplateId": 14,  # ?
                 "transformMap": transform_map
@@ -189,7 +203,7 @@ class TestCase(unittest.TestCase):
         assert result["success"] is True
 
         transform_2_data = []
-        for (src_sample_id, src_plate_bc, well_num, woi) in stamp_data:
+        for (src_sample_id, src_plate_bc, well_num) in stamp_data:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
                                  (plate_2_barcode, well_num),
                                  data=json.dumps(data),
@@ -200,11 +214,11 @@ class TestCase(unittest.TestCase):
             # assert result["data"]["root_sample_id"] == sample_1_id
             assert result["data"]["parents"][0] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
-            assert result["data"]["order_item_id"] == woi
+            # assert result["data"]["order_item_id"] == woi
             # logging.warn("((((()))))) %s", result["data"])
             plate_2_sample_id = result["data"]["id"]
             assert plate_2_sample_id != src_sample_id
-            next_map_data = (plate_2_sample_id, plate_2_barcode, well_num, woi)
+            next_map_data = (plate_2_sample_id, plate_2_barcode, well_num)
             transform_2_data.append(next_map_data)
 
         # then same2same the result
@@ -220,7 +234,7 @@ class TestCase(unittest.TestCase):
             "destination_plate_well_count": plate_3_well_count,
             "destination_plate_type": plate_3_type,
             "source_sample_id": src_sample_id
-        } for (src_sample_id, src_plate_bc, well_num, woi) in transform_2_data]
+        } for (src_sample_id, src_plate_bc, well_num) in transform_2_data]
 
         data = {"sampleTransformTypeId": 62,  # "CHP Deprotection"
                 "sampleTransformTemplateId": 2,  # Same - Same
@@ -235,7 +249,7 @@ class TestCase(unittest.TestCase):
 
         # now verify the samples are intact
 
-        for (src_sample_id, src_plate_bc, well_num, woi) in transform_2_data:
+        for (src_sample_id, src_plate_bc, well_num) in transform_2_data:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
                                  (plate_3_barcode, well_num),
                                  data=json.dumps(data),
@@ -246,10 +260,10 @@ class TestCase(unittest.TestCase):
             # assert result["data"]["root_sample_id"] == sample_1_id
             assert result["data"]["parents"][0] == src_sample_id
             assert result["data"]["plate_well_code"] == 300480000 + well_num
-            assert result["data"]["order_item_id"] == woi
+            # assert result["data"]["order_item_id"] == woi
             plate_3_sample_id = result["data"]["id"]
             assert plate_3_sample_id != src_sample_id
-            next_map_data = (plate_3_sample_id, plate_3_barcode, well_num, woi)
+            next_map_data = (plate_3_sample_id, plate_3_barcode, well_num)
 
     def xtest_small_same_to_same_to_same_golden(self):
 
