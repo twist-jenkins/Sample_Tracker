@@ -51,8 +51,7 @@ class Warp1Config(Config):
 
 
 class Warp2Config(Config):
-    # SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp2smt"
-    SQLALCHEMY_DATABASE_URI = "The Warp2 database is now considered frozen"
+    SQLALCHEMY_DATABASE_URI = "postgresql://twister:Of2dAd8cir5Y@10.10.120.94/warp2smt228"
 
 
 class DevConfig(Config):

@@ -12,7 +12,8 @@ import datetime
 
 from flask import g, make_response, request, Response, jsonify
 
-from sqlalchemy.orm import subqueryload
+from sqlalchemy import distinct
+from sqlalchemy.orm import subqueryload, aliased
 from sqlalchemy.orm.exc import NoResultFound  # , MultipleResultsFound
 
 from app.utils import scoped_session
@@ -490,6 +491,8 @@ def create_well_transform(db_session, operator, sample_transform, order_number,
 
 
 def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
+    import time
+    start = time.time()
 
     try:
         sample_plate = db.session.query(Plate).filter(
@@ -515,11 +518,42 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
     #     TransformDetail.destination_plate_id == plate_id,
     #     Plate.id == TransformDetail.source_plate_id).all()
 
-    wells = []
-    child_plates = []
+    child_pids = []
+    parent_pids = []
+
+    # Query for parent plates
+    ParentSample = aliased(Sample)
+    ChildSample = aliased(Sample)
+    for plate in db.session.query(distinct(ParentSample.plate_id) ) \
+            .join(TransformDetail,
+                  TransformDetail.parent_sample_id == ParentSample.id ) \
+            .filter(ParentSample.plate_id != sample_plate.id ) \
+            .join(ChildSample,
+                  TransformDetail.child_sample_id == ChildSample.id ) \
+            .filter(ChildSample.plate_id == sample_plate.id):
+        parent_pids.append(plate)
+
     parent_plates = []
-    seen_parents = []
-    seen_children = []
+    if parent_pids:
+        parent_plates = db.session.query(Plate).\
+            filter(Plate.id.in_(parent_pids)).all()
+
+    # Query for child plates
+    for plate in db.session.query(distinct(ChildSample.plate_id) ) \
+            .join(TransformDetail,
+                  TransformDetail.child_sample_id == ChildSample.id ) \
+            .filter(ChildSample.plate_id != sample_plate.id ) \
+            .join(ParentSample,
+                  TransformDetail.parent_sample_id == ParentSample.id ) \
+            .filter(ParentSample.plate_id == sample_plate.id):
+        child_pids.append(plate)
+
+    child_plates = []
+    if child_pids:
+        child_plates = db.session.query(Plate).\
+            filter(Plate.id.in_(child_pids)).all()
+
+    wells = []
     this_to_child_task_name = None
     parent_to_this_task_name = None
     for s in sample_plate.current_well_contents(db.session):
@@ -528,39 +562,37 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
                       "sample_id": s.id
                       })
 
-        for parent in s.parents:
-            # Look at all the parent plates for this sample
-            if parent.plate.id not in seen_parents:
-                seen_parents.append(parent.plate.id)
-                parent_plates.append({
-                    "externalBarcode": parent.plate.external_barcode,
-                    "dateCreated": str(parent.plate.date_created),
-                    "dateCreatedFormatted":
-                        parent.plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
-                })
+    # Look at all the parent plates for this sample
+    parent_info = []
+    for parent in parent_plates:
+        parent_info.append({
+            "externalBarcode": parent.external_barcode,
+            "dateCreated": str(parent.date_created),
+            "dateCreatedFormatted":
+                parent.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+        })
 
-                if s.transform:
-                    parent_to_this_task_name = s.transform.transform_type.name
+    # if s.transform:
+    #     parent_to_this_task_name = s.transform.transform_type.name
 
-        for child in s.children:
-            # Look at all the child plates for this sample
-            if child.plate.id not in seen_children:
-                seen_children.append(child.plate.id)
-                child_plates.append({
-                    "externalBarcode": child.plate.external_barcode,
-                    "dateCreated": str(child.plate.date_created),
-                    "dateCreatedFormatted":
-                        child.plate.date_created.strftime("%A, %B %d, %Y %I:%M%p")
-                })
+    # Look at all the child plates for this sample
+    child_info = []
+    for child in child_plates:
+        child_info.append({
+            "externalBarcode": child.external_barcode,
+            "dateCreated": str(child.date_created),
+            "dateCreatedFormatted":
+                child.date_created.strftime("%A, %B %d, %Y %I:%M%p")
+        })
 
-                if child.transform:
-                    this_to_child_task_name = child.transform.transform_type.name
+    # if child.transform:
+    #     this_to_child_task_name = child.transform.transform_type.name
 
     report = {
         "success": True,
-        "parentPlates": parent_plates,
+        "parentPlates": parent_info,
         "parentToThisTaskName": parent_to_this_task_name,
-        "childPlates": child_plates,
+        "childPlates": child_info,
         "thisToChildTaskName": this_to_child_task_name,
         "wells": wells,
         "plateDetails": {
@@ -570,6 +602,8 @@ def plate_details(sample_plate_barcode, fmt, basic_data_only=True):
             "type": str(sample_plate.type_id)
         }
     }
+
+    logger.info("Plate info took: " + str(time.time() - start))
 
     if fmt == "json":
         resp = Response(response=json.dumps(report),
@@ -727,223 +761,8 @@ def check_plates_are_new():
 # ### Hamailton operation endpoints
 ##################
 
-hamiltons = {
-    "HAM04": {
-        "label": "Jupiter 2 - STAR Plus",
-        "type": "Star Plus",
-        "barcode": "HAM04",
-        "trackCount": 68,
-        "deckRegions": {
-            "left side": {
-                "trackWidth": 30,
-                "startTrack": 1
-            },
-            "middle partition": {
-                "trackWidth": 12,
-                "startTrack": 31
-            },
-            "right side": {
-                "trackWidth": 24,
-                "startTrack": 43
-            }
-        }
-    },
-    "HAM01": {
-        "label": "Galactica - STAR",
-        "type": "Star Plus",
-        "barcode": "HAM01",
-        "trackCount": 54,
-        "deckRegions": {
-            "main": {
-                "trackWidth": 54,
-                "startTrack": 1
-            }
-        }
-    },
-    "HAM0X": {
-        "label": "Enterprise - STAR",
-        "type": "Star",
-        "barcode": "HAM0X",
-        "trackCount": 54,
-        "deckRegions": {
-            "main": {
-                "trackWidth": 54,
-                "startTrack": 1
-            }
-        }
-    },
-    "HAM0Y": {
-        "label": "Millenium Falcon - STAR",
-        "type": "Star",
-        "barcode": "HAM0Y",
-        "trackCount": 54,
-        "deckRegions": {
-            "main": {
-                "trackWidth": 54,
-                "startTrack": 1
-            }
-        }
-    }
-}
-
-carriers = {
-    "CARR0001": {
-        "positions": {
-            "CARR0001-01": {
-                "index": 1
-            },
-            "CARR0001-02": {
-                "index": 2
-            },"CARR0001-03": {
-                "index": 3
-            },
-            "CARR0001-04": {
-                "index": 4
-            },
-            "CARR0001-05": {
-                "index": 5
-            }
-
-        }
-    },
-    "CARR0002": {
-        "positions": {
-            "CARR0002-01": {
-                "index": 1
-            },
-            "CARR0002-02": {
-                "index": 2
-            },
-            "CARR0002-03": {
-                "index": 3
-            },
-            "CARR0002-04": {
-                "index": 4
-            },
-            "CARR0002-05": {
-                "index": 5
-            }
-
-        }
-    },
-    "CARR0003": {
-        "positions": {
-            "CARR0003-01": {
-                "index": 1
-            },
-            "CARR0003-02": {
-                "index": 2
-            },
-            "CARR0003-03": {
-                "index": 3
-            },
-            "CARR0003-04": {
-                "index": 4
-            },
-            "CARR0003-05": {
-                "index": 5
-            }
-
-        }
-    },
-    "CARR0004": {
-        "positions": {
-            "CARR0004-01": {
-                "index": 1
-            },"CARR0004-02": {
-                "index": 2
-            },
-            "CARR0004-03": {
-                "index": 3
-            },
-            "CARR0004-04": {
-                "index": 4
-            },
-            "CARR0004-05": {
-                "index": 5
-            }
-
-        }
-    },
-    "CARR0005": {
-        "positions": {
-            "CARR0005-01": {
-                "index": 1
-            },
-            "CARR0005-02": {
-                "index": 2
-            },
-            "CARR0005-03": {
-                "index": 3
-            },
-            "CARR0005-04": {
-                "index": 4
-            },
-            "CARR0005-05": {
-                "index": 5
-            }
-
-        }
-    },
-    "CARR0006": {
-        "positions": {
-            "CARR0006-01": {
-                "index": 1
-            },
-            "CARR0006-02": {
-                "index": 2
-            },
-            "CARR0006-03": {
-                "index": 3
-            },
-            "CARR0006-04": {
-                "index": 4
-            },
-            "CARR0006-05": {
-                "index": 5
-            }
-        }
-    },
-    "CARR0007": {
-        "positions": {
-            "CARR0007-01": {
-                "index": 1
-            },
-            "CARR0007-02": {
-                "index": 2
-            },
-            "CARR0007-03": {
-                "index": 3
-            },
-            "CARR0007-04": {
-                "index": 4
-            },
-            "CARR0007-05": {
-                "index": 5
-            }
-        }
-    },
-    "CARR0008": {
-        "positions": {
-            "CARR0008-01": {
-                "index": 1
-            },
-            "CARR0008-02": {
-                "index": 2
-            },
-            "CARR0008-03": {
-                "index": 3
-            },
-            "CARR0008-04": {
-                "index": 4
-            }
-            ,"CARR0008-05": {
-                "index": 5
-            }
-
-        }
-    }
-}
+hamiltons = constants.HAMILTONS
+carriers = constants.CARRIERS
 
 
 def get_hamilton_by_barcode(hamilton_barcode):
