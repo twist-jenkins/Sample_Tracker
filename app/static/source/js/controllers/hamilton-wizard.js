@@ -413,6 +413,10 @@ angular.module('twist.app').controller('hamiltonWizardController', ['$scope', '$
                     barcodeFinishedTimeout = $timeout(function () {
                         var positionBarcode = $scope.highlightedPlate.barcode;
                         var positionInCarrier = $scope.highlightedPlate.carrier.positions[positionBarcode];
+
+
+                        console.log($scope.highlightedPlate.carrier.positions);
+
                         if (positionInCarrier) {
                             if (positionInCarrier.index == $scope.highlightedPlate.localIndex) {
                                 /* then we're ready for the plate barcode */
