@@ -38,7 +38,7 @@ def to_resp(f):
     def f2(*args, **kwargs):
         try:
             rows, responseCommands = f(*args, **kwargs)
-            
+
         except WebError as e:
             return Response( response=json.dumps({'success': False,
                                                   'message': str(e),
@@ -342,7 +342,7 @@ def primer_preplanning( type_id, templ_id ):
                 "forProperty": "associatedPcaPlates"
             }
         })
-    
+
     if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
         masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
         dataType = "text"
@@ -434,7 +434,8 @@ def thermocycle( type_id, templ_id ):
 
 @to_resp
 def quant_upload( type_id, templ_id ):
-    rows, cmds = [], []
+    cmds = []
+    rows = plates_to_rows( request.json['sources'] )
     cmds.append({
         "type": "REQUEST_DATA",
         "item": {
@@ -604,7 +605,7 @@ def ecr_pcr_planning( type_id, templ_id ):
                 "forProperty": "associatedEcrPlates"
             }
         })
-    
+
     if not ecrPlates or ecrPlates[0] is None or ecrPlates[1] is None or ecrPlates[2] is None or ecrPlates[3] is None:
         masterMixNeeds = "Please scan <strong>all 4</strong> ECR plates to retrieve master mix needs."
         dataType = "text"
@@ -671,12 +672,12 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
         })
 
     return rows, cmds
-    
+
 def preview( transform_type_id, transform_template_id ):
     """Called by the UI to generate a draft transform spec before execution."""
 
     print '@@ transform_type_id=%s, transform_template_id=%s' % (transform_type_id, transform_template_id)
-    
+
     assert request.method == 'POST'
 
     details = request.json["details"]
@@ -853,7 +854,7 @@ def preview( transform_type_id, transform_template_id ):
                             "item": {
                                 "type": "text",
                                 "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                                "data":  ("Return plate <strong>" 
+                                "data":  ("Return plate <strong>"
                                           + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
                                           + "</strong> to the pooling bin.")
                             }
