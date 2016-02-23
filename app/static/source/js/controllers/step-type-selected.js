@@ -4,9 +4,9 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
         $scope.Constants = Constants;
 
         $scope.selectTransformTemplateType = function (which, skipGo) {
-            if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep()) {
+            if (which == Constants.HAMILTON_OPERATION && !$scope.isHamiltonStep(selectedTransformTypeId)) {
                 return false;
-            } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep()) {
+            } else if (which != Constants.HAMILTON_OPERATION && $scope.isHamiltonStep(selectedTransformTypeId)) {
                 return false;
             }
             if (!skipGo) {
@@ -21,7 +21,7 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTransformTypeId == 39 || selectedTransformTypeId == 48 || selectedTransformTypeId == 51) {
+            if (selectedTransformTypeId == 39 || selectedTransformTypeId == 48 || selectedTransformTypeId == 51 || selectedTransformTypeId == 70) {
                 return true;
             }
             return false;

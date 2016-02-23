@@ -35,7 +35,7 @@ angular.module('twist.app').factory('Constants',[
             ,DATA_TYPE_BARCODE: 'barcode'
             ,DATA_TYPE_RADIO: 'radio'
             ,DATA_TYPE_CSV: 'csv'
-            ,BARCODE_PREFIX_PLATE: 'PLT'
+            ,BARCODE_PREFIX_PLATE: 'p'
             ,BARCODE_TYPE_PLATE: 'PLATE'
             ,BARCODE_TYPE_INSTRUMENT: 'INSTRUMENT'
             ,BARCODE_TYPE_CARRIER: 'CARRIER'
