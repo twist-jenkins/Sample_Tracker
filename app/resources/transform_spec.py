@@ -17,7 +17,7 @@ from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
-from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate
+from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate, PlateType
 
 logger = logging.getLogger()
 
@@ -324,7 +324,8 @@ def alter_spec_ngs_barcodes(db_session, spec):
     plates = {}
     logging.info("Caching plates.")
     barcodes = set([op['source_plate_barcode'] for op in operations]
-                   + [op['destination_plate_barcode'] for op in operations])
+                   + [op['destination_plate_barcode'] for op in operations]
+                   )
     for barcode in barcodes:
         try:
             plate = db_session.query(Plate).\
@@ -355,8 +356,11 @@ def alter_spec_ngs_barcodes(db_session, spec):
 
         destination_plate = plates[oper["destination_plate_barcode"]]
         destination_plate_type = destination_plate.type_id
+        if "destination_plate_type" in oper:
+            assert destination_plate_type == oper["destination_plate_type"]
+        dest_type = db.session.query(PlateType).get(destination_plate_type)
         destination_well_id = str(oper["destination_well_name"])
-        destination_well_number = destination_plate.plate_type.layout.get_well_by_label(destination_well_id).well_number
+        destination_well_number = dest_type.layout.get_well_by_label(destination_well_id).well_number
 
         nps_id, ngs_pair = miseq.make_ngs_prepped_sample(db_session,
                                                          source_sample_id,
@@ -376,7 +380,9 @@ def alter_spec_ngs_barcodes(db_session, spec):
             oper["source_well_number"] = source_well_number
             oper["source_sample_id"] = barcode_sequence_to_barcode_sample(seq_id)
             oper["source_plate_well_count"] = 384
-            oper["destination_sample_id"] = nps_id
+            oper["destination_plate_barcode"] = oper["destination_plate_barcode"]
+            oper["destination_plate_well_count"] = 384
+            # oper["destination_sample_id"] = nps_id  # accession this during execution!
             oper["destination_plate_type"] = destination_plate_type
             oper["destination_well_number"] = destination_well_number
             new_operations.append(oper)
