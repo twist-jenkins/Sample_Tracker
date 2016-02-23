@@ -673,6 +673,7 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
 
     return rows, cmds
 
+
 def preview( transform_type_id, transform_template_id ):
     """Called by the UI to generate a draft transform spec before execution."""
 
