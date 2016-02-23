@@ -367,12 +367,12 @@ class TestCase(unittest.TestCase):
         assert "data_json" in result["data"]
         assert result["data"]["date_executed"] is None
 
-        # 5. the spec should have BCS_ going in and NPS_ going out
+        # 5. the spec should have BCS_ going in # and NPS_ going out
 
         operations = result["data"]["data_json"]["operations"]
         for well in operations:
             assert well["source_sample_id"][0:4] == "BCS_"
-            assert well["destination_sample_id"][0:4] == "NPS_"
+            # assert well["destination_sample_id"][0:4] == "NPS_"
 
         # 7. We should be able to get an echo worklist
         echo_url = new_spec_url + ".echo.csv"
@@ -409,12 +409,14 @@ class TestCase(unittest.TestCase):
         from collections import defaultdict
         bc_pairs = defaultdict(int)
         for ix, well in enumerate(operations):
-            target_id = well["destination_sample_id"]
-            assert target_id[0:4] == "NPS_"
+            # target_id = well["destination_sample_id"]
+            target_well_number = well["destination_well_number"]
+            # assert target_id[0:4] == "NPS_"
             barcode_sample_id = well["source_sample_id"]
             assert barcode_sample_id[0:4] == "BCS_"
             barcode_sequence_id = 'BC_' + barcode_sample_id[4:]
-            rv = self.client.get('/api/v1/rest/sample/%s' % target_id,
+            rv = self.client.get('/api/v1/rest/plate/%s/well/%d'
+                                 % (dest_plate_1_barcode, target_well_number),
                                  content_type='application/json')
             assert rv.status_code == 200, rv.data
             result = json.loads(rv.data)

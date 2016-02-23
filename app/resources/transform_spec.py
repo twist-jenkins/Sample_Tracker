@@ -354,13 +354,23 @@ def alter_spec_ngs_barcodes(db_session, spec):
         source_well_id = str(oper["source_well_name"])
         source_well_number = source_plate.plate_type.layout.get_well_by_label(source_well_id).well_number
 
-        destination_plate = plates[oper["destination_plate_barcode"]]
-        destination_plate_type = destination_plate.type_id
-        if "destination_plate_type" in oper:
-            assert destination_plate_type == oper["destination_plate_type"]
-        dest_type = db.session.query(PlateType).get(destination_plate_type)
         destination_well_id = str(oper["destination_well_name"])
+        if oper["destination_plate_barcode"] in plates:
+            # plate exists in DB, check it
+            destination_plate = plates[oper["destination_plate_barcode"]]
+            destination_plate_type = destination_plate.type_id
+            if "destination_plate_type" in oper:
+                assert destination_plate_type == oper["destination_plate_type"]
+
+        else:
+            # new plate not yet in DB
+            destination_plate_type = oper["destination_plate_type"]
+
+        # FIXME: adhoc_sample_movement shouldn't need destination_well_number!
+        # FIXME: well_id == well_label == well_name ??
+        dest_type = db.session.query(PlateType).get(destination_plate_type)
         destination_well_number = dest_type.layout.get_well_by_label(destination_well_id).well_number
+        destination_well_name = destination_well_id
 
         nps_id, ngs_pair = miseq.make_ngs_prepped_sample(db_session,
                                                          source_sample_id,
@@ -374,22 +384,26 @@ def alter_spec_ngs_barcodes(db_session, spec):
              ngs_pair.forward_primer_i5_well_column,
              ngs_pair.i5_sequence_id)
         ]:
-            oper = oper.copy()
-            oper["source_plate_barcode"] = NGS_BARCODE_PLATE
-            oper["source_well_name"] = "%s%d" % (row, column)
-            oper["source_well_number"] = source_well_number
-            oper["source_sample_id"] = barcode_sequence_to_barcode_sample(seq_id)
-            oper["source_plate_well_count"] = 384
-            oper["destination_plate_barcode"] = oper["destination_plate_barcode"]
-            oper["destination_plate_well_count"] = 384
+            new_oper = {}  # oper.copy()
+            new_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
+            new_oper["source_well_name"] = "%s%d" % (row, column)
+            # oper["source_well_number"] = None
+            new_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(seq_id)
+            new_oper["source_plate_well_count"] = 384
+            new_oper["destination_plate_barcode"] = oper["destination_plate_barcode"]
+            new_oper["destination_plate_well_count"] = 384
             # oper["destination_sample_id"] = nps_id  # accession this during execution!
-            oper["destination_plate_type"] = destination_plate_type
-            oper["destination_well_number"] = destination_well_number
-            new_operations.append(oper)
-            logging.warn("oper: %s", oper)
+            new_oper["destination_plate_type"] = destination_plate_type
+            new_oper["destination_well_number"] = destination_well_number
+            new_oper["destination_well_name"] = destination_well_name
+            new_operations.append(new_oper)
+            logging.warn("operX : %s", new_oper)
 
     spec.data_json["operations"] = new_operations
     spec.data_json["destinations"] = spec.data_json["sources"]
+
+    # TODO: determine whether we still want / need the "sources" to
+    # look like this:
     spec.data_json["sources"] = [{
         "id": None,
         "type": "plate",

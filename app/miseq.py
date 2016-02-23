@@ -384,11 +384,13 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
 
     # Refer to source sample instances
     # FIXME: this hardcodes a relationship between sequence and sample
-    i5_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
-    i7_sample_id = ngs_pair.i7_sequence_id.replace("BC_", "BCS_")
+    # i5_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
+    # i7_sample_id = ngs_pair.i7_sequence_id.replace("BC_", "BCS_")
 
     # Create NPS
     nps_id = create_unique_id("NPS_")()
+
+    """
     description = 'SMT - well %s' % destination_well_id  # TODO: add plate
     nps_sample = Sample(id=nps_id,
                         name=nps_id,
@@ -416,5 +418,6 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
                   ngs_pair.i7_sequence_id)
 
     db_session.flush()
+    """
 
     return nps_id, ngs_pair

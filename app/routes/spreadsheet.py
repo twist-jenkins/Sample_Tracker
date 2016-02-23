@@ -104,6 +104,15 @@ def create_adhoc_sample_movement(db_session,
         for sample in s:
             src_samples[barcode][sample.well.well_number] = sample
 
+    # Lookup well_number by well_name, if necesssary
+    for oper in transform_map:
+        if "source_well_number" not in oper:
+            s_bc = oper["source_plate_barcode"]
+            s_label = str(oper["source_well_name"])
+            s_type = source_plates[s_bc].plate_type
+            s_number = s_type.layout.get_well_by_label(s_label).well_number
+            oper["source_well_number"] = s_number
+
     # Create and cache all destination plates as needed
     dest_plates = {}
     logging.info("Caching dest plates.")
@@ -211,6 +220,7 @@ def create_adhoc_sample_movement(db_session,
         # check destination
 
         destination_plate_barcode, destination_well_number = dest_key
+        logging.warn("**************** %s", dest_key)
 
         try:
             dplate = dest_plates[destination_plate_barcode]
@@ -239,6 +249,10 @@ def create_adhoc_sample_movement(db_session,
                 logging.error("Invalid xfer: %s", msg)
                 return {"success": False,
                         "errorMessage": msg}
+
+            logging.warn("****************<<<< %s / %s", source_plate_barcode,
+                         source_well_number)
+
 
             try:
                 src_s = src_samples[source_plate_barcode][source_well_number]
@@ -414,6 +428,9 @@ def sample_handler(db_session, copy_metadata, transform, well_cache,
 
     # Link up the source samples as parent
     for source_well_sample in source_well_samples:
+        logging.warn("*************** >>>>>> %s > %s",
+                     source_well_sample.id,
+                     new_s.id)
         source_to_dest_well_transform = TransformDetail(
             transform=transform,
             parent_sample_id=source_well_sample.id,
