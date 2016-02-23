@@ -96,6 +96,7 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.label_destination_tubes');
                                 break;
                             case 58:
+                            case 70:
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_placement_and_scan');
                                 break;
                             default:

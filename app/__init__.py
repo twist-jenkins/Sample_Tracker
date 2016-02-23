@@ -426,6 +426,14 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK,
                             TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC as VECTOR_CREATE_SRC_T,
                             TRANS_TPL_VECTOR_CREATE_SRC as VECTOR_CREATE_SRC,
+                            TRANS_TYPE_ECR_PCR_PLANNING as ECR_PCR_PLANNING_T,
+                            TRANS_TPL_ECR_PCR_PLANNING as ECR_PCR_PLANNING,
+                            TRANS_TYPE_ECR_PCR_SOURCE_PLATE_CREATION as ECR_PCR_SOURCE_PLATE_CREATION_T,
+                            TRANS_TPL_ECR_PCR_SOURCE_PLATE_CREATION as ECR_PCR_SOURCE_PLATE_CREATION,
+                            TRANS_TYPE_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING_T,
+                            TRANS_TPL_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING,
+                            TRANS_TYPE_ECR_PCR_THERMOCYCLE as ECR_THERMO_T,
+                            TRANS_TYPE_ECR_PCR_UPLOAD_QUANT as ECR_PCR_UPLOAD_QUANT_T,
     )
 
     f = {(62, SAME_PLATE):                    transform.generic_same_to_same,  # 62 is "CHP Deprotection"
@@ -438,14 +446,19 @@ def transform_params( transform_type_id, transform_template_id  ):
          (NGS_THERO_T, SAME_PLATE):                   transform.thermocycle,
          (PCA_THERMO_T, SAME_PLATE):                  transform.thermocycle,
          (PCR_THERMO_T, SAME_PLATE):                  transform.thermocycle,
+         (ECR_THERMO_T, SAME_PLATE):                  transform.thermocycle,
          (REBATCH_XFORM_T, REBATCH_XFORM):            transform.rebatch_transform,
          (UPLOAD_QUANT_T, SAME_PLATE):                transform.quant_upload,
+         (ECR_PCR_UPLOAD_QUANT_T, SAME_PLATE):        transform.quant_upload,
          (NGS_HITPICKING_T, ):             transform.ngs_hitpicking,
          (25, SAME_PLATE):                 transform.ngs_tagmentation, # ?? no type constant?
          (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
          (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
          (NGS_LOAD, ):                     transform.ngs_load,
          (NGS_POOLING, ):    transform.ngs_pooling,
+         (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):                              transform.ecr_pcr_planning,
+         (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):    transform.ecr_pcr_source_plate_creation,
+         (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):            transform.ecr_pcr_primer_hitpicking,
     }.get( (transform_type_id, transform_template_id), transform.preview )
 
     print '@@ transform_type_id:%s, transform_template_id:%s -> %s' \

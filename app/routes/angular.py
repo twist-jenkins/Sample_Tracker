@@ -914,6 +914,40 @@ def process_hamilton_sources(transform_type_id):
             }
         )
 
+    elif transform_type_id == constants.TRANS_TYPE_ECR_PCR_MASTER_MIX_ADDITION:
+        '''
+        this code needs to actually analyze the wells in the plates of plateBarcodes
+        and build a master mix addition worklist AND needs to determine where the 4 destination plates should be placed.
+        It will return the SET_DESTINATIONS command as-is below.
+        The ADD_TRANSFORM_SPEC_DETAIL should be the array of 4 destination plates with their forPosition and barcode properties set accordingly
+        '''
+
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"}
+                ]
+            }
+        )
+        respData["responseCommands"].append(
+            {
+                "type": "ADD_TRANSFORM_SPEC_DETAIL",
+                "detail": {
+                    "key": "guidedDestinationPlacementData",
+                    "value": [
+                        {"forPosition": 1, "barcode": "TUBE01"},
+                        {"forPosition": 2, "barcode": "TUBE02"},
+                        {"forPosition": 3, "barcode": "TUBE03"},
+                        {"forPosition": 4, "barcode": "TUBE04"}
+                    ]
+                }
+            }
+        )
+
     elif transform_type_id == constants.TRANS_TYPE_POST_PCA_NORM:
         '''
         this code needs to actually analyze the wells in the plates of plateBarcodes

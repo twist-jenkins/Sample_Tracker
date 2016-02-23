@@ -1102,7 +1102,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'iHAM04': { // Jupiter 2
+                        'iHAM03': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1144,7 +1144,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         },
-                        'iHAM01': { // Galactica
+                        'iHAM04': { // Galactica
                             'main': {
                                 carriers: [
                                     {
@@ -1250,7 +1250,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'iHAM04': { // Jupiter 2
+                        'iHAM03': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1371,7 +1371,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'iHAM04': { // Jupiter 2
+                        'iHAM03': { // Jupiter 2
                             'left side': {
                                 carriers: [
                                     {
@@ -1492,7 +1492,7 @@ app = angular.module('twist.app')
                                 ]
                             }
                         },
-                        'iHAM01': { // Galactica
+                        'iHAM04': { // Galactica
                             'main': {
                                 carriers: [
                                     {
@@ -1673,7 +1673,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 4
                         ,plateTypeId: 'SPTT_0006'
-                        ,variablePlateCount: false
+                        ,variablePlateCount: true
                     }
                 }
                 ,37: {  // keyed to transform_template_id in the database
@@ -1688,7 +1688,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'iHAM0Y': { // Millenium Falcon
+                        'iHAM01': { // Millenium Falcon
                             'main': {
                                 carriers: [
                                     {
@@ -1733,7 +1733,7 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,hamiltonDetails: {
-                        'iHAM0Y': { // Millenium Falcon
+                        'iHAM01': { // Millenium Falcon
                             'main': {
                                 carriers: [
                                     {
@@ -1752,6 +1752,34 @@ app = angular.module('twist.app')
                             }
                         }
 
+                    }
+                }
+                ,39: {  // keyed to transform_template_id in the database
+                    description: 'ECR/PCR Planning'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                        ,create: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
+                ,40: {  // keyed to transform_template_id in the database
+                    description: 'ECR/PCR Primer Hitpicking'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 4
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: true
                     }
                 }
                 ,42: {  // keyed to transform_template_id in the database
@@ -1777,11 +1805,68 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
-                        ,create: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,variablePlateCount: false
+                    }
+                }
+                ,44: {  // keyed to transform_template_id in the database
+                    description: 'ECR/PCR Source Plate Creation'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                }
+                ,45: {  // keyed to transform_template_id in the database
+                    description: 'ECR/PCR Master Mix Addition'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 4
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        'iHAM01': { // Millenium Falcon
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 25
+                                        ,index: 1
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 31
+                                        ,index: 2
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+
                     }
                 }
 
