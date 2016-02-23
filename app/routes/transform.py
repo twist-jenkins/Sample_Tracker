@@ -6,7 +6,6 @@ import logging
 
 from app import db
 from app import constants
-from app.steps import primer_hitpicking, vector_hitpicking
 from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
@@ -22,7 +21,6 @@ from twistdb.frag import FraganalyzerRunSampleSummaryJoin
 
 
 logger = logging.getLogger()
-
 
 class WebError(Exception):
     """
@@ -255,6 +253,8 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
     bulk primer plate to the PCA plates, but the REAL destinations are temporary PCR plates.
     the plate id's are later replaced with the real destination barcodes.
     """
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     pca_plates = []
     for bc in pca_barcodes:
         try:
@@ -367,6 +367,8 @@ def primer_preplanning( type_id, templ_id ):
 
 @to_resp
 def primer_create_src( type_id, templ_id ):
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     rows = plates_to_rows( request.json['sources'] )
     bulk_barcode = request.json['sources'][0]['details']['id']
     custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
@@ -384,6 +386,8 @@ def primer_create_src( type_id, templ_id ):
 
 @to_resp
 def primer_master_mix( type_id, templ_id ):
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     rows = plates_to_rows( request.json['sources'] )
     bulk_barcode = request.json['sources'][0]['details']['id']
     mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
@@ -479,6 +483,8 @@ def ngs_mastermix( type_id, templ_id ):
 
 @to_resp
 def pcr_primer_hitpick( type_id, templ_id ):
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     rows, cmds = [{}], []
     destinations_ready = ("destinations" in request.json
                           and request.json['destinations'])
@@ -693,6 +699,8 @@ def vector_create_src( type_id, templ_id ):
     """
     generate echo worklists
     """
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     # source plate shouldn't exist, but *must* appear in a previous transform spec
     if len(request.json['sources']) != 1:
         raise WebError("expected 1 source plate, found %d" % len(request.json['sources']))
