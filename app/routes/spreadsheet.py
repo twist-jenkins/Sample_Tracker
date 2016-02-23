@@ -19,8 +19,7 @@ from app.models import create_destination_plate
 from app.dbmodels import NGS_BARCODE_PLATE  # , NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
-from twistdb.sampletrack import (Sample, Plate, PlateWell, Transform,
-                                 PlateType, TransformDetail)
+from twistdb.sampletrack import (Sample, Plate, Transform, TransformDetail)
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
 
@@ -70,246 +69,245 @@ def create_adhoc_sample_movement(db_session,
     db_session.add(sample_transform)
     db_session.flush()
 
-    destination_plates_by_barcode = {}
+    import time
+    start = time.time()
 
-    #
-    # NEXT: Now, do the transform for each source-plate-well to each destination-plate-well...
-    #
-    order_number = 1
+    # Cache all requested source plates
+    source_plates = {}
+    logging.info("Caching source plates.")
+    srcs = set([d['source_plate_barcode'] for d in wells])
+    for src in srcs:
+        try:
+            source_plate = db_session.query(Plate).\
+                filter(Plate.external_barcode == src).one()
+            source_plates[src] = source_plate
+        except:
+            logging.warn(" %s encountered error creating sample transform. "
+                         "There is no source plate with the barcode: [%s]",
+                         g.user.first_and_last_name, src)
+            return {
+                "success": False,
+                "errorMessage": "There is no source plate with the barcode: [%s]" % (src)
+            }
 
+    # We always operate on a plate's current contents so we pull that
+    # in a single query so that we have it on-hand and can then single out
+    # samples for transfer.
+    src_samples = {}
+    logging.info("Caching source samples.")
+    for barcode, plate in source_plates.iteritems():
+        s = plate.current_well_contents(db_session)
+        src_samples[barcode] = {}
+        for sample in s:
+            src_samples[barcode][sample.well.well_number] = sample
+
+    # Create and cache all destination plates as needed
+    dest_plates = {}
+    logging.info("Caching dest plates.")
+    dests = set([(d['destination_plate_barcode'],
+                  d['destination_plate_type']) for d in wells])
+
+    merge_transform_flag = (NGS_BARCODE_PLATE in srcs)
+    in_place_transform_flag = (srcs == set([d[0] for d in dests]))
+
+    if merge_transform_flag:
+        # TODO: add lots more kinds of merge transforms.
+        try:
+            # Retrieve the target plate for our merge transform
+            dbarcodes = [d[0] for d in dests]
+            dplates = db_session.query(Plate).\
+                filter(Plate.external_barcode.in_(dbarcodes)).all()
+            for plate in dplates:
+                dest_plates[plate.external_barcode] = plate
+        except:
+            logging.warn("%s encountered error creating sample transform. "
+                         "One or more destination plate with barcodes do not exist (in merge transform): %s",
+                         g.user.first_and_last_name, dests)
+            return {
+                "success": False,
+                "errorMessage": "Missing at least one destination plate with the barcode: %s" %
+                                (dests)
+            }
+    elif in_place_transform_flag:
+        # BUGFIX 11/17/2015: for in-place transforms,
+        # don't create a new plate!
+        # TODO: clarify same-same transform destination plate.
+        dest_plates = source_plates
+    else:
+        # This is a transform that requires creating a new plate in DB
+        try:
+            for barcode, dtype in dests:
+                destination_plate = create_destination_plate(
+                    db_session,
+                    operator,
+                    barcode,
+                    dtype,
+                    "Unknown location",  # FIXME find a better default for this
+                    transform_template_id)
+                dest_plates[barcode] = destination_plate
+            db_session.flush()
+        except IndexError:
+            err_msg = ("Encountered error creating sample "
+                       "transform. Could not create destination plate: [%s]"
+                       )
+            logging.info(err_msg, ",".join([d[0] for d in dests]))
+            return {
+                "success": False,
+                "errorMessage": err_msg % ",".join([d[0] for d in dests])
+            }
+
+    # Create a map of samples already on the destination plates, if any
+    dest_samples = {}
+    logging.info("Caching dest samples (if any).")
+    for barcode, plate in dest_plates.iteritems():
+        s = plate.current_well_contents(db_session)
+        dest_samples[barcode] = {}
+        for sample in s:
+            dest_samples[barcode][sample.well.well_number] = sample
+
+    # Also cache a map of well number to well instance for all destination wells
+    well_cache = {}
+    for barcode, plate in dest_plates.iteritems():
+        if plate.type_id not in well_cache.keys():
+            well_cache[plate.type_id] = {}
+        well_ids = [d['destination_well_number']
+                    if d['destination_plate_barcode'] == barcode
+                    else None for d in wells]
+        well_ids = [x for x in well_ids if x is not None]  # There must be a better way!
+        for id in well_ids:
+            well_cache[plate.type_id][id] = plate.get_well_by_number(id)
+
+    new_rows = []
+    logging.info("Creating new samples.")
     for ix, well in enumerate(wells):
         try:
             source_plate_barcode = well["source_plate_barcode"]
             source_well_number = well['source_well_number']
             destination_plate_barcode = well["destination_plate_barcode"]
             destination_well_number = well['destination_well_number']
-            # destination_sample_id = well.get("destination_sample_id", None)
-            destination_plate_type = well['destination_plate_type']
         except KeyError:
             logging.error("Malformed well [%s]:", well)
             raise
 
-        logging.info("1. Obtain access to the source plate for this line item.")
+        # try:
+        #     splate = source_plates[source_plate_barcode]
+        # except:
+        #     logging.warn(" %s encountered error creating sample transform. "
+        #                  "There is no source plate with the barcode: [%s]",
+        #                  g.user.first_and_last_name, source_plate_barcode)
+        #     return {
+        #         "success": False,
+        #         "errorMessage": "There is no source plate with the barcode: [%s]" % (source_plate_barcode)
+        #     }
+
         try:
-            source_plate = db_session.query(Plate).\
-                filter(Plate.external_barcode == source_plate_barcode).one()
+            dplate = dest_plates[destination_plate_barcode]
         except:
-            logging.warn(" %s encountered error creating sample transform. "
-                         "There is no source plate with the barcode: [%s]",
-                         g.user.first_and_last_name, source_plate_barcode)
             return {
                 "success": False,
-                "errorMessage": "There is no source plate with the barcode: [%s]" % (source_plate_barcode)
+                "errorMessage": "Failed to create/find destination plate [%s]." %
+                                destination_plate_barcode
             }
 
-        # storage_location = source_plate.storage_location # FIXME why copy the storage location??
-
-        #
-        # 2. Obtain (or create if we haven't yet grabbed it) the sample plate type row for the type of plate
-        # specified for the destination of this line item.
-        #
-        # NOTE I removed the bit about reverse mapping from plate well count
-        # because there's no need to do this if you pass in the plate type ID
-        # directly as part of the transform spec.
-        dest_plate_type = db_session.query(PlateType).\
-            get(destination_plate_type)
-        if not dest_plate_type:
-            logging.info(" %s encountered error creating sample "
-                         "transform. There are no sample plates with "
-                         "the type: [%s]",
-                         g.user.first_and_last_name,
-                         destination_plate_type)
+        try:
+            src_s = src_samples[source_plate_barcode][source_well_number]
+        except:
             return {
                 "success": False,
-                "errorMessage": "There are no sample plates with the type: [%s]" % (destination_plate_type)
+                "errorMessage": "Failed to create sample for plate/well [%s/%s]." %
+                                (source_plate_barcode, source_well_number)
             }
 
+        try:
+            dest_s = dest_samples[destination_plate_barcode][destination_well_number]
+        except:
+            dest_s = None
+
+        # NOTE I'm not sure when we would need this or even in what code path
+        # it would execute given the try block above?
         #
-        # 3. Obtain (or create if we haven't yet added a row for it in the database) the row for this well-to-well
-        # transform's destination plate.
-        # - It may be new, in which case we create a new plate orm object.
-        # - We may have created it on a previous loop iteration.
-        # - It may already exist in the database, if in_place_transform.
-        # - It may already exist in the database, if merge_transform.
-
-        merge_transform_flag = (source_plate_barcode == NGS_BARCODE_PLATE)
-
-        in_place_transform_flag = (destination_plate_barcode == source_plate_barcode)
-
-        destination_plate = destination_plates_by_barcode.get(destination_plate_barcode)
-        if not destination_plate:
-
-            if merge_transform_flag:
-                # TODO: add lots more kinds of merge transforms.
-                try:
-                    # Retrieve the target plate for our merge transform
-                    destination_plate = db_session.query(Plate).\
-                        filter(Plate.external_barcode == destination_plate_barcode).one()
-                except:
-                    logging.warn(" %s encountered error creating sample transform. "
-                                 "There is no destination plate with the barcode: [%s]",
-                                 g.user.first_and_last_name, destination_plate_barcode)
-                    return {
-                        "success": False,
-                        "errorMessage": "There is no destination plate with the barcode: [%s]" %
-                                        (destination_plate_barcode)
-                    }
-
-            elif in_place_transform_flag:
-                # BUGFIX 11/17/2015: for in-place transforms,
-                # don't create a new plate!
-                # TODO: clarify same-same transform destination plate.
-                destination_plate = source_plate
-
-            else:
-                # This is a transform that requires creating a new plate in DB
-                try:
-                    destination_plate = create_destination_plate(
-                        db_session,
-                        operator,
-                        destination_plate_barcode,
-                        dest_plate_type.type_id,
-                        "Unknown location",  # FIXME find a better default for this
-                        transform_template_id)
-                    db_session.flush()
-                except IndexError:
-                    err_msg = ("Encountered error creating sample "
-                               "transform. Could not create destination plate: [%s]"
-                               )
-                    logging.info(err_msg, destination_plate_barcode)
-                    return {
-                        "success": False,
-                        "errorMessage": err_msg % destination_plate_barcode
-                    }
-
-            destination_plates_by_barcode[destination_plate_barcode] = destination_plate
-
-        destination_plate = destination_plates_by_barcode.\
-            get(destination_plate_barcode)
-        if not destination_plate:
-            return {
-                "success": False,
-                "errorMessage": "Failed to create/find destination plate."
-            }
-
+        # if not src_s and not merge_transform_flag:
         #
-        logging.info('3. Get the "source plate well"')
+        #     name_test = dplate.get_well_by_number(source_well_number)
+        #     if not name_test:
+        #         msg = "There is no well [%s] in the source plate with barcode: [%s]" % (source_well_number, source_plate_barcode)
+        #         if IGNORE_MISSING_SOURCE_PLATE_WELLS:
+        #             logging.warn(msg)
+        #             continue
+        #         else:
+        #             logging.error(msg)
+        #             return {
+        #                 "success": False,
+        #                 "errorMessage": msg
+        #             }
+
+        # existing_plate_layout = db_session.query(Sample).\
+        #     join(PlateWell, Sample.well).\
+        #     filter(Sample.plate_id == destination_plate.id,
+        #            PlateWell.well_number == destination_well_number).first()
+
+        # NOTE I don't think we need to carefully check these; if the destination
+        # well has a sample in it, then this is by definition a merge transform
+        # and we should note the source and current destination sample as parents
+        # of the new destination sample.
         #
+        # if in_place_transform_flag:
+        #     if not existing_plate_layout:
+        #         return {
+        #             "success": False,
+        #             "errorMessage": "This in-place-transform destination plate [%s] contains no sample in well [%s]" %
+        #                             (destination_plate.external_barcode, source_well_sample.well.well_number)
+        #         }
+        # elif merge_transform_flag:
+        #     if not existing_plate_layout:
+        #         return {
+        #             "success": False,
+        #             "errorMessage": "This merge-transform destination plate [%s] contains no sample in well [%s]" %
+        #                             (destination_plate.external_barcode, source_well_sample.well.well_number)
+        #         }
+        # elif existing_plate_layout:
+        #     # still wanted in context of in-place transforms and merge transforms?
+        #     return {
+        #         "success": False,
+        #         "errorMessage": "This destination plate [%s] already contains sample [%s] in well [%s]" %
+        #                         (destination_plate.external_barcode, source_well_sample.id,
+        #                          source_well_sample.well.well_number)
+        #     }
 
-        source_well_sample = db_session.query(Sample).\
-            join(PlateWell, Sample.well).\
-            filter(Sample.plate_id == source_plate.id,
-                   PlateWell.well_number == source_well_number).first()
+        assert src_s is not None
 
-        # print "SOURCE PLATE WELL: %s " % str(source_well_sample)
-        logging.info("SOURCE WELL SAMPLE: %s (%s, %s, %s) ",
-                     source_well_sample, source_plate.id,
-                     source_well_number, source_well_sample.id)
-
-        if not source_well_sample and not merge_transform_flag:
-            # I think this was trying to confirm that the source_well_number
-            # is a legit well number on the destination plate so let's confirm
-            # that in a more direct way rather than using mappings
-            #
-            # error_well_id = source_well_number
-            # if dest_plate_size:
-            #     if dest_plate_size == "48":
-            #         try:
-            #             error_well_id = get_col_and_row_for_well_id_48(source_well_number)
-            #         except:
-            #             error_well_id = source_well_number
-            #     elif dest_plate_size == "96":
-            #         try:
-            #             error_well_id = get_col_and_row_for_well_id_96(source_well_number)
-            #         except:
-            #             error_well_id = source_well_number
-            #     elif dest_plate_size == "384":
-            #         try:
-            #             error_well_id = get_col_and_row_for_well_id_384(source_well_number)
-            #         except:
-            #             error_well_id = source_well_number
-            name_test = destination_plate.get_well_by_number(source_well_number)
-            if not name_test:
-                msg = "There is no well [%s] in the source plate with barcode: [%s]" % (source_well_number, source_plate_barcode)
-                if IGNORE_MISSING_SOURCE_PLATE_WELLS:
-                    logging.warn(msg)
-                    continue
-                else:
-                    logging.error(msg)
-                    return {
-                        "success": False,
-                        "errorMessage": msg
-                    }
-
-        logging.info("DESTINATION PLATE, barcode: %s  plate type: [%s]",
-                     destination_plate.external_barcode, dest_plate_type.name)
-
-        existing_plate_layout = db_session.query(Sample).\
-            join(PlateWell, Sample.well).\
-            filter(Sample.plate_id == destination_plate.id,
-                   PlateWell.well_number == destination_well_number).first()
-
-        if in_place_transform_flag:
-            if not existing_plate_layout:
-                return {
-                    "success": False,
-                    "errorMessage": "This in-place-transform destination plate [%s] contains no sample in well [%s]" %
-                                    (destination_plate.external_barcode, source_well_sample.well.well_number)
-                }
-        elif merge_transform_flag:
-            if not existing_plate_layout:
-                return {
-                    "success": False,
-                    "errorMessage": "This merge-transform destination plate [%s] contains no sample in well [%s]" %
-                                    (destination_plate.external_barcode, source_well_sample.well.well_number)
-                }
-        elif existing_plate_layout:
-            # still wanted in context of in-place transforms and merge transforms?
-            return {
-                "success": False,
-                "errorMessage": "This destination plate [%s] already contains sample [%s] in well [%s]" %
-                                (destination_plate.external_barcode, source_well_sample.id,
-                                 source_well_sample.well.well_number)
-            }
-
-        assert source_well_sample is not None
-
-        logging.info("4. Accession the new sample record for the well")
         copy_metadata = in_place_transform_flag or merge_transform_flag
-        destination_sample = sample_handler(db_session,
-                                            copy_metadata,
-                                            transform_type_id,
-                                            source_well_sample,
-                                            destination_plates_by_barcode[destination_plate_barcode],
-                                            destination_well_number)
-        db_session.flush()
+        s = sample_handler(db_session, copy_metadata, sample_transform,
+                           well_cache, src_s, dplate,
+                           destination_well_number, dest_s)
+        new_rows.append(s)
 
-        order_number += 1
+    logging.info("Bulk inserting samples and relationships.")
 
+    db_session.bulk_save_objects(new_rows)
     db_session.commit()
+
+    logger.info("Adhoc movement took: " + str(time.time() - start))
 
     return {
         "success": True
     }
 
 
-def sample_handler(db_session, copy_metadata, transform_type_id,
+def sample_handler(db_session, copy_metadata, transform, well_cache,
                    source_well_sample, destination_plate,
-                   destination_well_id):
+                   destination_well_id, destination_sample=None):
 
     new_id = create_unique_id(Sample.id_prefix)
     try:
-        well = db_session.query(PlateWell).\
-            filter(PlateWell.layout == destination_plate.plate_type.layout,
-                   PlateWell.well_number == destination_well_id).one()
-        """ TODO: allow caller to pass in PlateWellCode directly in the transform spec?  That would expose the coding though """
+        well = well_cache[destination_plate.type_id][destination_well_id]
     except:
         err = "Found too many wells for dest well_id [%s] type [%s]" \
             % (destination_well_id, destination_plate.plate_type)
         logger.error(err)
         raise KeyError(err)
 
-    if copy_metadata or True:  # FIXME -- debugging plate stamp transform
+    if copy_metadata:
         # Copy all extant metadata
         new_s = quick_copy(db_session, source_well_sample)
         new_s.id = new_id()
@@ -319,25 +317,46 @@ def sample_handler(db_session, copy_metadata, transform_type_id,
         new_s = Sample(id=new_id(), plate_id=destination_plate.id,
                        plate_well_code=well.well_code,
                        operator_id=current_user.operator_id)
+    new_s.transform_id = transform.id
 
-    db_session.add(new_s)
-
-    if source_well_sample:
-        source_to_dest_well_transform = TransformDetail(
-            parent_sample_id=source_well_sample.id,
-            child_sample_id=new_s.id
-        )
-        db_session.add(source_to_dest_well_transform)
-
-    if transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
-                             constants.TRANS_TYPE_QPIX_TO_384_WELL):
+    if transform.transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
+                                       constants.TRANS_TYPE_QPIX_TO_384_WELL):
         # We just cloned this so it's clonal
         new_s.is_clonal = True
         # FIXME hardcoding this for Warp2 for now - should derive
         # this from the A/B rebatching metadata somehow (@sucheta!)
         new_s.cloning_process_id = 'CLO_564c1af300bc150fa632c63d'
 
-    db_session.flush()
+    # new_objs = [new_s]
+
+    # Link up the source sample as parent
+    source_to_dest_well_transform = TransformDetail(
+        transform=transform,
+        parent_sample_id=source_well_sample.id,
+        child_sample_id=new_s.id
+    )
+    # new_objs.append(source_to_dest_well_transform)
+    # NOTE that we don't have to explicitly return the TransformDetail instances
+    # created because they are linked to the new_s Sample instance by virtue
+    # of setting new_s.id as the child ID. I tried to actually return these
+    # instances directly and commit them in the bulk commit and that ended up
+    # double-adding rows for each TransformDetail, one with the transform ID
+    # properly populated and one without. Strange!
+    #
+    # I also verified that even though nothing is technically *done* with the
+    # instance variables source_to_dest_well_transform and
+    # dest_well_parent_transform that it *is* necessary to create them like
+    # this to properly populated the TransformDetail table. SQLAlchemy magic.
+
+    if destination_sample:
+        # This is also a parent since we are merging samples
+        dest_well_parent_transform = TransformDetail(
+            transform=transform,
+            parent_sample_id=destination_sample.id,
+            child_sample_id=new_s.id
+        )
+        # new_objs.append(dest_well_parent_transform)
+
     return new_s
 
 
