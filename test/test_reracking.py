@@ -48,32 +48,41 @@ class TestCase(unittest.TestCase):
             kan_d={}
             chlor_d={}
             unknown={}
-            by_marker = defaultdict(list)
+            by_marker = defaultdict(dict)
+            test =[]
 
             samples= db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_WARP2.1').one().current_well_contents(db.session)
-            print len(samples)
+            #print len(samples)
             for sample in samples:
                 concentration = sample.conc_ng_ul
                 cloning_process= sample.order_item.cloning_process
                 #print cloning_process ,'cloning_process'
                 sequence = sample.order_item.sequence
                 #print sequence
-                amp_d.update({"sample1":"volume"});
-                amp_d.update({"sample2":"volume"});
-                amp_d.update({"sample3":"volume"});
 
-                kan_d.update({"sample4":"volume"});
-                kan_d.update({"sample5":"volume"});
-                kan_d.update({"sample6":"volume"});
-                kan_d.update({"sample7":"volume"});
-                kan_d.update({"sample8":"volume"});
-                kan_d.update({"sample18":"volume"});
+                by_marker['AMP'].update({"sample100": "volume",
+                                         "sample102": "volume",
+                                         "sample103": "volume",
+                                         "sample104":"voulme",
+                                         "sample109":"volume"})
 
-                unknown.update({"sample15":"volume"});
-                unknown.update({"sample52":"volume"});
-                unknown.update({"sample53":"volume"});
-                unknown.update({"sample54":"volume"});
-                unknown.update({"sample55":"volume"});
+                by_marker['KAN'].update({"sample1": "volume",
+                                         "sample2": "volume",
+                                         "sample3": "volume"})
+
+                by_marker['CHLOR'].update({"sample4":"volume",
+                                        "sample5":"volume",
+                                        "sample6":"volume",
+                                        "sample7":"volume"})
+
+
+                by_marker['UNKNOWN'].update({"sample15":"volume",
+                                        "sample52":"volume ",
+                                        "sample57":"volume" ,
+                                        "sample56":"volume"  ,
+                                        "sample58":"volume"  ,
+                                        "sample59":"volume"})
+
 
 
                 if len(sequence) < 200 and (concentration is not  None) :
@@ -85,48 +94,88 @@ class TestCase(unittest.TestCase):
 
                     if cloning_process is not None :
                         marker = cloning_process.resistance_marker.code
-                        if(marker == "AMP") :
-                            amp_d.update({sample:volume});
-                            print 'amp_d'
-                        elif(marker == "KAN")  :
-                            kan_d.update({sample,volume});
-                            print 'kan'
-                        elif(marker == 'CHLOR') :
-                            chlor_d.update({sample,volume});
-                            print 'chlor'
-                        elif (marker is None) :
-                            unknown.update(sample.volume);
-                            print 'unknown'
+                        by_marker[ marker ][ sample ] = volume
 
 
-
-
-            by_marker['AMP'].append(amp_d)
-            by_marker['KAN'].append(kan_d)
-            by_marker['CHLOR'].append(chlor_d)
-            by_marker['UNKNOWN'].append(unknown)
-
-            print (len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown))
-
-            for k in sorted(by_marker, key=lambda k: len(by_marker[k], reverse=True):
-                print k
-
-
-            #print (len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown))
-
-            number= sum([len(amp_d),len(kan_d) ,len(chlor_d) ,len(unknown)])
+        number= sum([len(by_marker['AMP']),len(by_marker['KAN']) ,len(by_marker['CHLOR']) ,len(by_marker['UNKNOWN'])])
             #print amp_d.keys(),kan_d.keys() ,chlor_d.keys()
             #transform_spec(amp_d,kan_d,chlor_d,unknown,(number/48)+1)
-            number_of_plates=(number/48) +1
-            for plate_index in range(number_of_plates):
-                thisPlate = {"type": "SPTT_0006",
-                                 "first_in_group": plate_index,
-                                 "details": {
-                                     "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
-                                              (by_marker[marker], (plateIndex), int(how_many_for_group))
-                                 }}
+        number_of_plates=int(math.ceil(number/6))
+        #print number_of_plates
+        plate_index = 0
+        count =0
+        plate_capacity =6
+        balance_dict = {}
 
-            #for x in am_d:
+        while plate_index <= number_of_plates and count <number:
+
+
+            for k in sorted(by_marker, key=lambda k: len(by_marker[k]), reverse=True):
+                #print k
+
+                if(len(by_marker[k]) %6 == 0):
+                    #print "loop"
+                    count += len(by_marker[k])
+                    thisPlate = {"type": "SPTT_0006",
+                                 "first_in_group": plate_index+1,
+                                 "details": {
+                                 "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
+                                 (k, (plate_index+1), int(len(by_marker[k])))
+                                 }}
+                    test.append(thisPlate)
+                    #print test
+                    by_marker.pop(k,None)
+                    break
+                elif len(by_marker[k]) >= plate_capacity:
+                    remainder = len(by_marker[k]) %6
+                    #balance_dict[k] = remainder#(len(by_marker[k]) -plate_capacity)
+                    '''if(len(balance_dict) != 0):
+                        plate_capacity = balance_dict[k]
+                        print plate_capacity
+                    else:
+                        plate_capacity = (len(by_marker[k]) -plate_capacity)'''
+                    count += len(by_marker[k])
+                    thisPlate = {"type": "SPTT_0006",
+                                 "first_in_group": plate_index+1,
+                                 "details": {
+                                 "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
+                                 (k, (plate_index+1), int(plate_capacity))
+                                 }}
+                    test.append(thisPlate)
+                    #print len(balance_dict) ,":" , k
+
+                    balance_dict[k] =len(by_marker[k])- plate_capacity
+                    plate_capacity = 6
+                    #by_marker.pop(k,None)
+                    break
+
+                elif len(by_marker[k]) < plate_capacity:
+
+                    remainder = len(by_marker[k]) %6
+                    if(len(balance_dict) != 0):
+                        temp = balance_dict[k]
+                        #print temp
+                    else:
+                        temp = len(by_marker[k])
+                    #balance_dict[k].append(remainder)
+                    #print remainder ,'remainder'
+                    count += len(by_marker[k])
+                    thisPlate = {"type": "SPTT_0006",
+                                 "first_in_group": plate_index+1,
+                                 "details": {
+                                 "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
+                                 (k, (plate_index+1), int(temp))
+                                 }}
+                    test.append(thisPlate)
+                    plate_capacity= 6-temp
+                    print count , ':', plate_capacity
+                    #print test
+                    by_marker.pop(k,None)
+
+
+            plate_index+=1
+
+        print test
 
 
 
