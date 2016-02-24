@@ -14,6 +14,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 1
                         ,variablePlateCount: false
+                        ,create: true
                     }
                 }
                 ,2: {  // keyed to transform_template_id in the database
@@ -55,6 +56,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0005'
                         ,variablePlateCount: false
                         ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
+                        ,create: true
                     }
                     ,plateWellToWellMaps: [ // index in plate_well_to_well_map array = source_plate_index
                         {   // key= sopurce plate well id
@@ -460,6 +462,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0004'
                         ,variablePlateCount: false
                         ,plateTitles: ['Left:&nbsp;&nbsp;','Right:&nbsp;']
+                        ,create: true
                     }
                     ,plateWellToWellMaps: [ // array of source plates
                         {   // index in plate_well_to_well_map array = source_plate_index
@@ -591,6 +594,7 @@ app = angular.module('twist.app')
                         ,wellCount: 384
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,create: true
                     }
                     ,plateWellToWellMaps: [
                         {
@@ -1038,6 +1042,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 1
                         ,variablePlateCount: false
+                        ,create: true
                     }
                 }
                 ,24: {  // keyed to transform_template_id in the database
@@ -1050,6 +1055,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,create: true
                     }
                 }
                 ,25: {  // keyed to transform_template_id in the database
@@ -1064,6 +1070,7 @@ app = angular.module('twist.app')
                         plateCount: 0
                         ,variablePlateCount: true
                         ,plateTypeId: 'SPTT_0006'
+                        ,create: true
                     }
                 }
                 ,26: {  // keyed to transform_template_id in the database
@@ -1100,6 +1107,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 10
                         ,variablePlateCount: true
+                        ,create: true
                     }
                     ,hamiltonDetails: {
                         'iHAM03': { // Jupiter 2
@@ -1209,8 +1217,8 @@ app = angular.module('twist.app')
                         ,variablePlateCount: true
                     }
                     ,destination: {
-                        plateCount: 0
-                        ,variablePlateCount: false
+                        plateCount: 4
+                        ,variablePlateCount: true
                     }
                 }
                 ,31: {  // keyed to transform_template_id in the database
@@ -1248,6 +1256,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 4
                         ,variablePlateCount: true
+                        ,create: true
                     }
                     ,hamiltonDetails: {
                         'iHAM03': { // Jupiter 2
@@ -1369,6 +1378,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 96
                         ,variablePlateCount: true
+                        ,create: true
                     }
                     ,hamiltonDetails: {
                         'iHAM03': { // Jupiter 2
@@ -1646,6 +1656,7 @@ app = angular.module('twist.app')
                             ,'Plate&nbsp;15&nbsp;'
                             ,'Plate&nbsp;16&nbsp;'
                         ]
+                        ,create: true
                     }
                 }
                 ,35: {  // keyed to transform_template_id in the database
@@ -1674,6 +1685,7 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: true
+                        ,create: true
                     }
                 }
                 ,37: {  // keyed to transform_template_id in the database
@@ -1686,6 +1698,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 4
                         ,variablePlateCount: true
+                        ,create: true
                     }
                     ,hamiltonDetails: {
                         'iHAM01': { // Millenium Falcon
@@ -1780,6 +1793,7 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: true
+                        ,create: true
                     }
                 }
                 ,42: {  // keyed to transform_template_id in the database
@@ -1796,6 +1810,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
                         ,plateTitles: ['Destination&nbsp;A:&nbsp;', 'Destination&nbsp;B:&nbsp;']
+                        ,create: true
                     }
                 }
                 ,43: {  // keyed to transform_template_id in the database
@@ -1834,6 +1849,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 4
                         ,variablePlateCount: true
+                        ,create: true
                     }
                     ,hamiltonDetails: {
                         'iHAM01': { // Millenium Falcon
