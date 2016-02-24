@@ -321,12 +321,18 @@ class TestCase(unittest.TestCase):
     def test_small_ngs_barcoding_spec_golden(self):
         rnd = rnd_bc()
         dest_plate_1_barcode = rnd + '_1'
+        dest_plate_2_barcode = rnd + '_2'
         root_cs_id = "CS_563bff9150a77622447fc8f5"
 
-        # 1. Skip creating the target plate
+        test_fixture = [
+            ['A1', 1, dest_plate_1_barcode, 'A1', 1, 96],
+            ['A1', 1, dest_plate_1_barcode, 'A2', 2, 96],
+            ['A2', 2, dest_plate_1_barcode, 'B1', 13, 96],
+            # ['B1', 13, dest_plate_2_barcode, 'A1', 1, 96],
+            # ['B1', 13, dest_plate_2_barcode, 'A2', 2, 96],
+        ]
 
-        # 2. create an ngs barcoding spec (type 26)
-        spec = EXAMPLE_NGS_BARCODING_SPEC.copy()
+        # 1. Create two target plates
         transform_map = [{
             "source_plate_barcode": self.root_plate_barcode,
             "source_well_name": src_well,
@@ -334,14 +340,51 @@ class TestCase(unittest.TestCase):
             "destination_plate_barcode": dest_plate,
             "destination_well_name": dest_well,
             "destination_well_number": dest_number,
+            "destination_plate_type": "SPTT_0005",
+            "destination_plate_well_count": dest_well_count
+        } for (src_well, src_number, dest_plate, dest_well,
+               dest_number, dest_well_count) in test_fixture]
+
+        data = {"sampleTransformTypeId": 13,  # ?
+                "sampleTransformTemplateId": 14,  # ?
+                "transformMap": transform_map
+                }
+        rv = self.client.post('/api/v1/track-sample-step',
+                              data=json.dumps(data),
+                              content_type='application/json')
+        assert rv.status_code == 200, rv.data
+        result = json.loads(rv.data)
+        assert result["success"] is True
+
+        # 2. read the sample IDs
+
+        ancestor_sample_ids = set()
+        for ix, (src_well, src_number, dest_plate, dest_well,
+             dest_number, dest_well_count) in enumerate(test_fixture):
+            rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
+                                 (dest_plate, dest_number),
+                                 content_type='application/json')
+            assert rv.status_code == 200, rv.data
+            result = json.loads(rv.data)
+            assert result["errors"] == []
+            sample_id = result["data"]["id"]
+            test_fixture[ix].append(sample_id)
+            ancestor_sample_ids.add(sample_id)
+
+        # 3. create an ngs barcoding spec (type 26)
+
+        spec = EXAMPLE_NGS_BARCODING_SPEC.copy()
+        transform_map = [{
+            "source_plate_barcode": dest_plate,
+            "source_well_name": src_well,
+            "source_well_number": src_number,
+            "destination_plate_barcode": dest_plate,
+            "destination_well_name": dest_well,
+            "destination_well_number": dest_number,
             "destination_plate_well_count": dest_well_count,
             "destination_plate_type": "SPTT_0005",
-            "source_sample_id": root_cs_id
-        } for (src_well, src_number, dest_plate, dest_well, dest_number, dest_well_count) in [
-            ('A1', 1, dest_plate_1_barcode, 'A1', 1, 96),
-            ('A1', 1, dest_plate_1_barcode, 'A2', 2, 96),
-            ('A2', 2, dest_plate_1_barcode, 'B1', 13, 96),
-        ]]
+            "source_sample_id": dest_sample_id
+        } for (src_well, src_number, dest_plate, dest_well, dest_number, dest_well_count, dest_sample_id) in test_fixture]
         spec["operations"] = transform_map
         spec["details"] = {
             "transform_template_id": 2,  # 21?
@@ -352,7 +395,7 @@ class TestCase(unittest.TestCase):
             "transform_type_id": 26
         }
 
-        # 3. post the spec -- this replaces post('/api/v1/track-sample-step')
+        # 4. post the spec -- this replaces post('/api/v1/track-sample-step')
 
         rv = self.client.post('/api/v1/rest/transform-specs',
                               data=json.dumps({"plan": spec}),
@@ -360,21 +403,22 @@ class TestCase(unittest.TestCase):
         assert rv.status_code == 201, rv.data
         new_spec_url = rv.headers['location']
 
-        # 4. the spec should now exist but not be executed yet
+        # 5. the spec should now exist but not be executed yet
 
         result = json.loads(rv.data)
         assert "data" in result
         assert "data_json" in result["data"]
         assert result["data"]["date_executed"] is None
 
-        # 5. the spec should have BCS_ going in and NPS_ going out
+        # 6. the spec should have BCS_ going in and nothing going out
 
         operations = result["data"]["data_json"]["operations"]
-        for well in operations:
-            assert well["source_sample_id"][0:4] == "BCS_"
-            assert well["destination_sample_id"][0:4] == "NPS_"
+        for oper in operations:
+            assert oper["source_sample_id"][0:4] == "BCS_"
+            assert "destination_sample_id" not in oper
 
         # 7. We should be able to get an echo worklist
+
         echo_url = new_spec_url + ".echo.csv"
         rv = self.client.get(echo_url,
                              content_type="application/json")
@@ -384,7 +428,8 @@ class TestCase(unittest.TestCase):
         assert len(echo_csv) == len(transform_map) * 2
         for line in echo_csv:
             assert line["Source Plate Barcode"] == "NGS_BARCODE_PLATE_TEST1"
-            assert line["Destination Plate Barcode"] == dest_plate_1_barcode
+            assert line["Destination Plate Barcode"] in (dest_plate_1_barcode,
+                                                         dest_plate_2_barcode)
 
         # 8. Now execute
 
@@ -409,19 +454,22 @@ class TestCase(unittest.TestCase):
         from collections import defaultdict
         bc_pairs = defaultdict(int)
         for ix, well in enumerate(operations):
-            target_id = well["destination_sample_id"]
-            assert target_id[0:4] == "NPS_"
+            # target_id = well["destination_sample_id"]
+            target_well_number = well["destination_well_number"]
+            # assert target_id[0:4] == "NPS_"
             barcode_sample_id = well["source_sample_id"]
             assert barcode_sample_id[0:4] == "BCS_"
             barcode_sequence_id = 'BC_' + barcode_sample_id[4:]
-            rv = self.client.get('/api/v1/rest/sample/%s' % target_id,
+            rv = self.client.get('/api/v1/rest/plate/%s/well/%d'
+                                 % (dest_plate_1_barcode, target_well_number),
                                  content_type='application/json')
             assert rv.status_code == 200, rv.data
             result = json.loads(rv.data)
             assert "data" in result
             dat = result["data"]
             print "$" * 80, dat
-            assert root_cs_id in dat["parents"]
+            assert len(dat["parents"]) == 1
+            assert dat["parents"][0] in ancestor_sample_ids
             if ix % 2:
                 assert dat["i5_sequence_id"] == barcode_sequence_id
             else:
