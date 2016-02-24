@@ -804,9 +804,10 @@ def vector_hitpicking( type_id, templ_id ):
     """
     generate echo worklists
     """
-    rows, cmds = [], []
-    
-    return rows, cmds
+    from app.steps import vector_hitpicking
+    if len(request.json['sources']) != 1:
+        raise WebError('expected one source; got %d' % len(request.json['sources']))
+    return vector_hitpicking.hitpicking( db.session, request.json['sources'][0]['details']['id'] )
 
 
 @to_resp

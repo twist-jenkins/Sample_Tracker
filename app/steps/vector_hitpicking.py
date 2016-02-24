@@ -5,6 +5,9 @@ import csv
 from cStringIO import StringIO
 from app.routes.transform import WebError
 
+from twistdb.sampletrack import Plate, TransformSpec
+from app.constants import TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK
+
 SEARCH_LAST_N_DAYS = 2
 
 ALIQ_VOLUME = 1.125      # [uL]
@@ -12,13 +15,9 @@ VECTOR_WASTE_VOL = 39.0  # [uL]
 VECTOR_MAX_VOL = 59.0    # [uL]
 ALIQ_PER_WELL = int( math.floor( (VECTOR_MAX_VOL - VECTOR_WASTE_VOL) / ALIQ_VOLUME ))
 
+XFER_VOL = 1125 #  [nL]
 
-def create_src( db, vector_barcode ):
-    """
-    """
-    from twistdb.sampletrack import Plate, TransformSpec
-    from app.miseq import echo_csv
-    from app.constants import TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK
+def retrieve_transform_spec( db, vector_barcode ):
 
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
     specjs = []
@@ -37,6 +36,13 @@ def create_src( db, vector_barcode ):
     except:
         raise WebError("expected to find 1 TransformSpec matching barcode '%s' but found %d"
                        % (vector_barcode, len(specjs)))
+    return src_spec
+
+
+def create_src( db, vector_barcode ):
+    """
+    """
+    src_spec = retrieve_transform_spec( db, vector_barcode )
 
     dest_plates = [ db.query(Plate).filter(Plate.external_barcode == dest_plate_barcode).one()
                     for dest_plate_barcode in src_spec['misc']['dest_barcodes'] ]
@@ -93,3 +99,58 @@ def create_src( db, vector_barcode ):
              }}]
 
     return rows, cmds
+
+
+def hitpicking( db, vector_barcode ):
+    from app.miseq import echo_csv
+
+    src_spec = retrieve_transform_spec( db, vector_barcode )
+    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == dest_plate_barcode).one()
+                    for dest_plate_barcode in src_spec['misc']['dest_barcodes'] ]
+
+    vector_plate = db.query(Plate).filter(Plate.external_barcode == vector_barcode).one()
+
+    by_vector = defaultdict(list)
+    for vector_s in vector_plate.current_well_contents(db):
+        by_vector[ vector_s.order_item.name ].append( [vector_s.well, 0] )
+
+    # order is important, as the last well will likely have less material in it
+    for well_list in by_vector.values():
+        well_list.sort( key=lambda (w, _): w.well_code )
+
+    rows = []
+    for dest_plate in dest_plates:
+        for d_sample in dest_plate.current_well_contents(db):
+            # not very efficient, but N is quite small:
+            vector_name = d_sample.cloning_process.vector.name
+            for t in by_vector[ vector_name ]:
+                if t[1] < ALIQ_PER_WELL:
+                    t[1] += 1
+
+                    rows.append({
+                        'source_plate_barcode':         vector_barcode,
+                        'source_well_name':             t[0].well_label,
+                        'source_well_number':           t[0].well_number,
+                        'source_sample_id':             vector_name,
+                        'source_plate_well_count':      386,
+                        'destination_plate_barcode':    dest_plate.external_barcode,
+                        'destination_well_name':        d_sample.well.well_label,
+                        'destination_well_number':      d_sample.well.well_number,
+                        'destination_plate_well_count': 384,
+                        'destination_sample_id':        d_sample.id,
+                        'destination_plate_type':       'SPTT_0006',
+                    })
+
+                    break
+            else:
+                raise WebError("didn't find a source well for vector "+vector_name)
+
+    return rows, [ {"type": "PRESENT_DATA",
+                    "item": {
+                        "type":     "file-data",
+                        "title":    "Echo worklist",
+                        "data":     echo_csv( rows, XFER_VOL ),
+                        "mimeType": "text/csv",
+                        "fileName": vector_barcode + "_echo_worklist.csv"
+                    }} ]
+
