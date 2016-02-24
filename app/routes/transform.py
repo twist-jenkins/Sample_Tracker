@@ -241,7 +241,7 @@ def sample_data_determined_transform(transform_template_id, sources, dests):
             })
         groups.append(new_group)
 
-    return groups
+    return groupsde
 
 
 def pca_pre_planning( bulk_barcode, pca_barcodes ):
@@ -310,7 +310,27 @@ def plates_to_rows( sources ):
 
 @to_resp
 def rebatch_transform( type_id, templ_id ):
-    rows, cmds = [], []
+    rows, cmds = [{}], []
+    destinations_ready = ("destinations" in request.json
+                          and request.json['destinations'])
+
+    '''for dest_index, destination in enumerate(request.json['destinations']):
+        if "id" not in destination["details"] or \
+                destination["details"]["id"] == "":
+            destinations_ready = False'''
+
+    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
+                db.session, request.json['sources'][0]['details']['id'],
+                [x['details']['id'] for x in request.json['destinations']])'''
+
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+
+    cmds.append({
+        "type": "SET_DESTINATIONS",
+        "plates": destination_plates
+    })
+
+    #print destination_plates
     return rows, cmds
 
 

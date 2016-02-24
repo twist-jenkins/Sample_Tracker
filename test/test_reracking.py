@@ -24,6 +24,8 @@ from collections import defaultdict
 from twistdb.sampletrack import Plate
 from twistdb.sampletrack import Sample
 from test_flask_app import rnd_bc
+from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
+from flask import request, Response
 
 
 class TestCase(unittest.TestCase):
@@ -51,37 +53,46 @@ class TestCase(unittest.TestCase):
             by_marker = defaultdict(list)
             d = {}
 
-            samples= db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_WARP2.1').one().current_well_contents(db.session)
+            #dest_type = db.session.query(PlateType).get('SPTT_0006')
+            #for src_idx, src in enumerate(request.json['sources']):
+                #plate_barcode = src['details']['id']
+            samples = db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_PCA_NORM_TEST').one().current_well_contents(db.session)
+
+
             print len(samples)
             for sample in samples:
                 concentration = sample.conc_ng_ul
-                cloning_process= sample.cloning_process
-                sequence = sample.order_item.sequence
-                marker = cloning_process
+                cloning_process= sample.cloning_process.resistance_marker.code
+                #sequence = sample.order_item.sequence
+                if cloning_process is None :
+                    marker = "NOMARKER"
+                else:
+                    marker = cloning_process
                 by_marker[ marker ].append(sample)
 
 
 
 
 
-            d= {}
-            for marker in ('AMP','KAN'):
-                d[ marker ] = ['sample-%d' % i for i in range(50)]
+
+            '''for marker in ('AMP','KAN','CHLOR'):
+                d[ marker ] = ['sample-%d' % i for i in range(384)]'''
+
 
 
             qpix_plates =[]
 
 
-            for marker in sorted (d):
+            for marker in sorted (by_marker):
                 tmp = defaultdict(list)
-                for i, sample in enumerate(d[marker]):
+                for i, sample in enumerate(by_marker[marker]):
                     tmp[i // 48].append(sample)
                 for plate_no in sorted (tmp):
                     qpix_plates.append( (marker,tmp[plate_no]) )
 
 
 
-            print len(qpix_plates), qpix_plates[0] ,qpix_plates[1]
+            #print len(qpix_plates), qpix_plates[0] ,qpix_plates[1]
             dest_tmp = defaultdict(lambda: defaultdict(int))
             for i, (marker, samples) in enumerate(qpix_plates):
                 dest_tmp[i // 8][ marker ] += len( samples )
@@ -89,15 +100,21 @@ class TestCase(unittest.TestCase):
             destination_plates = []
             for i, (_, markers) in enumerate(sorted(dest_tmp.items())):
                 title = []
-                for marker, d in sorted(markers.items()):
-                    title.append("%d samples of %s" % (len(d), marker))
-                destination_plates.append( {"type": "SPTT_0006",
+                for marker1, d in sorted(markers.items()):
+                    title.append("%d samples of %s" % (d, str(marker1)))
+                thisPlate = {"type": "SPTT_0006",
+                                 "first_in_group": i+1,
+                                 "details": {
+                                     "title": "<strong> %s </strong> resistance - Plate <strong> %s </strong> of %s" %
+                                              (str(marker1), (i + 1), d)}}
+                '''destination_plates.append( {"type": "SPTT_0006",
                                             "first_in_group": i+1,
                                             "details": {
-                                                "title": ', '.join(title)}} )
+                                                "title": ', '.join(title)}} )'''
 
 
-
+            destination_plates.append(thisPlate)
+            print destination_plates
 
             '''final =[]
 
@@ -147,8 +164,8 @@ class TestCase(unittest.TestCase):
             lookup48to384[(qpix_plate + 1, x_48_well)] = x_384_well_id
             lookup384to48[x_384_well_id] = (qpix_plate + 1, x_48_well)
 
-            for well_id, well in sorted(lookup48to384.iteritems()):
-                print well_id , well
+            '''for well_id, well in sorted(lookup48to384.iteritems()):
+                print well_id , well'''
             #print (qpix_plate + 1, x_48_well), ':', x_384_well_id
 
 
