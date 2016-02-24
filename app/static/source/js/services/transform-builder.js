@@ -625,8 +625,6 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
                     Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
 
-                        console.log(shouldBeNew + ' ' + data.success);
-
                         var destinationOk = function (destItem) {
                             /* destination plate is new - we're good to go */
                             destItem.loaded = true; /* shows the "valid" icon for this input */
