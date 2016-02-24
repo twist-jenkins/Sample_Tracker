@@ -311,7 +311,9 @@ def alter_spec_post_pca_hamilton_worklist(db_session, spec):
 
 
 def alter_spec_ngs_barcodes(db_session, spec):
-    """Update the POSTed transform spec to contain NGS-specific info."""
+    """Inject NGS-specific info into the POSTed transform spec.
+    This needs to happen as the spec is saved, but beore the spec is executed.
+    """
 
     operations = spec.data_json["operations"]
 
@@ -349,10 +351,10 @@ def alter_spec_ngs_barcodes(db_session, spec):
         """
         source_sample_id = oper["source_sample_id"]
 
-        source_plate = plates[oper["source_plate_barcode"]]
-        #source_plate_type = source_plate.type_id
-        source_well_id = str(oper["source_well_name"])
-        source_well_number = source_plate.plate_type.layout.get_well_by_label(source_well_id).well_number
+        # source_plate = plates[oper["source_plate_barcode"]]
+        # source_plate_type = source_plate.type_id
+        # source_well_id = str(oper["source_well_name"])
+        # source_well_number = source_plate.plate_type.layout.get_well_by_label(source_well_id).well_number
 
         destination_well_id = str(oper["destination_well_name"])
         if oper["destination_plate_barcode"] in plates:
@@ -397,7 +399,7 @@ def alter_spec_ngs_barcodes(db_session, spec):
             new_oper["destination_well_number"] = destination_well_number
             new_oper["destination_well_name"] = destination_well_name
             new_operations.append(new_oper)
-            logging.warn("operX : %s", new_oper)
+            logging.warn("alter_spec operX : %s", new_oper)
 
     spec.data_json["operations"] = new_operations
     spec.data_json["destinations"] = spec.data_json["sources"]

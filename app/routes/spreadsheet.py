@@ -118,6 +118,7 @@ def create_adhoc_sample_movement(db_session,
     logging.info("Caching dest plates.")
     dests = set([(d['destination_plate_barcode'],
                   d['destination_plate_type']) for d in transform_map])
+    logging.warn("dests: %s", list(dests))
 
     # TODO: remove merge_transform_flag
     # merge_transform_flag = (NGS_BARCODE_PLATE in srcs)
@@ -175,9 +176,11 @@ def create_adhoc_sample_movement(db_session,
     logging.info("Caching dest samples (if any).")
     for barcode, plate in dest_plates.iteritems():
         s = plate.current_well_contents(db_session)
+        logging.warn("dest plate samples: %s = %d", plate.external_barcode, len(s))
         dest_samples[barcode] = {}
         for sample in s:
             dest_samples[barcode][sample.well.well_number] = sample
+            logging.warn("dest_s: %s", sample.id)
 
     # Also cache a map of well number to well instance for all destination wells
     well_cache = {}
@@ -250,10 +253,6 @@ def create_adhoc_sample_movement(db_session,
                 return {"success": False,
                         "errorMessage": msg}
 
-            logging.warn("****************<<<< %s / %s", source_plate_barcode,
-                         source_well_number)
-
-
             try:
                 src_s = src_samples[source_plate_barcode][source_well_number]
             except KeyError:
@@ -262,6 +261,9 @@ def create_adhoc_sample_movement(db_session,
                 logging.error("Invalid xfer: %s", msg)
                 return {"success": False,
                         "errorMessage": msg}
+
+            logging.warn("****************<<<< %s / %s = %s",
+                         source_plate_barcode, source_well_number, src_s.id)
 
             source_samples.append(src_s)
 
