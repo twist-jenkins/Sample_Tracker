@@ -419,6 +419,7 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T,
                             TRANS_TYPE_UPLOAD_QUANT as UPLOAD_QUANT_T,
                             TRANS_TYPE_NGS_INDEX_HITPICKING as NGS_HITPICKING_T,
+                            TRANS_TPL_NGS_INDEX_HITPICKING as NGS_HITPICKING,
                             TRANS_TYPE_NGS_MASTERMIX_ADDITION as NGS_MASTERMIX_T,
                             TRANS_TPL_PCR_PRIMER_HITPICK as PCR_PRIMER_HITPICK,
                             TRANS_TYPE_NGS_LOAD_ON_SEQUENCER as NGS_LOAD,
@@ -443,7 +444,7 @@ def transform_params( transform_type_id, transform_template_id  ):
          (REBATCH_XFORM_T, REBATCH_XFORM):            transform.rebatch_transform,
          (UPLOAD_QUANT_T, SAME_PLATE):                transform.quant_upload,
          (ECR_PCR_UPLOAD_QUANT_T, SAME_PLATE):        transform.quant_upload,
-         (NGS_HITPICKING_T, ):             transform.ngs_hitpicking,
+         (NGS_HITPICKING_T, NGS_HITPICKING):          transform.ngs_hitpicking,
          (25, SAME_PLATE):                 transform.ngs_tagmentation, # ?? no type constant?
          (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
          (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
