@@ -73,7 +73,7 @@ def create_adhoc_sample_movement(db_session,
     import time
     start = time.time()
 
-    # Cache all requested plates, raising an error if any are not found
+    # Cache all source plates, raising an error if any are not found
     plate_cache = {}
     srcs = set([d['source_plate_barcode'] for d in transform_map])
     logging.info("Caching source plates: %s" % list(srcs))
@@ -100,20 +100,18 @@ def create_adhoc_sample_movement(db_session,
         try:
             dest_plate = db_session.query(Plate).\
                 filter(Plate.external_barcode == dest_barcode).one()
-            plate_cache[dest_barcode] = dest_plate
         except:
             logging.info("There is no dest plate [%s], creating it",
                          dest_barcode)
             # This is a transform that requires creating a new plate in DB
             try:
-                destination_plate = create_destination_plate(
+                dest_plate = create_destination_plate(
                     db_session,
                     operator,
                     dest_barcode,
                     dtype,
                     "Unknown location",  # FIXME find a better default for this
                     transform_template_id)
-                plate_cache[dest_barcode] = destination_plate
                 db_session.flush()
             except IndexError:
                 err_msg = ("Encountered error creating sample "
@@ -124,6 +122,7 @@ def create_adhoc_sample_movement(db_session,
                     "success": False,
                     "errorMessage": err_msg
                 }
+        plate_cache[dest_barcode] = dest_plate
 
     # We always operate on a plate's current contents so we pull that
     # in a single query so that we have it on-hand and can then single out
@@ -135,7 +134,8 @@ def create_adhoc_sample_movement(db_session,
         for sample in s:
             sample_cache[(barcode, sample.well.well_number)] = sample
 
-    # Inject well_number by well_name into transform_map, if necessary
+    # Inject well_number by well_name into transform_map, if necessary.
+    # Also make sure source_well_sample is consistent.
     for oper in transform_map:
         if "source_well_number" not in oper:
             s_bc = oper["source_plate_barcode"]
@@ -143,16 +143,14 @@ def create_adhoc_sample_movement(db_session,
             s_type = plate_cache[s_bc].plate_type
             s_num = s_type.layout.get_well_by_label(s_label).well_number
             oper["source_well_number"] = s_num
-            if "source_well_sample" in oper:
-                assert oper["source_well_sample"] == sample_cache[(s_bc,
-                                                                   s_num)].id
 
-    # Also cache a map of well number to well instance for all destination wells
+        if "source_well_sample" in oper:
+            assert oper["source_well_sample"] == sample_cache[(s_bc, s_num)].id
+
+    # Also cache a map of well number to well instance for all dest wells
     well_cache = {}
     for dest_barcode in [d[0] for d in dests]:
         plate = plate_cache[dest_barcode]
-        # if plate.type_id not in well_cache.keys():
-        #    well_cache[plate.type_id] = {}
         well_ids = [d['destination_well_number']
                     if d['destination_plate_barcode'] == dest_barcode
                     else None for d in transform_map]
@@ -176,7 +174,6 @@ def create_adhoc_sample_movement(db_session,
 
         # get destination plate
         destination_plate_barcode, destination_well_number = dest_key
-        logging.warn("**************** %s", dest_key)
         try:
             dplate = plate_cache[destination_plate_barcode]
         except KeyError:
@@ -193,7 +190,7 @@ def create_adhoc_sample_movement(db_session,
             dest_s = None
 
         # create and add the new sample
-        s = sample_handler(db_session, sample_transform,
+        s = sample_handler(sample_transform,
                            well_cache, source_samples, dplate,
                            destination_well_number, dest_s)
         new_rows.append(s)
@@ -210,8 +207,8 @@ def create_adhoc_sample_movement(db_session,
     }
 
 
-def sample_handler(db_session, transform, well_cache,
-                   source_well_samples, destination_plate,
+def sample_handler(transform, well_cache,
+                   source_samples, destination_plate,
                    destination_well_id, destination_sample=None):
     """Accessions a new sample into the designated well,
     using the source sample(s) as parents and/or reagents.
@@ -230,20 +227,19 @@ def sample_handler(db_session, transform, well_cache,
     """
 
     logging.debug("sample_handler: src=[%s] dest=[%s]",
-                  source_well_samples, destination_sample)
+                  source_samples, destination_sample)
 
     new_id = create_unique_id(Sample.id_prefix)
 
     # Copy all extant metadata except transform, parents, children, is_clonal
-    if len(source_well_samples) == 0:
-        raise NotImplementedError("TODO?: Create samples from scratch.")
-    elif len(source_well_samples) > 1:
+    if len(source_samples) > 1:
         logging.debug("Merging %d samples into %s",
-                      len(source_well_samples), destination_sample)
-        new_s = merged_sample(db_session, source_well_samples)
-    else:
-        assert len(source_well_samples) == 1
-        new_s = copied_sample(db_session, source_well_samples[0])
+                      len(source_samples), destination_sample)
+        new_s = merged_sample(source_samples)
+    elif len(source_samples) == 1:
+        new_s = copied_sample(source_samples[0])
+    elif len(source_samples) == 0:
+        raise NotImplementedError("TODO?: Create samples from scratch")
 
     # Set attributes unique to this sample
     new_s.id = new_id()
@@ -253,17 +249,13 @@ def sample_handler(db_session, transform, well_cache,
                        destination_well_id)]
     new_s.plate_well_code = well.well_code
 
-    # Handle transform-specific sample logic
-    if transform.transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
-                                       constants.TRANS_TYPE_QPIX_TO_384_WELL):
-        # We just cloned this so it's clonal
-        new_s.is_clonal = True
-        # FIXME hardcoding this for Warp2 for now - should derive
-        # this from the A/B rebatching metadata somehow (@sucheta!)
-        new_s.cloning_process_id = 'CLO_564c1af300bc150fa632c63d'
+    # Type-specific logic
+    handle_transform_specific_logic(transform, new_s)
+    true_parent_samples = parse_source_reagents(transform,
+                                                source_samples, new_s)
 
     # Link up the source sample(s) and any "destination" sample as parent(s)
-    for source_well_sample in source_well_samples:
+    for source_well_sample in true_parent_samples:
         source_to_dest_well_transform = TransformDetail(
             transform=transform,
             parent_sample_id=source_well_sample.id,
@@ -292,8 +284,50 @@ def sample_handler(db_session, transform, well_cache,
     return new_s
 
 
+def handle_transform_specific_logic(transform, new_s):
+
+    if transform.transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
+                                       constants.TRANS_TYPE_QPIX_TO_384_WELL):
+        # We just cloned this so it's clonal
+        new_s.is_clonal = True
+        # FIXME hardcoding this for Warp2 for now - should derive
+        # this from the A/B rebatching metadata somehow (@sucheta!)
+        new_s.cloning_process_id = 'CLO_564c1af300bc150fa632c63d'
+
+
+def parse_source_reagents(transform, source_samples, new_s):
+    """Splits out the "reagent" style parent samples (e.g. ngs barcodes)
+    from the true parent samples (e.g. oligo pooling)."""
+
+    true_parent_samples = []
+
+    for src_s in source_samples:
+        if src_s.id[0:4] == 'BCS_':
+            # FIXME: identify barcode samples via a type_id instead?
+            logging.info("REAGENT: %s", src_s)
+            n_added = 0
+            for attrname in ('i5_sequence_id', 'i7_sequence_id'):
+                seq_id = getattr(src_s, attrname)
+                if seq_id is not None:
+                    setattr(new_s, attrname, seq_id)
+                    n_added += 1
+            if n_added == 0:
+                raise ValueError("%s is missing barcode seqs, please add"
+                                 % src_s)
+            elif n_added > 1:
+                raise ValueError("%s has too %d barcode seqs, expected only 1"
+                                 % (src_s, n_added))
+        else:
+            true_parent_samples.append(src_s)
+
+    return true_parent_samples
+
+
 def safe_sqlalchemy_copy(session, object_handle):
-    """Implement a safe copy.copy().
+    """Copy a sample, this approach copies a little too much,
+    including parent transform details etc.
+
+    Implement a safe copy.copy().
 
     Based on http://permalink.gmane.org/gmane.comp.python.sqlalchemy.user/39675
 
@@ -322,10 +356,9 @@ def safe_sqlalchemy_copy(session, object_handle):
     return copy
 
 
-from sqlalchemy.orm import make_transient
-
-
 def transient_copy(session, inst):
+    """Copy a sample, this approach forces a bunch of flushes"""
+    from sqlalchemy.orm import make_transient
     session.expunge(inst)
     make_transient(inst)
     inst.id = None
@@ -334,8 +367,8 @@ def transient_copy(session, inst):
     return inst
 
 
-def copied_sample(session, orig_obj):
-    """Copy a sample, quick fix"""
+def copied_sample(orig_obj):
+    """Copy a sample, this approach is hard to maintain though"""
 
     copy = Sample()
     for attrname in ("order_item_id", "type_id", "operator_id",
@@ -350,7 +383,7 @@ def copied_sample(session, orig_obj):
     return copy
 
 
-def merged_sample(session, parent_samples):
+def merged_sample(parent_samples):
     """Merge a set of samples."""
 
     copy = Sample()
@@ -365,5 +398,5 @@ def merged_sample(session, parent_samples):
                      "i7_sequence_id"):
         source_vals = set([getattr(par, attrname) for par in parent_samples])
         if len(source_vals) == 1:
-            setattr(copy, attrname, source_vals[0])
+            setattr(copy, attrname, source_vals.pop())
     return copy
