@@ -11,7 +11,7 @@ angular.module('twist.app').factory('BarcodeManager', ['Constants',
         };
 
         var instruments = {
-            'iHAM04': Constants.INSTRUMENT_TYPE_HAMILTON
+            'iHAM03': Constants.INSTRUMENT_TYPE_HAMILTON
         };
 
         var carriers = {

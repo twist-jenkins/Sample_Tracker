@@ -337,7 +337,7 @@ def primer_preplanning( type_id, templ_id ):
             "type": "REQUEST_DATA",
             "item": {
                 "type": "array.4",
-                "dataType": "barcode",
+                "dataType": "barcode.PLATE",
                 "title": "Associated PCA Plate Barcodes",
                 "forProperty": "associatedPcaPlates"
             }
@@ -409,6 +409,9 @@ def thermocycle( type_id, templ_id ):
 
         # TO DO  Actually derive the proper thermocycling conditions for presentation to the user
 
+
+        # only respond with conditions if the thermocycler barcode is valid
+
         cmds.append({
             "type": "PRESENT_DATA",
             "item": {
@@ -421,7 +424,7 @@ def thermocycle( type_id, templ_id ):
         cmds.append({
             "type": "REQUEST_DATA",
             "item": {
-                "type": "barcode",
+                "type": "barcode.INSTRUMENT",
                 "title": "Thermocycler barcode",
                 "forProperty": "thermocyclerBarcode"
             }
@@ -431,7 +434,8 @@ def thermocycle( type_id, templ_id ):
 
 @to_resp
 def quant_upload( type_id, templ_id ):
-    rows, cmds = [], []
+    cmds = []
+    rows = plates_to_rows( request.json['sources'] )
     cmds.append({
         "type": "REQUEST_DATA",
         "item": {
@@ -547,21 +551,21 @@ def ngs_load( type_id, templ_id ):
 
     cmds.extend( [
         {"type": "REQUEST_DATA",
-         "item": {'type': "barcode",
+         "item": {'type': "barcode.INSTRUMENT",
                  "title": "Sequencer Barcode",
                  "forProperty": "sequencerBarcode",
                  #"value": reqData["sequencerBarcode"]
         }},
         {"type": "REQUEST_DATA",
          "item": {
-             "type": "barcode",
+             "type": "barcode.CARTRIDGE",
              "title": "Input Cartridge Barcode",
              "forProperty": "inputCartridgeBarcode",
              #"value": reqData["inputCartridgeBarcode"]
          }},
         {"type": "REQUEST_DATA",
          "item": {
-             "type": "barcode",
+             "type": "barcode.FLOWCELL",
              "title": "Flowcell Barcode",
              "forProperty": "flowCellBarcode",
              #"value": reqData["flowCellBarcode"]
@@ -686,6 +690,101 @@ def ngs_pooling():
     return rows, cmds
 
 
+@to_resp
+def ecr_pcr_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    details = request.json["details"]
+
+    # we need to add master mix needs info or tell the user we need all the PCA plates first
+    masterMixNeeds = ""
+    ecrPlates = None
+
+    if "requestedData" in details:
+        ecrPlates = details["requestedData"]
+
+    if ecrPlates and "associatedEcrPlates" in ecrPlates:
+        ecrPlates = ecrPlates["associatedEcrPlates"]
+    else:
+        # if they're not already in spec, we need to add the requested PCA plates
+        cmds.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": "array.4",
+                "dataType": "barcode.PLATE",
+                "title": "Associated ECR Plate Barcodes",
+                "forProperty": "associatedEcrPlates"
+            }
+        })
+
+    if not ecrPlates or ecrPlates[0] is None or ecrPlates[1] is None or ecrPlates[2] is None or ecrPlates[3] is None:
+        masterMixNeeds = "Please scan <strong>all 4</strong> ECR plates to retrieve master mix needs."
+        dataType = "text"
+    else:
+        # then all the plates had barcodes
+        # now we need to decide which master mixes are needed
+        # content like "Master Mix A x2\n\rMaster Mix B x3"
+
+        # TODO: do master mix needs for ECR/PCR and ROWS
+
+        rows = [{}]
+        masterMixNeeds = "Master mix needs here"
+        dataType = 'csv'
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": dataType,
+            "title": "Master Mix Needs",
+            "data": masterMixNeeds
+        }
+    })
+
+    return rows, cmds
+
+@to_resp
+def ecr_pcr_source_plate_creation( type_id, templ_id ):
+    rows = plates_to_rows( request.json['sources'] )
+
+    cmds = [{
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Source Plate Map",
+            "data": "Source Plate Data here",
+        }
+    }]
+    return rows, cmds
+
+@to_resp
+def ecr_pcr_primer_hitpicking( type_id, templ_id ):
+
+    rows, cmds = [{}], []
+    destinations_ready = ("destinations" in request.json
+                          and request.json['destinations'])
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+        if "id" not in destination["details"] or \
+                destination["details"]["id"] == "":
+            destinations_ready = False
+
+    if destinations_ready:
+        # TODO: add echo worklist generation here as return as response_command
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "file-data",
+                "title": "Echo worklist",
+                "data": "WORKLIST DATA HERE",
+                "mimeType": "text/csv",
+                "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+            }
+
+        })
+
+    return rows, cmds
+
+
 def preview( transform_type_id, transform_template_id ):
     """Called by the UI to generate a draft transform spec before execution."""
 
@@ -791,7 +890,110 @@ def preview( transform_type_id, transform_template_id ):
 
             elif transform_template_id == \
                     constants.TRANS_TPL_NGS_POOLING:
-                rows, responseCommands = ngs_pooling()
+
+                # rows, responseCommands = ngs_pooling()
+                # FIXME: resolving merge conflict...
+                # proper resolution: compare below then switch to above
+
+                rows = [{}];
+                sequencer = None;
+
+                basePairMax = 0;
+                currentBasePairTotal = 0;
+                previousBasePairTotal = 0;
+
+                if "requestedData" in details:
+                    reqData = details["requestedData"]
+
+                if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
+                    responseCommands.append({
+                        "type": "REQUEST_DATA",
+                        "item": {
+                            "type": 'radio'
+                            ,"title": 'Select Sequencer:'
+                            ,"forProperty": 'sequencer'
+                            ,"data": [
+                                {"option": 'MiSeq'}
+                                ,{"option": 'NextSeq'}
+                            ]
+                        }
+                    })
+
+                sources = request.json['sources'];
+
+                sourcesSet = [];
+
+                for sourceIndex, source in enumerate(sources):
+                    sourcesSet.append({
+                        "type": "SPTT_0006"
+                        ,"details" : {
+                            "id" : source["details"]["id"]
+                        }
+                    });
+
+                if "sequencer" in reqData:
+                    # TO DO  Derive the max BP count for this sequencer
+                    #        AND
+                    #        Return total count of basepairs on source plate(s)
+                    basePairMax = 12500000;
+
+                    '''
+                    currentBasePairTotal = total of BPs in all source plates
+                    previousBasePairTotal = total BPS on all plates but the last one
+                    '''
+
+                    # DEV ONLY - remove when real basepair counting is done
+                    previousBasePairTotal = 500;
+                    currentBasePairTotal = basePairMax - 3 + len(sources);
+
+                    reponseTally = currentBasePairTotal
+
+                    if currentBasePairTotal < basePairMax:
+                        #and add another source input to indicate there's more room
+                        sourcesSet.append({
+                            "type": "SPTT_0006"
+                        });
+
+                    elif basePairMax and currentBasePairTotal == basePairMax:
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
+                                "data": "No more plates will fit in this run."
+                            }
+                        })
+
+                    else :
+                        responseCommands.append({
+                            "type": "PRESENT_DATA",
+                            "item": {
+                                "type": "text",
+                                "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
+                                "data":  ("Return plate <strong>"
+                                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                                          + "</strong> to the pooling bin.")
+                            }
+                        })
+
+                        reponseTally = previousBasePairTotal
+
+                        #remove the last added source from the list
+                        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+                    responseCommands.append({
+                        "type": "PRESENT_DATA",
+                        "item": {
+                            "type": "text",
+                            "title": "Base Pair Tally",
+                            "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
+                        }
+                    })
+
+                responseCommands.append({
+                    "type": "SET_SOURCES",
+                    "plates": sourcesSet
+                })
 
             elif transform_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
@@ -2082,6 +2284,33 @@ TRANSFORM_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
+                ,"39": {  // keyed to transform_template_id in the database
+                    "description": "ECR/PCR Planning"
+                    ,"type": "standard_template"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"plateTypeId": "SPTT_0006"
+                        ,"variablePlateCount": false
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"40": {  // keyed to transform_template_id in the database
+                    "description": "ECR/PCR Primer Hitpicking"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 4
+                        ,"variablePlateCount": true
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                }
                 ,"42": {  // keyed to transform_template_id in the database
                     "description": "PCA/PCR Purification"
                     ,"type": "standard"
@@ -2094,6 +2323,32 @@ TRANSFORM_MAP = loads("""
                         "plateCount": 2
                         ,"variablePlateCount": false
                         ,"plateTypeId": "SPTT_0006"
+                    }
+                }
+                ,"43": {  // keyed to transform_template_id in the database
+                    "description": "Source Plate Creation"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"44": {  // keyed to transform_template_id in the database
+                    "description": "ECR/PCR Source Plate Creation"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
                     }
                 }
             }

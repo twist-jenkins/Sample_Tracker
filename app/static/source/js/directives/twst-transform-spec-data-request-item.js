@@ -1,5 +1,5 @@
-angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout',   
-    function($compile, Constants, $timeout) {
+angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout', 'BarcodeManager',   
+    function($compile, Constants, $timeout, BarcodeManager) {
         return {
             scope: {
                 transformSpec: '='
@@ -56,7 +56,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                         var returnValidate = function (arrInd) {
 
-                            if ($scope.itemData.dataType = Constants.DATA_TYPE_BARCODE) {
+                            if ($scope.itemData.dataType.indexOf(Constants.DATA_TYPE_BARCODE) == 0) {
+
+                                var expectedBarcodeType = $scope.itemData.dataType.split('.')[1];
 
                                 var val = $scope.transformSpec.details.requestedData[$scope.itemData.forProperty][arrInd];
 
@@ -70,9 +72,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                             $scope.validations[arrInd] = null;
                                             $scope.errors[arrInd] = null;
                                         }
-                                    } else if (val.indexOf(Constants.BARCODE_PREFIX_PLATE) != 0) {
+                                    } else if (!(BarcodeManager.validateType(val, expectedBarcodeType))) {
                                         $scope.validations[arrInd] = false;
-                                        $scope.errors[arrInd] = 'Value is not a recognized plate barcode';
+                                        $scope.errors[arrInd] = 'Invalid barcode for expected type: ' + expectedBarcodeType;
                                     } else if (val && val.length) {
 
                                         //check that we haven't already scanned this one
@@ -124,7 +126,7 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                     $scope.validation = null;
                     $scope.error = null;
 
-                    var barcodeType = $scope.itemData.type.split('.')[1];
+                    var expectedBarcodeType = $scope.itemData.type.split('.')[1];
 
                     if (!$scope.readOnly) {
                         ml +=   '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\']" ng-blur="validate(true);"/>' +
@@ -146,9 +148,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                         $scope.validation = null;
                                         $scope.error = null;
                                     }
-                                } else if (val.indexOf(Constants.BARCODE_PREFIX_PLATE) != 0) {
+                                } else if (!(BarcodeManager.validateType(val, expectedBarcodeType))) {
                                     $scope.validation = false;
-                                    $scope.error = 'Value is not a recognized plate barcode';
+                                    $scope.error = 'Invalid barcode for expected type: ' + expectedBarcodeType;
                                 } else if (val && val.length) {
                                     $scope.validation = 1;
                                     $scope.error = null;
