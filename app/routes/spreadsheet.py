@@ -135,15 +135,17 @@ def create_adhoc_sample_movement(db_session,
         for sample in s:
             sample_cache[(barcode, sample.well.well_number)] = sample
 
-    # Lookup well_number by well_name, if necessary
+    # Inject well_number by well_name into transform_map, if necessary
     for oper in transform_map:
         if "source_well_number" not in oper:
             s_bc = oper["source_plate_barcode"]
             s_label = str(oper["source_well_name"])
             s_type = plate_cache[s_bc].plate_type
-            s_number = s_type.layout.get_well_by_label(s_label).well_number
-            oper["source_well_number"] = s_number
-            # TODO: oper["source_well_sample"]
+            s_num = s_type.layout.get_well_by_label(s_label).well_number
+            oper["source_well_number"] = s_num
+            if "source_well_sample" in oper:
+                assert oper["source_well_sample"] == sample_cache[(s_bc,
+                                                                   s_num)].id
 
     # Also cache a map of well number to well instance for all destination wells
     well_cache = {}
@@ -167,21 +169,14 @@ def create_adhoc_sample_movement(db_session,
     for dest_key, operation_group in itertools.groupby(transforms_by_dest,
                                                        dest_grouping_func):
 
-        # This loop is now oriented towards many-samples-to-one-sample
-        # merge transforms.  len(source_samples) shows the type of transform:
-        #
-        #     len(source_samples) == 0: create fresh sample, no parents
-        #     len(source_samples) == 1: copy sample, one parent
-        #     len(source_samples) > 1: merge sample, multiple parents
-        #
-        # Handles mixing operations (pooling, NGS barcoding,
-        # primer addition, etc) as well as non-mixing steps
+        # get sources -- one or more going into the same destination
+        source_samples = [sample_cache[(oper["source_plate_barcode"],
+                                        oper["source_well_number"])]
+                          for oper in operation_group]
 
-        # check destination
-
+        # get destination plate
         destination_plate_barcode, destination_well_number = dest_key
         logging.warn("**************** %s", dest_key)
-
         try:
             dplate = plate_cache[destination_plate_barcode]
         except KeyError:
@@ -190,19 +185,14 @@ def create_adhoc_sample_movement(db_session,
             logging.error("Invalid xfer: %s", msg)
             return {"success": False, "errorMessage": msg}
 
+        # get "destination" sample (if present, this will become a parent)
         try:
             dest_s = sample_cache[(destination_plate_barcode,
                                    destination_well_number)]
         except KeyError:
-            # raise KeyError(destination_plate_barcode, destination_well_number)
             dest_s = None
 
-        # check source(s)
-
-        source_samples = [sample_cache[(oper["source_plate_barcode"],
-                                        oper["source_well_number"])]
-                          for oper in operation_group]
-
+        # create and add the new sample
         s = sample_handler(db_session, sample_transform,
                            well_cache, source_samples, dplate,
                            destination_well_number, dest_s)
@@ -226,7 +216,18 @@ def sample_handler(db_session, transform, well_cache,
     """Accessions a new sample into the designated well,
     using the source sample(s) as parents and/or reagents.
     Note: destination_sample, if present, will become a parent
-    of the new sample that this routine will accession."""
+    of the new sample that this routine will accession.
+
+    This loop is now oriented towards many-samples-to-one-sample
+    merge transforms.  len(source_samples) shows the type of transform:
+
+        len(source_samples) == 1: copy sample, one parent
+        len(source_samples) >  1: merge sample, multiple parents
+        len(source_samples) == 0: create fresh sample, no parents (TBD)
+
+    Handles mixing operations (pooling, NGS barcoding, primer addition,
+    etc) as well as non-mixing steps
+    """
 
     logging.debug("sample_handler: src=[%s] dest=[%s]",
                   source_well_samples, destination_sample)
@@ -235,7 +236,7 @@ def sample_handler(db_session, transform, well_cache,
 
     # Copy all extant metadata except transform, parents, children, is_clonal
     if len(source_well_samples) == 0:
-        raise ValueError("source sample is required")
+        raise NotImplementedError("TODO?: Create samples from scratch.")
     elif len(source_well_samples) > 1:
         logging.debug("Merging %d samples into %s",
                       len(source_well_samples), destination_sample)
