@@ -430,6 +430,8 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TPL_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING,
                             TRANS_TYPE_ECR_PCR_THERMOCYCLE as ECR_THERMO_T,
                             TRANS_TYPE_ECR_PCR_UPLOAD_QUANT as ECR_PCR_UPLOAD_QUANT_T,
+                            TRANS_TYPE_PLS_DILUTION as PLS_DILUTION_T,
+                            TRANS_TPL_MULTIPLEX_SAME_PLATE as MULTIPLEX_SAME_PLATE
     )
 
     f = {(PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transform.primer_preplanning,
@@ -448,6 +450,7 @@ def transform_params( transform_type_id, transform_template_id  ):
          (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
          (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
          (NGS_LOAD, ):                     transform.ngs_load,
+         (PLS_DILUTION_T, MULTIPLEX_SAME_PLATE):      transform.pls_dilution,
          (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):      transform.ecr_pcr_planning,
          (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):      transform.ecr_pcr_source_plate_creation,
          (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):      transform.ecr_pcr_primer_hitpicking,
