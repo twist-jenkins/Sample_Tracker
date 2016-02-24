@@ -329,6 +329,15 @@ def rebatch_transform( type_id, templ_id ):
         "type": "SET_DESTINATIONS",
         "plates": destination_plates
     })
+    cmds.append({
+        "type": "REQUEST_DATA",
+        "item": {
+            "type": "array.1",
+            "dataType": "barcode.PLATE",
+            "title": "Associated PCA Plate Barcode",
+            "forProperty": "associatedPcaPlates"
+        }
+    })
 
     #print destination_plates
     return rows, cmds
