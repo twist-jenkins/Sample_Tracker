@@ -490,13 +490,12 @@ def pcr_primer_hitpick( type_id, templ_id ):
     from app.steps import primer_hitpicking, vector_hitpicking
 
     rows, cmds = [{}], []
-    destinations_ready = ("destinations" in request.json
-                          and request.json['destinations'])
+    destinations_ready = bool( request.json.get('destinations') )
 
     for dest_index, destination in enumerate(request.json['destinations']):
-        if "id" not in destination["details"] or \
-                destination["details"]["id"] == "":
+        if not destination['details'].get('id'):
             destinations_ready = False
+            break
 
     if destinations_ready:
         rows = filter_transform(transform_template_id,
