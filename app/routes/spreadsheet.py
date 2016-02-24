@@ -79,9 +79,8 @@ def create_adhoc_sample_movement(db_session,
     logging.info("Caching source plates: %s" % list(srcs))
     for src_barcode in srcs:
         try:
-            source_plate = db_session.query(Plate).\
-                filter(Plate.external_barcode == src_barcode).one()
-            plate_cache[src_barcode] = source_plate
+            source_plate = db_session.query(Plate) \
+                                     .filter(Plate.external_barcode == src_barcode).one()
         except:
             logging.warn(" %s encountered error creating sample transform. "
                          "There is no source plate with the barcode: [%s]",
@@ -90,6 +89,9 @@ def create_adhoc_sample_movement(db_session,
                 "success": False,
                 "errorMessage": "There is no source plate with the barcode: [%s]" % (src_barcode)
             }
+        else:
+            plate_cache[src_barcode] = source_plate
+
 
     # Cache all destination plates, creating any that are not found
 
