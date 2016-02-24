@@ -66,7 +66,7 @@ def create_src( db, vector_barcode ):
         for vol, col in ([ (VECTOR_MAX_VOL, j) for j in range(div) ]
                          + [ (VECTOR_WASTE_VOL + math.ceil(mod * ALIQ_VOLUME), div) ]):
             dest_well_name = '%s%d' % (row, col+1)
-            dest_well_num = row_i * 24 + col
+            dest_well_num = row_i * 24 + col + 1
             
             rows.append( {
                 'source_plate_barcode':         vector_sources[ vector_name ].name,
