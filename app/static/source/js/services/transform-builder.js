@@ -616,11 +616,17 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
                     var barcodeArray = [barcode];
 
+                    var shouldBeNew = true;
+
+                    if (!(base.map.destination.create)) {
+                        //then these destinations should not already exist
+                        shouldBeNew = false;
+                    }
+
                     Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
-                        if (!data.success) {
-                            /* error - destination plates already exist */
-                            onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
-                        } else {
+
+                        var isNew = data.success;
+                        if (isNew && shouldBeNew) {
                             /* destination plate is new - we're good to go */
                             destItem.loaded = true; /* shows the "valid" icon for this input */
                             destItem.updating = false;
@@ -636,6 +642,11 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                             }
                             base.destinationsReady = true;
                             base.updateOperationsList();
+                        } else if (!isNew && shouldBeNew) {
+                            /* error - destination plates already exist */
+                            onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
+                        } else if (!shouldBeNew && isNew) {
+                            onError(destItem, 'Error: Plate ' + barcode + ' was not found.');
                         }
                         ready();
                     }).error(function (data) {
