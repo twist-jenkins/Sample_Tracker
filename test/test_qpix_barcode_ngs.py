@@ -328,8 +328,8 @@ class TestCase(unittest.TestCase):
             ['A1', 1, dest_plate_1_barcode, 'A1', 1, 96],
             ['A1', 1, dest_plate_1_barcode, 'A2', 2, 96],
             ['A2', 2, dest_plate_1_barcode, 'B1', 13, 96],
-            ['B1', 13, dest_plate_2_barcode, 'A1', 1, 96],
-            ['B1', 13, dest_plate_2_barcode, 'A2', 2, 96],
+            # ['B1', 13, dest_plate_2_barcode, 'A1', 1, 96],
+            # ['B1', 13, dest_plate_2_barcode, 'A2', 2, 96],
         ]
 
         # 1. Create two target plates

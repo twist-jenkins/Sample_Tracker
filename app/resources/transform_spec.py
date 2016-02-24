@@ -374,9 +374,7 @@ def alter_spec_ngs_barcodes(db_session, spec):
         destination_well_number = dest_type.layout.get_well_by_label(destination_well_id).well_number
         destination_well_name = destination_well_id
 
-        nps_id, ngs_pair = miseq.make_ngs_prepped_sample(db_session,
-                                                         source_sample_id,
-                                                         destination_well_id)
+        ngs_pair = miseq.next_ngs_pair(db_session)
 
         for (row, column, seq_id) in [
             (ngs_pair.reverse_primer_i7_well_row,
