@@ -1,7 +1,7 @@
 var api_base_url = '/api/v1/';
 var server_url = twist_api_url;
 
-<<<<<<< HEAD:app/static/source/js/services.js
+
 api_base_url = '/api/v1/';
 server_url = twist_api_url;
 
@@ -377,10 +377,8 @@ app = angular.module('twist.app')
     }]
 )
 
-.factory('TransformBuilder', ['Api', 'Maps', 'Constants',
-=======
 angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constants',
->>>>>>> 182e1a238b8402d799aa501bb1645afaf931c675:app/static/source/js/services/transform-builder.js
+
     function (Api, Maps, Constants) {
 
         var TransformSpec = function () {

@@ -7,6 +7,7 @@ import logging
 from app import db
 from app import constants
 from app.steps import primer_hitpicking
+from app.steps import rebatching_normalization
 from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
@@ -19,8 +20,6 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from twistdb.ngs import CallerSummary
 from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
 from twistdb.frag import FraganalyzerRunSampleSummaryJoin
-from twistdb.work_order import OrderItem , DNAMolecule
-from twistdb.backend import CloningProcess ,ResistanceMarker
 
 
 logger = logging.getLogger()
@@ -54,13 +53,13 @@ def to_resp(f):
                                                   'responseCommands': responseCommands}),
                              status=200,
                              mimetype="application/json")
+    f2.__name__ = f.__name__
     return f2
 
 
 def merge_transform(sources, dests):
     """
     Merge plates.
-
     Currently assumes that there is only one destination plate and that the
     mapping is 1:1 source well to destination well.
     """
@@ -248,10 +247,8 @@ def sample_data_determined_transform(transform_template_id, sources, dests):
 def pca_pre_planning( bulk_barcode, pca_barcodes ):
     """
     return list of master mix conditions for extracted PCA plates.
-
     more importantly, this function has a side-effect: it pre-generates the Echo worklist
     for the later "Primer Hitpicking" step.
-
     worse, this is stored in a misleading way, as a transform that moves primers from the
     bulk primer plate to the PCA plates, but the REAL destinations are temporary PCR plates.
     the plate id's are later replaced with the real destination barcodes.
@@ -277,19 +274,98 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
     master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
     return master_mixes, rows
 
-def get_samples_fromeach_384well_plate(barcode):
 
-   samples= db.session.query(Plate).filter(Plate.external_barcode  == barcode).one().current_well_contents
+def plates_to_rows( sources ):
+    rows = []
+    # Pull the first source plate to fix the plate type
+    src_plate_type = sources[0]['details']['plateDetails']['type']
+    dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
-   return samples
+    for src_idx, src in enumerate(sources):
+        barcode = src['details']['id']
+        try:
+            plate = db.session.query(Plate) \
+                              .filter(Plate.external_barcode == barcode) \
+                              .one()
+        except MultipleResultsFound:
+            raise WebError('multiple plates found with barcode %s' % barcode)
+
+        for sample in db.session.query(Sample).join(PlateWell, Sample.well) \
+                .filter(Sample.plate == plate) \
+                .order_by(PlateWell.well_number):
+
+            rows.append({'source_plate_barcode':           barcode,
+                         'source_well_name':               sample.well.well_label,
+                         'source_well_number':             sample.well.well_number,
+                         'source_well_code':                 sample.well.well_code,
+                         'source_sample_id':               sample.id,
+                         'destination_plate_barcode':      barcode,
+                         'destination_well_name':          sample.well.well_label,
+                         'destination_well_number':        sample.well.well_number,
+                         'destination_plate_type':         plate.type_id,
+                         'destination_plate_well_count':   plate.plate_type.layout.feature_count
+                         })
+    return rows
+
+
+@to_resp
+def rebatch_transform( type_id, templ_id ):
+    rows, cmds = [], []
+    return rows, cmds
+
 
 @to_resp
 def primer_preplanning( type_id, templ_id ):
-    return [], cmds
+    rows, cmds = [{}], []
+
+    details = request.json["details"]
+
+    # we need to add master mix needs info or tell the user we need all the PCA plates first
+    masterMixNeeds = ""
+    pcaPlates = None
+
+    if "requestedData" in details:
+        pcaPlates = details["requestedData"]
+
+    if pcaPlates and "associatedPcaPlates" in pcaPlates:
+        pcaPlates = pcaPlates["associatedPcaPlates"]
+    else:
+        # if they're not already in spec, we need to add the requested PCA plates
+        cmds.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": "array.4",
+                "dataType": "barcode.PLATE",
+                "title": "Associated PCA Plate Barcodes",
+                "forProperty": "associatedPcaPlates"
+            }
+        })
+
+    if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
+        masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
+        dataType = "text"
+    else:
+        # then all the plates had barcodes
+        # now we need to decide which master mixes are needed
+        # content like "Master Mix A x2\n\rMaster Mix B x3"
+        bulk_barcode = request.json['sources'][0]['details']['id']
+        masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
+        dataType = 'csv'
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": dataType,
+            "title": "Master Mix Needs",
+            "data": masterMixNeeds
+        }
+    })
+    return rows, cmds
 
 
 @to_resp
 def primer_create_src( type_id, templ_id ):
+    rows = plates_to_rows( request.json['sources'] )
     bulk_barcode = request.json['sources'][0]['details']['id']
     custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
 
@@ -301,11 +377,12 @@ def primer_create_src( type_id, templ_id ):
             "data": custom_primers,
         }
     }]
-    return [], cmds
+    return rows, cmds
 
 
 @to_resp
 def primer_master_mix( type_id, templ_id ):
+    rows = plates_to_rows( request.json['sources'] )
     bulk_barcode = request.json['sources'][0]['details']['id']
     mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
 
@@ -317,18 +394,288 @@ def primer_master_mix( type_id, templ_id ):
             "data":  mixes,
         }
     }]
-    return [], cmds
+    return rows, cmds
 
 
 @to_resp
 def thermocycle( type_id, templ_id ):
-    pass
+    rows, cmds = [], []
+    reqData = request.json['details'].get('requestedData')
+
+    if reqData and "thermocyclerBarcode" in reqData:
+        thermoBarcode = reqData["thermocyclerBarcode"]
+
+        # TO DO  Actually derive the proper thermocycling conditions for presentation to the user
 
 
-def preview(transfer_type_id=None, transfer_template_id =None):
+        # only respond with conditions if the thermocycler barcode is valid
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "Thermocycling conditions",
+                "data": "Thermocycling conditions here... maybe CSV format to render a table?"
+            }
+        })
+    else:
+        cmds.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": "barcode.INSTRUMENT",
+                "title": "Thermocycler barcode",
+                "forProperty": "thermocyclerBarcode"
+            }
+        })
+    return [], cmds
+
+
+@to_resp
+def quant_upload( type_id, templ_id ):
+    cmds = []
+    rows = plates_to_rows( request.json['sources'] )
+    cmds.append({
+        "type": "REQUEST_DATA",
+        "item": {
+            "type": "file-data",
+            "title": "Quantification Results",
+            "forProperty": "instrument_data",
+            "fileType": "quantification"
+        }
+    })
+    return rows, cmds
+
+
+@to_resp
+def ngs_hitpicking( type_id, templ_id ):
+    rows, cmds = [{}], []
+    # TO DO   Generate worklist...
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "file-data",
+            "title": "Worklist",
+            "forProperty": "worklist",
+            "fileType": "worklist"
+        }
+    })
+    return rows, cmds
+
+
+@to_resp
+def ngs_mastermix( type_id, templ_id ):
+    rows, cmds = [{}], []
+    # TO DO   Generate master mix instructions...
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "text",
+            "title": "NGS Master Mix",
+            "data": "Master mix data here... maybe CSV format to render a table?"
+                    }
+    })
+    return rows, cmds
+
+
+@to_resp
+def pcr_primer_hitpick( type_id, templ_id ):
+    rows, cmds = [{}], []
+    destinations_ready = ("destinations" in request.json
+                          and request.json['destinations'])
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+        if "id" not in destination["details"] or \
+                destination["details"]["id"] == "":
+            destinations_ready = False
+
+    if destinations_ready:
+        rows = filter_transform(transform_template_id,
+                                request.json['sources'],
+                                request.json['destinations'] )
+
+        echo_worklist = primer_hitpicking.munge_echo_worklist(
+            db.session, request.json['sources'][0]['details']['id'],
+            [x['details']['id'] for x in request.json['destinations']])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "file-data",
+                "title": "Echo worklist",
+                "data": echo_worklist,
+                "mimeType": "text/csv",
+                "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+            }
+
+        })
+
+    return rows, cmds
+
+
+@to_resp
+def ngs_load( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    # TO DO   based on source barcode, present the target sequencer
+
+    #DEV Only remove when code exists to set sequencer
+    sequencer = "MiSeq";
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "text",
+            "title": "Target Sequencer",
+            "data": "<strong>" + sequencer + "</strong>"
+        }
+    })
+
+    reqData = {
+        "sequencerBarcode": None,
+        "inputCartridgeBarcode": None,
+        "flowCellBarcode": None
+    }
+
+    if "requestedData" in details:
+        data = details["requestedData"]
+        if "sequencerBarcode" in data:
+            reqData["sequencerBarcode"] = data["sequencerBarcode"]
+        if "inputCartridgeBarcode" in data:
+            reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
+        if "flowCellBarcode" in data:
+            reqData["flowCellBarcode"] = data["flowCellBarcode"]
+
+    cmds.extend( [
+        {"type": "REQUEST_DATA",
+         "item": {'type': "barcode.INSTRUMENT",
+                 "title": "Sequencer Barcode",
+                 "forProperty": "sequencerBarcode",
+                 #"value": reqData["sequencerBarcode"]
+        }},
+        {"type": "REQUEST_DATA",
+         "item": {
+             "type": "barcode.CARTRIDGE",
+             "title": "Input Cartridge Barcode",
+             "forProperty": "inputCartridgeBarcode",
+             #"value": reqData["inputCartridgeBarcode"]
+         }},
+        {"type": "REQUEST_DATA",
+         "item": {
+             "type": "barcode.FLOWCELL",
+             "title": "Flowcell Barcode",
+             "forProperty": "flowCellBarcode",
+             #"value": reqData["flowCellBarcode"]
+         }}, ])
+    return rows, cmds
+
+
+@to_resp
+def ngs_tagmentation( type_id, templ_id ):
+    rows, cmds = [{}], []
+    return rows, cmds
+
+
+@to_resp
+def ecr_pcr_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    details = request.json["details"]
+
+    # we need to add master mix needs info or tell the user we need all the PCA plates first
+    masterMixNeeds = ""
+    ecrPlates = None
+
+    if "requestedData" in details:
+        ecrPlates = details["requestedData"]
+
+    if ecrPlates and "associatedEcrPlates" in ecrPlates:
+        ecrPlates = ecrPlates["associatedEcrPlates"]
+    else:
+        # if they're not already in spec, we need to add the requested PCA plates
+        cmds.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": "array.4",
+                "dataType": "barcode.PLATE",
+                "title": "Associated ECR Plate Barcodes",
+                "forProperty": "associatedEcrPlates"
+            }
+        })
+
+    if not ecrPlates or ecrPlates[0] is None or ecrPlates[1] is None or ecrPlates[2] is None or ecrPlates[3] is None:
+        masterMixNeeds = "Please scan <strong>all 4</strong> ECR plates to retrieve master mix needs."
+        dataType = "text"
+    else:
+        # then all the plates had barcodes
+        # now we need to decide which master mixes are needed
+        # content like "Master Mix A x2\n\rMaster Mix B x3"
+
+        # TODO: do master mix needs for ECR/PCR and ROWS
+
+        rows = [{}]
+        masterMixNeeds = "Master mix needs here"
+        dataType = 'csv'
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": dataType,
+            "title": "Master Mix Needs",
+            "data": masterMixNeeds
+        }
+    })
+
+    return rows, cmds
+
+@to_resp
+def ecr_pcr_source_plate_creation( type_id, templ_id ):
+    rows = plates_to_rows( request.json['sources'] )
+
+    cmds = [{
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Source Plate Map",
+            "data": "Source Plate Data here",
+        }
+    }]
+    return rows, cmds
+
+@to_resp
+def ecr_pcr_primer_hitpicking( type_id, templ_id ):
+
+    rows, cmds = [{}], []
+    destinations_ready = ("destinations" in request.json
+                          and request.json['destinations'])
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+        if "id" not in destination["details"] or \
+                destination["details"]["id"] == "":
+            destinations_ready = False
+
+    if destinations_ready:
+        # TODO: add echo worklist generation here as return as response_command
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "file-data",
+                "title": "Echo worklist",
+                "data": "WORKLIST DATA HERE",
+                "mimeType": "text/csv",
+                "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
+            }
+
+        })
+
+    return rows, cmds
+
+
+def preview( transform_type_id, transform_template_id ):
     """Called by the UI to generate a draft transform spec before execution."""
 
-    print '@@ transfer_type_id=%s, transfer_template_id=%s' % (transfer_type_id, transfer_template_id)
+    print '@@ transform_type_id=%s, transform_template_id=%s' % (transform_type_id, transform_template_id)
 
     assert request.method == 'POST'
 
@@ -340,305 +687,6 @@ def preview(transfer_type_id=None, transfer_template_id =None):
     rows = []
 
     try:
-        if transform_type_id in (
-                constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
-                constants.TRANS_TYPE_ADD_PCA_MASTER_MIX,
-                constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
-                constants.TRANS_TYPE_PCA_PREPLANNING,
-                constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
-                constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION,
-                constants.TRANS_TYPE_NGS_THERMOCYCLE,
-                constants.TRANS_TYPE_UPLOAD_QUANT,
-                constants.TRANS_TYPE_PCR_PRIMER_HITPICK,
-                constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER):
-                # these are same to same transforms or data uploads
-
-            if transform_type_id in (
-                    constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC,
-                    constants.TRANS_TYPE_PCA_PREPLANNING):
-
-                src_plate_type = "SPTT_0006"
-                dest_plate_type = src_plate_type
-
-            else:
-
-                # Pull the first source plate to fix the plate type
-                src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-                dest_plate_type = db.session.query(PlateType).get(src_plate_type)
-
-                for src_idx, src in enumerate(request.json['sources']):
-                    barcode = src['details']['id']
-                    try:
-                        plate = db.session.query(Plate) \
-                                          .filter(Plate.external_barcode == barcode) \
-                                          .one()
-                    except MultipleResultsFound:
-                        raise WebError('multiple plates found with barcode %s' % barcode)
-
-                    for sample in db.session.query(Sample).join(PlateWell, Sample.well) \
-                            .filter(Sample.plate == plate) \
-                            .order_by(PlateWell.well_number):
-
-                        rows.append({'source_plate_barcode':           barcode,
-                                     'source_well_name':               sample.well.well_label,
-                                     'source_well_number':             sample.well.well_number,
-                                     'source_well_code':                 sample.well.well_code,
-                                     'source_sample_id':               sample.id,
-                                     'destination_plate_barcode':      barcode,
-                                     'destination_well_name':          sample.well.well_label,
-                                     'destination_well_number':        sample.well.well_number,
-                                     'destination_plate_type':         plate.type_id,
-                                     'destination_plate_well_count':   plate.plate_type.layout.feature_count
-                                     })
-
-            if transform_type_id == constants.TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC:
-                bulk_barcode = request.json['sources'][0]['details']['id']
-                custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
-
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "csv",
-                        "title": "Source Plate Map",
-                        "data": custom_primers,
-                    }
-                })
-
-            elif transform_type_id == constants.TRANS_TYPE_ADD_PCA_MASTER_MIX:
-                bulk_barcode = request.json['sources'][0]['details']['id']
-                mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
-
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type":  "csv",
-                        "title": "PCA Master Mix",
-                        "data":  mixes,
-                    }
-                })
-
-            elif transform_type_id in (
-                    constants.TRANS_TYPE_PCA_THERMOCYCLE,
-                    constants.TRANS_TYPE_PCA_PCR_THERMOCYCLE,
-                    constants.TRANS_TYPE_NGS_THERMOCYCLE):
-
-                reqData = {}
-
-                if "requestedData" in details:
-                    reqData = details["requestedData"]
-
-                if reqData and "thermocyclerBarcode" in reqData:
-                    thermoBarcode = reqData["thermocyclerBarcode"]
-
-                    # TO DO  Actually derive the proper thermocycling conditions for presentation to the user
-
-                    responseCommands.append({
-                        "type": "PRESENT_DATA",
-                        "item": {
-                            "type": "text",
-                            "title": "Thermocycling conditions",
-                            "data": "Thermocycling conditions here... maybe CSV format to render a table?"
-                        }
-                    })
-                else:
-                    responseCommands.append({
-                        "type": "REQUEST_DATA",
-                        "item": {
-                            "type": "barcode.THERMOCYCLER",
-                            "title": "Thermocycler barcode",
-                            "forProperty": "thermocyclerBarcode"
-                        }
-                    })
-
-            elif transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "file-data",
-                        "title": "Quantification Results",
-                        "forProperty": "instrument_data",
-                        "fileType": "quantification"
-                    }
-                })
-
-            elif transform_type_id == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
-
-                rows = [{}]
-
-                # TO DO   Generate worklist...
-
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "file-data",
-                        "title": "Worklist",
-                        "forProperty": "worklist",
-                        "fileType": "worklist"
-                    }
-                })
-
-            elif transform_type_id == constants.TRANS_TYPE_NGS_MASTERMIX_ADDITION:
-
-                rows = [{}]
-
-                # TO DO   Generate master mix instructions...
-
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "NGS Master Mix",
-                        "data": "Master mix data here... maybe CSV format to render a table?"
-                    }
-                })
-
-            elif transform_type_id == constants.TRANS_TYPE_PCA_PREPLANNING:
-                rows = [{}]
-
-                # we need to add master mix needs info or tell the user we need all the PCA plates first
-                masterMixNeeds = ""
-                pcaPlates = None
-                dataType = "csv"
-
-                if "requestedData" in details:
-                    pcaPlates = details["requestedData"]
-
-                if pcaPlates and "associatedPcaPlates" in pcaPlates:
-                    pcaPlates = pcaPlates["associatedPcaPlates"]
-                else:
-                    # if they're not already in spec, we need to add the requested PCA plates
-                    responseCommands.append({
-                        "type": "REQUEST_DATA",
-                        "item": {
-                            "type": "array.4",
-                            "dataType": "barcode.PLATE",
-                            "title": "Associated PCA Plate Barcodes",
-                            "forProperty": "associatedPcaPlates"
-                        }
-                    })
-
-                if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
-                    masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
-                    dataType = "text"
-                else:
-                    # then all the plates had barcodes
-                    # now we need to decide which master mixes are needed
-                    # content like "Master Mix A x2\n\rMaster Mix B x3"
-                    bulk_barcode = request.json['sources'][0]['details']['id']
-                    masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": dataType,
-                        "title": "Master Mix Needs",
-                        "data": masterMixNeeds
-                    }
-                })
-
-            elif transfer_template_id == constants.TRANS_TPL_PCR_PRIMER_HITPICK:
-
-
-
-
-
-                destinations_ready = ("destinations" in request.json
-                                      and request.json['destinations'])
-
-                for dest_index, destination in enumerate(request.json['destinations']):
-                    if "id" not in destination["details"] or \
-                            destination["details"]["id"] == "":
-                        destinations_ready = False
-
-                if destinations_ready:
-                    rows = filter_transform(transform_template_id,
-                                            request.json['sources'],
-                                            request.json['destinations'] )
-
-                    echo_worklist = primer_hitpicking.munge_echo_worklist(
-                        db.session, request.json['sources'][0]['details']['id'],
-                        [x['details']['id'] for x in request.json['destinations']])
-
-                    responseCommands.append({
-                        "type": "PRESENT_DATA",
-                        "item": {
-                            "type": "file-data",
-                            "title": "Echo worklist",
-                            "data": echo_worklist,
-                            "mimeType": "text/csv",
-                            "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
-                        }
-
-                    })
-
-            elif transform_type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
-
-                rows = [{}]
-
-                # TO DO   based on source barcode, present the target sequencer
-
-                # DEV Only remove when code exists to set sequencer
-                sequencer = "MiSeq"
-
-                responseCommands.append({
-                    "type": "PRESENT_DATA",
-                    "item": {
-                        "type": "text",
-                        "title": "Target Sequencer",
-                        "data": "<strong>" + sequencer + "</strong>"
-                    }
-                })
-
-                reqData = {
-                    "sequencerBarcode": None,
-                    "inputCartridgeBarcode": None,
-                    "flowCellBarcode": None
-                }
-
-                if "requestedData" in details:
-                    data = details["requestedData"]
-                    if "sequencerBarcode" in data:
-                        reqData["sequencerBarcode"] = data["sequencerBarcode"]
-                    if "inputCartridgeBarcode" in data:
-                        reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
-                    if "flowCellBarcode" in data:
-                        reqData["flowCellBarcode"] = data["flowCellBarcode"]
-
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode.SEQUENCER",
-                        "title": "Sequencer Barcode",
-                        "forProperty": "sequencerBarcode",
-                        # "value": reqData["sequencerBarcode"]
-                    }
-                })
-
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode.CARTRIDGE",
-                        "title": "Input Cartridge Barcode",
-                        "forProperty": "inputCartridgeBarcode",
-                        # "value": reqData["inputCartridgeBarcode"]
-                    }
-                })
-
-                responseCommands.append({
-                    "type": "REQUEST_DATA",
-                    "item": {
-                        "type": "barcode.FLOWCELL",
-                        "title": "Flowcell Barcode",
-                        "forProperty": "flowCellBarcode",
-                        # "value": reqData["flowCellBarcode"]
-                    }
-                })
-
-            else:
-                rows = []
-
-        else:
-
             if str(transform_template_id) not in TRANSFORM_MAP:
                 raise WebError('Unknown transform template id: %s' %
                                transform_template_id)
@@ -673,54 +721,7 @@ def preview(transfer_type_id=None, transfer_template_id =None):
 
             elif transform_template_id == \
                     constants.TRANS_TPL_REBATCH_FOR_TRANSFORM:
-                groups = sample_data_determined_transform(
-                    transform_template_id, request.json['sources'], request.json['destinations'])
-
-                # to do: create the dest
-
-                destination_plates = []
-                dest_type = db.session.query(PlateType).get('SPTT_0006')
-                fourToOneMap = maps_json()["transform_maps"][constants.TRANS_TPL_96_TO_384]["plate_well_to_well_maps"]
-                dest_plate_index = 0
-
-                for group in groups:
-                    plateIndex = 0
-                    how_many_for_group = math.ceil(float(len(group["quadrants"])) / 4)
-                    while plateIndex < how_many_for_group:
-                        thisPlate = {"type": "SPTT_0006",
-                                     "first_in_group": plateIndex == 0,
-                                     "details": {
-                                         "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
-                                                  (group["marker_value"], (plateIndex + 1), int(how_many_for_group))
-                                     }}
-                        destination_plates.append(thisPlate)
-                        plateIndex += 1
-                    quadrantIndex = 0
-
-                    dest_barcode = dest_barcodes[dest_plate_index] \
-                        if dest_barcodes else "DEST_" + str(dest_plate_index)
-
-                    for quadrant in group["quadrants"]:
-                        for rowIndex, row in enumerate(quadrant):
-                            dest_well_number = \
-                                fourToOneMap[quadrantIndex % 4][rowIndex + 1]["destination_well_id"]
-                            rows.append({
-                                'source_plate_barcode':           row["source_plate_barcode"],
-                                'source_well_name':               row["source_well_name"],
-                                'source_well_number':             row["source_well_number"],
-                                'source_sample_id':               row["source_sample_id"],
-                                'destination_plate_barcode':      dest_barcode,
-                                'destination_well_name':          dest_type.get_well_by_number(dest_well_number).well_label,
-                                'destination_well_number':        dest_well_number,
-                                'destination_plate_type':         dest_type.type_id,
-                                'destination_plate_well_count':   dest_type.layout.feature_count
-                            })
-
-                        quadrantIndex += 1
-                        if (quadrantIndex and (quadrantIndex % 4 == 0)):
-                            dest_plate_index += 1
-                            dest_barcode = dest_barcodes[dest_plate_index] \
-                                if dest_barcodes else "DEST_" + str(dest_plate_index)
+                destination_plates = rebatching_normalization.calculate_volume_foreach_sample('ss')
 
                 responseCommands.append({
                     "type": "SET_DESTINATIONS",
@@ -730,12 +731,12 @@ def preview(transfer_type_id=None, transfer_template_id =None):
             elif transform_template_id == \
                     constants.TRANS_TPL_NGS_POOLING:
 
-                rows = [{}]
-                sequencer = None
+                rows = [{}];
+                sequencer = None;
 
-                basePairMax = 0
-                currentBasePairTotal = 0
-                previousBasePairTotal = 0
+                basePairMax = 0;
+                currentBasePairTotal = 0;
+                previousBasePairTotal = 0;
 
                 if "requestedData" in details:
                     reqData = details["requestedData"]
@@ -754,9 +755,9 @@ def preview(transfer_type_id=None, transfer_template_id =None):
                         }
                     })
 
-                sources = request.json['sources']
+                sources = request.json['sources'];
 
-                sourcesSet = []
+                sourcesSet = [];
 
                 for sourceIndex, source in enumerate(sources):
                     sourcesSet.append({
@@ -764,13 +765,13 @@ def preview(transfer_type_id=None, transfer_template_id =None):
                         ,"details" : {
                             "id" : source["details"]["id"]
                         }
-                    })
+                    });
 
                 if "sequencer" in reqData:
                     # TO DO  Derive the max BP count for this sequencer
                     #        AND
                     #        Return total count of basepairs on source plate(s)
-                    basePairMax = 12500000
+                    basePairMax = 12500000;
 
                     '''
                     currentBasePairTotal = total of BPs in all source plates
@@ -778,16 +779,16 @@ def preview(transfer_type_id=None, transfer_template_id =None):
                     '''
 
                     # DEV ONLY - remove when real basepair counting is done
-                    previousBasePairTotal = 500
-                    currentBasePairTotal = basePairMax - 3 + len(sources)
+                    previousBasePairTotal = 500;
+                    currentBasePairTotal = basePairMax - 3 + len(sources);
 
                     reponseTally = currentBasePairTotal
 
                     if currentBasePairTotal < basePairMax:
-                        # and add another source input to indicate there's more room
+                        #and add another source input to indicate there's more room
                         sourcesSet.append({
                             "type": "SPTT_0006"
-                        })
+                        });
 
                     elif basePairMax and currentBasePairTotal == basePairMax:
                         responseCommands.append({
@@ -805,13 +806,15 @@ def preview(transfer_type_id=None, transfer_template_id =None):
                             "item": {
                                 "type": "text",
                                 "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                                "data": "Return plate <strong>" + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"] + "</strong> to the pooling bin."
+                                "data":  ("Return plate <strong>"
+                                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                                          + "</strong> to the pooling bin.")
                             }
                         })
 
                         reponseTally = previousBasePairTotal
 
-                        # remove the last added source from the list
+                        #remove the last added source from the list
                         sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
 
                     responseCommands.append({
@@ -2063,8 +2066,6 @@ TRANSFORM_MAP = loads("""
                 ,"31": {  // keyed to sample_transform_template_id in the database
                     "description": "NGS: Pooling"
                     ,"type": "standard_template"
-
-
                     ,"source": {
                         "plateCount": 1
                         ,"variablePlateCount": true
@@ -2119,6 +2120,33 @@ TRANSFORM_MAP = loads("""
                         ,"plateTypeId": "SPTT_0006"
                     }
                 }
+                ,"39": {  // keyed to transform_template_id in the database
+                    "description": "ECR/PCR Planning"
+                    ,"type": "standard_template"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"plateTypeId": "SPTT_0006"
+                        ,"variablePlateCount": false
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"40": {  // keyed to transform_template_id in the database
+                    "description": "ECR/PCR Primer Hitpicking"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 4
+                        ,"variablePlateCount": true
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                }
                 ,"42": {  // keyed to transform_template_id in the database
                     "description": "PCA/PCR Purification"
                     ,"type": "standard"
@@ -2131,6 +2159,32 @@ TRANSFORM_MAP = loads("""
                         "plateCount": 2
                         ,"variablePlateCount": false
                         ,"plateTypeId": "SPTT_0006"
+                    }
+                }
+                ,"43": {  // keyed to transform_template_id in the database
+                    "description": "Source Plate Creation"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
+                    }
+                }
+                ,"44": {  // keyed to transform_template_id in the database
+                    "description": "ECR/PCR Source Plate Creation"
+                    ,"type": "standard"
+                    ,"source": {
+                        "plateCount": 1
+                        ,"variablePlateCount": false
+                        ,"plateTypeId": "SPTT_0006"
+                    }
+                    ,"destination": {
+                        "plateCount": 0
+                        ,"variablePlateCount": false
                     }
                 }
             }

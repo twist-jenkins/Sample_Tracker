@@ -48,134 +48,67 @@ class TestCase(unittest.TestCase):
             kan_d={}
             chlor_d={}
             unknown={}
-            by_marker = defaultdict(dict)
-            test =[]
+            by_marker = defaultdict(list)
+            d = {}
 
             samples= db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_WARP2.1').one().current_well_contents(db.session)
-            #print len(samples)
+            print len(samples)
             for sample in samples:
                 concentration = sample.conc_ng_ul
-                cloning_process= sample.order_item.cloning_process
-                #print cloning_process ,'cloning_process'
+                cloning_process= sample.cloning_process
                 sequence = sample.order_item.sequence
-                #print sequence
-
-                by_marker['AMP'].update({"sample100": "volume",
-                                         "sample102": "volume",
-                                         "sample103": "volume",
-                                         "sample104":"voulme",
-                                         "sample109":"volume"})
-
-                by_marker['KAN'].update({"sample1": "volume",
-                                         "sample2": "volume",
-                                         "sample3": "volume"})
-
-                by_marker['CHLOR'].update({"sample4":"volume",
-                                        "sample5":"volume",
-                                        "sample6":"volume",
-                                        "sample7":"volume"})
-
-
-                by_marker['UNKNOWN'].update({"sample15":"volume",
-                                        "sample52":"volume ",
-                                        "sample57":"volume" ,
-                                        "sample56":"volume"  ,
-                                        "sample58":"volume"  ,
-                                        "sample59":"volume"})
+                marker = cloning_process
+                by_marker[ marker ].append(sample)
 
 
 
-                if len(sequence) < 200 and (concentration is not  None) :
-                    fmol = 13*5
-                    volume = (fmol/concentration)
-                elif len(sequence) >= 200 and (concentration is not  None) :
-                    fmol = 13*2
-                    volume = (fmol/concentration)
-
-                    if cloning_process is not None :
-                        marker = cloning_process.resistance_marker.code
-                        by_marker[ marker ][ sample ] = volume
 
 
-        number= sum([len(by_marker['AMP']),len(by_marker['KAN']) ,len(by_marker['CHLOR']) ,len(by_marker['UNKNOWN'])])
-            #print amp_d.keys(),kan_d.keys() ,chlor_d.keys()
-            #transform_spec(amp_d,kan_d,chlor_d,unknown,(number/48)+1)
-        number_of_plates=int(math.ceil(number/6))
-        #print number_of_plates
-        plate_index = 0
-        count =0
-        plate_capacity =6
-        balance_dict = {}
-
-        while plate_index <= number_of_plates and count <number:
+            d= {}
+            for marker in ('AMP','KAN'):
+                d[ marker ] = ['sample-%d' % i for i in range(50)]
 
 
-            for k in sorted(by_marker, key=lambda k: len(by_marker[k]), reverse=True):
-                #print k
-
-                if(len(by_marker[k]) %6 == 0):
-                    #print "loop"
-                    count += len(by_marker[k])
-                    thisPlate = {"type": "SPTT_0006",
-                                 "first_in_group": plate_index+1,
-                                 "details": {
-                                 "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
-                                 (k, (plate_index+1), int(len(by_marker[k])))
-                                 }}
-                    test.append(thisPlate)
-                    #print test
-                    by_marker.pop(k,None)
-                    break
-                elif len(by_marker[k]) >= plate_capacity:
-                    remainder = len(by_marker[k]) %6
-                    #balance_dict[k] = remainder#(len(by_marker[k]) -plate_capacity)
-                    '''if(len(balance_dict) != 0):
-                        plate_capacity = balance_dict[k]
-                        print plate_capacity
-                    else:
-                        plate_capacity = (len(by_marker[k]) -plate_capacity)'''
-                    count += len(by_marker[k])
-                    thisPlate = {"type": "SPTT_0006",
-                                 "first_in_group": plate_index+1,
-                                 "details": {
-                                 "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
-                                 (k, (plate_index+1), int(plate_capacity))
-                                 }}
-                    test.append(thisPlate)
-                    #print len(balance_dict) ,":" , k
-
-                    balance_dict[k] =len(by_marker[k])- plate_capacity
-                    plate_capacity = 6
-                    #by_marker.pop(k,None)
-                    break
-
-                elif len(by_marker[k]) < plate_capacity:
-
-                    remainder = len(by_marker[k]) %6
-                    if(len(balance_dict) != 0):
-                        temp = balance_dict[k]
-                        #print temp
-                    else:
-                        temp = len(by_marker[k])
-                    #balance_dict[k].append(remainder)
-                    #print remainder ,'remainder'
-                    count += len(by_marker[k])
-                    thisPlate = {"type": "SPTT_0006",
-                                 "first_in_group": plate_index+1,
-                                 "details": {
-                                 "title": "<strong>%s</strong> resistance - Plate <strong>%s</strong> of %s" %
-                                 (k, (plate_index+1), int(temp))
-                                 }}
-                    test.append(thisPlate)
-                    plate_capacity= 6-temp
-                    print count , ':', plate_capacity
-                    #print test
-                    by_marker.pop(k,None)
+            qpix_plates =[]
 
 
-            plate_index+=1
+            for marker in sorted (d):
+                tmp = defaultdict(list)
+                for i, sample in enumerate(d[marker]):
+                    tmp[i // 48].append(sample)
+                for plate_no in sorted (tmp):
+                    qpix_plates.append( (marker,tmp[plate_no]) )
 
-        print test
+
+
+            print len(qpix_plates), qpix_plates[0] ,qpix_plates[1]
+            dest_tmp = defaultdict(lambda: defaultdict(int))
+            for i, (marker, samples) in enumerate(qpix_plates):
+                dest_tmp[i // 8][ marker ] += len( samples )
+
+            destination_plates = []
+            for i, (_, markers) in enumerate(sorted(dest_tmp.items())):
+                title = []
+                for marker, d in sorted(markers.items()):
+                    title.append("%d samples of %s" % (len(d), marker))
+                destination_plates.append( {"type": "SPTT_0006",
+                                            "first_in_group": i+1,
+                                            "details": {
+                                                "title": ', '.join(title)}} )
+
+
+
+
+            '''final =[]
+
+            for marker in sorted (by_marker):
+                tmp = defaultdict(list)
+                for i ,sample in enumerate(by_marker[marker]):
+                    tmp[i // 48].append(sample)
+                for plate_no in sorted (tmp):
+                    final.append( (marker,by_marker[plate_no]) )
+
+            print len(final)'''
 
 
 
@@ -183,8 +116,7 @@ class TestCase(unittest.TestCase):
 
 
 
-
-    def test_create_worklist(self):
+    #def test_create_worklist(self):
 
         lookup13 ={}
         rows =[]
@@ -214,7 +146,12 @@ class TestCase(unittest.TestCase):
 
             lookup48to384[(qpix_plate + 1, x_48_well)] = x_384_well_id
             lookup384to48[x_384_well_id] = (qpix_plate + 1, x_48_well)
+
+            for well_id, well in sorted(lookup48to384.iteritems()):
+                print well_id , well
             #print (qpix_plate + 1, x_48_well), ':', x_384_well_id
+
+
 
 
 
