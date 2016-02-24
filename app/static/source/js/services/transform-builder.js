@@ -625,8 +625,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
                     Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
 
-                        var isNew = data.success;
-                        if (isNew && shouldBeNew) {
+                        console.log(shouldBeNew + ' ' + data.success);
+
+                        var destinationOk = function (destItem) {
                             /* destination plate is new - we're good to go */
                             destItem.loaded = true; /* shows the "valid" icon for this input */
                             destItem.updating = false;
@@ -641,12 +642,24 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 }
                             }
                             base.destinationsReady = true;
-                            base.updateOperationsList();
-                        } else if (!isNew && shouldBeNew) {
-                            /* error - destination plates already exist */
-                            onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
-                        } else if (!shouldBeNew && isNew) {
-                            onError(destItem, 'Error: Plate ' + barcode + ' was not found.');
+                            base.updateOperationsList();  
+                        }
+
+                        var isNew = data.success;
+
+                        if (shouldBeNew) {
+                            if (isNew) {
+                                destinationOk(destItem);
+                            } else {
+                                /* error - destination plates already exist */
+                                onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
+                            }
+                        } else {
+                            if (isNew) {
+                                onError(destItem, 'Error: Plate ' + barcode + ' was not found.');
+                            } else {
+                                destinationOk(destItem);
+                            }
                         }
                         ready();
                     }).error(function (data) {
