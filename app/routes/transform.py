@@ -709,7 +709,11 @@ def vector_create_src( type_id, templ_id ):
     if len(request.json['sources']) != 1:
         raise WebError("expected 1 source plate, found %d" % len(request.json['sources']))
 
-    return vector_hitpicking.create_src( db.session, request.json['sources']['details']['id'] )
+    print '@@ request.json:', request.json
+    if len(request.json['sources']) != 1:
+        raise WebError('expected one source; got %d' % len(request.json['sources']))
+    
+    return vector_hitpicking.create_src( db.session, request.json['sources'][0]['details']['id'] )
 
 
 @to_resp

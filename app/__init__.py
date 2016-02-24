@@ -434,11 +434,13 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TPL_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING,
                             TRANS_TYPE_ECR_PCR_THERMOCYCLE as ECR_THERMO_T,
                             TRANS_TYPE_ECR_PCR_UPLOAD_QUANT as ECR_PCR_UPLOAD_QUANT_T,
+                            TRANS_TYPE_VECTOR_NORM as VECTOR_NORM_T,
     )
 
     f = {(62, SAME_PLATE):                    transform.generic_same_to_same,  # 62 is "CHP Deprotection"
-         (VECTOR_HITPICK, SAME_PLATE):        transform.vector_hitpicking,
+         (VECTOR_HITPICK, SAME_PLATE):                transform.vector_hitpicking,
          (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):    transform.vector_create_src,
+         (VECTOR_NORM_T, SAME_PLATE):                 transform.generic_same_to_same,
          (PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transform.primer_preplanning,
          (PRIMER_CREATE_SRC_T, SAME_PLATE):           transform.primer_create_src,
          (PRIMER_MASTER_T, SAME_PLATE):               transform.primer_master_mix,

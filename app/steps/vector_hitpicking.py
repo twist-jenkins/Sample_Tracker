@@ -5,13 +5,15 @@ import csv
 from cStringIO import StringIO
 from app.routes.transform import WebError
 
+SEARCH_LAST_N_DAYS = 2
+
 ALIQ_VOLUME = 1.125      # [uL]
 VECTOR_WASTE_VOL = 39.0  # [uL]
 VECTOR_MAX_VOL = 59.0    # [uL]
 ALIQ_PER_WELL = int( math.floor( (VECTOR_MAX_VOL - VECTOR_WASTE_VOL) / ALIQ_VOLUME ))
 
 
-def create_source( db, vector_barcode ):
+def create_src( db, vector_barcode ):
     """
     """
     from twistdb.sampletrack import Plate, TransformSpec
@@ -25,32 +27,32 @@ def create_source( db, vector_barcode ):
         srcs = spec.data_json['sources']
 
         if ( len(srcs) == 1
-             and srcs[0]['details']['id'] == bulk_barcode
+             and srcs[0]['details']['id'] == vector_barcode
              and spec.data_json['details']['transfer_type_id'] == VECTOR_HITPICK ):
 
             specjs.append( spec.data_json )
 
     try:
-        src_spec = [specjs]
+        [src_spec] = specjs
     except:
         raise WebError("expected to find 1 TransformSpec matching barcode '%s' but found %d"
                        % (vector_barcode, len(specjs)))
 
-    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == barcode).one()
+    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == dest_plate_barcode).one()
                     for dest_plate_barcode in src_spec['misc']['dest_barcodes'] ]
 
     vector_tallies = defaultdict(int)
     for plate in dest_plates:
         for sample in plate.current_well_contents(db):
             # fix me: we should get vector via cloning process, which hangs off design, no?
-            [design] = sample.order_item.designs
-            [cluster_d] = design.cluster_designs
-            vector_name = cluster_d.cloning_process.vector.name
+            vector_name = sample.cloning_process.vector.name
             vector_tallies[ vector_name ] += 1
+
     vector_sources = {}
     for nom in vector_tallies:
-        plate = db.query(Plate).get('Virtual Vector Source :: ' + nom)
-        if not plate:
+        try:
+            plate = db.query(Plate).filter(Plate.name == 'Virtual Vector Source :: ' + nom).one()
+        except:
             raise WebError("vector source 'Virtual Vector Source :: %s' not found" % nom)
         vector_sources[ nom ] = plate
 
