@@ -1866,6 +1866,111 @@ app = angular.module('twist.app')
                                 ]
                             }
                         }
+                        ,'iHAM02': { // Enterprise
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 25
+                                        ,index: 1
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 31
+                                        ,index: 2
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+
+                    }
+                }
+                ,46: {  // keyed to transform_template_id in the database
+                    description: 'ECR/PCR Purification'
+                    ,type: 'hamilton'
+                    ,source: {
+                        plateCount: 2
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 2
+                        ,variablePlateCount: true
+                    }
+                    ,hamiltonDetails: {
+                        'iHAM01': { // Millenium Falcon
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 25
+                                        ,index: 1
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 31
+                                        ,index: 2
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                        ,'iHAM02': { // Enterprise
+                            'main': {
+                                carriers: [
+                                    {
+                                        startTrack: 25
+                                        ,index: 1
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                    ,{
+                                        startTrack: 31
+                                        ,index: 2
+                                        ,type: 'PCR_L5_384'
+                                        ,plates: [
+                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
 
                     }
                 }
