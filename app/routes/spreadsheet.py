@@ -203,36 +203,7 @@ def create_adhoc_sample_movement(db_session,
                                         oper["source_well_number"])]
                           for oper in operation_group]
 
-        # for oper in operation_group:
-
-        #     # all these operations should wind up in the same destination
-
-        #     try:
-        #         source_plate_barcode = oper["source_plate_barcode"]
-        #         source_well_number = oper['source_well_number']
-        #     except KeyError:
-        #         msg = "Failed to create/find source plate/well [%s/%s]."
-        #         msg %= (source_plate_barcode, source_well_number)
-        #         logging.error("Invalid xfer: %s", msg)
-        #         return {"success": False,
-        #                 "errorMessage": msg}
-
-        #     try:
-        #         src_s = sample_cache[source_plate_barcode][source_well_number]
-        #     except KeyError:
-        #         msg = "Failed to create sample for plate/well [%s/%s]."
-        #         msg %= (source_plate_barcode, source_well_number)
-        #         logging.error("Invalid xfer: %s", msg)
-        #         return {"success": False,
-        #                 "errorMessage": msg}
-
-        #     logging.warn("****************<<<< %s / %s = %s",
-        #                  source_plate_barcode, source_well_number, src_s.id)
-
-        #     source_samples.append(src_s)
-
-        copy_metadata = True  # in_place_transform_flag  # or merge_transform_flag
-        s = sample_handler(db_session, copy_metadata, sample_transform,
+        s = sample_handler(db_session, sample_transform,
                            well_cache, source_samples, dplate,
                            destination_well_number, dest_s)
         new_rows.append(s)
@@ -249,37 +220,39 @@ def create_adhoc_sample_movement(db_session,
     }
 
 
-def sample_handler(db_session, copy_metadata, transform, well_cache,
+def sample_handler(db_session, transform, well_cache,
                    source_well_samples, destination_plate,
                    destination_well_id, destination_sample=None):
+    """Accessions a new sample into the designated well,
+    using the source sample(s) as parents and/or reagents.
+    Note: destination_sample, if present, will become a parent
+    of the new sample that this routine will accession."""
 
-    logging.warn("sample_handler: src=[%s] dest=[%s]",
-                 source_well_samples, destination_sample)
+    logging.debug("sample_handler: src=[%s] dest=[%s]",
+                  source_well_samples, destination_sample)
 
     new_id = create_unique_id(Sample.id_prefix)
-    try:
-        well = well_cache[(destination_plate.external_barcode,
-                           destination_well_id)]
-    except:
-        err = "Error looking up wells for dest well_id [%s] %s: cache is [%s]"
-        err %= (destination_plate.external_barcode,
-                destination_well_id, well_cache)
-        logger.error(err)
-        raise KeyError(err)
 
-    if copy_metadata:
-        assert len(source_well_samples) == 1
-        # Copy all extant metadata
-        new_s = quick_copy(db_session, source_well_samples[0])
-        new_s.id = new_id()
-        new_s.plate_id = destination_plate.id
-        new_s.plate_well_code = well.well_code
+    # Copy all extant metadata except transform, parents, children, is_clonal
+    if len(source_well_samples) == 0:
+        raise ValueError("source sample is required")
+    elif len(source_well_samples) > 1:
+        logging.debug("Merging %d samples into %s",
+                      len(source_well_samples), destination_sample)
+        new_s = merged_sample(db_session, source_well_samples)
     else:
-        new_s = Sample(id=new_id(), plate_id=destination_plate.id,
-                       plate_well_code=well.well_code,
-                       operator_id=current_user.operator_id)
-    new_s.transform_id = transform.id
+        assert len(source_well_samples) == 1
+        new_s = copied_sample(db_session, source_well_samples[0])
 
+    # Set attributes unique to this sample
+    new_s.id = new_id()
+    new_s.plate_id = destination_plate.id
+    new_s.transform_id = transform.id
+    well = well_cache[(destination_plate.external_barcode,
+                       destination_well_id)]
+    new_s.plate_well_code = well.well_code
+
+    # Handle transform-specific sample logic
     if transform.transform_type_id in (constants.TRANS_TYPE_QPIX_PICK_COLONIES,
                                        constants.TRANS_TYPE_QPIX_TO_384_WELL):
         # We just cloned this so it's clonal
@@ -288,19 +261,21 @@ def sample_handler(db_session, copy_metadata, transform, well_cache,
         # this from the A/B rebatching metadata somehow (@sucheta!)
         new_s.cloning_process_id = 'CLO_564c1af300bc150fa632c63d'
 
-    # new_objs = [new_s]
-
-    # Link up the source samples as parent
+    # Link up the source sample(s) and any "destination" sample as parent(s)
     for source_well_sample in source_well_samples:
-        logging.warn("*************** >>>>>> %s > %s",
-                     source_well_sample.id,
-                     new_s.id)
         source_to_dest_well_transform = TransformDetail(
             transform=transform,
             parent_sample_id=source_well_sample.id,
             child_sample_id=new_s.id
         )
-    # new_objs.append(source_to_dest_well_transform)
+
+    if destination_sample:
+        dest_well_parent_transform = TransformDetail(
+            transform=transform,
+            parent_sample_id=destination_sample.id,
+            child_sample_id=new_s.id
+        )
+
     # NOTE that we don't have to explicitly return the TransformDetail instances
     # created because they are linked to the new_s Sample instance by virtue
     # of setting new_s.id as the child ID. I tried to actually return these
@@ -312,15 +287,6 @@ def sample_handler(db_session, copy_metadata, transform, well_cache,
     # instance variables source_to_dest_well_transform and
     # dest_well_parent_transform that it *is* necessary to create them like
     # this to properly populated the TransformDetail table. SQLAlchemy magic.
-
-    if destination_sample:
-        # This is also a parent since we are merging samples
-        dest_well_parent_transform = TransformDetail(
-            transform=transform,
-            parent_sample_id=destination_sample.id,
-            child_sample_id=new_s.id
-        )
-        # new_objs.append(dest_well_parent_transform)
 
     return new_s
 
@@ -367,7 +333,7 @@ def transient_copy(session, inst):
     return inst
 
 
-def quick_copy(session, orig_obj):
+def copied_sample(session, orig_obj):
     """Copy a sample, quick fix"""
 
     copy = Sample()
@@ -380,4 +346,23 @@ def quick_copy(session, orig_obj):
                      "host_cell_pk", "growth_medium", "i5_sequence_id",
                      "i7_sequence_id"):
         setattr(copy, attrname, getattr(orig_obj, attrname))
+    return copy
+
+
+def merged_sample(session, parent_samples):
+    """Merge a set of samples."""
+
+    copy = Sample()
+    attrs_to_ignore = ("is_clonal", )
+    for attrname in ("order_item_id", "type_id", "operator_id",
+                     "external_barcode", "name", "description",
+                     "work_order_id", "synthesis_run_pk", "cluster_num",
+                     "primer_pk", "cloning_process_id",
+                     "mol_type", "is_circular",
+                     "is_assembly", "is_external", "external_id",
+                     "host_cell_pk", "growth_medium", "i5_sequence_id",
+                     "i7_sequence_id"):
+        source_vals = set([getattr(par, attrname) for par in parent_samples])
+        if len(source_vals) == 1:
+            setattr(copy, attrname, source_vals[0])
     return copy

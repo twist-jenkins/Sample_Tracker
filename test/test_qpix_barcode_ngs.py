@@ -358,6 +358,7 @@ class TestCase(unittest.TestCase):
 
         # 2. read the sample IDs
 
+        ancestor_sample_ids = set()
         for ix, (src_well, src_number, dest_plate, dest_well,
              dest_number, dest_well_count) in enumerate(test_fixture):
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
@@ -368,6 +369,7 @@ class TestCase(unittest.TestCase):
             assert result["errors"] == []
             sample_id = result["data"]["id"]
             test_fixture[ix].append(sample_id)
+            ancestor_sample_ids.add(sample_id)
 
         # 3. create an ngs barcoding spec (type 26)
 
@@ -466,7 +468,8 @@ class TestCase(unittest.TestCase):
             assert "data" in result
             dat = result["data"]
             print "$" * 80, dat
-            assert root_cs_id in dat["parents"]
+            assert len(dat["parents"]) == 1
+            assert dat["parents"][0] in ancestor_sample_ids
             if ix % 2:
                 assert dat["i5_sequence_id"] == barcode_sequence_id
             else:
