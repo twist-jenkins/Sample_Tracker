@@ -28,7 +28,7 @@ def create_src( db, vector_barcode ):
 
         if ( len(srcs) == 1
              and srcs[0]['details']['id'] == vector_barcode
-             and spec.data_json['details']['transfer_type_id'] == VECTOR_HITPICK ):
+             and spec.data_json['details']['transform_type_id'] == VECTOR_HITPICK ):
 
             specjs.append( spec.data_json )
 
@@ -70,7 +70,7 @@ def create_src( db, vector_barcode ):
             
             rows.append( {
                 'source_plate_barcode':         vector_sources[ vector_name ].name,
-                'source_well_name':             None,
+                'source_well_name':             'A1',
                 'source_well_number':           1,
                 'source_sample_id':             vector_name,
                 'source_plate_well_count':      1,
@@ -79,6 +79,7 @@ def create_src( db, vector_barcode ):
                 'destination_well_number':      dest_well_num,
                 'destination_plate_well_count': 384,
                 'destination_sample_id':        vector_name,
+                'destination_plate_type':       'SPTT_0006',
             })
 
             csv_w.writerow( [vector_name, dest_well_name, vol] )
