@@ -349,8 +349,9 @@ def alter_spec_ngs_barcodes(db_session, spec):
                 "destination_plate_well_count":384
             }
         """
-        source_sample_id = oper["source_sample_id"]
 
+        # Note: all the source stuff is ignored:
+        # source_sample_id = oper["source_sample_id"]
         # source_plate = plates[oper["source_plate_barcode"]]
         # source_plate_type = source_plate.type_id
         # source_well_id = str(oper["source_well_name"])
