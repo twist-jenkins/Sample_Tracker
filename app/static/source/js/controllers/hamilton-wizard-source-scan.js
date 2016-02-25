@@ -50,7 +50,7 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
 
                                     /* the backend responds with the total destinations in a single list
                                     *  which does NOT take into account skipped carriers or unused carrier positions
-                                    *  thus we need to loop through the
+                                    *  thus we need to set destinations only in used positions on non-skipped carriers
                                     */
 
                                     var destPlateCount = command.plates.length;
