@@ -433,7 +433,7 @@ def thermocycle( type_id, templ_id ):
                 "forProperty": "thermocyclerBarcode"
             }
         })
-    return [], cmds
+    return [{}], cmds
 
 
 @to_resp
