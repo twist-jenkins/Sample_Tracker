@@ -21,7 +21,12 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
         };
 
         $scope.isHamiltonStep = function () {
-            if (selectedTransformTypeId == 39 || selectedTransformTypeId == 48 || selectedTransformTypeId == 51 || selectedTransformTypeId == 70) {
+            if (selectedTransformTypeId == 39 || 
+                selectedTransformTypeId == 48 || 
+                selectedTransformTypeId == 51 || 
+                selectedTransformTypeId == 70 || 
+                selectedTransformTypeId == 72 ||
+                selectedTransformTypeId == 9) {
                 return true;
             }
             return false;
