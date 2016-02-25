@@ -422,17 +422,20 @@ angular.module('twist.app').controller('hamiltonWizardController', ['$scope', '$
                                 /* then we're ready for the plate barcode */
                                 $scope.highlightedPlate.positionScanned = true;
                                 $scope.highlightedPlate.barcode = null;
+                                $scope.clearScannedItemErrorMessage();
                                 $scope.flashHamiltonThumbsUp();
                                 $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_PLATE);
                             } else {
                                 /* right carrier but prompt operator to scan correct position barcode */
                                 delete $scope.highlightedPlate.positionScanned;
+                                $scope.clearScannedItemErrorMessage();
                                 $scope.showScannedItemErrorMessage('<strong>Incorrect position scanned:</strong> Please scan carrier ' + $scope.highlightedPlate.carrier.index + ' position ' + $scope.highlightedPlate.localIndex);
                                 $scope.highlightedPlate.barcode = null;
                             }
                         } else {
                             /* scanned barcode is not a position on this carrier */
                             delete $scope.highlightedPlate.positionScanned;
+                            $scope.clearScannedItemErrorMessage();
                             $scope.showScannedItemErrorMessage('<strong>Invalid position barcode:</strong> Please scan carrier ' + $scope.highlightedPlate.carrier.index + ' position ' + $scope.highlightedPlate.localIndex);
                             $scope.highlightedPlate.barcode = null;
                         }
