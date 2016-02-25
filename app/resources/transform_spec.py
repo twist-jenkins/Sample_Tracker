@@ -315,27 +315,16 @@ def alter_spec_ngs_barcodes(db_session, spec):
     This needs to happen as the spec is saved, but beore the spec is executed.
     """
 
-    # operations = spec.data_json["operations"]
+    # TODO: figure out how to allow multiple ngs barcode plates
+    # while still keeping all barcode pairs in a single NGSBarcodePair table
 
-    sources = spec.data_json["destinations"]
+    # sources = spec.data_json["sources"]
 
     destinations = spec.data_json["destinations"]
 
-    # swap out ngs barcode plate name
-    # for op in operations:
-    #    if op['source_plate_barcode'] == 'NGS_BARCODE_PLATE':
-    #        op['source_plate_barcode'] = NGS_BARCODE_PLATE
-
     destination_barcodes = [dest["details"]["id"] for dest in destinations]
 
-        # Note: all the source stuff is ignored:
-        # source_sample_id = oper["source_sample_id"]
-        # source_plate = plates[oper["source_plate_barcode"]]
-        # source_plate_type = source_plate.type_id
-        # source_well_id = str(oper["source_well_name"])
-        # source_well_number = source_plate.plate_type.layout.get_well_by_label(source_well_id).well_number
-
-    new_operations = []
+    operations = []
     for dest_plate_barcode in destination_barcodes:
         try:
             destination_plate = db_session.query(Plate).\
@@ -368,11 +357,10 @@ def alter_spec_ngs_barcodes(db_session, spec):
                 new_oper["destination_plate_type"] = destination_plate.type_id
                 new_oper["destination_well_number"] = sample.well.well_number
                 new_oper["destination_well_name"] = sample.well.well_label
-                new_operations.append(new_oper)
-                logging.warn("alter_spec operX : %s", new_oper)
+                operations.append(new_oper)
+                logging.debug("alter_spec operX : %s", new_oper)
 
-    spec.data_json["operations"] = new_operations
-    # spec.data_json["destinations"] = spec.data_json["sources"]
+    spec.data_json["operations"] = operations
 
     # TODO: determine whether we still want / need the "sources" to
     # look like this:
