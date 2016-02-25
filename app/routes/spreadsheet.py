@@ -230,7 +230,6 @@ def sample_handler(transform, well_cache,
 
     logging.debug("sample_handler: src=[%s] dest=[%s]", source_samples, destination_sample)
 
-    print "@@ sample_handler: src=[%s] dest=[%s]" % (source_samples, destination_sample)
     new_id = create_unique_id(Sample.id_prefix)
 
 
@@ -238,7 +237,6 @@ def sample_handler(transform, well_cache,
                        if destination_sample
                        else source_samples )
 
-    print '@@ 1\n' * 10
     # Copy all extant metadata except transform, parents, children, is_clonal
     if len(parent_samples) > 1:
         logging.debug("Merging %d samples into %s",  len(parent_samples), destination_sample)
@@ -247,8 +245,6 @@ def sample_handler(transform, well_cache,
         new_s = copied_sample(parent_samples[0])
     else:
         raise NotImplementedError("TODO?: Create samples from scratch")
-
-    print '@@ 1a\n' * 10
 
     # Set attributes unique to this sample
     new_s.id = new_id()
@@ -260,10 +256,6 @@ def sample_handler(transform, well_cache,
     # Type-specific logic
     handle_transform_specific_logic(transform, new_s)
     true_parent_samples = parse_source_reagents(transform, parent_samples, new_s)
-
-    print '@@ true_parent_samples:', true_parent_samples
-
-    print '@@ 2\n' * 10
 
     # Link up the source sample(s) and any "destination" sample as parent(s)
     for source_well_sample in true_parent_samples:
