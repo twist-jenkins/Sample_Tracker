@@ -586,215 +586,16 @@ def ngs_tagmentation(type_id, templ_id):
     return rows, cmds
 
 
-def ngs_pooling():
-    """TRANS_TPL_NGS_POOLING"""
-
-    rows, cmds = [{}], []
-
-    details = request.json["details"]
-
-    sequencer = None;
-
-    basePairMax = 0;
-    currentBasePairTotal = 0;
-    previousBasePairTotal = 0;
-
-    if "requestedData" in details:
-        reqData = details["requestedData"]
-
-    if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-        cmds.append({
-            "type": "REQUEST_DATA",
-            "item": {
-                "type": 'radio'
-                ,"title": 'Select Sequencer:'
-                ,"forProperty": 'sequencer'
-                ,"data": [
-                    {"option": 'MiSeq'}
-                    ,{"option": 'NextSeq'}
-                ]
-            }
-        })
-
-    sources = request.json['sources'];
-
-    sourcesSet = [];
-
-    for sourceIndex, source in enumerate(sources):
-        sourcesSet.append({
-            "type": "SPTT_0006"
-            ,"details" : {
-                "id" : source["details"]["id"]
-            }
-        });
-
-    if "sequencer" in reqData:
-        # TO DO  Derive the max BP count for this sequencer
-        #        AND
-        #        Return total count of basepairs on source plate(s)
-        basePairMax = 12600000;
-
-        '''
-        currentBasePairTotal = total of BPs in all source plates
-        previousBasePairTotal = total BPS on all plates but the last one
-        '''
-
-        # DEV ONLY - remove when real basepair counting is done
-        previousBasePairTotal = 500;
-        currentBasePairTotal = basePairMax - 3 + len(sources);
-
-        reponseTally = currentBasePairTotal
-
-        if currentBasePairTotal < basePairMax:
-            #and add another source input to indicate there's more room
-            sourcesSet.append({
-                "type": "SPTT_0006"
-            });
-
-        elif basePairMax and currentBasePairTotal == basePairMax:
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                    "data": "No more plates will fit in this run."
-                }
-            })
-
-        else :
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>"
-                              + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
-                }
-            })
-
-            reponseTally = previousBasePairTotal
-
-            #remove the last added source from the list
-            sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
-
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "text",
-                "title": "Base Pair Tally",
-                "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-            }
-        })
-
-    cmds.append({
-        "type": "SET_SOURCES",
-        "plates": sourcesSet
-    })
-
-    return rows, cmds
-
 @to_resp
-def ngs_pooling( type_id, templ_id ):
+def ngs_pooling(type_id, templ_id):
+
     rows, cmds = [{}], []
-    sequencer = None
 
-    basePairMax = 0;
-    currentBasePairTotal = 0;
-    previousBasePairTotal = 0;
+    from app.steps import ngs_pooling as ngsp
+    s_samples = ngsp.get_source_samples(db.session, request.json['sources'])
+    cmds = ngsp.pooling_cmds(db.session, request, s_samples)
+    rows = ngsp.pooling_transform(db.session, s_samples)
 
-    if "requestedData" in details:
-        reqData = details["requestedData"]
-
-    if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-        cmds.append({
-            "type": "REQUEST_DATA",
-            "item": {
-                "type": 'radio'
-                ,"title": 'Select Sequencer:'
-                ,"forProperty": 'sequencer'
-                ,"data": [
-                    {"option": 'MiSeq'}
-                    ,{"option": 'NextSeq'}
-                ]
-            }
-        })
-
-    sources = request.json['sources'];
-
-    sourcesSet = [];
-
-    for sourceIndex, source in enumerate(sources):
-        sourcesSet.append({
-            "type": "SPTT_0006"
-            ,"details" : {
-                "id" : source["details"]["id"]
-            }
-        });
-
-    if "sequencer" in reqData:
-        # TO DO  Derive the max BP count for this sequencer
-        #        AND
-        #        Return total count of basepairs on source plate(s)
-        basePairMax = 12500000;
-
-        '''
-        currentBasePairTotal = total of BPs in all source plates
-        previousBasePairTotal = total BPS on all plates but the last one
-        '''
-
-        # DEV ONLY - remove when real basepair counting is done
-        previousBasePairTotal = 500;
-        currentBasePairTotal = basePairMax - 3 + len(sources);
-
-        reponseTally = currentBasePairTotal
-
-        if currentBasePairTotal < basePairMax:
-            #and add another source input to indicate there's more room
-            sourcesSet.append({
-                "type": "SPTT_0006"
-            });
-
-        elif basePairMax and currentBasePairTotal == basePairMax:
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                    "data": "No more plates will fit in this run."
-                }
-            })
-
-        else :
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>" 
-                              + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
-                }
-            })
-
-            reponseTally = previousBasePairTotal
-
-            #remove the last added source from the list
-            sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
-
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "text",
-                "title": "Base Pair Tally",
-                "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-            }
-        })
-
-    cmds.append({
-        "type": "SET_SOURCES",
-        "plates": sourcesSet
-    })
     return rows, cmds
 
 
@@ -823,7 +624,7 @@ def vector_create_src( type_id, templ_id ):
     print '@@ request.json:', request.json
     if len(request.json['sources']) != 1:
         raise WebError('expected one source; got %d' % len(request.json['sources']))
-    
+
     return vector_hitpicking.create_src( db.session, request.json['sources'][0]['details']['id'] )
 
 
