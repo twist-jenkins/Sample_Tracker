@@ -5,7 +5,7 @@ import logging
 from datetime import datetime
 
 import flask_restful
-from flask import request
+from flask import request, g
 from flask.ext.restful import abort
 from flask_login import current_user
 
@@ -17,7 +17,7 @@ from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
-from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate
+from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate, PlateType
 
 logger = logging.getLogger()
 
@@ -285,11 +285,11 @@ def modify_before_insert(db_session, spec):
     details = spec.data_json["details"]
     if "transform_type_id" in details:
         if details["transform_type_id"] not in (
-                constants.TRANS_TYPE_NGS_HITPICK_INDEXING,
+                constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
                 constants.TRANS_TYPE_POST_PCA_NORM):
             return False
 
-    if details["transform_type_id"] == constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
+    if details["transform_type_id"] == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
         res = alter_spec_ngs_barcodes(db_session, spec)
     elif details["transform_type_id"] == constants.TRANS_TYPE_POST_PCA_NORM:
         res = alter_spec_post_pca_hamilton_worklist(db_session, spec)
@@ -311,8 +311,33 @@ def alter_spec_post_pca_hamilton_worklist(db_session, spec):
 
 
 def alter_spec_ngs_barcodes(db_session, spec):
-    """Update the POSTed transform spec to contain NGS-specific info."""
+    """Inject NGS-specific info into the POSTed transform spec.
+    This needs to happen as the spec is saved, but beore the spec is executed.
+    """
+
     operations = spec.data_json["operations"]
+
+    # swap out ngs barcode plate name
+    for op in operations:
+        if op['source_plate_barcode'] == 'NGS_BARCODE_PLATE':
+            op['source_plate_barcode'] = NGS_BARCODE_PLATE
+
+    # Cache all requested plates
+    plates = {}
+    logging.info("Caching plates.")
+    barcodes = set([op['source_plate_barcode'] for op in operations]
+                   + [op['destination_plate_barcode'] for op in operations]
+                   )
+    for barcode in barcodes:
+        try:
+            plate = db_session.query(Plate).\
+                filter(Plate.external_barcode == barcode).one()
+            plates[barcode] = plate
+        except:
+            logging.warn("%s encountered error preparing sample transform. "
+                         "There is no plate with the barcode: [%s]",
+                         g.user.first_and_last_name, barcode)
+
     new_operations = []
     for oper in operations:
         """ assumes oper looks like {
@@ -325,33 +350,60 @@ def alter_spec_ngs_barcodes(db_session, spec):
             }
         """
         source_sample_id = oper["source_sample_id"]
-        destination_well_id = oper["destination_well_name"]  # goes into notes
-        nps_id, ngs_pair = miseq.make_ngs_prepped_sample(db_session,
-                                                         source_sample_id,
-                                                         destination_well_id)
 
-        i7_rowcol = "%s%d" % (ngs_pair.reverse_primer_i7_well_row,
-                              ngs_pair.reverse_primer_i7_well_column)
-        i7_oper = oper.copy()
-        i7_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
-        i7_oper["source_well_name"] = i7_rowcol
-        i7_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(ngs_pair.i7_sequence_id)
-        i7_oper["source_plate_well_count"] = 384
-        i7_oper["destination_sample_id"] = nps_id
-        new_operations.append(i7_oper)
+        # source_plate = plates[oper["source_plate_barcode"]]
+        # source_plate_type = source_plate.type_id
+        # source_well_id = str(oper["source_well_name"])
+        # source_well_number = source_plate.plate_type.layout.get_well_by_label(source_well_id).well_number
 
-        i5_rowcol = "%s%d" % (ngs_pair.forward_primer_i5_well_row,
-                              ngs_pair.forward_primer_i5_well_column)
-        i5_oper = oper.copy()
-        i5_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
-        i5_oper["source_well_name"] = i5_rowcol
-        i5_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(ngs_pair.i5_sequence_id)
-        i5_oper["source_plate_well_count"] = 384
-        i5_oper["destination_sample_id"] = nps_id
-        new_operations.append(i5_oper)
+        destination_well_id = str(oper["destination_well_name"])
+        if oper["destination_plate_barcode"] in plates:
+            # plate exists in DB, check it
+            destination_plate = plates[oper["destination_plate_barcode"]]
+            destination_plate_type = destination_plate.type_id
+            if "destination_plate_type" in oper:
+                assert destination_plate_type == oper["destination_plate_type"]
+
+        else:
+            # new plate not yet in DB
+            destination_plate_type = oper["destination_plate_type"]
+
+        # FIXME: adhoc_sample_movement shouldn't need destination_well_number!
+        # FIXME: well_id == well_label == well_name ??
+        dest_type = db.session.query(PlateType).get(destination_plate_type)
+        destination_well_number = dest_type.layout.get_well_by_label(destination_well_id).well_number
+        destination_well_name = destination_well_id
+
+        ngs_pair = miseq.next_ngs_pair(db_session)
+
+        for (row, column, seq_id) in [
+            (ngs_pair.reverse_primer_i7_well_row,
+             ngs_pair.reverse_primer_i7_well_column,
+             ngs_pair.i7_sequence_id),
+            (ngs_pair.forward_primer_i5_well_row,
+             ngs_pair.forward_primer_i5_well_column,
+             ngs_pair.i5_sequence_id)
+        ]:
+            new_oper = {}  # oper.copy()
+            new_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
+            new_oper["source_well_name"] = "%s%d" % (row, column)
+            # oper["source_well_number"] = None
+            new_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(seq_id)
+            new_oper["source_plate_well_count"] = 384
+            new_oper["destination_plate_barcode"] = oper["destination_plate_barcode"]
+            new_oper["destination_plate_well_count"] = 384
+            # oper["destination_sample_id"] = nps_id  # accession this during execution!
+            new_oper["destination_plate_type"] = destination_plate_type
+            new_oper["destination_well_number"] = destination_well_number
+            new_oper["destination_well_name"] = destination_well_name
+            new_operations.append(new_oper)
+            logging.warn("alter_spec operX : %s", new_oper)
 
     spec.data_json["operations"] = new_operations
     spec.data_json["destinations"] = spec.data_json["sources"]
+
+    # TODO: determine whether we still want / need the "sources" to
+    # look like this:
     spec.data_json["sources"] = [{
         "id": None,
         "type": "plate",

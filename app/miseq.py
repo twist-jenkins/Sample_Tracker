@@ -363,9 +363,10 @@ def create_nrsj(cur_session, ngs_run, ngs_prepped_samples):
 '''
 
 
-def make_ngs_prepped_sample(db_session, source_sample_id,
-                            destination_well_id):
-    # Grab next pair of barcodes
+def next_ngs_pair(db_session):
+    """Note, this method used to create an NPS (NGSPreppedSample), but now
+    simply picks the next pair of NGS barcodes"""
+
     ngs_pair = None
     tries_remaining = 1000
     while not ngs_pair and tries_remaining > 0:
@@ -382,39 +383,4 @@ def make_ngs_prepped_sample(db_session, source_sample_id,
         raise KeyError("ngs_barcode_pair_index %s not found"
                        % ngs_barcode_pair_index)
 
-    # Refer to source sample instances
-    # FIXME: this hardcodes a relationship between sequence and sample
-    i5_sample_id = ngs_pair.i5_sequence_id.replace("BC_", "BCS_")
-    i7_sample_id = ngs_pair.i7_sequence_id.replace("BC_", "BCS_")
-
-    # Create NPS
-    nps_id = create_unique_id("NPS_")()
-    description = 'SMT - well %s' % destination_well_id  # TODO: add plate
-    nps_sample = Sample(id=nps_id,
-                        name=nps_id,
-                        description=description,
-                        i5_sequence_id=ngs_pair.i5_sequence_id,
-                        i7_sequence_id=ngs_pair.i7_sequence_id,
-                        operator_id=current_user.operator_id)
-
-    db_session.add(nps_sample)
-
-    # Create parent-child relationships.
-    # TODO: consider getting rid of the barcode relationships here.
-    # They're probably superfluous, since we have 4 columns at the
-    # child sample level to track i5 and i7 barcoding.
-    for parent_sample_id in (source_sample_id, i5_sample_id, i7_sample_id):
-        xform = TransformDetail(
-            parent_sample_id=parent_sample_id,
-            child_sample_id=nps_id
-        )
-        db_session.add(xform)
-
-    logging.debug('NPS_ID %s for %s assigned [%s, %s]',
-                  nps_id, source_sample_id,
-                  ngs_pair.i5_sequence_id,
-                  ngs_pair.i7_sequence_id)
-
-    db_session.flush()
-
-    return nps_id, ngs_pair
+    return ngs_pair

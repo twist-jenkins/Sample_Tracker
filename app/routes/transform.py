@@ -38,7 +38,7 @@ def to_resp(f):
     def f2(*args, **kwargs):
         try:
             rows, responseCommands = f(*args, **kwargs)
-            
+
         except WebError as e:
             return Response( response=json.dumps({'success': False,
                                                   'message': str(e),
@@ -342,7 +342,7 @@ def primer_preplanning( type_id, templ_id ):
                 "forProperty": "associatedPcaPlates"
             }
         })
-    
+
     if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
         masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
         dataType = "text"
@@ -434,7 +434,8 @@ def thermocycle( type_id, templ_id ):
 
 @to_resp
 def quant_upload( type_id, templ_id ):
-    rows, cmds = [], []
+    cmds = []
+    rows = plates_to_rows( request.json['sources'] )
     cmds.append({
         "type": "REQUEST_DATA",
         "item": {
@@ -573,8 +574,119 @@ def ngs_load( type_id, templ_id ):
 
 
 @to_resp
-def ngs_tagmentation( type_id, templ_id ):
+def ngs_tagmentation(type_id, templ_id):
+    # Should this be a same-to-same transform?
+    cmds = []
+    rows = plates_to_rows(request.json['sources'])
+    return rows, cmds
+
+
+def ngs_pooling():
+    """TRANS_TPL_NGS_POOLING"""
+
     rows, cmds = [{}], []
+
+    details = request.json["details"]
+
+    sequencer = None;
+
+    basePairMax = 0;
+    currentBasePairTotal = 0;
+    previousBasePairTotal = 0;
+
+    if "requestedData" in details:
+        reqData = details["requestedData"]
+
+    if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
+        cmds.append({
+            "type": "REQUEST_DATA",
+            "item": {
+                "type": 'radio'
+                ,"title": 'Select Sequencer:'
+                ,"forProperty": 'sequencer'
+                ,"data": [
+                    {"option": 'MiSeq'}
+                    ,{"option": 'NextSeq'}
+                ]
+            }
+        })
+
+    sources = request.json['sources'];
+
+    sourcesSet = [];
+
+    for sourceIndex, source in enumerate(sources):
+        sourcesSet.append({
+            "type": "SPTT_0006"
+            ,"details" : {
+                "id" : source["details"]["id"]
+            }
+        });
+
+    if "sequencer" in reqData:
+        # TO DO  Derive the max BP count for this sequencer
+        #        AND
+        #        Return total count of basepairs on source plate(s)
+        basePairMax = 12600000;
+
+        '''
+        currentBasePairTotal = total of BPs in all source plates
+        previousBasePairTotal = total BPS on all plates but the last one
+        '''
+
+        # DEV ONLY - remove when real basepair counting is done
+        previousBasePairTotal = 500;
+        currentBasePairTotal = basePairMax - 3 + len(sources);
+
+        reponseTally = currentBasePairTotal
+
+        if currentBasePairTotal < basePairMax:
+            #and add another source input to indicate there's more room
+            sourcesSet.append({
+                "type": "SPTT_0006"
+            });
+
+        elif basePairMax and currentBasePairTotal == basePairMax:
+            cmds.append({
+                "type": "PRESENT_DATA",
+                "item": {
+                    "type": "text",
+                    "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
+                    "data": "No more plates will fit in this run."
+                }
+            })
+
+        else :
+            cmds.append({
+                "type": "PRESENT_DATA",
+                "item": {
+                    "type": "text",
+                    "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
+                    "data":  ("Return plate <strong>"
+                              + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                              + "</strong> to the pooling bin.")
+                }
+            })
+
+            reponseTally = previousBasePairTotal
+
+            #remove the last added source from the list
+            sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "Base Pair Tally",
+                "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
+            }
+        })
+
+    cmds.append({
+        "type": "SET_SOURCES",
+        "plates": sourcesSet
+    })
+
     return rows, cmds
 
 
@@ -604,7 +716,7 @@ def ecr_pcr_planning( type_id, templ_id ):
                 "forProperty": "associatedEcrPlates"
             }
         })
-    
+
     if not ecrPlates or ecrPlates[0] is None or ecrPlates[1] is None or ecrPlates[2] is None or ecrPlates[3] is None:
         masterMixNeeds = "Please scan <strong>all 4</strong> ECR plates to retrieve master mix needs."
         dataType = "text"
@@ -671,12 +783,22 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
         })
 
     return rows, cmds
-    
+
+def pls_dilution(type_id, templ_id):
+    # Ready for you, Kieran
+
+    cmds = []
+
+    rows = plates_to_rows(request.json['sources'])
+
+    return rows, cmds
+
+
 def preview( transform_type_id, transform_template_id ):
     """Called by the UI to generate a draft transform spec before execution."""
 
     print '@@ transform_type_id=%s, transform_template_id=%s' % (transform_type_id, transform_template_id)
-    
+
     assert request.method == 'POST'
 
     details = request.json["details"]
@@ -778,6 +900,10 @@ def preview( transform_type_id, transform_template_id ):
             elif transform_template_id == \
                     constants.TRANS_TPL_NGS_POOLING:
 
+                # rows, responseCommands = ngs_pooling()
+                # FIXME: resolving merge conflict...
+                # proper resolution: compare below then switch to above
+
                 rows = [{}];
                 sequencer = None;
 
@@ -853,7 +979,7 @@ def preview( transform_type_id, transform_template_id ):
                             "item": {
                                 "type": "text",
                                 "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                                "data":  ("Return plate <strong>" 
+                                "data":  ("Return plate <strong>"
                                           + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
                                           + "</strong> to the pooling bin.")
                             }
