@@ -1796,23 +1796,6 @@ app = angular.module('twist.app')
                         ,create: true
                     }
                 }
-                ,42: {  // keyed to transform_template_id in the database
-                    description: 'PCR/PCR Purification'
-                    ,type: 'standard_template'
-                    ,source: {
-                        plateCount: 2
-                        ,plateTypeId: 'SPTT_0006'
-                        ,variablePlateCount: false
-                        ,plateTitles: ['Source&nbsp;A:&nbsp;', 'Source&nbsp;B:&nbsp;']
-                    }
-                    ,destination: {
-                        plateCount: 2
-                        ,plateTypeId: 'SPTT_0006'
-                        ,variablePlateCount: false
-                        ,plateTitles: ['Destination&nbsp;A:&nbsp;', 'Destination&nbsp;B:&nbsp;']
-                        ,create: true
-                    }
-                }
                 ,43: {  // keyed to transform_template_id in the database
                     description: 'Source Plate Creation'
                     ,type: 'standard_template'
@@ -1935,10 +1918,10 @@ app = angular.module('twist.app')
                                         ,index: 1
                                         ,type: 'PCR_L5_384'
                                         ,plates: [
-                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
-                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            {plateFor: 'source', localIndex: 5, unused: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4, unused: true}
                                             ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
-                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2, unused: true}
                                             ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
                                         ]
                                     }
@@ -1947,11 +1930,11 @@ app = angular.module('twist.app')
                                         ,index: 2
                                         ,type: 'PCR_L5_384'
                                         ,plates: [
-                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            {plateFor: 'destination', localIndex: 5, unused: true}
                                             ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
-                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3, unused: true}
                                             ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
-                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 1, unused: true}
                                         ]
                                     }
                                 ]
@@ -1965,10 +1948,10 @@ app = angular.module('twist.app')
                                         ,index: 1
                                         ,type: 'PCR_L5_384'
                                         ,plates: [
-                                            {plateFor: 'source', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
-                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
+                                            {plateFor: 'source', localIndex: 5, unused: true}
+                                            ,{plateFor: 'source', localIndex: 4, dataIndex: 4, unused: true}
                                             ,{plateFor: 'source', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
-                                            ,{plateFor: 'source', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
+                                            ,{plateFor: 'source', localIndex: 2, dataIndex: 2, unused: true}
                                             ,{plateFor: 'source', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
                                         ]
                                     }
@@ -1977,11 +1960,11 @@ app = angular.module('twist.app')
                                         ,index: 2
                                         ,type: 'PCR_L5_384'
                                         ,plates: [
-                                            {plateFor: 'destination', type: 'SPTT_006', localIndex: 5, dataIndex: 5, optional: true}
+                                            {plateFor: 'destination', localIndex: 5, unused: true}
                                             ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 4, dataIndex: 4, optional: true}
-                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 3, dataIndex: 3, optional: true}
+                                            ,{plateFor: 'destination', localIndex: 3, dataIndex: 3, unused: true}
                                             ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 2, dataIndex: 2, optional: true}
-                                            ,{plateFor: 'destination', type: 'SPTT_006', localIndex: 1, dataIndex: 1}
+                                            ,{plateFor: 'destination', localIndex: 1, dataIndex: 1, unused: true}
                                         ]
                                     }
                                 ]
