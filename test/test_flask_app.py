@@ -21,10 +21,12 @@ from app import db
 from app import login_manager
 
 
-def rnd_bc():
-    """Random barcode"""
-    return 'test' + ''.join([random.choice(string.letters + string.digits)
-                             for _ in range(10)])
+def rnd_bc(prefix='p'):
+    """Random plate barcode"""
+    result = 'p' + prefix + '_test_'
+    result += ''.join([random.choice(string.letters + string.digits)
+                       for _ in range(8)])
+    return result
 
 
 class AutomatedTestingUser(AnonymousUserMixin):
