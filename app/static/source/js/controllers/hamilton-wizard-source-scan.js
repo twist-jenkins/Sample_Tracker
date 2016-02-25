@@ -55,20 +55,18 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
 
                                     var destPlateCount = command.plates.length;
 
-                                    outerLoop:
-                                        for (var j=0; j<destPlateCount; j++) {
-                                            var setPlate = command.plates[j];
-                                            innerLoop: 
-                                                for (var h=0; h<$scope.hamiltonDataObj.allDestinationPlates.length;h++) {
-                                                    var destPlate = $scope.hamiltonDataObj.allDestinationPlates[h];
-                                                    if (!destPlate.carrier.scanSkipped && !destPlate.unused && !destPlate.set) {
-                                                        destPlate.optional = false;
-                                                        destPlate.set = true;
-                                                        break innerLoop;
-                                                    } 
-                                                }
-
+                                    for (var j=0; j<destPlateCount; j++) {
+                                        var setPlate = command.plates[j];
+                                        for (var h=0; h<$scope.hamiltonDataObj.allDestinationPlates.length;h++) {
+                                            var destPlate = $scope.hamiltonDataObj.allDestinationPlates[h];
+                                            if (!destPlate.carrier.scanSkipped && !destPlate.unused && !destPlate.set) {
+                                                destPlate.optional = false;
+                                                destPlate.set = true;
+                                                break;
+                                            } 
                                         }
+
+                                    }
 
                                     /* there may be fewer set destinations than possible destinations
                                     *  so loop through all destinations and set any unset destination to usused
