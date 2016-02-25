@@ -21,6 +21,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             base.planFromFile = false;
             base.autoUpdateSpec = true;
 
+            base.requestedDataItems = [];
+            base.presentedDataItems = [];
+
             base.error_message = '';
 
             var updating = function () {
