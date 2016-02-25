@@ -357,15 +357,14 @@ def alter_spec_ngs_barcodes(db_session, spec):
                  ngs_pair.forward_primer_i5_well_column,
                  ngs_pair.i5_sequence_id)
             ]:
-                new_oper = {}  # oper.copy()
+                new_oper = {}
                 new_oper["source_plate_barcode"] = NGS_BARCODE_PLATE
                 new_oper["source_well_name"] = "%s%d" % (row, column)
-                # oper["source_well_number"] = None
                 new_oper["source_sample_id"] = barcode_sequence_to_barcode_sample(seq_id)
                 new_oper["source_plate_well_count"] = 384
                 new_oper["destination_plate_barcode"] = dest_plate_barcode
                 new_oper["destination_plate_well_count"] = 384
-                # oper["destination_sample_id"] = accessioned during execution
+                # destination_sample_id is accessioned during execution
                 new_oper["destination_plate_type"] = destination_plate.type_id
                 new_oper["destination_well_number"] = sample.well.well_number
                 new_oper["destination_well_name"] = sample.well.well_label
@@ -373,7 +372,7 @@ def alter_spec_ngs_barcodes(db_session, spec):
                 logging.warn("alter_spec operX : %s", new_oper)
 
     spec.data_json["operations"] = new_operations
-    spec.data_json["destinations"] = spec.data_json["sources"]
+    # spec.data_json["destinations"] = spec.data_json["sources"]
 
     # TODO: determine whether we still want / need the "sources" to
     # look like this:
