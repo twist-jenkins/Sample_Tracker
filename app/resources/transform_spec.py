@@ -285,11 +285,11 @@ def modify_before_insert(db_session, spec):
     details = spec.data_json["details"]
     if "transform_type_id" in details:
         if details["transform_type_id"] not in (
-                constants.TRANS_TYPE_NGS_HITPICK_INDEXING,
+                constants.TRANS_TYPE_NGS_INDEX_HITPICKING,
                 constants.TRANS_TYPE_POST_PCA_NORM):
             return False
 
-    if details["transform_type_id"] == constants.TRANS_TYPE_NGS_HITPICK_INDEXING:
+    if details["transform_type_id"] == constants.TRANS_TYPE_NGS_INDEX_HITPICKING:
         res = alter_spec_ngs_barcodes(db_session, spec)
     elif details["transform_type_id"] == constants.TRANS_TYPE_POST_PCA_NORM:
         res = alter_spec_post_pca_hamilton_worklist(db_session, spec)

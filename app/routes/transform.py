@@ -991,6 +991,15 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
         })
     return rows, cmds
 
+def pls_dilution(type_id, templ_id):
+    # Ready for you, Kieran
+
+    cmds = []
+
+    rows = plates_to_rows(request.json['sources'])
+
+    return rows, cmds
+
 
 def preview( transform_type_id, transform_template_id ):
     """Called by the UI to generate a draft transform spec before execution."""

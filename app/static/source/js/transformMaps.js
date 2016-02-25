@@ -33,7 +33,7 @@ app = angular.module('twist.app')
                     description: 'Multiplexed same to same'
                     ,type: 'same-same'
                     ,source: {
-                        plateCount: 4
+                        plateCount: 1
                         ,variablePlateCount: true
                     }
                     ,destination: {
