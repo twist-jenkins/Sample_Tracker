@@ -422,17 +422,20 @@ angular.module('twist.app').controller('hamiltonWizardController', ['$scope', '$
                                 /* then we're ready for the plate barcode */
                                 $scope.highlightedPlate.positionScanned = true;
                                 $scope.highlightedPlate.barcode = null;
+                                $scope.clearScannedItemErrorMessage();
                                 $scope.flashHamiltonThumbsUp();
                                 $scope.findNextPlateForScan($scope.highlightedPlate.plateFor, Constants.HAMILTON_ELEMENT_PLATE);
                             } else {
                                 /* right carrier but prompt operator to scan correct position barcode */
                                 delete $scope.highlightedPlate.positionScanned;
+                                $scope.clearScannedItemErrorMessage();
                                 $scope.showScannedItemErrorMessage('<strong>Incorrect position scanned:</strong> Please scan carrier ' + $scope.highlightedPlate.carrier.index + ' position ' + $scope.highlightedPlate.localIndex);
                                 $scope.highlightedPlate.barcode = null;
                             }
                         } else {
                             /* scanned barcode is not a position on this carrier */
                             delete $scope.highlightedPlate.positionScanned;
+                            $scope.clearScannedItemErrorMessage();
                             $scope.showScannedItemErrorMessage('<strong>Invalid position barcode:</strong> Please scan carrier ' + $scope.highlightedPlate.carrier.index + ' position ' + $scope.highlightedPlate.localIndex);
                             $scope.highlightedPlate.barcode = null;
                         }
@@ -466,7 +469,9 @@ angular.module('twist.app').controller('hamiltonWizardController', ['$scope', '$
             if ($scope.selectedHamilton) {
                 $scope.setSelectedHamilton($scope.selectedHamilton);
             } else {
-                $scope.getHamiltonByBarcode($scope.selectedHamiltonInfo.split('-')[0].toUpperCase());
+                var hamBarcode = $scope.selectedHamiltonInfo.split('-')[0];
+                hamBarcode = hamBarcode.substring(0,1) + hamBarcode.substring(1).toUpperCase();
+                $scope.getHamiltonByBarcode(hamBarcode);
             }
         } else {
             $timeout(function () { jQuery('.twst-hamilton-wizard-hamilton-barcode-input').focus(); }, 0);

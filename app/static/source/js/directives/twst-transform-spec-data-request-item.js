@@ -74,7 +74,7 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                         }
                                     } else if (!(BarcodeManager.validateType(val, expectedBarcodeType))) {
                                         $scope.validations[arrInd] = false;
-                                        $scope.errors[arrInd] = 'Invalid barcode for expected type: ' + expectedBarcodeType;
+                                        $scope.errors[arrInd] = 'Invalid barcode ('+val+') for expected type: ' + expectedBarcodeType;
                                     } else if (val && val.length) {
 
                                         //check that we haven't already scanned this one
