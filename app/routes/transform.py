@@ -456,12 +456,12 @@ def ngs_hitpicking( type_id, templ_id ):
     cmds.append({
         "type": "PRESENT_DATA",
         "item": {
-            "type": "file-data",
-            "title": "Worklist",
-            "forProperty": "worklist",
-            "fileType": "worklist"
+            "type": "text",
+            "title": "Note",
+            "data": "'Preview' will appear empty.  NGS barcode pairs allocated upon Submit / Save, with Echo worklist available via Transform Specs."
         }
     })
+
     return rows, cmds
 
 
@@ -476,7 +476,7 @@ def ngs_mastermix( type_id, templ_id ):
             "type": "text",
             "title": "NGS Master Mix",
             "data": "Master mix data here... maybe CSV format to render a table?"
-                    }
+        }
     })
     return rows, cmds
 
