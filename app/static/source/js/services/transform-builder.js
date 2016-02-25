@@ -215,6 +215,20 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     base.addRequestedDataItems(requestedData);
                 }
 
+                if (base.map.details && base.map.details.presentedData) {
+
+                    var presentedData = [];
+
+                    for (var i=0; i< base.map.details.presentedData.length; i++) {
+                        presentedData.push({
+                            type: Constants.RESPONSE_COMMANDS_PRESENT_DATA
+                            ,item: base.map.details.presentedData[i]
+                        });
+                    }
+
+                    base.addPresentedDataItems(presentedData);
+                }
+
                 base.transformFromFile(false);
             }
 

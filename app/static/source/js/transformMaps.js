@@ -2049,6 +2049,28 @@ app = angular.module('twist.app')
 
                     }
                 }
+                ,47: {  // keyed to transform_template_id in the database
+                    description: 'MIN Pllaning'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,variablePlateCount: true
+                    }
+                    ,destination: {
+                        plateCount: 0
+                        ,variablePlateCount: false
+                    }
+                    ,details: {
+                        presentedData: [
+                            {
+                                type: 'csv'
+                                ,title: 'Clones Stats'
+                                ,forProperty: 'sequencer'
+                                ,data: 'Clones Picked, Plates Required\r\n0,0'
+                            }
+                        ]
+                    }
+                }
 
             }
             ,rowColumnMaps: {
