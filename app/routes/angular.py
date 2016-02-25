@@ -954,6 +954,34 @@ def process_hamilton_sources(transform_type_id):
         and build nornalization worklist for the source plate.
         '''
 
+    elif transform_type_id == constants.TRANS_TYPE_PCA_PCR_PURIFICATION:
+
+        # REAL code needed here to decide on destinations
+
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"}
+                ]
+            }
+        )
+
+    elif transform_type_id == constants.TRANS_TYPE_ECR_PCR_PURIFICATION:
+
+        # REAL code needed here to decide on destinations
+        
+        respData["responseCommands"].append(
+            {
+                "type": "SET_DESTINATIONS",
+                "plates": [
+                    {"type": "SPTT_0006"},
+                    {"type": "SPTT_0006"}
+                ]
+            }
+        )
+
     resp = Response(response=json.dumps(respData),
                     status=200, mimetype="application/json")
     return(resp)
