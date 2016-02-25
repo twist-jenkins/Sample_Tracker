@@ -1878,6 +1878,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,create: true
                     }
                     ,destination: {
                         plateCount: 0
