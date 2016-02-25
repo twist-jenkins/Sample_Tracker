@@ -25,7 +25,8 @@ angular.module('twist.app').controller('stepTypeSelectedController', ['$scope', 
                 selectedTransformTypeId == 48 || 
                 selectedTransformTypeId == 51 || 
                 selectedTransformTypeId == 70 || 
-                selectedTransformTypeId == 72) {
+                selectedTransformTypeId == 72 ||
+                selectedTransformTypeId == 9) {
                 return true;
             }
             return false;
