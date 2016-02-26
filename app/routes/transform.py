@@ -900,20 +900,18 @@ def generic_same_to_same( type_id, templ_id ):
 
 @to_resp
 def ecr_pcr_planning( type_id, templ_id ):
+    from app.steps import ecr_pcr_hitpicking
+
     rows, cmds = [{}], []
 
-    details = request.json["details"]
+    details = request.json['details']
 
     # we need to add master mix needs info or tell the user we need all the PCA plates first
     masterMixNeeds = ""
     ecrPlates = None
 
-    if "requestedData" in details:
-        ecrPlates = details["requestedData"]
-
-    if ecrPlates and "associatedEcrPlates" in ecrPlates:
-        ecrPlates = ecrPlates["associatedEcrPlates"]
-    else:
+    ecrPlates = details.get('requestedData', {}).get('associatedEcrPlates')
+    if ecrPlates is None:
         # if they're not already in spec, we need to add the requested PCA plates
         cmds.append({
             "type": "REQUEST_DATA",
@@ -925,7 +923,7 @@ def ecr_pcr_planning( type_id, templ_id ):
             }
         })
 
-    if not ecrPlates or ecrPlates[0] is None or ecrPlates[1] is None or ecrPlates[2] is None or ecrPlates[3] is None:
+    if not ecrPlates or (None in ecrPlates):
         masterMixNeeds = "Please scan <strong>all 4</strong> ECR plates to retrieve master mix needs."
         dataType = "text"
     else:
@@ -935,18 +933,17 @@ def ecr_pcr_planning( type_id, templ_id ):
 
         # TODO: do master mix needs for ECR/PCR and ROWS
 
-        rows = [{}]
+        print '@@ request.json:', request.json
+
+
+        if len(request.json['sources']) != 1:
+            raise WebError('expected 1 source, got %d' % len(request.json['sources']))
+        dna_plate_barcodes = request.json['details']['requestedData']['associatedEcrPlates']
+        rows, cmds = ecr_pcr_hitpicking.preplanning( db.session,
+                                                     request.json['sources'][0]['details']['id'],
+                                                     dna_plate_barcodes )
         masterMixNeeds = "Master mix needs here"
         dataType = 'csv'
-
-    cmds.append({
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": dataType,
-            "title": "Master Mix Needs",
-            "data": masterMixNeeds
-        }
-    })
 
     return rows, cmds
 

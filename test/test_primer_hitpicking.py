@@ -109,7 +109,7 @@ def test_primer_hitpicking_src():
         db.commit()
 
     for ch in "4321":
-        ext_bc = 'PLT_kierantest' + ch
+        ext_bc = 'plt_kierantest' + ch
         try:
             plate = db.query(Plate).filter(Plate.external_barcode==ext_bc).one()
         except NoResultFound:
