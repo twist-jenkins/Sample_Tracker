@@ -217,8 +217,8 @@ class TransformSpecResource(flask_restful.Resource):
         operations = spec.data_json["operations"]
         wells = operations  # (??)
 
-        if 'requestedData' in spec.data_json['details'].keys():
-            if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+        if 'requestedData' in spec.data_json['details'].keys() \
+           and transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
                 quant_data = spec.data_json['details']['requestedData']['instrument_data']
                 result = store_quant_data(sess, aliquot_plate, quant_data)
