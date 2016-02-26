@@ -1018,7 +1018,7 @@ def min_planning( type_id, templ_id ):
 
     # TODO: Count the number of clones and provide the "CLones Picked" and "Plate Required" counts
 
-    clones_picked = plates_required = 26
+    clones_picked = plates_required = 0
 
     if (clones_picked < constants.MINIPREP_PLANNING_CLONES_MAX and plates_required < constants.MINIPREP_PLANNING_PLATES_MAX):
         # if there are < 25 plates required AND less than 380 picks add another source
