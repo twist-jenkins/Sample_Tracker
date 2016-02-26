@@ -735,6 +735,9 @@ def generic_same_to_same( type_id, templ_id ):
                          'destination_plate_well_count': dest_plate_type.layout.feature_count
                          })
 
+    return rows, cmds
+
+
 @to_resp
 def ecr_pcr_planning( type_id, templ_id ):
     rows, cmds = [{}], []

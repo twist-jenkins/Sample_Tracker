@@ -405,6 +405,8 @@ def transform_params( transform_type_id, transform_template_id  ):
 
     # shorter names!
     from constants import (
+        TRANS_TYPE_EXTRACTION_TITIN as EXTRACTION_TITIN_T,
+        TRANS_TPL_EXTRACTION_TITIN as EXTRACTION_TITIN,
         TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
         TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
         TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
@@ -448,6 +450,8 @@ def transform_params( transform_type_id, transform_template_id  ):
     )
 
     f = {
+        (EXTRACTION_TITIN_T, EXTRACTION_TITIN):
+            transform.generic_same_to_same,
         (CHP_DEPROTECTION_T, SAME_PLATE):
             transform.generic_same_to_same,
         (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):
