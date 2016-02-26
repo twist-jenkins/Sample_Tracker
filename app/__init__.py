@@ -423,6 +423,7 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TYPE_NGS_MASTERMIX_ADDITION as NGS_MASTERMIX_T,
                             TRANS_TPL_PCR_PRIMER_HITPICK as PCR_PRIMER_HITPICK,
                             TRANS_TYPE_NGS_LOAD_ON_SEQUENCER as NGS_LOAD,
+                            TRANS_TYPE_NGS_POOLING,
                             TRANS_TPL_NGS_POOLING as NGS_POOLING,
                             TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK,
                             TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC as VECTOR_CREATE_SRC_T,
@@ -442,7 +443,8 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TPL_MIN_PLANNING as MIN_PLANNING
     )
 
-    f = {(62, SAME_PLATE):                    transform.generic_same_to_same,  # 62 is "CHP Deprotection"
+    f = {(62, SAME_PLATE): transform.generic_same_to_same,  #"CHP Deprotection"
+         (TRANS_TYPE_NGS_POOLING, NGS_POOLING):       transform.ngs_pooling,
          (VECTOR_HITPICK, SAME_PLATE):                transform.vector_hitpicking,
          (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):    transform.vector_create_src,
          (VECTOR_NORM_T, SAME_PLATE):                 transform.generic_same_to_same,
