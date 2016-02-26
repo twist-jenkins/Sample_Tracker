@@ -692,27 +692,18 @@ def source_plate_well_data():
             }
             return jsonify(response)
 
-        rows = db.session.query(Sample).filter(
-            Sample.plate_id == sample_plate.id).all()
-
-        well_to_col_and_row_mapping_fn = {
-            48:get_col_and_row_for_well_id_48,
-            96:get_col_and_row_for_well_id_96,
-            384:get_col_and_row_for_well_id_384
-        }.get(sample_plate.plate_type.layout.feature_count,
-              lambda well_id: "missing map")
+        samples = sample_plate.current_well_contents(db.session)
 
         wells = {}
-        for well in rows:
-
-            col_row = well_to_col_and_row_mapping_fn(well.well_id)
+        for sample in samples:
+            well = sample.well
 
             well_data = {
-                "well_id":well.well_id,
-                "column_and_row":col_row,
-                "sample_id":well.sample_id
+                "well_id": well.well_number,
+                "column_and_row": well.well_label,
+                "sample_id": sample.id
             }
-            wells[col_row] = well_data
+            wells[well.well_label] = well_data
 
         plateWellData[barcode] = {
             "wells": wells
@@ -971,7 +962,7 @@ def process_hamilton_sources(transform_type_id):
     elif transform_type_id == constants.TRANS_TYPE_ECR_PCR_PURIFICATION:
 
         # REAL code needed here to decide on destinations
-        
+
         respData["responseCommands"].append(
             {
                 "type": "SET_DESTINATIONS",
