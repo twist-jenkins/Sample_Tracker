@@ -9,8 +9,7 @@ from app import login_manager
 
 from test_flask_app import AutomatedTestingUser
 
-from twistdb.sampletrack import Sample, Plate
-from twistdb.ngs import CallerSummary
+from twistdb.sampletrack import Plate
 
 class TestCase(unittest.TestCase):
 
