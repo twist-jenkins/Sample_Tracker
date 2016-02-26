@@ -1228,6 +1228,7 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
     }
 
     .twst-record-step-present-request-data-pane {
+        position: relative;
         margin: 1em 0;
         border: 1px solid $twst-minty-green-bg;
         border-radius: 0.5em;
@@ -1239,6 +1240,13 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
         &.twst-record-step-present-request-data-pane-visible {
             height: auto;
             opacity: 1;
+        }
+
+        .twst-spinner {
+            position: absolute;
+            top: 0.8em;
+            left: 45%;
+            font-size: 0.8em;
         }
 
         h1 {
