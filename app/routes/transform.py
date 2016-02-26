@@ -313,6 +313,39 @@ def plates_to_rows( sources ):
 @to_resp
 def rebatch_transform( type_id, templ_id ):
     rows, cmds = [], []
+    #rows = plates_to_rows( request.json['sources'] )
+    destinations_ready = bool( request.json.get('destinations') )
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+            if not destination['details'].get('id'):
+                destinations_ready = False
+                break
+            if destinations_ready:
+                rows = rebatching_normalization.create_transform(db,
+                              request.json['sources'],
+                              request.json['destinations'] )
+
+    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
+                db.session, request.json['sources'][0]['details']['id'],
+                [x['details']['id'] for x in request.json['destinations']])'''
+
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+
+    cmds.append({
+        "type": "SET_DESTINATIONS",
+        "plates": destination_plates
+    })
+    cmds.append({
+        "type": "REQUEST_DATA",
+        "item": {
+            "type": "array.1",
+            "dataType": "barcode.PLATE",
+            "title": "Associated PCA Plate Barcode",
+            "forProperty": "associatedPcaPlates"
+        }
+    })
+
+    #print destination_plates
     return rows, cmds
 
 
@@ -771,7 +804,7 @@ def ngs_pooling( type_id, templ_id ):
                 "item": {
                     "type": "text",
                     "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>" 
+                    "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
                               + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
                               + "</strong> to the pooling bin.</span>")
                 }
@@ -823,7 +856,7 @@ def vector_create_src( type_id, templ_id ):
     print '@@ request.json:', request.json
     if len(request.json['sources']) != 1:
         raise WebError('expected one source; got %d' % len(request.json['sources']))
-    
+
     return vector_hitpicking.create_src( db.session, request.json['sources'][0]['details']['id'] )
 
 
