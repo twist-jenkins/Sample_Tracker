@@ -28,6 +28,7 @@ TRANS_TPL_MIN_PLANNING = 47
 # ------------------------------
 # Transform type IDs
 # ------------------------------
+TRANS_TYPE_PCA_PCR_ALIQUOTING = 1
 TRANS_TYPE_CLO_INSERT_HITPICK = 2
 TRANS_TYPE_PCA_PCR_PURIFICATION = 9
 
@@ -72,7 +73,7 @@ TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC = 76
 # -------------------------------
 
 MINIPREP_PLANNING_PLATES_MAX = 25
-MINIPREP_PLANNING_CLONES_MAX = 380
+MINIPREP_PLANNING_CLONES_MAX = 285
 
 # -------------------------------
 # BARCODED OBJECTS ETC

@@ -408,6 +408,7 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
                             TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
                             TRANS_TPL_SAME_PLATE as SAME_PLATE,
+                            TRANS_TPL_SAME_TO_SAME as SAME_TO_SAME,
                             TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
                             TRANS_TYPE_PCA_THERMOCYCLE as PRIMER_THERMO_T,
                             TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
@@ -440,10 +441,12 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TYPE_PLS_DILUTION as PLS_DILUTION_T,
                             TRANS_TPL_MULTIPLEX_SAME_PLATE as MULTIPLEX_SAME_PLATE,
                             TRANS_TYPE_MIN_PLANNING as MIN_PLANNING_T,
-                            TRANS_TPL_MIN_PLANNING as MIN_PLANNING
+                            TRANS_TPL_MIN_PLANNING as MIN_PLANNING,
+                            TRANS_TYPE_PCA_PCR_ALIQUOTING as PCA_PCR_ALIQUOTING_T
     )
 
     f = {(62, SAME_PLATE): transform.generic_same_to_same,  #"CHP Deprotection"
+         (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):          transform.generic_same_to_same,
          (TRANS_TYPE_NGS_POOLING, NGS_POOLING):       transform.ngs_pooling,
          (VECTOR_HITPICK, SAME_PLATE):                transform.vector_hitpicking,
          (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):    transform.vector_create_src,
