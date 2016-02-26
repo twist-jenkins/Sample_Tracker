@@ -404,79 +404,113 @@ def transform_params( transform_type_id, transform_template_id  ):
     print '@@ transform_type_id:%s, transform_template_id:%s' % (transform_type_id, transform_template_id)
 
     # shorter names!
-    from constants import ( TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
-                            TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
-                            TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
-                            TRANS_TPL_SAME_PLATE as SAME_PLATE,
-                            TRANS_TPL_SAME_TO_SAME as SAME_TO_SAME,
-                            TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
-                            TRANS_TYPE_PCA_THERMOCYCLE as PRIMER_THERMO_T,
-                            TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
-                            TRANS_TPL_PCA_PREPLANNING as PRIMER_PREPLANNING,
-                            TRANS_TYPE_NGS_THERMOCYCLE as NGS_THERO_T,
-                            TRANS_TYPE_PCA_THERMOCYCLE as PCA_THERMO_T,
-                            TRANS_TYPE_PCA_PCR_THERMOCYCLE as PCR_THERMO_T,
-                            TRANS_TPL_REBATCH_FOR_TRANSFORM as REBATCH_XFORM,
-                            TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T,
-                            TRANS_TYPE_UPLOAD_QUANT as UPLOAD_QUANT_T,
-                            TRANS_TYPE_NGS_INDEX_HITPICKING as NGS_HITPICKING_T,
-                            TRANS_TPL_NGS_INDEX_HITPICKING as NGS_HITPICKING,
-                            TRANS_TYPE_NGS_MASTERMIX_ADDITION as NGS_MASTERMIX_T,
-                            TRANS_TPL_PCR_PRIMER_HITPICK as PCR_PRIMER_HITPICK,
-                            TRANS_TYPE_NGS_LOAD_ON_SEQUENCER as NGS_LOAD,
-                            TRANS_TYPE_NGS_POOLING,
-                            TRANS_TPL_NGS_POOLING as NGS_POOLING,
-                            TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK,
-                            TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC as VECTOR_CREATE_SRC_T,
-                            TRANS_TPL_VECTOR_CREATE_SRC as VECTOR_CREATE_SRC,
-                            TRANS_TYPE_ECR_PCR_PLANNING as ECR_PCR_PLANNING_T,
-                            TRANS_TPL_ECR_PCR_PLANNING as ECR_PCR_PLANNING,
-                            TRANS_TYPE_ECR_PCR_SOURCE_PLATE_CREATION as ECR_PCR_SOURCE_PLATE_CREATION_T,
-                            TRANS_TPL_ECR_PCR_SOURCE_PLATE_CREATION as ECR_PCR_SOURCE_PLATE_CREATION,
-                            TRANS_TYPE_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING_T,
-                            TRANS_TPL_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING,
-                            TRANS_TYPE_ECR_PCR_THERMOCYCLE as ECR_THERMO_T,
-                            TRANS_TYPE_ECR_PCR_UPLOAD_QUANT as ECR_PCR_UPLOAD_QUANT_T,
-                            TRANS_TYPE_VECTOR_NORM as VECTOR_NORM_T,
-                            TRANS_TYPE_PLS_DILUTION as PLS_DILUTION_T,
-                            TRANS_TPL_MULTIPLEX_SAME_PLATE as MULTIPLEX_SAME_PLATE,
-                            TRANS_TYPE_MIN_PLANNING as MIN_PLANNING_T,
-                            TRANS_TPL_MIN_PLANNING as MIN_PLANNING,
-                            TRANS_TYPE_PCA_PCR_ALIQUOTING as PCA_PCR_ALIQUOTING_T
+    from constants import (
+        TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
+        TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
+        TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
+        TRANS_TPL_SAME_PLATE as SAME_PLATE,
+        TRANS_TPL_SAME_TO_SAME as SAME_TO_SAME,
+        TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
+        TRANS_TYPE_PCA_THERMOCYCLE as PRIMER_THERMO_T,
+        TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
+        TRANS_TPL_PCA_PREPLANNING as PRIMER_PREPLANNING,
+        TRANS_TYPE_NGS_THERMOCYCLE as NGS_THERO_T,
+        TRANS_TYPE_PCA_THERMOCYCLE as PCA_THERMO_T,
+        TRANS_TYPE_PCA_PCR_THERMOCYCLE as PCR_THERMO_T,
+        TRANS_TPL_REBATCH_FOR_TRANSFORM as REBATCH_XFORM,
+        TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T,
+        TRANS_TYPE_UPLOAD_QUANT as UPLOAD_QUANT_T,
+        TRANS_TYPE_NGS_INDEX_HITPICKING as NGS_HITPICKING_T,
+        TRANS_TPL_NGS_INDEX_HITPICKING as NGS_HITPICKING,
+        TRANS_TYPE_NGS_MASTERMIX_ADDITION as NGS_MASTERMIX_T,
+        TRANS_TPL_PCR_PRIMER_HITPICK as PCR_PRIMER_HITPICK,
+        TRANS_TYPE_CHP_DEPROTECTION as CHP_DEPROTECTION_T,
+        TRANS_TYPE_NGS_LOAD_ON_SEQUENCER as NGS_LOAD_T,
+        TRANS_TYPE_NGS_POOLING as NGS_POOLING_T,
+        TRANS_TPL_NGS_POOLING as NGS_POOLING,
+        TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK_T,
+        TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC as VECTOR_CREATE_SRC_T,
+        TRANS_TPL_VECTOR_CREATE_SRC as VECTOR_CREATE_SRC,
+        TRANS_TYPE_ECR_PCR_PLANNING as ECR_PCR_PLANNING_T,
+        TRANS_TPL_ECR_PCR_PLANNING as ECR_PCR_PLANNING,
+        TRANS_TYPE_ECR_PCR_SOURCE_PLATE_CREATION as ECR_PCR_SOURCE_PLATE_CREATION_T,
+        TRANS_TPL_ECR_PCR_SOURCE_PLATE_CREATION as ECR_PCR_SOURCE_PLATE_CREATION,
+        TRANS_TYPE_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING_T,
+        TRANS_TPL_ECR_PCR_PRIMER_HITPICKING as ECR_PCR_PRIMER_HITPICKING,
+        TRANS_TYPE_ECR_PCR_THERMOCYCLE as ECR_THERMO_T,
+        TRANS_TYPE_ECR_PCR_UPLOAD_QUANT as ECR_PCR_UPLOAD_QUANT_T,
+        TRANS_TYPE_VECTOR_NORM as VECTOR_NORM_T,
+        TRANS_TYPE_PLS_DILUTION as PLS_DILUTION_T,
+        TRANS_TPL_MULTIPLEX_SAME_PLATE as MULTIPLEX_SAME_PLATE,
+        TRANS_TYPE_MIN_PLANNING as MIN_PLANNING_T,
+        TRANS_TPL_MIN_PLANNING as MIN_PLANNING,
+        TRANS_TYPE_PCA_PCR_ALIQUOTING as PCA_PCR_ALIQUOTING_T,
     )
 
-    f = {(62, SAME_PLATE): transform.generic_same_to_same,  #"CHP Deprotection"
-         (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):          transform.generic_same_to_same,
-         (TRANS_TYPE_NGS_POOLING, NGS_POOLING):       transform.ngs_pooling,
-         (VECTOR_HITPICK, SAME_PLATE):                transform.vector_hitpicking,
-         (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):    transform.vector_create_src,
-         (VECTOR_NORM_T, SAME_PLATE):                 transform.generic_same_to_same,
-         (PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):  transform.primer_preplanning,
-         (PRIMER_CREATE_SRC_T, SAME_PLATE):           transform.primer_create_src,
-         (PRIMER_MASTER_T, SAME_PLATE):               transform.primer_master_mix,
-         (PRIMER_THERMO_T, SAME_PLATE):               transform.thermocycle,
-         (NGS_THERO_T, SAME_PLATE):                   transform.thermocycle,
-         (PCA_THERMO_T, SAME_PLATE):                  transform.thermocycle,
-         (PCR_THERMO_T, SAME_PLATE):                  transform.thermocycle,
-         (ECR_THERMO_T, SAME_PLATE):                  transform.thermocycle,
-         (REBATCH_XFORM_T, REBATCH_XFORM):            transform.rebatch_transform,
-         (UPLOAD_QUANT_T, SAME_PLATE):                transform.quant_upload,
-         (ECR_PCR_UPLOAD_QUANT_T, SAME_PLATE):        transform.quant_upload,
-         (NGS_HITPICKING_T, NGS_HITPICKING):          transform.ngs_hitpicking,
-         (MIN_PLANNING_T, MIN_PLANNING):          transform.min_planning,
-         (25, SAME_PLATE):                 transform.ngs_tagmentation, # ?? no type constant?
-         (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
-         (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
-         (NGS_LOAD, ):                     transform.ngs_load,
-         (NGS_POOLING, ):    transform.ngs_pooling,
-         (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):                              transform.ecr_pcr_planning,
-         (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):    transform.ecr_pcr_source_plate_creation,
-         (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):            transform.ecr_pcr_primer_hitpicking,
-         (PLS_DILUTION_T, MULTIPLEX_SAME_PLATE):      transform.pls_dilution,
-         (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):      transform.ecr_pcr_planning,
-         (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):      transform.ecr_pcr_source_plate_creation,
-         (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):      transform.ecr_pcr_primer_hitpicking,
-    }.get( (transform_type_id, transform_template_id), transform.preview )
+    f = {
+        (CHP_DEPROTECTION_T, SAME_PLATE):
+            transform.generic_same_to_same,
+        (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):
+            transform.generic_same_to_same,
+        (NGS_POOLING_T, NGS_POOLING):
+            transform.ngs_pooling,
+        (VECTOR_HITPICK_T, SAME_PLATE):
+            transform.vector_hitpicking,
+        (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):
+            transform.vector_create_src,
+        (VECTOR_NORM_T, SAME_PLATE):
+            transform.generic_same_to_same,
+        (PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):
+            transform.primer_preplanning,
+        (PRIMER_CREATE_SRC_T, SAME_PLATE):
+            transform.primer_create_src,
+        (PRIMER_MASTER_T, SAME_PLATE):
+            transform.primer_master_mix,
+        (PRIMER_THERMO_T, SAME_PLATE):
+            transform.thermocycle,
+        (NGS_THERO_T, SAME_PLATE):
+            transform.thermocycle,
+        (PCA_THERMO_T, SAME_PLATE):
+            transform.thermocycle,
+        (PCR_THERMO_T, SAME_PLATE):
+            transform.thermocycle,
+        (ECR_THERMO_T, SAME_PLATE):
+            transform.thermocycle,
+        (REBATCH_XFORM_T, REBATCH_XFORM):
+            transform.rebatch_transform,
+        (UPLOAD_QUANT_T, SAME_PLATE):
+            transform.quant_upload,
+        (ECR_PCR_UPLOAD_QUANT_T, SAME_PLATE):
+            transform.quant_upload,
+        (NGS_HITPICKING_T, NGS_HITPICKING):
+            transform.ngs_hitpicking,
+        (MIN_PLANNING_T, MIN_PLANNING):
+            transform.min_planning,
+        (25, SAME_PLATE):
+            transform.ngs_tagmentation,  # ?? no type constant?
+        (NGS_MASTERMIX_T, ):
+            transform.ngs_mastermix,
+        (PCR_PRIMER_HITPICK, ):
+            transform.pcr_primer_hitpick,
+        (NGS_LOAD_T, ):
+            transform.ngs_load,
+        (NGS_POOLING_T, ):
+            transform.ngs_pooling,
+        (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):
+            transform.ecr_pcr_planning,
+        (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):
+            transform.ecr_pcr_source_plate_creation,
+        (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):
+            transform.ecr_pcr_primer_hitpicking,
+        (PLS_DILUTION_T, MULTIPLEX_SAME_PLATE):
+            transform.pls_dilution,
+        (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):
+            transform.ecr_pcr_planning,
+        (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):
+            transform.ecr_pcr_source_plate_creation,
+        (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):
+            transform.ecr_pcr_primer_hitpicking,
+    }.get((transform_type_id, transform_template_id), transform.preview)
 
     print '@@ transform_type_id:%s, transform_template_id:%s -> %s' \
         % (transform_type_id, transform_template_id, f.__name__)
