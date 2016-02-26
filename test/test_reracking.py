@@ -44,6 +44,7 @@ class TestCase(unittest.TestCase):
 
 
     def test_calculate_volume_foreach_sample(self):
+
         with scoped_session(db.engine) as db_session_2:
 
             amp_d={}
@@ -52,6 +53,15 @@ class TestCase(unittest.TestCase):
             unknown={}
             by_marker = defaultdict(list)
             d = {}
+            rows =[]
+            lookup13 ={}
+            rows =[]
+
+
+
+
+            #    print (qpix_plate + 1, x_48_well), ':', x_384_well_id
+
 
             #dest_type = db.session.query(PlateType).get('SPTT_0006')
             #for src_idx, src in enumerate(request.json['sources']):
@@ -59,15 +69,15 @@ class TestCase(unittest.TestCase):
             samples = db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_PCA_NORM_TEST').one().current_well_contents(db.session)
 
 
-            print len(samples)
+            #print len(samples)
             for sample in samples:
                 concentration = sample.conc_ng_ul
-                cloning_process= sample.cloning_process.resistance_marker.code
+                cloning_process= sample.cloning_process
                 #sequence = sample.order_item.sequence
                 if cloning_process is None :
                     marker = "NOMARKER"
                 else:
-                    marker = cloning_process
+                    marker = cloning_process.resistance_marker.code
                 by_marker[ marker ].append(sample)
 
 
@@ -76,7 +86,7 @@ class TestCase(unittest.TestCase):
 
 
             '''for marker in ('AMP','KAN','CHLOR'):
-                d[ marker ] = ['sample-%d' % i for i in range(384)]'''
+                by_marker[ marker ] = ['sample-%d' % i for i in range(384)]'''
 
 
 
@@ -92,7 +102,6 @@ class TestCase(unittest.TestCase):
 
 
 
-            #print len(qpix_plates), qpix_plates[0] ,qpix_plates[1]
             dest_tmp = defaultdict(lambda: defaultdict(int))
             for i, (marker, samples) in enumerate(qpix_plates):
                 dest_tmp[i // 8][ marker ] += len( samples )
@@ -107,33 +116,27 @@ class TestCase(unittest.TestCase):
                                  "details": {
                                      "title": "<strong> %s </strong> resistance - Plate <strong> %s </strong> of %s" %
                                               (str(marker1), (i + 1), d)}}
-                '''destination_plates.append( {"type": "SPTT_0006",
-                                            "first_in_group": i+1,
-                                            "details": {
-                                                "title": ', '.join(title)}} )'''
-
-
-            destination_plates.append(thisPlate)
-            print destination_plates
-
-            '''final =[]
-
-            for marker in sorted (by_marker):
-                tmp = defaultdict(list)
-                for i ,sample in enumerate(by_marker[marker]):
-                    tmp[i // 48].append(sample)
-                for plate_no in sorted (tmp):
-                    final.append( (marker,by_marker[plate_no]) )
-
-            print len(final)'''
 
 
 
 
 
+                destination_plates.append(thisPlate)
+
+            #print destination_plates
+
+        dest_plates = destination_plates
+        print len(dest_plates)
+        dest_type = db.session.query(PlateType).get('SPTT_0006')  # FIXME: hard-coded to 96 well
+        dest_ctr = 1
+
+        layout = test_transform(destination_plates)
+
+        #print layout
 
 
-    #def test_create_worklist(self):
+
+def test_transform(dest_plates):
 
         lookup13 ={}
         rows =[]
@@ -144,14 +147,13 @@ class TestCase(unittest.TestCase):
 
         lookup48to384={}
         lookup384to48={}
-        # example: (1, 1): 1
-        #          (1, 2): 3
-        #          ... 381 more ...
-        #          (8, 48): 384
+        samples = db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_PCA_NORM_TEST').one().current_well_contents(db.session)
+
+
 
         for x_384_well_id in lookup13:
-        #for src_384_well_id ,(dest_96plate_num ,destn_96well_id) in itertools.chain(*lookup13) :
-            #for y in itertools.chain(*lookup14) :
+
+
             x_96_plate = lookup13[x_384_well_id]['destination_plate_number']
             x_96_well = lookup13[x_384_well_id]['destination_well_id']
 
@@ -163,12 +165,59 @@ class TestCase(unittest.TestCase):
 
             lookup48to384[(qpix_plate + 1, x_48_well)] = x_384_well_id
             lookup384to48[x_384_well_id] = (qpix_plate + 1, x_48_well)
-
-            '''for well_id, well in sorted(lookup48to384.iteritems()):
-                print well_id , well'''
-            #print (qpix_plate + 1, x_48_well), ':', x_384_well_id
+            print (qpix_plate + 1, x_48_well), ':', x_384_well_id
 
 
+
+        dest_type = db.session.query(PlateType).get('SPTT_0006')
+        source_type =db.session.query(PlateType).get('SPTT_0004')
+
+        for plate in dest_plates:
+            for (qpix_plate_1,x_48_well),x_384_well_id  in lookup48to384.items():
+
+
+
+
+                rows.append({'source_plate_barcode':               qpix_plate_1,
+                             'source_well_name':               str(source_type.get_well_by_number(int(x_48_well)).well_label),#str(samples[x_48_well].well.well_label),
+                             'source_well_number':             x_48_well,#samples[x_48_well].well.well_number,
+                             'source_well_code':                source_type.get_well_by_number(int(x_48_well)).well_code,#samples[x_48_well].well.well_code,
+                             'source_sample_id':               str(samples[x_48_well-1].id),
+                             'destination_plate_barcode':      "DDDDDD",#dest_barcodes[dest_plate_idx],
+                             'destination_well_name':          str(dest_type.get_well_by_number(int(x_384_well_id)).well_label),
+                             'destination_well_number':        str(x_384_well_id),
+                             'destination_plate_type':         str(dest_type.type_id),
+                             'destination_plate_well_count':   dest_type.layout.feature_count
+                             })
+        print sorted(rows)
+        return rows
+
+                       #print (qpix_plate + 1, x_48_well), ':', x_384_well_id
+            #for sample in samples:
+            #print (qpix_plate + 1, x_48_well), ':', x_384_well_id , ':', sample.well.well_label ,':',sample.well.well_number
+
+
+
+'''def plates_to_rows( sources ):
+    rows = []
+    # Pull the first source plate to fix the plate type
+    #src_plate_type = sources[0]['details']['plateDetails']['type']
+    #dest_plate_type = db.session.query(PlateType).get(src_plate_type)
+
+    samples = db.session.query(Plate).filter(Plate.external_barcode  == 'PLT_PCA_NORM_TEST').one().current_well_contents(db.session)
+    for sample in samples:
+        rows.append({'source_plate_barcode':           "PLT_PCA_NORM_TEST",
+                     'source_well_name':               sample.well.well_label,
+                     'source_well_number':             sample.well.well_number,
+                     'source_well_code':               sample.well.well_code,
+                     'source_sample_id':               sample.id,
+                     'destination_plate_barcode':      "PLT_PCA_NORM_TEST",
+                     'destination_well_name':          sample.well.well_label,
+                     'destination_well_number':        sample.well.well_number,
+                     'destination_plate_type':         "SPTT_0006",
+                     'destination_plate_well_count':   "384"
+                         })
+    return rows'''
 
 
 

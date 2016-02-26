@@ -95,7 +95,7 @@ def create_transform(db,sources, dests ):
     for dest_barcode in dest_barcodes :
             for (qpix_plate_1,x_48_well),x_384_well_id  in mapping_lookup.items():
 
-                rows.append({'source_plate_barcode':            qpix_plate_1,
+                rows.append({'source_plate_barcode':            src_barcode,#qpix_plate_1,
                              'source_well_name':               str(source_type.get_well_by_number(int(x_48_well)).well_label),
                              'source_well_number':             x_48_well,
                              'source_well_code':                source_type.get_well_by_number(int(x_48_well)).well_code,
