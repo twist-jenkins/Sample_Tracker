@@ -58,6 +58,7 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
 
     div(class="twst-record-step-present-request-data-pane" ng-class="{'twst-record-step-present-request-data-pane-visible': showPresentedRequestedData}")
         h1 Additional Items for this Transform
+        div(class="twst-spinner" ng-if="transformSpec.updating")
         div(class="twst-record-step-present-request-data-pane-content")
             div(class="twst-present-request-data-pane-content-left" ng-if="transformSpec.requestedDataItems.length")
                 h3
