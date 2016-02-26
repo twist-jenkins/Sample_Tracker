@@ -21,7 +21,7 @@ migrate = Migrate(app, db)
 
 manager.add_command('db', MigrateCommand)
 
-manager.add_command("runserver", Server)
+manager.add_command("runserver", Server())
 manager.add_command("shell", Shell())
 
 
