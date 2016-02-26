@@ -771,9 +771,9 @@ def ngs_pooling( type_id, templ_id ):
                 "item": {
                     "type": "text",
                     "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>" 
+                    "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>" 
                               + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
+                              + "</strong> to the pooling bin.</span>")
                 }
             })
 
