@@ -6,10 +6,6 @@ import logging
 
 from app import db
 from app import constants
-
-from app.steps import primer_hitpicking
-from app.steps import rebatching_normalization
-
 from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
@@ -701,9 +697,9 @@ def ngs_pooling():
                 "item": {
                     "type": "text",
                     "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>"
+                    "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
                               + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
+                              + "</strong> to the pooling bin.</span>")
                 }
             })
 
@@ -805,9 +801,9 @@ def ngs_pooling( type_id, templ_id ):
                 "item": {
                     "type": "text",
                     "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>"
+                    "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
                               + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
+                              + "</strong> to the pooling bin.</span>")
                 }
             })
 
@@ -1023,7 +1019,6 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
             }
 
         })
-
     return rows, cmds
 
 def pls_dilution(type_id, templ_id):
@@ -1033,6 +1028,73 @@ def pls_dilution(type_id, templ_id):
 
     rows = plates_to_rows(request.json['sources'])
 
+    return rows, cmds
+
+@to_resp
+def min_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    sources = request.json['sources'];
+
+    sourcesSet = [];
+
+    for sourceIndex, source in enumerate(sources):
+        sourcesSet.append({
+            "type": "SPTT_0006",
+            "details" : {
+                "id" : source["details"]["id"]
+            }
+        });
+
+    # TODO: Count the number of clones and provide the "CLones Picked" and "Plate Required" counts
+
+    clones_picked = plates_required = 26
+
+    if (clones_picked < constants.MINIPREP_PLANNING_CLONES_MAX and plates_required < constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if there are < 25 plates required AND less than 380 picks add another source
+        sourcesSet.append({
+            "type": "SPTT_0006"
+        });
+    elif (clones_picked == constants.MINIPREP_PLANNING_CLONES_MAX or plates_required == constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if either limit is reached exactly
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-warn-text\">Run FULL</strong>",
+                "data": "<span class=\"twst-warn-text\">No more plates will fit in this run.</span>"
+            }
+        })
+    else:
+        # then either clones or plates are over the limit
+
+        #remove the last added source from the list
+        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-error-text\">Limit Overrun!</strong>",
+                "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
+                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                          + "</strong> to the freezer.</span>")
+            }
+        })
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Clone Stats",
+            "data": 'Clones Picked, Plates Required\r\n<strong>%s</strong> of %s,<strong>%s</strong> of %s' % (clones_picked, constants.MINIPREP_PLANNING_CLONES_MAX, plates_required, constants.MINIPREP_PLANNING_PLATES_MAX)
+        }
+    })
+
+    cmds.append({
+        "type": "SET_SOURCES",
+        "plates": sourcesSet
+    })
 
     return rows, cmds
 
@@ -1091,111 +1153,6 @@ def preview( transform_type_id, transform_template_id ):
                     "type": "SET_DESTINATIONS",
                     "plates": destination_plates
                 })
-
-
-            elif transform_template_id == \
-                    constants.TRANS_TPL_NGS_POOLING:
-
-                rows = [{}];
-                sequencer = None;
-
-                basePairMax = 0;
-                currentBasePairTotal = 0;
-                previousBasePairTotal = 0;
-
-                if "requestedData" in details:
-                    reqData = details["requestedData"]
-
-                if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-                    responseCommands.append({
-                        "type": "REQUEST_DATA",
-                        "item": {
-                            "type": 'radio'
-                            ,"title": 'Select Sequencer:'
-                            ,"forProperty": 'sequencer'
-                            ,"data": [
-                                {"option": 'MiSeq'}
-                                ,{"option": 'NextSeq'}
-                            ]
-                        }
-                    })
-
-                sources = request.json['sources'];
-
-                sourcesSet = [];
-
-                for sourceIndex, source in enumerate(sources):
-                    sourcesSet.append({
-                        "type": "SPTT_0006"
-                        ,"details" : {
-                            "id" : source["details"]["id"]
-                        }
-                    });
-
-                if "sequencer" in reqData:
-                    # TO DO  Derive the max BP count for this sequencer
-                    #        AND
-                    #        Return total count of basepairs on source plate(s)
-                    basePairMax = 12500000;
-
-                    '''
-                    currentBasePairTotal = total of BPs in all source plates
-                    previousBasePairTotal = total BPS on all plates but the last one
-                    '''
-
-                    # DEV ONLY - remove when real basepair counting is done
-                    previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax - 3 + len(sources);
-
-                    reponseTally = currentBasePairTotal
-
-                    if currentBasePairTotal < basePairMax:
-                        #and add another source input to indicate there's more room
-                        sourcesSet.append({
-                            "type": "SPTT_0006"
-                        });
-
-                    elif basePairMax and currentBasePairTotal == basePairMax:
-                        responseCommands.append({
-                            "type": "PRESENT_DATA",
-                            "item": {
-                                "type": "text",
-                                "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                                "data": "No more plates will fit in this run."
-                            }
-                        })
-
-                    else :
-                        responseCommands.append({
-                            "type": "PRESENT_DATA",
-                            "item": {
-                                "type": "text",
-                                "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                                "data":  ("Return plate <strong>"
-                                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                                          + "</strong> to the pooling bin.")
-                            }
-                        })
-
-                        reponseTally = previousBasePairTotal
-
-                        #remove the last added source from the list
-                        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
-
-                    responseCommands.append({
-                        "type": "PRESENT_DATA",
-                        "item": {
-                            "type": "text",
-                            "title": "Base Pair Tally",
-                            "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-                        }
-                    })
-
-                responseCommands.append({
-                    "type": "SET_SOURCES",
-                    "plates": sourcesSet
-                })
-
 
             elif transform_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:

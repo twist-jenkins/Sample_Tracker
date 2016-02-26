@@ -46,37 +46,41 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
 
                             switch (commandType) {
                                 case Constants.RESPONSE_COMMANDS_SET_DESTINATIONS:
-                                    var destinationPlateCount = command.plates.length;
 
-                                    var newAllDestinationPlates = [];
 
-                                    var skippedCarrierPlatesCount = 0;
+                                    /* the backend responds with the total destinations in a single list
+                                    *  which does NOT take into account skipped carriers or unused carrier positions
+                                    *  thus we need to set destinations only in used positions on non-skipped carriers
+                                    */
 
-                                    $scope.setDestinationPlatesNeedingScanCount(0);
+                                    var destPlateCount = command.plates.length;
 
-                                    var destinationPlatesNeedingScanCount = 0;
-
-                                    for (var j=0; j<$scope.hamiltonDataObj.allDestinationPlates.length;j++) {
-                                        var plate = $scope.hamiltonDataObj.allDestinationPlates[j];
-
-                                        if (plate.carrier.scanSkipped) {
-                                            skippedCarrierPlatesCount += plate.carrier.plates.length;
-                                        } else {
-                                            plate.optional = false;
-                                            if (plate.dataIndex - skippedCarrierPlatesCount > destinationPlateCount) {
-                                                plate.unused = true;
-                                            } else {
-                                                newAllDestinationPlates.push(plate);
-                                            }
+                                    for (var j=0; j<destPlateCount; j++) {
+                                        var setPlate = command.plates[j];
+                                        for (var h=0; h<$scope.hamiltonDataObj.allDestinationPlates.length;h++) {
+                                            var destPlate = $scope.hamiltonDataObj.allDestinationPlates[h];
+                                            if (!destPlate.carrier.scanSkipped && !destPlate.unused && !destPlate.set) {
+                                                destPlate.optional = false;
+                                                destPlate.set = true;
+                                                break;
+                                            } 
                                         }
 
-                                        if (!plate.unused) {
-                                            destinationPlatesNeedingScanCount++;
+                                    }
+
+                                    /* there may be fewer set destinations than possible destinations
+                                    *  so loop through all destinations and set any unset destination to usused
+                                    */
+
+                                    for (var h=0; h<$scope.hamiltonDataObj.allDestinationPlates.length;h++) {
+                                        var destPlate = $scope.hamiltonDataObj.allDestinationPlates[h];
+                                        if (!destPlate.set) {
+                                            destPlate.unused = true;
                                         }
                                     }
-                                    $scope.setDestinationPlatesNeedingScanCount(destinationPlatesNeedingScanCount);
 
-                                    $scope.hamiltonDataObj.allDestinationPlates = newAllDestinationPlates;
+                                    $scope.setDestinationPlatesNeedingScanCount(destPlateCount);
+                                    
                                     break;
                                 case Constants.RESPONSE_COMMANDS_ADD_TRANSFORM_SPEC_DETAIL:
                                     $scope.transformSpec.details[command.detail.key] = command.detail.value;
@@ -88,14 +92,17 @@ angular.module('twist.app').controller('hamiltonWizardSourceScanController', ['$
                         }
 
                         switch ($scope.transformSpec.details.transform_type_id) {
+                            case 9:
                             case 39:
                             case 48:
+                            case 72:
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_scan');
                                 break;
                             case 51:
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.label_destination_tubes');
                                 break;
                             case 58:
+                            case 70:
                                 $state.go('root.record_transform.step_type_selected.tab_selected.hamilton_wizard.destination_placement_and_scan');
                                 break;
                             default:

@@ -398,6 +398,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             base.planFromFile = false;
             base.autoUpdateSpec = true;
 
+            base.requestedDataItems = [];
+            base.presentedDataItems = [];
+
             base.error_message = '';
 
             var updating = function () {
@@ -419,255 +422,48 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         updating();
                     }
 
-                    if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_STEP ||
-                        (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING && base.details.transform_template_id >= 25 && base.details.transform_template_id <=29) ) {
-                        if (base.sourcesReady && base.destinationsReady) {
-                            // kieran
-                            Api.previewTransformation( base.sources, base.destinations, base.details )
-                                .success( function(result) {
-                                    if( result.success ) {
-                                        base.error_message = '';
-                                        base.operations = result.data;
+                    if (base.sourcesReady && base.destinationsReady) {
+                        // kieran
+                        Api.previewTransformation( base.sources, base.destinations, base.details )
+                            .success( function(result) {
+                                if( result.success ) {
+                                    base.error_message = '';
+                                    base.operations = result.data;
 
-                                        if (result.responseCommands) {
-                                            /* this transform requires additional actions or input data */
-                                            base.handleResponseCommands(result.responseCommands);
-                                        }
-
-                                        if (base.operations.length) {
-                                            //if we got operations, then that means sources AND destinations were ready
-                                            //we should force validation on any requested data that exists since
-                                            //otherwise this transform spec should be ready to save
-                                            if (base.requestedDataItems && base.requestedDataItems.length) {
-                                                for (var i=0; i < base.requestedDataItems.length; i++) {
-                                                    base.requestedDataItems[i].validateNow = true;
-                                                }
-                                            }
-                                        }
-
-                                    } else {
-                                        base.error_message = result.message;
+                                    if (result.responseCommands) {
+                                        /* this transform requires additional actions or input data */
+                                        base.handleResponseCommands(result.responseCommands);
                                     }
 
-                                    if (toggleUpdating) {
-                                        ready();
-                                    }
-                                }).error(function(data) {
-                                    console.log('Error retrieving transform preview.');
-                                });
-
-                        } else {
-                            base.clearOperationsList();
-                            if (toggleUpdating) {
-                                ready();
-                            }
-                        }
-                    } else if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
-                        // "rebatching for transformation"
-
-                        if (base.sourcesReady) {
-
-                            var templateId = base.details.transform_template_id;
-
-                            switch (templateId) {
-                                /***
-                                * moved to backend
-
-                                case 25:
-                                    //Rebatching for trannsformation
-                                    //first, we'll group source wells based on resistance_marker values
-                                    var resistanceGroups = {};
-                                    var destinationQuadrants = {};
-                                    var destinationPlates = {};
-
-                                    for (var i=0; i<base.sources.length;i++) {
-                                        var source = base.sources[i];
-                                        for (var j=0; j < source.items.length; j++) {
-                                            var well = angular.copy(source.items[j]);
-                                            well.source_plate_barcode = source.details.id
-                                            var rMarkerVal = well.resistance_marker_plan ? well.resistance_marker_plan.toUpperCase() : 'NULL';
-                                            if (!resistanceGroups[rMarkerVal]) {
-                                                resistanceGroups[rMarkerVal] = [];
+                                    if (base.operations.length) {
+                                        //if we got operations, then that means sources AND destinations were ready
+                                        //we should force validation on any requested data that exists since
+                                        //otherwise this transform spec should be ready to save
+                                        if (base.requestedDataItems && base.requestedDataItems.length) {
+                                            for (var i=0; i < base.requestedDataItems.length; i++) {
+                                                base.requestedDataItems[i].validateNow = true;
                                             }
-                                            resistanceGroups[rMarkerVal].push(well);
-                                        }
-                                    }
-                                    console.log(resistanceGroups);
-
-                                    // resistance groups get written as 96-well quadrants to 384 well trays
-                                    // build the quadrants
-                                    for (group in resistanceGroups) {
-                                        destinationQuadrants[group] = new Array(Math.ceil(resistanceGroups[group].length/96));
-                                        var quadIndex = 0;
-                                        for (var i=0; i < resistanceGroups[group].length; i++) {
-                                            if (i && i%96 == 0) {
-                                                quadIndex++;
-                                            }
-                                            if (!destinationQuadrants[group][quadIndex]) {
-                                                destinationQuadrants[group][quadIndex] = [];
-                                            }
-                                            destinationQuadrants[group][quadIndex].push(resistanceGroups[group][i])
-                                        }
-                                    }
-                                    console.log(destinationQuadrants);
-
-                                    // use the 4-to-1 combine map to write the quadrants to 384 well plates
-                                    var theMap = Maps.transformTemplates[18];
-
-                                    // configure the ultimate destination plates - 384 wells
-                                    for (group in destinationQuadrants) {
-                                        destinationPlates[group] = new Array(Math.ceil(destinationQuadrants[group].length/4));
-
-                                        var plateIndex = 0;
-                                        for (var i=0; i < destinationQuadrants[group].length; i++) {
-                                            if (i && i%4 == 0) {
-                                                plateIndex++;
-                                            }
-
-                                            var quadrant = destinationQuadrants[group][i];
-                                            var quardrantMap = theMap.plateWellToWellMaps[i%4];
-
-                                            for (var j=0; j< quadrant.length; j++) {
-                                                var well = quadrant[j];
-                                                well.destination_plate_number = quardrantMap[j+1].destination_plate_number;
-                                                console.log(well.destination_plate_number)
-                                                well.destination_well_id = quardrantMap[j+1].destination_well_id;
-                                                if (!destinationPlates[group][plateIndex]) {
-                                                    destinationPlates[group][plateIndex] = [];
-                                                }
-                                                destinationPlates[group][plateIndex].push(well);
-                                            }
-                                        }
-
-                                    }
-
-                                    console.log(destinationPlates);
-
-                                    var plateIndex = -1;
-
-                                    //and add or fill the destination inputs for the necessary plates
-                                    for (group in destinationPlates) {
-                                        var plates = destinationPlates[group];
-                                        for (var i=0; i<plates.length; i++) {
-                                            plateIndex++;
-                                            var dest = returnEmptyPlate();
-                                            dest.details.title = '<strong>' + group + '</strong> Resistance  - <strong>Plate ' + (i + 1) + '</strong> of  ' + plates.length + ' &nbsp;(' + plates[i].length + ' wells filled):';
-                                            if (!i) {
-                                                dest['first_in_group'] = true;
-                                            }
-                                            if (base.destinations[plateIndex]) {
-                                                if (base.destinations[plateIndex].loaded || base.destinations[plateIndex].updating) {
-                                                    //do nothing - this destination was already entered
-                                                } else {
-                                                    dest.details.id = base.destinations[plateIndex].details.id;
-                                                    base.destinations[plateIndex] = dest;
-                                                    base.addDestination(plateIndex);
-                                                }
-                                            } else {
-                                                base.destinations[plateIndex] = dest;
-                                                base.addDestination(plateIndex);
-                                            }
-
                                         }
                                     }
 
-                                    if (base.destinationsReady) {
+                                } else {
+                                    base.error_message = result.message;
+                                }
 
-                                        var operations = [];
+                                if (toggleUpdating) {
+                                    ready();
+                                }
+                            }).error(function(data) {
+                                console.log('Error retrieving transform preview.');
+                            });
 
-                                        var destPlateIndex = 0;
-
-                                        for (group in destinationPlates) {
-                                            var plates = destinationPlates[group];
-                                            for (var i=0; i<plates.length; i++) {
-                                                var plate = plates[i];
-                                                destPlateIndex += i;
-
-                                                for (var j=0; j<plate.length;j++) {
-                                                    var sourceWell = plate[j];
-                                                    var destWellRowColumnMap = Maps.rowColumnMaps[base.map.destination.plateTypeId];
-                                                    var operationRow = {
-                                                        source_plate_barcode: sourceWell.source_plate_barcode
-                                                        ,source_well_name: sourceWell.column_and_row
-                                                        ,source_sample_id: sourceWell.sample_id
-                                                        ,destination_plate_barcode: base.destinations[destPlateIndex].details.id
-                                                        ,destination_well_name: destWellRowColumnMap[sourceWell.destination_well_id].row + destWellRowColumnMap[sourceWell.destination_well_id].column
-                                                        ,destination_plate_well_count: Maps.plateTypeInfo[theMap.destination.plateTypeId].wellCount
-                                                    };
-                                                    operations.push(operationRow);
-                                                }
-                                            }
-                                            destPlateIndex++;
-
-                                        }
-
-                                        base.operations = operations;
-
-                                    } else {
-                                        base.clearOperationsList();
-                                    }
-
-                                break;
-                                */
-
-                            case 30:
-                                    /* for NGS, the destination plate is the same as the source plate (as entered)
-                                    * BUT the source plate we record is a placeholder for the dna barcodes plate
-                                    * so we need to adjust the generated operations to reflect this */
-                                    var operations = [];
-
-
-                                    for (var i=0; i<base.sources.length;i++) {
-                                        var plate = base.sources[i];
-                                        for (var j=0; j<plate.items.length;j++) {
-                                            var sourceWell = plate.items[j];
-                                            var operationRow = {
-                                                source_plate_barcode: 'NGS_BARCODE_PLATE'
-                                                ,source_well_name: sourceWell.column_and_row
-                                                ,source_sample_id: sourceWell.sample_id
-                                                ,destination_plate_barcode: plate.details.id
-                                                ,destination_well_name: sourceWell.column_and_row
-                                                ,destination_plate_well_count: Maps.plateTypeInfo[plate.details.plateDetails.type].wellCount
-                                            };
-                                            operations.push(operationRow);
-                                        }
-                                    }
-
-                                    base.operations = operations;
-                                    break;
-                            case 31:
-                                    /* these are the interim types for Keiran to work on while kipp is in Puerto Rico */
-                                    var operations = [];
-
-                                    if (base.destinationsReady) {
-                                        for (var i=0; i<base.sources.length;i++) {
-                                            var plate = base.sources[i];
-                                            for (var j=0; j<plate.items.length;j++) {
-                                                var sourceWell = plate.items[j];
-                                                var operationRow = {
-                                                    source_plate_barcode: plate.details.id
-                                                    ,source_well_name: sourceWell.column_and_row
-                                                    ,source_sample_id: sourceWell.sample_id
-                                                    ,destination_plate_barcode: base.destinations[0].details.id
-                                                    ,destination_well_name: 'A1'
-                                                    ,destination_plate_well_count: 1
-                                                };
-                                                operations.push(operationRow);
-                                            }
-                                        }
-                                    }
-                                    base.operations = operations;
-                                    break;
-
-                            default :
-                                    console.log('Error: Unrecognized plate planning template id = [' + templateId + ']');
-                                    break;
-                            }
-
-                        } else {
-                            base.clearOperationsList();
+                    } else {
+                        base.clearOperationsList();
+                        if (toggleUpdating) {
+                            ready();
                         }
                     }
+                    
                 }
             };
 
@@ -731,20 +527,8 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             }
 
             base.addPresentedDataItems = function (items) {
-                for (var i=0; i< items.length ;i++) {
-                    var newItem = items[i];
-                    var already = false;
-                    for (var j=0; j < base.presentedDataItems.length; j++) {
-                        currentItem = base.presentedDataItems[j];
-                        if (currentItem.item.forProperty == newItem.item.forProperty) {
-                            already = true;
-                        }
-                    }
-
-                    if (!already) {
-                        base.presentedDataItems.push(angular.copy(newItem));
-                    }
-                }
+                //presented data items *always* destructively overwrite
+                base.presentedDataItems = items;
             }
 
             base.getDestinationsHeader = function () {
@@ -793,6 +577,20 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     }
 
                     base.addRequestedDataItems(requestedData);
+                }
+
+                if (base.map.details && base.map.details.presentedData) {
+
+                    var presentedData = [];
+
+                    for (var i=0; i< base.map.details.presentedData.length; i++) {
+                        presentedData.push({
+                            type: Constants.RESPONSE_COMMANDS_PRESENT_DATA
+                            ,item: base.map.details.presentedData[i]
+                        });
+                    }
+
+                    base.addPresentedDataItems(presentedData);
                 }
 
                 base.transformFromFile(false);
@@ -992,11 +790,16 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
                     var barcodeArray = [barcode];
 
+                    var shouldBeNew = true;
+
+                    if (!(base.map.destination.create)) {
+                        //then these destinations should not already exist
+                        shouldBeNew = false;
+                    }
+
                     Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
-                        if (!data.success) {
-                            /* error - destination plates already exist */
-                            onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
-                        } else {
+
+                        var destinationOk = function (destItem) {
                             /* destination plate is new - we're good to go */
                             destItem.loaded = true; /* shows the "valid" icon for this input */
                             destItem.updating = false;
@@ -1011,7 +814,24 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 }
                             }
                             base.destinationsReady = true;
-                            base.updateOperationsList();
+                            base.updateOperationsList();  
+                        }
+
+                        var isNew = data.success;
+
+                        if (shouldBeNew) {
+                            if (isNew) {
+                                destinationOk(destItem);
+                            } else {
+                                /* error - destination plates already exist */
+                                onError(destItem, 'Error: A plate with barcode ' + barcode + ' already exists in the database.');
+                            }
+                        } else {
+                            if (isNew) {
+                                onError(destItem, 'Error: Plate ' + barcode + ' was not found.');
+                            } else {
+                                destinationOk(destItem);
+                            }
                         }
                         ready();
                     }).error(function (data) {
@@ -1313,11 +1133,6 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     delete plate.updating;
                     delete plate.loaded;
                     delete plate.details.title;
-                }
-
-                /* for NGS barcoding transforms, we need to add the source plate as the destination */
-                if (base.details.transform_template_id == 30) {
-                    obj.destinations = angular.copy(base.sources);
                 }
 
                 obj.operations = angular.copy(base.operations);

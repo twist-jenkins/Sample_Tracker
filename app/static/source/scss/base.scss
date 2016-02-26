@@ -242,6 +242,13 @@ strong {
     color: #e07a14;
 }
 
+.twst-boxed-error {
+    color: #000;
+    padding: 0.3em 0.4em;
+    background-color: #ce9f9f;
+    border-radius: 0.3em;
+}
+
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
 /******************************************************************************************************************************************************/
@@ -745,7 +752,7 @@ strong {
     }
 }
 
-ul.twst-spec-requested-items {
+ul.twst-spec-requested-items, ul.twst-spec-presented-items {
     margin-left: 0.5em;
 
     li {
@@ -1254,6 +1261,10 @@ ul.twst-spec-requested-items {
 
                 h3 {
                     color: #000;
+
+                    strong {
+                        padding-right: 0.35em;
+                    }
                 }
             }
 
@@ -2317,7 +2328,7 @@ ul.twst-spec-requested-items {
 
     &.twst-hamilton-wizard-guided-placement-scan-mode {
 
-        &.twst-hamilton-wizard-iHAM01 {
+        &.twst-hamilton-wizard-iHAM04 {
             .twst-hamilton-wizard-deck-visualizer {
                 .twst-hamilton-wizard-deck-contents {
                     .twst-hamilton-wizard-carrier {
@@ -2332,7 +2343,7 @@ ul.twst-spec-requested-items {
             }
         }
 
-        &.twst-hamilton-wizard-iHAM04 {
+        &.twst-hamilton-wizard-iHAM03 {
             .twst-hamilton-wizard-deck-visualizer {
                 .twst-hamilton-wizard-deck-contents {
                     .twst-hamilton-wizard-carrier {

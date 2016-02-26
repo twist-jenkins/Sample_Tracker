@@ -5,6 +5,7 @@
 # ------------------------------
 TRANS_TPL_SAME_TO_SAME = 1
 TRANS_TPL_SAME_PLATE = 2
+TRANS_TPL_MULTIPLEX_SAME_PLATE = 4
 TRANS_TPL_96_TO_384 = 18
 TRANS_TPL_PLATE_MERGE = 23
 TRANS_TPL_REBATCH_FOR_TRANSFORM = 25
@@ -13,19 +14,25 @@ TRANS_TPL_NGS_QC_PASSING = 27
 TRANS_TPL_EXTRACTION_TITIN = 34
 TRANS_TPL_PCA_PREPLANNING = 35
 TRANS_TPL_PCR_PRIMER_HITPICK = 36
+TRANS_TPL_NGS_INDEX_HITPICKING = 30
 TRANS_TPL_NGS_POOLING = 31
 TRANS_TPL_MIN_HITPICKING_FOR_MINIPREP = 32
 TRANS_TPL_PCA_PCR_PURIFICATION = 42
+TRANS_TPL_VECTOR_CREATE_SRC = 43
+TRANS_TPL_ECR_PCR_PLANNING = 39
+TRANS_TPL_ECR_PCR_SOURCE_PLATE_CREATION = 44
+TRANS_TPL_ECR_PCR_PRIMER_HITPICKING = 40
+TRANS_TPL_ECR_PCR_MASTER_MIX_ADDITION = 45
+TRANS_TPL_MIN_PLANNING = 47
 
 # ------------------------------
 # Transform type IDs
 # ------------------------------
 TRANS_TYPE_CLO_INSERT_HITPICK = 2
+TRANS_TYPE_PCA_PCR_PURIFICATION = 9
 
 TRANS_TYPE_QPIX_PICK_COLONIES = 15
 TRANS_TYPE_QPIX_TO_384_WELL = 16
-
-TRANS_TYPE_NGS_HITPICK_INDEXING = 26
 
 TRANS_TYPE_HITPICK_MINIPREP = 39
 TRANS_TYPE_HITPICK_SHIP_PLATES = 48
@@ -44,8 +51,27 @@ TRANS_TYPE_NGS_INDEX_HITPICKING = 26
 TRANS_TYPE_NGS_MASTERMIX_ADDITION = 82
 TRANS_TYPE_NGS_THERMOCYCLE = 27
 TRANS_TYPE_NGS_LOAD_ON_SEQUENCER = 84
-TRANS_TYPE_REBATCH_FOR_TRANSFORM = 45
+TRANS_TYPE_REBATCH_FOR_TRANSFORM = 45  # <-- FIXME: I don't see a "rebatch" type in the database
+TRANS_TYPE_VECTOR_NORM = 45
+TRANS_TYPE_ECR_PCR_PLANNING = 67
+TRANS_TYPE_ECR_PCR_SOURCE_PLATE_CREATION = 68
+TRANS_TYPE_ECR_PCR_PRIMER_HITPICKING = 69
+TRANS_TYPE_ECR_PCR_MASTER_MIX_ADDITION = 70
+TRANS_TYPE_ECR_PCR_THERMOCYCLE = 71
+TRANS_TYPE_ECR_PCR_PURIFICATION = 72
+TRANS_TYPE_ECR_PCR_UPLOAD_QUANT = 74
+TRANS_TYPE_PLS_DILUTION = 77
+TRANS_TYPE_MIN_PLANNING = 85
 
+TRANS_TYPE_VECTOR_HITPICK = 4
+TRANS_TYPE_VECTOR_HITPICK_CREATE_SRC = 76
+
+# -------------------------------
+# MISC
+# -------------------------------
+
+MINIPREP_PLANNING_PLATES_MAX = 25
+MINIPREP_PLANNING_CLONES_MAX = 380
 
 
 # -------------------------------
@@ -53,10 +79,10 @@ TRANS_TYPE_REBATCH_FOR_TRANSFORM = 45
 # -------------------------------
 
 HAMILTONS = {
-    "iHAM04": {
+    "iHAM03": {
         "label": "Jupiter 2 - STAR Plus",
         "type": "Star Plus",
-        "barcode": "iHAM04",
+        "barcode": "iHAM03",
         "trackCount": 68,
         "deckRegions": {
             "left side": {
@@ -73,10 +99,10 @@ HAMILTONS = {
             }
         }
     },
-    "iHAM01": {
+    "iHAM04": {
         "label": "Galactica - STAR",
         "type": "Star Plus",
-        "barcode": "iHAM01",
+        "barcode": "iHAM04",
         "trackCount": 54,
         "deckRegions": {
             "main": {
@@ -85,10 +111,10 @@ HAMILTONS = {
             }
         }
     },
-    "iHAM0X": {
+    "iHAM02": {
         "label": "Enterprise - STAR",
         "type": "Star",
-        "barcode": "iHAM0X",
+        "barcode": "iHAM02",
         "trackCount": 54,
         "deckRegions": {
             "main": {
@@ -97,10 +123,10 @@ HAMILTONS = {
             }
         }
     },
-    "iHAM0Y": {
+    "iHAM01": {
         "label": "Millenium Falcon - STAR",
         "type": "Star",
-        "barcode": "iHAM0Y",
+        "barcode": "iHAM01",
         "trackCount": 54,
         "deckRegions": {
             "main": {
@@ -115,18 +141,18 @@ CARRIERS = {
     "cL5A001": {
         "type": "L5AC",
         "positions": {
-            "cL5A001-01": {
+            "cL5A001_01": {
                 "index": 1
             },
-            "cL5A001-02": {
+            "cL5A001_02": {
                 "index": 2
-            },"cL5A001-03": {
+            },"cL5A001_03": {
                 "index": 3
             },
-            "cL5A001-04": {
+            "cL5A001_04": {
                 "index": 4
             },
-            "cL5A001-05": {
+            "cL5A001_05": {
                 "index": 5
             }
 
@@ -135,19 +161,19 @@ CARRIERS = {
     "cL5A002": {
         "type": "L5AC",
         "positions": {
-            "cL5A002-01": {
+            "cL5A002_01": {
                 "index": 1
             },
-            "cL5A002-02": {
+            "cL5A002_02": {
                 "index": 2
             },
-            "cL5A002-03": {
+            "cL5A002_03": {
                 "index": 3
             },
-            "cL5A002-04": {
+            "cL5A002_04": {
                 "index": 4
             },
-            "cL5A002-05": {
+            "cL5A002_05": {
                 "index": 5
             }
 
@@ -156,19 +182,19 @@ CARRIERS = {
     "cL5A003": {
         "type": "L5AC",
         "positions": {
-            "cL5A003-01": {
+            "cL5A003_01": {
                 "index": 1
             },
-            "cL5A003-02": {
+            "cL5A003_02": {
                 "index": 2
             },
-            "cL5A003-03": {
+            "cL5A003_03": {
                 "index": 3
             },
-            "cL5A003-04": {
+            "cL5A003_04": {
                 "index": 4
             },
-            "cL5A003-05": {
+            "cL5A003_05": {
                 "index": 5
             }
 
@@ -177,18 +203,18 @@ CARRIERS = {
     "cL5A004": {
         "type": "L5AC",
         "positions": {
-            "cL5A004-01": {
+            "cL5A004_01": {
                 "index": 1
-            },"cL5A004-02": {
+            },"cL5A004_02": {
                 "index": 2
             },
-            "cL5A004-03": {
+            "cL5A004_03": {
                 "index": 3
             },
-            "cL5A004-04": {
+            "cL5A004_04": {
                 "index": 4
             },
-            "cL5A004-05": {
+            "cL5A004_05": {
                 "index": 5
             }
 
@@ -197,19 +223,19 @@ CARRIERS = {
     "cL5A005": {
         "type": "L5AC",
         "positions": {
-            "cL5A005-01": {
+            "cL5A005_01": {
                 "index": 1
             },
-            "cL5A005-02": {
+            "cL5A005_02": {
                 "index": 2
             },
-            "cL5A005-03": {
+            "cL5A005_03": {
                 "index": 3
             },
-            "cL5A005-04": {
+            "cL5A005_04": {
                 "index": 4
             },
-            "cL5A005-05": {
+            "cL5A005_05": {
                 "index": 5
             }
 
@@ -218,19 +244,19 @@ CARRIERS = {
     "cL5A006": {
         "type": "L5AC",
         "positions": {
-            "cL5A006-01": {
+            "cL5A006_01": {
                 "index": 1
             },
-            "cL5A006-02": {
+            "cL5A006_02": {
                 "index": 2
             },
-            "cL5A006-03": {
+            "cL5A006_03": {
                 "index": 3
             },
-            "cL5A006-04": {
+            "cL5A006_04": {
                 "index": 4
             },
-            "cL5A006-05": {
+            "cL5A006_05": {
                 "index": 5
             }
         }
@@ -238,19 +264,19 @@ CARRIERS = {
     "cL5A007": {
         "type": "L5AC",
         "positions": {
-            "cL5A007-01": {
+            "cL5A007_01": {
                 "index": 1
             },
-            "cL5A007-02": {
+            "cL5A007_02": {
                 "index": 2
             },
-            "cL5A007-03": {
+            "cL5A007_03": {
                 "index": 3
             },
-            "cL5A007-04": {
+            "cL5A007_04": {
                 "index": 4
             },
-            "cL5A007-05": {
+            "cL5A007_05": {
                 "index": 5
             }
         }
@@ -258,19 +284,19 @@ CARRIERS = {
     "cL5A008": {
         "type": "L5AC",
         "positions": {
-            "cL5A008-01": {
+            "cL5A008_01": {
                 "index": 1
             },
-            "cL5A008-02": {
+            "cL5A008_02": {
                 "index": 2
             },
-            "cL5A008-03": {
+            "cL5A008_03": {
                 "index": 3
             },
-            "cL5A008-04": {
+            "cL5A008_04": {
                 "index": 4
             }
-            ,"cL5A008-05": {
+            ,"cL5A008_05": {
                 "index": 5
             }
 
@@ -279,19 +305,19 @@ CARRIERS = {
     "cL5A009": {
         "type": "L5AC",
         "positions": {
-            "cL5A009-01": {
+            "cL5A009_01": {
                 "index": 1
             },
-            "cL5A009-02": {
+            "cL5A009_02": {
                 "index": 2
             },
-            "cL5A009-03": {
+            "cL5A009_03": {
                 "index": 3
             },
-            "cL5A009-04": {
+            "cL5A009_04": {
                 "index": 4
             }
-            ,"cL5A009-05": {
+            ,"cL5A009_05": {
                 "index": 5
             }
 
@@ -300,19 +326,19 @@ CARRIERS = {
     "cL5A010": {
         "type": "L5AC",
         "positions": {
-            "cL5A010-01": {
+            "cL5A010_01": {
                 "index": 1
             },
-            "cL5A010-02": {
+            "cL5A010_02": {
                 "index": 2
             },
-            "cL5A010-03": {
+            "cL5A010_03": {
                 "index": 3
             },
-            "cL5A010-04": {
+            "cL5A010_04": {
                 "index": 4
             }
-            ,"cL5A010-05": {
+            ,"cL5A010_05": {
                 "index": 5
             }
 
@@ -321,19 +347,19 @@ CARRIERS = {
     "cL5A011": {
         "type": "L5AC",
         "positions": {
-            "cL5A011-01": {
+            "cL5A011_01": {
                 "index": 1
             },
-            "cL5A011-02": {
+            "cL5A011_02": {
                 "index": 2
             },
-            "cL5A011-03": {
+            "cL5A011_03": {
                 "index": 3
             },
-            "cL5A011-04": {
+            "cL5A011_04": {
                 "index": 4
             }
-            ,"cL5A011-05": {
+            ,"cL5A011_05": {
                 "index": 5
             }
 
@@ -342,19 +368,19 @@ CARRIERS = {
     "cL5A012": {
         "type": "L5AC",
         "positions": {
-            "cL5A012-01": {
+            "cL5A012_01": {
                 "index": 1
             },
-            "cL5A012-02": {
+            "cL5A012_02": {
                 "index": 2
             },
-            "cL5A012-03": {
+            "cL5A012_03": {
                 "index": 3
             },
-            "cL5A012-04": {
+            "cL5A012_04": {
                 "index": 4
             }
-            ,"cL5A012-05": {
+            ,"cL5A012_05": {
                 "index": 5
             }
 
@@ -363,19 +389,19 @@ CARRIERS = {
     "cL5A013": {
         "type": "L5AC",
         "positions": {
-            "cL5A013-01": {
+            "cL5A013_01": {
                 "index": 1
             },
-            "cL5A013-02": {
+            "cL5A013_02": {
                 "index": 2
             },
-            "cL5A013-03": {
+            "cL5A013_03": {
                 "index": 3
             },
-            "cL5A013-04": {
+            "cL5A013_04": {
                 "index": 4
             }
-            ,"cL5A013-05": {
+            ,"cL5A013_05": {
                 "index": 5
             }
 
@@ -384,19 +410,19 @@ CARRIERS = {
     "cL5A014": {
         "type": "L5AC",
         "positions": {
-            "cL5A014-01": {
+            "cL5A014_01": {
                 "index": 1
             },
-            "cL5A014-02": {
+            "cL5A014_02": {
                 "index": 2
             },
-            "cL5A014-03": {
+            "cL5A014_03": {
                 "index": 3
             },
-            "cL5A014-04": {
+            "cL5A014_04": {
                 "index": 4
             }
-            ,"cL5A014-05": {
+            ,"cL5A014_05": {
                 "index": 5
             }
 
@@ -405,19 +431,19 @@ CARRIERS = {
     "cL5A015": {
         "type": "L5AC",
         "positions": {
-            "cL5A015-01": {
+            "cL5A015_01": {
                 "index": 1
             },
-            "cL5A015-02": {
+            "cL5A015_02": {
                 "index": 2
             },
-            "cL5A015-03": {
+            "cL5A015_03": {
                 "index": 3
             },
-            "cL5A015-04": {
+            "cL5A015_04": {
                 "index": 4
             }
-            ,"cL5A015-05": {
+            ,"cL5A015_05": {
                 "index": 5
             }
 
@@ -426,19 +452,19 @@ CARRIERS = {
     "cL5A016": {
         "type": "L5AC",
         "positions": {
-            "cL5A016-01": {
+            "cL5A016_01": {
                 "index": 1
             },
-            "cL5A016-02": {
+            "cL5A016_02": {
                 "index": 2
             },
-            "cL5A016-03": {
+            "cL5A016_03": {
                 "index": 3
             },
-            "cL5A016-04": {
+            "cL5A016_04": {
                 "index": 4
             }
-            ,"cL5A016-05": {
+            ,"cL5A016_05": {
                 "index": 5
             }
 
@@ -447,19 +473,19 @@ CARRIERS = {
     "cAPE001": {
         "type": "APE",
         "positions": {
-            "cAPE001-01": {
+            "cAPE001_01": {
                 "index": 1
             },
-            "cAPE001-02": {
+            "cAPE001_02": {
                 "index": 2
             },
-            "cAPE001-03": {
+            "cAPE001_03": {
                 "index": 3
             },
-            "cAPE001-04": {
+            "cAPE001_04": {
                 "index": 4
             }
-            ,"cAPE001-05": {
+            ,"cAPE001_05": {
                 "index": 5
             }
 
@@ -468,19 +494,19 @@ CARRIERS = {
     "cAPE002": {
         "type": "APE",
         "positions": {
-            "cAPE002-01": {
+            "cAPE002_01": {
                 "index": 1
             },
-            "cAPE002-02": {
+            "cAPE002_02": {
                 "index": 2
             },
-            "cAPE002-03": {
+            "cAPE002_03": {
                 "index": 3
             },
-            "cAPE002-04": {
+            "cAPE002_04": {
                 "index": 4
             }
-            ,"cAPE002-05": {
+            ,"cAPE002_05": {
                 "index": 5
             }
         }
@@ -512,19 +538,19 @@ CARRIERS = {
     "c384P001": {
         "type": "PCR_L5_384",
         "positions": {
-            "c384P001-01": {
+            "c384P001_01": {
                 "index": 1
             },
-            "c384P001-02": {
+            "c384P001_02": {
                 "index": 2
             },
-            "c384P001-03": {
+            "c384P001_03": {
                 "index": 3
             },
-            "c384P001-04": {
+            "c384P001_04": {
                 "index": 4
             }
-            ,"c384P001-05": {
+            ,"c384P001_05": {
                 "index": 5
             }
         }
@@ -532,19 +558,19 @@ CARRIERS = {
     "c384P002": {
         "type": "PCR_L5_384",
         "positions": {
-            "c384P002-01": {
+            "c384P002_01": {
                 "index": 1
             },
-            "c384P002-02": {
+            "c384P002_02": {
                 "index": 2
             },
-            "c384P002-03": {
+            "c384P002_03": {
                 "index": 3
             },
-            "c384P002-04": {
+            "c384P002_04": {
                 "index": 4
             }
-            ,"c384P002-05": {
+            ,"c384P002_05": {
                 "index": 5
             }
         }
@@ -552,19 +578,19 @@ CARRIERS = {
     "c384P003": {
         "type": "PCR_L5_384",
         "positions": {
-            "c384P003-01": {
+            "c384P003_01": {
                 "index": 1
             },
-            "c384P003-02": {
+            "c384P003_02": {
                 "index": 2
             },
-            "c384P003-03": {
+            "c384P003_03": {
                 "index": 3
             },
-            "c384P003-04": {
+            "c384P003_04": {
                 "index": 4
             }
-            ,"c384P003-05": {
+            ,"c384P003_05": {
                 "index": 5
             }
         }
@@ -572,19 +598,19 @@ CARRIERS = {
     "c384P004": {
         "type": "PCR_L5_384",
         "positions": {
-            "c384P004-01": {
+            "c384P004_01": {
                 "index": 1
             },
-            "c384P004-02": {
+            "c384P004_02": {
                 "index": 2
             },
-            "c384P004-03": {
+            "c384P004_03": {
                 "index": 3
             },
-            "c384P004-04": {
+            "c384P004_04": {
                 "index": 4
             }
-            ,"c384P004-05": {
+            ,"c384P004_05": {
                 "index": 5
             }
         }
@@ -592,19 +618,19 @@ CARRIERS = {
     "c96P001": {
         "type": "PCR_L5_96",
         "positions": {
-            "c96P001-01": {
+            "c96P001_01": {
                 "index": 1
             },
-            "c96P001-02": {
+            "c96P001_02": {
                 "index": 2
             },
-            "c96P001-03": {
+            "c96P001_03": {
                 "index": 3
             },
-            "c96P001-04": {
+            "c96P001_04": {
                 "index": 4
             }
-            ,"c96P001-05": {
+            ,"c96P001_05": {
                 "index": 5
             }
         }
@@ -612,19 +638,19 @@ CARRIERS = {
     "c96P002": {
         "type": "PCR_L5_96",
         "positions": {
-            "c96P002-01": {
+            "c96P002_01": {
                 "index": 1
             },
-            "c96P002-02": {
+            "c96P002_02": {
                 "index": 2
             },
-            "c96P002-03": {
+            "c96P002_03": {
                 "index": 3
             },
-            "c96P002-04": {
+            "c96P002_04": {
                 "index": 4
             }
-            ,"c96P002-05": {
+            ,"c96P002_05": {
                 "index": 5
             }
         }
@@ -644,16 +670,16 @@ CARRIERS = {
     "cQTRY001": {
         "type": "QTRY",
         "positions": {
-            "cQTRY001-01": {
+            "cQTRY001_01": {
                 "index": 1
             },
-            "cQTRY001-02": {
+            "cQTRY001_02": {
                 "index": 2
             },
-            "cQTRY001-03": {
+            "cQTRY001_03": {
                 "index": 3
             },
-            "cQTRY001-04": {
+            "cQTRY001_04": {
                 "index": 4
             }
         }
@@ -661,16 +687,16 @@ CARRIERS = {
     "cQTRY002": {
         "type": "QTRY",
         "positions": {
-            "cQTRY002-01": {
+            "cQTRY002_01": {
                 "index": 1
             },
-            "cQTRY002-02": {
+            "cQTRY002_02": {
                 "index": 2
             },
-            "cQTRY002-03": {
+            "cQTRY002_03": {
                 "index": 3
             },
-            "cQTRY002-04": {
+            "cQTRY002_04": {
                 "index": 4
             }
         }
@@ -678,16 +704,16 @@ CARRIERS = {
     "cQTRY003": {
         "type": "QTRY",
         "positions": {
-            "cQTRY003-01": {
+            "cQTRY003_01": {
                 "index": 1
             },
-            "cQTRY003-02": {
+            "cQTRY003_02": {
                 "index": 2
             },
-            "cQTRY003-03": {
+            "cQTRY003_03": {
                 "index": 3
             },
-            "cQTRY003-04": {
+            "cQTRY003_04": {
                 "index": 4
             }
         }
@@ -701,19 +727,19 @@ CARRIERS = {
     "cHPC001": {
         "type": "HPC",
         "positions": {
-            "cHPC001-01": {
+            "cHPC001_01": {
                 "index": 1
             },
-            "cHPC001-02": {
+            "cHPC001_02": {
                 "index": 2
             },
-            "cHPC001-03": {
+            "cHPC001_03": {
                 "index": 3
             },
-            "cHPC001-04": {
+            "cHPC001_04": {
                 "index": 4
             }
-            ,"cHPC001-05": {
+            ,"cHPC001_05": {
                 "index": 5
             }
         }
@@ -721,19 +747,19 @@ CARRIERS = {
     "cHPC002": {
         "type": "HPC",
         "positions": {
-            "cHPC002-01": {
+            "cHPC002_01": {
                 "index": 1
             },
-            "cHPC002-02": {
+            "cHPC002_02": {
                 "index": 2
             },
-            "cHPC002-03": {
+            "cHPC002_03": {
                 "index": 3
             },
-            "cHPC002-04": {
+            "cHPC002_04": {
                 "index": 4
             }
-            ,"cHPC002-05": {
+            ,"cHPC002_05": {
                 "index": 5
             }
         }
@@ -741,19 +767,19 @@ CARRIERS = {
     "cHPC003": {
         "type": "HPC",
         "positions": {
-            "cHPC003-01": {
+            "cHPC003_01": {
                 "index": 1
             },
-            "cHPC003-02": {
+            "cHPC003_02": {
                 "index": 2
             },
-            "cHPC003-03": {
+            "cHPC003_03": {
                 "index": 3
             },
-            "cHPC003-04": {
+            "cHPC003_04": {
                 "index": 4
             }
-            ,"cHPC003-05": {
+            ,"cHPC003_05": {
                 "index": 5
             }
         }

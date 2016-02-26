@@ -63,7 +63,7 @@ MASTER_MIX_TEMPLATE = {
     'B9': 'Uni13_F_ex',
 }
 
-XFER_VOL = 0.1 # [ul]
+XFER_VOL = 100 # [nl]
 
 
 def populate_row( starting_row, target_ct ):
@@ -145,8 +145,8 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
                 for primer in (sample.order_item.primer_pair.fwd_primer,
                                sample.order_item.primer_pair.rev_primer):
                     loc = pd[ primer.name ][ primer_ct[ primer.name ] // ALIQ_PER_WELL ]
-                    db.query
                     primer_ct[ primer.name ] += 1
+
                     rows.append( {
                         'source_plate_barcode':         bulk_plate_barcode,
                         'source_well_name':             loc,
@@ -164,6 +164,7 @@ def bulk_to_temp_transform( db, bulk_plate_barcode, pca_plates ):
 
 def bulk_barcode_to_pca_plates( db, bulk_barcode ):
     from twistdb.sampletrack import Plate, TransformSpec
+    from app.constants import TRANS_TYPE_PCA_PREPLANNING as PCA_PREPLANNING
 
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
     dest_barcodes = {}
@@ -171,7 +172,8 @@ def bulk_barcode_to_pca_plates( db, bulk_barcode ):
                   .filter(TransformSpec.date_created >= N_days_ago):
         srcs = spec.data_json['sources']
         if ( len(srcs) == 1
-             and srcs[0]['details']['id'] == bulk_barcode ):
+             and srcs[0]['details']['id'] == bulk_barcode
+             and spec.data_json['details']['transform_type_id'] == PCA_PREPLANNING ):
 
             # we must maintain ordering
             for i, op in enumerate( spec.data_json['operations'] ):
@@ -244,6 +246,7 @@ def munge_echo_worklist( db, bulk_barcode, temp_plate_barcodes ):
     """
     from twistdb.sampletrack import Plate, TransformSpec
     from app.miseq import echo_csv
+    from app.constants import TRANS_TYPE_PCA_PREPLANNING as PCA_PREPLANNING
 
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
     specs = []
@@ -251,7 +254,9 @@ def munge_echo_worklist( db, bulk_barcode, temp_plate_barcodes ):
                   .filter(TransformSpec.date_created >= N_days_ago):
         srcs = spec.data_json['sources']
         if ( len(srcs) == 1
-             and srcs[0]['details']['id'] == bulk_barcode ):
+             and srcs[0]['details']['id'] == bulk_barcode
+             and spec.data_json['details']['transform_type_id'] == PCA_PREPLANNING ):
+
             specs.append( spec.data_json )
 
     # there should only be one:
