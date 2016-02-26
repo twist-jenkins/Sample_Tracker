@@ -150,21 +150,8 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             }
 
             base.addPresentedDataItems = function (items) {
-                for (var i=0; i< items.length ;i++) {
-                    var newItem = items[i];
-                    var already = false;
-                    for (var j=0; j < base.presentedDataItems.length; j++) {
-                        currentItem = base.presentedDataItems[j];
-                        if (currentItem.item.forProperty == newItem.item.forProperty) {
-                            base.presentedDataItems[j] = newItem;
-                            already = true;
-                        }
-                    }
-
-                    if (!already) {
-                        base.presentedDataItems.push(angular.copy(newItem));
-                    }
-                }
+                //presented data items *always* destructively overwrite
+                base.presentedDataItems = items;
             }
 
             base.getDestinationsHeader = function () {

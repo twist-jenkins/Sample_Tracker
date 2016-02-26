@@ -2064,8 +2064,7 @@ app = angular.module('twist.app')
                         presentedData: [
                             {
                                 type: 'csv'
-                                ,title: 'Clones Stats'
-                                ,forProperty: 'sequencer'
+                                ,title: 'Clone Stats'
                                 ,data: 'Clones Picked, Plates Required\r\n0,0'
                             }
                         ]

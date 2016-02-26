@@ -667,9 +667,9 @@ def ngs_pooling():
                 "item": {
                     "type": "text",
                     "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>"
+                    "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
                               + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
+                              + "</strong> to the pooling bin.</span>")
                 }
             })
 
@@ -997,6 +997,74 @@ def pls_dilution(type_id, templ_id):
     cmds = []
 
     rows = plates_to_rows(request.json['sources'])
+
+    return rows, cmds
+
+@to_resp
+def min_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    sources = request.json['sources'];
+
+    sourcesSet = [];
+
+    for sourceIndex, source in enumerate(sources):
+        sourcesSet.append({
+            "type": "SPTT_0006",
+            "details" : {
+                "id" : source["details"]["id"]
+            }
+        });
+
+    # TODO: Count the number of clones and provide the "CLones Picked" and "Plate Required" counts
+
+    clones_picked = plates_required = 26
+
+    if (clones_picked < constants.MINIPREP_PLANNING_CLONES_MAX and plates_required < constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if there are < 25 plates required AND less than 380 picks add another source
+        sourcesSet.append({
+            "type": "SPTT_0006"
+        });
+    elif (clones_picked == constants.MINIPREP_PLANNING_CLONES_MAX or plates_required == constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if either limit is reached exactly
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-warn-text\">Run FULL</strong>",
+                "data": "<span class=\"twst-warn-text\">No more plates will fit in this run.</span>"
+            }
+        })
+    else:
+        # then either clones or plates are over the limit
+
+        #remove the last added source from the list
+        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-error-text\">Limit Overrun!</strong>",
+                "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
+                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                          + "</strong> to the freezer.</span>")
+            }
+        })
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Clone Stats",
+            "data": 'Clones Picked, Plates Required\r\n<strong>%s</strong> of %s,<strong>%s</strong> of %s' % (clones_picked, constants.MINIPREP_PLANNING_CLONES_MAX, plates_required, constants.MINIPREP_PLANNING_PLATES_MAX)
+        }
+    })
+
+    cmds.append({
+        "type": "SET_SOURCES",
+        "plates": sourcesSet
+    })
 
     return rows, cmds
 
