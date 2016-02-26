@@ -151,7 +151,7 @@ def pooling_transform(db, source_samples):
     for s_sample in source_samples:
         plate_size = s_sample.plate.plate_type.layout.feature_count
         rows.append({
-            'source_plate_barcode':         s_sample.plate.id,
+            'source_plate_barcode':         s_sample.plate.external_barcode,
             'source_well_name':             s_sample.well.well_label,
             'source_well_number':           s_sample.well.well_number,
             'source_sample_id':             s_sample.id,
