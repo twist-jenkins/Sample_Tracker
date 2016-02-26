@@ -132,8 +132,7 @@ def create_adhoc_sample_movement(db_session,
     sample_cache = {}
     logging.info("Caching plate samples.")
     for barcode, plate in plate_cache.iteritems():
-        s = plate.current_well_contents(db_session)
-        for sample in s:
+        for sample in plate.current_well_contents(db_session):
             sample_cache[(barcode, sample.well.well_number)] = sample
 
     # Inject well_number by well_name into transform_map, if necessary.
