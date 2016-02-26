@@ -313,6 +313,39 @@ def plates_to_rows( sources ):
 @to_resp
 def rebatch_transform( type_id, templ_id ):
     rows, cmds = [], []
+    #rows = plates_to_rows( request.json['sources'] )
+    destinations_ready = bool( request.json.get('destinations') )
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+            if not destination['details'].get('id'):
+                destinations_ready = False
+                break
+            if destinations_ready:
+                rows = rebatching_normalization.create_transform(db,
+                              request.json['sources'],
+                              request.json['destinations'] )
+
+    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
+                db.session, request.json['sources'][0]['details']['id'],
+                [x['details']['id'] for x in request.json['destinations']])'''
+
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+
+    cmds.append({
+        "type": "SET_DESTINATIONS",
+        "plates": destination_plates
+    })
+    cmds.append({
+        "type": "REQUEST_DATA",
+        "item": {
+            "type": "array.1",
+            "dataType": "barcode.PLATE",
+            "title": "Associated PCA Plate Barcode",
+            "forProperty": "associatedPcaPlates"
+        }
+    })
+
+    #print destination_plates
     return rows, cmds
 
 
@@ -586,6 +619,7 @@ def ngs_tagmentation(type_id, templ_id):
     return rows, cmds
 
 
+
 @to_resp
 def ngs_pooling(type_id, templ_id):
 
@@ -798,6 +832,74 @@ def pls_dilution(type_id, templ_id):
     cmds = []
 
     rows = plates_to_rows(request.json['sources'])
+
+    return rows, cmds
+
+@to_resp
+def min_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    sources = request.json['sources'];
+
+    sourcesSet = [];
+
+    for sourceIndex, source in enumerate(sources):
+        sourcesSet.append({
+            "type": "SPTT_0006",
+            "details" : {
+                "id" : source["details"]["id"]
+            }
+        });
+
+    # TODO: Count the number of clones and provide the "CLones Picked" and "Plate Required" counts
+
+    clones_picked = plates_required = 0
+
+    if (clones_picked < constants.MINIPREP_PLANNING_CLONES_MAX and plates_required < constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if there are < 25 plates required AND less than 380 picks add another source
+        sourcesSet.append({
+            "type": "SPTT_0006"
+        });
+    elif (clones_picked == constants.MINIPREP_PLANNING_CLONES_MAX or plates_required == constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if either limit is reached exactly
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-warn-text\">Run FULL</strong>",
+                "data": "<span class=\"twst-warn-text\">No more plates will fit in this run.</span>"
+            }
+        })
+    else:
+        # then either clones or plates are over the limit
+
+        #remove the last added source from the list
+        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-error-text\">Limit Overrun!</strong>",
+                "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
+                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                          + "</strong> to the freezer.</span>")
+            }
+        })
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Clone Stats",
+            "data": 'Clones Picked, Plates Required\r\n<strong>%s</strong> of %s,<strong>%s</strong> of %s' % (clones_picked, constants.MINIPREP_PLANNING_CLONES_MAX, plates_required, constants.MINIPREP_PLANNING_PLATES_MAX)
+        }
+    })
+
+    cmds.append({
+        "type": "SET_SOURCES",
+        "plates": sourcesSet
+    })
 
     return rows, cmds
 

@@ -438,7 +438,9 @@ def transform_params( transform_type_id, transform_template_id  ):
                             TRANS_TYPE_ECR_PCR_UPLOAD_QUANT as ECR_PCR_UPLOAD_QUANT_T,
                             TRANS_TYPE_VECTOR_NORM as VECTOR_NORM_T,
                             TRANS_TYPE_PLS_DILUTION as PLS_DILUTION_T,
-                            TRANS_TPL_MULTIPLEX_SAME_PLATE as MULTIPLEX_SAME_PLATE
+                            TRANS_TPL_MULTIPLEX_SAME_PLATE as MULTIPLEX_SAME_PLATE,
+                            TRANS_TYPE_MIN_PLANNING as MIN_PLANNING_T,
+                            TRANS_TPL_MIN_PLANNING as MIN_PLANNING
     )
 
     f = {(62, SAME_PLATE): transform.generic_same_to_same,  #"CHP Deprotection"
@@ -458,6 +460,7 @@ def transform_params( transform_type_id, transform_template_id  ):
          (UPLOAD_QUANT_T, SAME_PLATE):                transform.quant_upload,
          (ECR_PCR_UPLOAD_QUANT_T, SAME_PLATE):        transform.quant_upload,
          (NGS_HITPICKING_T, NGS_HITPICKING):          transform.ngs_hitpicking,
+         (MIN_PLANNING_T, MIN_PLANNING):          transform.min_planning,
          (25, SAME_PLATE):                 transform.ngs_tagmentation, # ?? no type constant?
          (NGS_MASTERMIX_T, ):              transform.ngs_mastermix,
          (PCR_PRIMER_HITPICK, ):           transform.pcr_primer_hitpick,
