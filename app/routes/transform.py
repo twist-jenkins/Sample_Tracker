@@ -17,7 +17,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from twistdb.ngs import CallerSummary
 from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
-from twistdb.frag import FraganalyzerRunSampleSummaryJoin
+# from twistdb.frag import FraganalyzerRunSampleSummaryJoin
 
 
 logger = logging.getLogger()
@@ -118,31 +118,33 @@ def filter_transform(transform_template_id, sources, dests):
     if transform_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells(barcode):
-            well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
-            for plate, sample, fa_well in \
-                db.session.query(Plate, Sample, FraganalyzerRunSampleSummaryJoin) \
-                    .filter(Plate.external_barcode == barcode) \
-                    .join(Sample).join(FraganalyzerRunSampleSummaryJoin) \
-                    .filter(FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
-
-                    if fa_well.human_classification:
-                        [hum] = fa_well.human_classification
-                        score = hum.qc_call
-                    else:
-                        if fa_well.ok_to_ship():
-                            score = 'Pass'
-                        elif fa_well.borderline_to_ship():
-                            score = 'Warn'
-                        else:
-                            score = 'Fail'
-                    well_scores[sample.well.well_number]['sample'] = sample
-                    well_scores[sample.well.well_number]['scores'].add(score)
-
-            well_to_passfail = {}
-            for well_id, d in well_scores.items():
-                if d['scores'] == set(['Warn']):
-                    well_to_passfail[well_id] = d['well']
-            return well_to_passfail
+            # FIXME (JCD) commenting this out until we clear up FA redesign
+            # well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
+            # for plate, sample, fa_well in \
+            #     db.session.query(Plate, Sample, FraganalyzerRunSampleSummaryJoin) \
+            #         .filter(Plate.external_barcode == barcode) \
+            #         .join(Sample).join(FraganalyzerRunSampleSummaryJoin) \
+            #         .filter(FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
+            #
+            #         if fa_well.human_classification:
+            #             [hum] = fa_well.human_classification
+            #             score = hum.qc_call
+            #         else:
+            #             if fa_well.ok_to_ship():
+            #                 score = 'Pass'
+            #             elif fa_well.borderline_to_ship():
+            #                 score = 'Warn'
+            #             else:
+            #                 score = 'Fail'
+            #         well_scores[sample.well.well_number]['sample'] = sample
+            #         well_scores[sample.well.well_number]['scores'].add(score)
+            #
+            # well_to_passfail = {}
+            # for well_id, d in well_scores.items():
+            #     if d['scores'] == set(['Warn']):
+            #         well_to_passfail[well_id] = d['well']
+            # return well_to_passfail
+            return None
 
     elif transform_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
         # NGS pass/fail
