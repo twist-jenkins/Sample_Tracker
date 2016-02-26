@@ -10,7 +10,7 @@ import os.path
 
 operator_id = 'khervold'
 
-    
+
 def test_primer_hitpicking_src():
     desc = 'testing: primer hitpicking'
     sf_id = 'testing::primer-hitpicking-fake-salesforce-id'
@@ -138,7 +138,7 @@ def test_vector_hitpicking():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     db = get_handle( config_file = os.path.join(script_dir, 'config.ini'))
 
-    data = {'sources': [{'details':{'id':'vector-bulk'}}], 'details': {'transform_type_id': VECTOR_HITPICK}, 'misc': {'dest_barcodes': ['PLT_kierantest4','PLT_kierantest1','PLT_kierantest2','PLT_kierantest3']}}
+    data = {'sources': [{'details':{'id':'vector-bulk'}}], 'details': {'transform_type_id': VECTOR_HITPICK}, 'misc': {'dest_barcodes': ['PLT_kierantest4','PLT_kierantest1','PLT_kierantest2','PLT_kierantest3']}, 'operations': []}
     ts = TransformSpec(type_id=VECTOR_HITPICK, data_json=data, operator_id='khervold' )
     db.add(ts)
     db.commit()
@@ -154,7 +154,7 @@ def test_vector_hitpicking():
                         operator_id=operator_id, plate=plate, well=plate.get_well_by_number(1) )
         db.add(sample)
         db.commit()
-    
+
 if __name__ == "__main__":
     test_primer_hitpicking_src()
     test_vector_hitpicking()

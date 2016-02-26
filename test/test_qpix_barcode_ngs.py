@@ -18,53 +18,41 @@ from test_flask_app import AutomatedTestingUser, rnd_bc
 # from test_flask_app import RootPlate
 
 EXAMPLE_NGS_BARCODING_SPEC = {
-    "type":"plate_step",
-    "title":"NGS prep: barcode hitpicking",
+    "type":"PLATE_PLANNING",
+    "title":"NGS Index hitpicking",
     "sources":[{
-        "id": None,
+        "id":None,
         "type":"plate",
         "details":{
             "text":"",
-            "id":"SRN 000000 SM-37",
+            "id":"NGS_BARCODE_PLATE_TEST1",
             "plateDetails":{
                 "type":"SPTT_0006",
                 "createdBy":"Charlie Ledogar",
-                "dateCreated":"2015-11-08 14:47:55.714115"
+                "dateCreated":"2015-11-21 17:59:00"
             }
         }
     }],
-    "destinations":[],
-    "operations":[
-        {
-            "source_plate_barcode":"SRN 000577 SM-37",
-            "source_well_name":"K13",
-            "source_well_number": 253,
-            "source_sample_id":"CS_563bff9150a77622447fc8f5",
-            "destination_plate_barcode":"SRN 000577 SM-37",
-            "destination_well_name":"K13",
-            "destination_well_number": 253,
-            "destination_plate_type": "SPTT_0006",
-            "destination_plate_well_count":384
-        },{
-            "source_plate_barcode":"SRN 000577 SM-37",
-            "source_well_name":"K15",
-            "source_well_number": 255,
-            "source_sample_id":"CS_563bff9150a77622447fc8f7",
-            "destination_plate_barcode":"SRN 000577 SM-37",
-            "destination_well_name":"K15",
-            "destination_well_number": 255,
-            "destination_plate_type": "SPTT_0006",
-            "destination_plate_well_count":384
+    "destinations":[{
+        "id":None,
+        "type":"plate",
+        "details":{
+            "text":"",
+            "id":"pEXT_test_Vh3va9Aq_13"
         }
-    ],
+    }],
+    "operations":[{}],
     "details":{
-        "transform_template_id":2,
-        "text":"NGS prep: barcode hitpicking",
-        "source_plate_count":1,"id":26,
+        "text":"NGS Index hitpicking",
+        "transform_template_id":30,
+        "source_plate_count":1,
+        "id":26,
         "destination_plate_count":0,
+        "uid_group":10,
         "transform_type_id":26
     }
 }
+
 
 EXAMPLE_ALIQUOT_SPEC = {
     "type":"plate_step",
@@ -82,13 +70,7 @@ EXAMPLE_ALIQUOT_SPEC = {
             }
         }
     }],
-    "destinations":[{
-        "id":None,
-        "type":"plate",
-        "details":{
-            "text":"","id":"f8m938fm3984y9834y"
-        }
-    }],
+    "destinations": None,
     "operations":[
         {
             "source_plate_barcode":"SRN 000577 SM-21",
@@ -374,26 +356,10 @@ class TestCase(unittest.TestCase):
         # 3. create an ngs barcoding spec (type 26)
 
         spec = EXAMPLE_NGS_BARCODING_SPEC.copy()
-        transform_map = [{
-            "source_plate_barcode": dest_plate,
-            "source_well_name": src_well,
-            "source_well_number": src_number,
-            "destination_plate_barcode": dest_plate,
-            "destination_well_name": dest_well,
-            "destination_well_number": dest_number,
-            "destination_plate_well_count": dest_well_count,
-            "destination_plate_type": "SPTT_0005",
-            "source_sample_id": dest_sample_id
-        } for (src_well, src_number, dest_plate, dest_well, dest_number, dest_well_count, dest_sample_id) in test_fixture]
-        spec["operations"] = transform_map
-        spec["details"] = {
-            "transform_template_id": 2,  # 21?
-            "text": "NGS prep: barcode hitpicking",
-            "source_plate_count": 1,
-            "id": 26,
-            "destination_plate_count": 0,
-            "transform_type_id": 26
-        }
+        plate_barcodes = set([el[2] for el in test_fixture])
+        spec["destinations"] = [{"id": None, "type": "plate",
+                                 "details": {"text": "", "id": plate_barcode}}
+                                for plate_barcode in plate_barcodes]
 
         # 4. post the spec -- this replaces post('/api/v1/track-sample-step')
 

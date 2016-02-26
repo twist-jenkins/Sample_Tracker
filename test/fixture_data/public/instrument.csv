@@ -1,0 +1,4 @@
+serial_number,instrument_type,status,description
+MISEQ_1,ngs,active,"MiSeq 1"
+MISEQ_2,ngs,active,"MiSeq 2"
+NEXTSEQ_1,ngs,active,"NextSeq 1"

@@ -17,7 +17,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from twistdb.ngs import CallerSummary
 from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
-from twistdb.frag import FraganalyzerRunSampleSummaryJoin
+# from twistdb.frag import FraganalyzerRunSampleSummaryJoin
 
 
 logger = logging.getLogger()
@@ -118,31 +118,33 @@ def filter_transform(transform_template_id, sources, dests):
     if transform_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells(barcode):
-            well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
-            for plate, sample, fa_well in \
-                db.session.query(Plate, Sample, FraganalyzerRunSampleSummaryJoin) \
-                    .filter(Plate.external_barcode == barcode) \
-                    .join(Sample).join(FraganalyzerRunSampleSummaryJoin) \
-                    .filter(FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
-
-                    if fa_well.human_classification:
-                        [hum] = fa_well.human_classification
-                        score = hum.qc_call
-                    else:
-                        if fa_well.ok_to_ship():
-                            score = 'Pass'
-                        elif fa_well.borderline_to_ship():
-                            score = 'Warn'
-                        else:
-                            score = 'Fail'
-                    well_scores[sample.well.well_number]['sample'] = sample
-                    well_scores[sample.well.well_number]['scores'].add(score)
-
-            well_to_passfail = {}
-            for well_id, d in well_scores.items():
-                if d['scores'] == set(['Warn']):
-                    well_to_passfail[well_id] = d['well']
-            return well_to_passfail
+            # FIXME (JCD) commenting this out until we clear up FA redesign
+            # well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
+            # for plate, sample, fa_well in \
+            #     db.session.query(Plate, Sample, FraganalyzerRunSampleSummaryJoin) \
+            #         .filter(Plate.external_barcode == barcode) \
+            #         .join(Sample).join(FraganalyzerRunSampleSummaryJoin) \
+            #         .filter(FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
+            #
+            #         if fa_well.human_classification:
+            #             [hum] = fa_well.human_classification
+            #             score = hum.qc_call
+            #         else:
+            #             if fa_well.ok_to_ship():
+            #                 score = 'Pass'
+            #             elif fa_well.borderline_to_ship():
+            #                 score = 'Warn'
+            #             else:
+            #                 score = 'Fail'
+            #         well_scores[sample.well.well_number]['sample'] = sample
+            #         well_scores[sample.well.well_number]['scores'].add(score)
+            #
+            # well_to_passfail = {}
+            # for well_id, d in well_scores.items():
+            #     if d['scores'] == set(['Warn']):
+            #         well_to_passfail[well_id] = d['well']
+            # return well_to_passfail
+            return None
 
     elif transform_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
         # NGS pass/fail
@@ -313,6 +315,39 @@ def plates_to_rows( sources ):
 @to_resp
 def rebatch_transform( type_id, templ_id ):
     rows, cmds = [], []
+    #rows = plates_to_rows( request.json['sources'] )
+    destinations_ready = bool( request.json.get('destinations') )
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+            if not destination['details'].get('id'):
+                destinations_ready = False
+                break
+            if destinations_ready:
+                rows = rebatching_normalization.create_transform(db,
+                              request.json['sources'],
+                              request.json['destinations'] )
+
+    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
+                db.session, request.json['sources'][0]['details']['id'],
+                [x['details']['id'] for x in request.json['destinations']])'''
+
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+
+    cmds.append({
+        "type": "SET_DESTINATIONS",
+        "plates": destination_plates
+    })
+    cmds.append({
+        "type": "REQUEST_DATA",
+        "item": {
+            "type": "array.1",
+            "dataType": "barcode.PLATE",
+            "title": "Associated PCA Plate Barcode",
+            "forProperty": "associatedPcaPlates"
+        }
+    })
+
+    #print destination_plates
     return rows, cmds
 
 
@@ -433,7 +468,7 @@ def thermocycle( type_id, templ_id ):
                 "forProperty": "thermocyclerBarcode"
             }
         })
-    return [], cmds
+    return [{}], cmds
 
 
 @to_resp
@@ -460,12 +495,12 @@ def ngs_hitpicking( type_id, templ_id ):
     cmds.append({
         "type": "PRESENT_DATA",
         "item": {
-            "type": "file-data",
-            "title": "Worklist",
-            "forProperty": "worklist",
-            "fileType": "worklist"
+            "type": "text",
+            "title": "Note",
+            "data": "'Preview' will appear empty.  NGS barcode pairs allocated upon Submit / Save, with Echo worklist available via Transform Specs."
         }
     })
+
     return rows, cmds
 
 
@@ -480,7 +515,7 @@ def ngs_mastermix( type_id, templ_id ):
             "type": "text",
             "title": "NGS Master Mix",
             "data": "Master mix data here... maybe CSV format to render a table?"
-                    }
+        }
     })
     return rows, cmds
 
@@ -586,215 +621,17 @@ def ngs_tagmentation(type_id, templ_id):
     return rows, cmds
 
 
-def ngs_pooling():
-    """TRANS_TPL_NGS_POOLING"""
-
-    rows, cmds = [{}], []
-
-    details = request.json["details"]
-
-    sequencer = None;
-
-    basePairMax = 0;
-    currentBasePairTotal = 0;
-    previousBasePairTotal = 0;
-
-    if "requestedData" in details:
-        reqData = details["requestedData"]
-
-    if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-        cmds.append({
-            "type": "REQUEST_DATA",
-            "item": {
-                "type": 'radio'
-                ,"title": 'Select Sequencer:'
-                ,"forProperty": 'sequencer'
-                ,"data": [
-                    {"option": 'MiSeq'}
-                    ,{"option": 'NextSeq'}
-                ]
-            }
-        })
-
-    sources = request.json['sources'];
-
-    sourcesSet = [];
-
-    for sourceIndex, source in enumerate(sources):
-        sourcesSet.append({
-            "type": "SPTT_0006"
-            ,"details" : {
-                "id" : source["details"]["id"]
-            }
-        });
-
-    if "sequencer" in reqData:
-        # TO DO  Derive the max BP count for this sequencer
-        #        AND
-        #        Return total count of basepairs on source plate(s)
-        basePairMax = 12600000;
-
-        '''
-        currentBasePairTotal = total of BPs in all source plates
-        previousBasePairTotal = total BPS on all plates but the last one
-        '''
-
-        # DEV ONLY - remove when real basepair counting is done
-        previousBasePairTotal = 500;
-        currentBasePairTotal = basePairMax - 3 + len(sources);
-
-        reponseTally = currentBasePairTotal
-
-        if currentBasePairTotal < basePairMax:
-            #and add another source input to indicate there's more room
-            sourcesSet.append({
-                "type": "SPTT_0006"
-            });
-
-        elif basePairMax and currentBasePairTotal == basePairMax:
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                    "data": "No more plates will fit in this run."
-                }
-            })
-
-        else :
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>"
-                              + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
-                }
-            })
-
-            reponseTally = previousBasePairTotal
-
-            #remove the last added source from the list
-            sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
-
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "text",
-                "title": "Base Pair Tally",
-                "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-            }
-        })
-
-    cmds.append({
-        "type": "SET_SOURCES",
-        "plates": sourcesSet
-    })
-
-    return rows, cmds
 
 @to_resp
-def ngs_pooling( type_id, templ_id ):
+def ngs_pooling(type_id, templ_id):
+
     rows, cmds = [{}], []
-    sequencer = None
 
-    basePairMax = 0;
-    currentBasePairTotal = 0;
-    previousBasePairTotal = 0;
+    from app.steps import ngs_pooling as ngsp
+    s_samples = ngsp.get_source_samples(db.session, request.json['sources'])
+    cmds = ngsp.pooling_cmds(db.session, request, s_samples)
+    rows = ngsp.pooling_transform(db.session, s_samples)
 
-    if "requestedData" in details:
-        reqData = details["requestedData"]
-
-    if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-        cmds.append({
-            "type": "REQUEST_DATA",
-            "item": {
-                "type": 'radio'
-                ,"title": 'Select Sequencer:'
-                ,"forProperty": 'sequencer'
-                ,"data": [
-                    {"option": 'MiSeq'}
-                    ,{"option": 'NextSeq'}
-                ]
-            }
-        })
-
-    sources = request.json['sources'];
-
-    sourcesSet = [];
-
-    for sourceIndex, source in enumerate(sources):
-        sourcesSet.append({
-            "type": "SPTT_0006"
-            ,"details" : {
-                "id" : source["details"]["id"]
-            }
-        });
-
-    if "sequencer" in reqData:
-        # TO DO  Derive the max BP count for this sequencer
-        #        AND
-        #        Return total count of basepairs on source plate(s)
-        basePairMax = 12500000;
-
-        '''
-        currentBasePairTotal = total of BPs in all source plates
-        previousBasePairTotal = total BPS on all plates but the last one
-        '''
-
-        # DEV ONLY - remove when real basepair counting is done
-        previousBasePairTotal = 500;
-        currentBasePairTotal = basePairMax - 3 + len(sources);
-
-        reponseTally = currentBasePairTotal
-
-        if currentBasePairTotal < basePairMax:
-            #and add another source input to indicate there's more room
-            sourcesSet.append({
-                "type": "SPTT_0006"
-            });
-
-        elif basePairMax and currentBasePairTotal == basePairMax:
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                    "data": "No more plates will fit in this run."
-                }
-            })
-
-        else :
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>" 
-                              + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
-                }
-            })
-
-            reponseTally = previousBasePairTotal
-
-            #remove the last added source from the list
-            sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
-
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "text",
-                "title": "Base Pair Tally",
-                "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-            }
-        })
-
-    cmds.append({
-        "type": "SET_SOURCES",
-        "plates": sourcesSet
-    })
     return rows, cmds
 
 
@@ -823,7 +660,7 @@ def vector_create_src( type_id, templ_id ):
     print '@@ request.json:', request.json
     if len(request.json['sources']) != 1:
         raise WebError('expected one source; got %d' % len(request.json['sources']))
-    
+
     return vector_hitpicking.create_src( db.session, request.json['sources'][0]['details']['id'] )
 
 
@@ -994,6 +831,74 @@ def pls_dilution(type_id, templ_id):
     cmds = []
 
     rows = plates_to_rows(request.json['sources'])
+
+    return rows, cmds
+
+@to_resp
+def min_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    sources = request.json['sources'];
+
+    sourcesSet = [];
+
+    for sourceIndex, source in enumerate(sources):
+        sourcesSet.append({
+            "type": "SPTT_0006",
+            "details" : {
+                "id" : source["details"]["id"]
+            }
+        });
+
+    # TODO: Count the number of clones and provide the "CLones Picked" and "Plate Required" counts
+
+    clones_picked = plates_required = 0
+
+    if (clones_picked < constants.MINIPREP_PLANNING_CLONES_MAX and plates_required < constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if there are < 25 plates required AND less than 380 picks add another source
+        sourcesSet.append({
+            "type": "SPTT_0006"
+        });
+    elif (clones_picked == constants.MINIPREP_PLANNING_CLONES_MAX or plates_required == constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if either limit is reached exactly
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-warn-text\">Run FULL</strong>",
+                "data": "<span class=\"twst-warn-text\">No more plates will fit in this run.</span>"
+            }
+        })
+    else:
+        # then either clones or plates are over the limit
+
+        #remove the last added source from the list
+        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-error-text\">Limit Overrun!</strong>",
+                "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
+                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                          + "</strong> to the freezer.</span>")
+            }
+        })
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Clone Stats",
+            "data": 'Clones Picked, Plates Required\r\n<strong>%s</strong> of %s,<strong>%s</strong> of %s' % (clones_picked, constants.MINIPREP_PLANNING_CLONES_MAX, plates_required, constants.MINIPREP_PLANNING_PLATES_MAX)
+        }
+    })
+
+    cmds.append({
+        "type": "SET_SOURCES",
+        "plates": sourcesSet
+    })
 
     return rows, cmds
 
