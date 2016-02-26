@@ -312,6 +312,7 @@ def plates_to_rows( sources ):
 
 @to_resp
 def rebatch_transform( type_id, templ_id ):
+    from app.steps import rebatching_normalization
     rows, cmds = [], []
     #rows = plates_to_rows( request.json['sources'] )
     destinations_ready = bool( request.json.get('destinations') )
