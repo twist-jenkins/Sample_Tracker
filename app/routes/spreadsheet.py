@@ -391,7 +391,7 @@ def merged_sample(parent_samples):
 
     filtered_parents = filter_real_samples( parent_samples )
 
-    copy = Sample()
+    result = Sample()
     attrs_to_ignore = ("is_clonal", )
     for attrname in ("order_item_id", "type_id", "operator_id",
                      "external_barcode", "name", "description",
@@ -403,6 +403,8 @@ def merged_sample(parent_samples):
                      "i7_sequence_id"):
         source_vals = set([getattr(par, attrname) for par in filtered_parents])
         if len(source_vals) == 1:
-            setattr(copy, attrname, source_vals.pop())
+            setattr(result, attrname, source_vals.pop())
+    if len(parent_samples) > 1:
+        result.is_pooled = True
 
-    return copy
+    return result
