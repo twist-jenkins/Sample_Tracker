@@ -446,7 +446,7 @@ def transform_params( transform_type_id, transform_template_id  ):
     )
 
     f = {(62, SAME_PLATE): transform.generic_same_to_same,  #"CHP Deprotection"
-         (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):          transform.generic_same_to_same,
+         (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):        transform.generic_same_to_same,
          (TRANS_TYPE_NGS_POOLING, NGS_POOLING):       transform.ngs_pooling,
          (VECTOR_HITPICK, SAME_PLATE):                transform.vector_hitpicking,
          (VECTOR_CREATE_SRC_T, VECTOR_CREATE_SRC):    transform.vector_create_src,

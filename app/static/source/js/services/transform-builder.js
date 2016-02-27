@@ -281,6 +281,28 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 base.updateOperationsList();
             }
 
+            base.skipPlateInput = function (which, plateIndex) {
+                var plate = null;
+                if (which == Constants.PLATE_SOURCE) {
+                    plate = base.sources[plateIndex];
+                } else if (which == Constants.PLATE_DESTINATION) {
+                    plate = base.destinations[plateIndex];
+                }
+                plate.skipped =  !plate.skipped;
+                if (plate.skipped) {
+                    plate.details.id = '**NO EXTRACTION**';
+                    plate.loaded = false;
+                } else {
+                    plate.details.id = '';
+                }
+                if (which == Constants.PLATE_SOURCE) {
+                   base.sourcesReady = base.checkSourcesReady();
+                } else if (which == Constants.PLATE_DESTINATION) {
+                base.destinationsReady = base.checkDestinationsReady();
+                }
+                base.updateOperationsList();
+            }
+
             base.checkSourcesReady = function (clearErrors) {
 
                 for (var i=0; i<base.sources.length; i++) {
@@ -381,7 +403,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
 
             base.checkDestinationsReady = function () {
                 for (var i=0; i<base.destinations.length; i++) {
-                    if (!base.destinations[i].details.id || (base.destinations[i].details.id && base.destinations[i].details.id.length < 6)) {
+                    if (!base.destinations[i].skipped && (!base.destinations[i].details.id || (base.destinations[i].details.id && base.destinations[i].details.id.length < 6))) {
                         base.destinations[i].loaded = false;
                         base.notReady('destination');
                         return false;
@@ -609,15 +631,25 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                     } else {
                         delete source.error;
                         delete source.loaded;
+                        delete source.skipped;
                     }
                 }
                 for (var i=0; i< base.destinations.length; i++) {
                     var destination = base.destinations[i];
                     if (destination.details.id && destination.details.id != '') {
-                        base.addDestination(i);
+                        if (destination.skipped) {
+                            delete destination.skipped;
+                            destination.details.id = '';
+                        } else {
+                            base.addDestination(i);
+                        }
                     } else {
                         delete destination.error;
                         delete destination.loaded;
+                        if (destination.skipped) {
+                            delete destination.skipped;
+                            destination.details.id = '';
+                        }
                     }
                 }
             }
