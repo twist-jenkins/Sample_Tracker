@@ -274,7 +274,7 @@ def echo_csv( operations, transfer_volume ):
 
 def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
     """ assumes each oper looks like {
-            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
+            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST2",
             "source_well_name": "A1",
             "source_sample_id":"BCS_00234",
             "source_plate_well_count": 384,

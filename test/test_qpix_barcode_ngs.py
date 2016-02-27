@@ -25,7 +25,7 @@ EXAMPLE_NGS_BARCODING_SPEC = {
         "type":"plate",
         "details":{
             "text":"",
-            "id":"NGS_BARCODE_PLATE_TEST1",
+            "id":"NGS_BARCODE_PLATE_TEST2",
             "plateDetails":{
                 "type":"SPTT_0006",
                 "createdBy":"Charlie Ledogar",
@@ -393,7 +393,7 @@ class TestCase(unittest.TestCase):
         echo_csv = list(csv.DictReader(rv.data.splitlines()))
         assert len(echo_csv) == len(transform_map) * 2
         for line in echo_csv:
-            assert line["Source Plate Barcode"] == "NGS_BARCODE_PLATE_TEST1"
+            assert line["Source Plate Barcode"] == "NGS_BARCODE_PLATE_TEST2"
             assert line["Destination Plate Barcode"] in (dest_plate_1_barcode,
                                                          dest_plate_2_barcode)
 
