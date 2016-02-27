@@ -66,9 +66,8 @@ angular.module('twist.app').controller('viewManageTransformSpecsController', ['$
         };
 
         $scope.executeSpec = function (spec) {
-            console.log('DDDDDDD');
+
             if (!spec.updating) {
-                console.log('FFFFFFFFF');
                 var execConfirmModal = $modal.open({
                     templateUrl: 'twist-confirm-spec-execute-modal.html'
                     ,size: 'md'
@@ -83,7 +82,7 @@ angular.module('twist.app').controller('viewManageTransformSpecsController', ['$
                             $scope.clickExecute = function() {
 
                                 spec.updating = true;
-                               /* Api.executeTransformSpec(spec.spec_id).success(function (data) {
+                                Api.executeTransformSpec(spec.spec_id).success(function (data) {
                                     loadSpecs();
                                     $modalInstance.close();
                                     announceSuccess(spec, 'execute');
@@ -91,7 +90,7 @@ angular.module('twist.app').controller('viewManageTransformSpecsController', ['$
                                     spec.updating = false;
                                     $modalInstance.close();
                                     announceError(spec, 'execute');
-                                });*/
+                                });
                             }
                         }
                     ]
