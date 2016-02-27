@@ -12,30 +12,40 @@ angular.module('twist.app').controller('tabSelectedController', ['$scope', '$sta
 
         /* refresh the current transform plan based on changes to plates inputs or upload file */
         $scope.updateTransformPlan = function (val, which, itemIndex) {
-            if (val && val.length > 5) {
 
-                /* prevent a source or destination from being entered more than once */
-                if (checkDupeBarcode(val, which)) {
-                    $scope.transformSpec.notReady(which);
-                    var errMsg = 'A plate with barcode <strong>' + val + '</strong> is already a ' + which + ' plate.';
-                    if (which == Constants.PLATE_SOURCE) {
-                        $scope.transformSpec.sources[itemIndex].error = errMsg
-                    } else if (which == Constants.PLATE_DESTINATION) {
-                        $scope.transformSpec.destinations[itemIndex].error = errMsg;
+            var thisPlate = null;
+
+            if (which == Constants.PLATE_SOURCE) {
+                thisPlate = $scope.transformSpec.sources[itemIndex];
+            } else if (which == Constants.PLATE_DESTINATION) {
+                thisPlate = $scope.transformSpec.destinations[itemIndex];
+            }
+
+            if (!thisPlate.skipped) {
+                if (val && val.length > 5) {
+                    /* prevent a source or destination from being entered more than once */
+                    if (checkDupeBarcode(val, which)) {
+                        $scope.transformSpec.notReady(which);
+                        var errMsg = 'A plate with barcode <strong>' + val + '</strong> is already a ' + which + ' plate.';
+                        if (which == Constants.PLATE_SOURCE) {
+                            $scope.transformSpec.sources[itemIndex].error = errMsg
+                        } else if (which == Constants.PLATE_DESTINATION) {
+                            $scope.transformSpec.destinations[itemIndex].error = errMsg;
+                        }
+                    } else {
+                        if (which == Constants.PLATE_SOURCE) {
+                            $scope.transformSpec.addSource(itemIndex);
+                        } else if (which == Constants.PLATE_DESTINATION) {
+                            $scope.transformSpec.addDestination(itemIndex);
+                        }
                     }
+
                 } else {
                     if (which == Constants.PLATE_SOURCE) {
-                        $scope.transformSpec.addSource(itemIndex);
+                        $scope.transformSpec.checkSourcesReady(true);
                     } else if (which == Constants.PLATE_DESTINATION) {
-                        $scope.transformSpec.addDestination(itemIndex);
+                        $scope.transformSpec.checkDestinationsReady(true);
                     }
-                }
-
-            } else {
-                if (which == Constants.PLATE_SOURCE) {
-                    $scope.transformSpec.checkSourcesReady(true);
-                } else if (which == Constants.PLATE_DESTINATION) {
-                    $scope.transformSpec.checkDestinationsReady(true);
                 }
             }
         };

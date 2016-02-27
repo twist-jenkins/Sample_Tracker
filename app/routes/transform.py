@@ -6,7 +6,6 @@ import logging
 
 from app import db
 from app import constants
-from app.steps import primer_hitpicking
 from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
@@ -18,11 +17,10 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from twistdb.ngs import CallerSummary
 from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
-from twistdb.frag import FraganalyzerRunSampleSummaryJoin
+# from twistdb.frag import FraganalyzerRunSampleSummaryJoin
 
 
 logger = logging.getLogger()
-
 
 class WebError(Exception):
     """
@@ -120,31 +118,33 @@ def filter_transform(transform_template_id, sources, dests):
     if transform_template_id == constants.TRANS_TPL_FRAG_ANALYZER:
         # frag analyzer
         def filter_wells(barcode):
-            well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
-            for plate, sample, fa_well in \
-                db.session.query(Plate, Sample, FraganalyzerRunSampleSummaryJoin) \
-                    .filter(Plate.external_barcode == barcode) \
-                    .join(Sample).join(FraganalyzerRunSampleSummaryJoin) \
-                    .filter(FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
-
-                    if fa_well.human_classification:
-                        [hum] = fa_well.human_classification
-                        score = hum.qc_call
-                    else:
-                        if fa_well.ok_to_ship():
-                            score = 'Pass'
-                        elif fa_well.borderline_to_ship():
-                            score = 'Warn'
-                        else:
-                            score = 'Fail'
-                    well_scores[sample.well.well_number]['sample'] = sample
-                    well_scores[sample.well.well_number]['scores'].add(score)
-
-            well_to_passfail = {}
-            for well_id, d in well_scores.items():
-                if d['scores'] == set(['Warn']):
-                    well_to_passfail[well_id] = d['well']
-            return well_to_passfail
+            # FIXME (JCD) commenting this out until we clear up FA redesign
+            # well_scores = defaultdict(lambda: {'well': None, 'scores': set()})
+            # for plate, sample, fa_well in \
+            #     db.session.query(Plate, Sample, FraganalyzerRunSampleSummaryJoin) \
+            #         .filter(Plate.external_barcode == barcode) \
+            #         .join(Sample).join(FraganalyzerRunSampleSummaryJoin) \
+            #         .filter(FraganalyzerRunSampleSummaryJoin.measurement_tag == 'post_ecrpcr'):
+            #
+            #         if fa_well.human_classification:
+            #             [hum] = fa_well.human_classification
+            #             score = hum.qc_call
+            #         else:
+            #             if fa_well.ok_to_ship():
+            #                 score = 'Pass'
+            #             elif fa_well.borderline_to_ship():
+            #                 score = 'Warn'
+            #             else:
+            #                 score = 'Fail'
+            #         well_scores[sample.well.well_number]['sample'] = sample
+            #         well_scores[sample.well.well_number]['scores'].add(score)
+            #
+            # well_to_passfail = {}
+            # for well_id, d in well_scores.items():
+            #     if d['scores'] == set(['Warn']):
+            #         well_to_passfail[well_id] = d['well']
+            # return well_to_passfail
+            return None
 
     elif transform_template_id == constants.TRANS_TPL_NGS_QC_PASSING:
         # NGS pass/fail
@@ -255,6 +255,8 @@ def pca_pre_planning( bulk_barcode, pca_barcodes ):
     bulk primer plate to the PCA plates, but the REAL destinations are temporary PCR plates.
     the plate id's are later replaced with the real destination barcodes.
     """
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     pca_plates = []
     for bc in pca_barcodes:
         try:
@@ -313,6 +315,39 @@ def plates_to_rows( sources ):
 @to_resp
 def rebatch_transform( type_id, templ_id ):
     rows, cmds = [], []
+    #rows = plates_to_rows( request.json['sources'] )
+    destinations_ready = bool( request.json.get('destinations') )
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+            if not destination['details'].get('id'):
+                destinations_ready = False
+                break
+            if destinations_ready:
+                rows = rebatching_normalization.create_transform(db,
+                              request.json['sources'],
+                              request.json['destinations'] )
+
+    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
+                db.session, request.json['sources'][0]['details']['id'],
+                [x['details']['id'] for x in request.json['destinations']])'''
+
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+
+    cmds.append({
+        "type": "SET_DESTINATIONS",
+        "plates": destination_plates
+    })
+    cmds.append({
+        "type": "REQUEST_DATA",
+        "item": {
+            "type": "array.1",
+            "dataType": "barcode.PLATE",
+            "title": "Associated PCA Plate Barcode",
+            "forProperty": "associatedPcaPlates"
+        }
+    })
+
+    #print destination_plates
     return rows, cmds
 
 
@@ -367,6 +402,8 @@ def primer_preplanning( type_id, templ_id ):
 
 @to_resp
 def primer_create_src( type_id, templ_id ):
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     rows = plates_to_rows( request.json['sources'] )
     bulk_barcode = request.json['sources'][0]['details']['id']
     custom_primers = primer_hitpicking.primer_src_creation( db.session, bulk_barcode )
@@ -384,6 +421,8 @@ def primer_create_src( type_id, templ_id ):
 
 @to_resp
 def primer_master_mix( type_id, templ_id ):
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     rows = plates_to_rows( request.json['sources'] )
     bulk_barcode = request.json['sources'][0]['details']['id']
     mixes = primer_hitpicking.bulk_barcode_to_mastermixes(  db.session, bulk_barcode )
@@ -429,7 +468,7 @@ def thermocycle( type_id, templ_id ):
                 "forProperty": "thermocyclerBarcode"
             }
         })
-    return [], cmds
+    return [{}], cmds
 
 
 @to_resp
@@ -456,12 +495,12 @@ def ngs_hitpicking( type_id, templ_id ):
     cmds.append({
         "type": "PRESENT_DATA",
         "item": {
-            "type": "file-data",
-            "title": "Worklist",
-            "forProperty": "worklist",
-            "fileType": "worklist"
+            "type": "text",
+            "title": "Note",
+            "data": "'Preview' will appear empty.  NGS barcode pairs allocated upon Submit / Save, with Echo worklist available via Transform Specs."
         }
     })
+
     return rows, cmds
 
 
@@ -476,21 +515,22 @@ def ngs_mastermix( type_id, templ_id ):
             "type": "text",
             "title": "NGS Master Mix",
             "data": "Master mix data here... maybe CSV format to render a table?"
-                    }
+        }
     })
     return rows, cmds
 
 
 @to_resp
 def pcr_primer_hitpick( type_id, templ_id ):
+    from app.steps import primer_hitpicking, vector_hitpicking
+
     rows, cmds = [{}], []
-    destinations_ready = ("destinations" in request.json
-                          and request.json['destinations'])
+    destinations_ready = bool( request.json.get('destinations') )
 
     for dest_index, destination in enumerate(request.json['destinations']):
-        if "id" not in destination["details"] or \
-                destination["details"]["id"] == "":
+        if not destination['details'].get('id'):
             destinations_ready = False
+            break
 
     if destinations_ready:
         rows = filter_transform(transform_template_id,
@@ -581,111 +621,119 @@ def ngs_tagmentation(type_id, templ_id):
     return rows, cmds
 
 
-def ngs_pooling():
-    """TRANS_TPL_NGS_POOLING"""
+
+@to_resp
+def ngs_pooling(type_id, templ_id):
 
     rows, cmds = [{}], []
 
-    details = request.json["details"]
+    from app.steps import ngs_pooling as ngsp
+    s_samples = ngsp.get_source_samples(db.session, request.json['sources'])
+    cmds = ngsp.pooling_cmds(db.session, request, s_samples)
+    rows = ngsp.pooling_transform(db.session, s_samples)
 
-    sequencer = None;
+    return rows, cmds
 
-    basePairMax = 0;
-    currentBasePairTotal = 0;
-    previousBasePairTotal = 0;
 
-    if "requestedData" in details:
-        reqData = details["requestedData"]
+@to_resp
+def vector_hitpicking( type_id, templ_id ):
+    """
+    generate echo worklists
+    """
+    from app.steps import vector_hitpicking
+    if len(request.json['sources']) != 1:
+        raise WebError('expected one source; got %d' % len(request.json['sources']))
+    return vector_hitpicking.hitpicking( db.session, request.json['sources'][0]['details']['id'] )
 
-    if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-        cmds.append({
-            "type": "REQUEST_DATA",
-            "item": {
-                "type": 'radio'
-                ,"title": 'Select Sequencer:'
-                ,"forProperty": 'sequencer'
-                ,"data": [
-                    {"option": 'MiSeq'}
-                    ,{"option": 'NextSeq'}
-                ]
-            }
-        })
 
-    sources = request.json['sources'];
+@to_resp
+def vector_create_src( type_id, templ_id ):
+    """
+    generate echo worklists
+    """
+    from app.steps import primer_hitpicking, vector_hitpicking
 
-    sourcesSet = [];
+    # source plate shouldn't exist, but *must* appear in a previous transform spec
+    if len(request.json['sources']) != 1:
+        raise WebError("expected 1 source plate, found %d" % len(request.json['sources']))
 
-    for sourceIndex, source in enumerate(sources):
-        sourcesSet.append({
-            "type": "SPTT_0006"
-            ,"details" : {
-                "id" : source["details"]["id"]
-            }
-        });
+    print '@@ request.json:', request.json
+    if len(request.json['sources']) != 1:
+        raise WebError('expected one source; got %d' % len(request.json['sources']))
 
-    if "sequencer" in reqData:
-        # TO DO  Derive the max BP count for this sequencer
-        #        AND
-        #        Return total count of basepairs on source plate(s)
-        basePairMax = 12600000;
+    return vector_hitpicking.create_src( db.session, request.json['sources'][0]['details']['id'] )
 
-        '''
-        currentBasePairTotal = total of BPs in all source plates
-        previousBasePairTotal = total BPS on all plates but the last one
-        '''
 
-        # DEV ONLY - remove when real basepair counting is done
-        previousBasePairTotal = 500;
-        currentBasePairTotal = basePairMax - 3 + len(sources);
+@to_resp
+def generic_same_to_same( type_id, templ_id ):
+    """
+    generate rows for same-to-same plate transform; or, if you prefer, look up wells/sample associated
+    with source plates and return as a big data structure for simple same-to-same transforms
+    """
+    rows, cmds = [], []
+    xfer = TRANSFORM_MAP[str(templ_id)]
 
-        reponseTally = currentBasePairTotal
+    dest_barcodes = [ x['details'].get('id', '') for x in
+                      ( request.json['sources']
+                        if templ_id == constants.TRANS_TPL_SAME_PLATE
+                        else request.json['destinations'] ) ]
 
-        if currentBasePairTotal < basePairMax:
-            #and add another source input to indicate there's more room
-            sourcesSet.append({
-                "type": "SPTT_0006"
-            });
+    if templ_id in (
+            constants.TRANS_TPL_SAME_TO_SAME,
+            constants.TRANS_TPL_SAME_PLATE):
 
-        elif basePairMax and currentBasePairTotal == basePairMax:
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                    "data": "No more plates will fit in this run."
-                }
-            })
+        src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
+        dest_plate_type = db.session.query(PlateType).get(src_plate_type)
 
-        else :
-            cmds.append({
-                "type": "PRESENT_DATA",
-                "item": {
-                    "type": "text",
-                    "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                    "data":  ("Return plate <strong>"
-                              + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                              + "</strong> to the pooling bin.")
-                }
-            })
+        dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
 
-            reponseTally = previousBasePairTotal
+    else:
 
-            #remove the last added source from the list
-            sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+        if xfer['destination']['plateCount'] != len(set(dest_barcodes)) \
+                and not xfer['destination']['variablePlateCount']:
+            raise WebError('Expected %d distinct destination plate barcodes; got %d'
+                           % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "text",
-                "title": "Base Pair Tally",
-                "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-            }
-        })
+        if xfer['source']['plateCount'] != len(request.json['sources']) \
+                and not xfer['source']['variablePlateCount']:
+            raise WebError('Expected %d source plates; got %d'
+                           % (xfer['source']['plateCount'], len(request.json['sources'])))
 
-    cmds.append({
-        "type": "SET_SOURCES",
-        "plates": sourcesSet
-    })
+        dest_plate_type = db.session.query(PlateType).get(xfer['destination']['plateTypeId'])
+
+        def dest_lookup(src_idx, well_id):
+            dest = xfer['plateWellToWellMaps'][src_idx][str(well_id)]
+            dest_barcode = dest_barcodes[dest['destination_plate_number'] - 1]
+            dest_well = dest['destination_well_id']
+            return dest_barcode, dest_well
+
+    if not dest_plate_type:
+        raise WebError('Unknown destination plate type: ' + xfer['destination']['plateTypeId'])
+
+    for src_idx, src in enumerate(request.json['sources']):
+        barcode = src['details']['id']
+        try:
+            plate = db.session.query(Plate) \
+                              .filter(Plate.external_barcode == barcode) \
+                              .one()
+        except MultipleResultsFound:
+            raise WebError('multiple plates found with barcode %s' % barcode)
+
+        for sample in plate.current_well_contents(db.session):
+
+            dest_barcode, dest_well = dest_lookup(src_idx, sample.well.well_number)
+
+            rows.append({'source_plate_barcode': barcode,
+                         'source_well_name': sample.well.well_label,
+                         'source_well_number': sample.well.well_number,
+                         'source_well_code': sample.well.well_code,
+                         'source_sample_id': sample.id,
+                         'destination_plate_barcode': dest_barcode,
+                         'destination_well_name': dest_plate_type.get_well_by_number(dest_well).well_label,
+                         'destination_well_number': dest_well,
+                         'destination_plate_type': dest_plate_type.type_id,
+                         'destination_plate_well_count': dest_plate_type.layout.feature_count
+                         })
 
     return rows, cmds
 
@@ -781,6 +829,82 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
             }
 
         })
+    return rows, cmds
+
+def pls_dilution(type_id, templ_id):
+    # Ready for you, Kieran
+
+    cmds = []
+
+    rows = plates_to_rows(request.json['sources'])
+
+    return rows, cmds
+
+@to_resp
+def min_planning( type_id, templ_id ):
+    rows, cmds = [{}], []
+
+    sources = request.json['sources'];
+
+    sourcesSet = [];
+
+    for sourceIndex, source in enumerate(sources):
+        sourcesSet.append({
+            "type": "SPTT_0006",
+            "details" : {
+                "id" : source["details"]["id"]
+            }
+        });
+
+    # TODO: Count the number of clones and provide the "CLones Picked" and "Plate Required" counts
+
+    clones_picked = plates_required = 0
+
+    if (clones_picked < constants.MINIPREP_PLANNING_CLONES_MAX and plates_required < constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if there are < 25 plates required AND less than 380 picks add another source
+        sourcesSet.append({
+            "type": "SPTT_0006"
+        });
+    elif (clones_picked == constants.MINIPREP_PLANNING_CLONES_MAX or plates_required == constants.MINIPREP_PLANNING_PLATES_MAX):
+        # if either limit is reached exactly
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-warn-text\">Run FULL</strong>",
+                "data": "<span class=\"twst-warn-text\">No more plates will fit in this run.</span>"
+            }
+        })
+    else:
+        # then either clones or plates are over the limit
+
+        #remove the last added source from the list
+        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "text",
+                "title": "<strong class=\"twst-error-text\">Limit Overrun!</strong>",
+                "data":  ("<span class=\"twst-boxed-error\">Return plate <strong>"
+                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
+                          + "</strong> to the freezer.</span>")
+            }
+        })
+
+    cmds.append({
+        "type": "PRESENT_DATA",
+        "item": {
+            "type": "csv",
+            "title": "Clone Stats",
+            "data": 'Clones Picked, Plates Required\r\n<strong>%s</strong> of %s,<strong>%s</strong> of %s' % (clones_picked, constants.MINIPREP_PLANNING_CLONES_MAX, plates_required, constants.MINIPREP_PLANNING_PLATES_MAX)
+        }
+    })
+
+    cmds.append({
+        "type": "SET_SOURCES",
+        "plates": sourcesSet
+    })
 
     return rows, cmds
 
@@ -827,8 +951,7 @@ def preview( transform_type_id, transform_template_id ):
                     raise WebError('Expected %d distinct destination plate barcodes; got %d'
                                    % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
 
-            if transform_template_id == \
-                    constants.TRANS_TPL_PLATE_MERGE:
+            if transform_template_id == constants.TRANS_TPL_PLATE_MERGE:
                 # merge source plate(s) into single destination plate
                 rows = merge_transform(request.json['sources'], request.json['destinations'])
 
@@ -888,112 +1011,6 @@ def preview( transform_type_id, transform_template_id ):
                     "plates": destination_plates
                 })
 
-            elif transform_template_id == \
-                    constants.TRANS_TPL_NGS_POOLING:
-
-                # rows, responseCommands = ngs_pooling()
-                # FIXME: resolving merge conflict...
-                # proper resolution: compare below then switch to above
-
-                rows = [{}];
-                sequencer = None;
-
-                basePairMax = 0;
-                currentBasePairTotal = 0;
-                previousBasePairTotal = 0;
-
-                if "requestedData" in details:
-                    reqData = details["requestedData"]
-
-                if not reqData or "sequencer" not in reqData or reqData["sequencer"] == "":
-                    responseCommands.append({
-                        "type": "REQUEST_DATA",
-                        "item": {
-                            "type": 'radio'
-                            ,"title": 'Select Sequencer:'
-                            ,"forProperty": 'sequencer'
-                            ,"data": [
-                                {"option": 'MiSeq'}
-                                ,{"option": 'NextSeq'}
-                            ]
-                        }
-                    })
-
-                sources = request.json['sources'];
-
-                sourcesSet = [];
-
-                for sourceIndex, source in enumerate(sources):
-                    sourcesSet.append({
-                        "type": "SPTT_0006"
-                        ,"details" : {
-                            "id" : source["details"]["id"]
-                        }
-                    });
-
-                if "sequencer" in reqData:
-                    # TO DO  Derive the max BP count for this sequencer
-                    #        AND
-                    #        Return total count of basepairs on source plate(s)
-                    basePairMax = 12500000;
-
-                    '''
-                    currentBasePairTotal = total of BPs in all source plates
-                    previousBasePairTotal = total BPS on all plates but the last one
-                    '''
-
-                    # DEV ONLY - remove when real basepair counting is done
-                    previousBasePairTotal = 500;
-                    currentBasePairTotal = basePairMax - 3 + len(sources);
-
-                    reponseTally = currentBasePairTotal
-
-                    if currentBasePairTotal < basePairMax:
-                        #and add another source input to indicate there's more room
-                        sourcesSet.append({
-                            "type": "SPTT_0006"
-                        });
-
-                    elif basePairMax and currentBasePairTotal == basePairMax:
-                        responseCommands.append({
-                            "type": "PRESENT_DATA",
-                            "item": {
-                                "type": "text",
-                                "title": "<strong class=\"twst-warn-text\">Pooling Run FULL</strong>",
-                                "data": "No more plates will fit in this run."
-                            }
-                        })
-
-                    else :
-                        responseCommands.append({
-                            "type": "PRESENT_DATA",
-                            "item": {
-                                "type": "text",
-                                "title": "<strong class=\"twst-error-text\">Basepair Limit Overrun</strong>",
-                                "data":  ("Return plate <strong>"
-                                          + request.json['sources'][len(request.json['sources']) - 1]["details"]["id"]
-                                          + "</strong> to the pooling bin.")
-                            }
-                        })
-
-                        reponseTally = previousBasePairTotal
-
-                        #remove the last added source from the list
-                        sourcesSet.remove(sourcesSet[len(sourcesSet) - 1])
-
-                    responseCommands.append({
-                        "type": "PRESENT_DATA",
-                        "item": {
-                            "type": "text",
-                            "title": "Base Pair Tally",
-                            "data": "<strong>" + str(reponseTally) + "</strong>/" + str(basePairMax) + " so far"
-                        }
-                    })
-
-                responseCommands.append({
-                    "type": "SET_SOURCES",
-                    "plates": sourcesSet
-                })
 
             elif transform_template_id == \
                     constants.TRANS_TPL_PCR_PRIMER_HITPICK:
@@ -1028,8 +1045,7 @@ def preview( transform_type_id, transform_template_id ):
                 rows = filter_transform(transform_template_id, request.json['sources'],
                                         request.json['destinations'])
 
-            elif transform_template_id == \
-                    constants.TRANS_TPL_PCA_PCR_PURIFICATION:
+            elif transform_template_id == constants.TRANS_TPL_PCA_PCR_PURIFICATION:
                     '''
                         Kieran or Charlie please handle this.
                         Sources and destinations should be processed pairwise (paired by index)
@@ -1038,60 +1054,8 @@ def preview( transform_type_id, transform_template_id ):
                     rows = [{}]
 
             else:
-                if transform_template_id in (
-                        constants.TRANS_TPL_SAME_TO_SAME,
-                        constants.TRANS_TPL_SAME_PLATE):
-                    src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
-                    dest_plate_type = db.session.query(PlateType).get(src_plate_type)
-
-                    dest_lookup = lambda src_idx, well_id: (dest_barcodes[src_idx], well_id)
-
-                else:
-                    if xfer['destination']['plateCount'] != len(set(dest_barcodes)) \
-                            and not xfer['destination']['variablePlateCount']:
-                        raise WebError('Expected %d distinct destination plate barcodes; got %d'
-                                       % (xfer['destination']['plateCount'], len(set(dest_barcodes))))
-
-                    if xfer['source']['plateCount'] != len(request.json['sources']) \
-                            and not xfer['source']['variablePlateCount']:
-                        raise WebError('Expected %d source plates; got %d'
-                                       % (xfer['source']['plateCount'], len(request.json['sources'])))
-
-                    dest_plate_type = db.session.query(PlateType).get(xfer['destination']['plateTypeId'])
-
-                    def dest_lookup(src_idx, well_id):
-                        dest = xfer['plateWellToWellMaps'][src_idx][str(well_id)]
-                        dest_barcode = dest_barcodes[dest['destination_plate_number'] - 1]
-                        dest_well = dest['destination_well_id']
-                        return dest_barcode, dest_well
-
-                if not dest_plate_type:
-                    raise WebError('Unknown destination plate type: ' + xfer['destination']['plateTypeId'])
-
-                for src_idx, src in enumerate(request.json['sources']):
-                    barcode = src['details']['id']
-                    try:
-                        plate = db.session.query(Plate) \
-                                          .filter(Plate.external_barcode == barcode) \
-                                          .one()
-                    except MultipleResultsFound:
-                        raise WebError('multiple plates found with barcode %s' % barcode)
-
-                    for sample in plate.current_well_contents(db.session):
-
-                        dest_barcode, dest_well = dest_lookup(src_idx, sample.well.well_number)
-
-                        rows.append({'source_plate_barcode': barcode,
-                                     'source_well_name': sample.well.well_label,
-                                     'source_well_number': sample.well.well_number,
-                                     'source_well_code': sample.well.well_code,
-                                     'source_sample_id': sample.id,
-                                     'destination_plate_barcode': dest_barcode,
-                                     'destination_well_name': dest_plate_type.get_well_by_number(dest_well).well_label,
-                                     'destination_well_number': dest_well,
-                                     'destination_plate_type': dest_plate_type.type_id,
-                                     'destination_plate_well_count': dest_plate_type.layout.feature_count
-                                     })
+                raise WebError("please edit __init__ routing function 'transform_params' to use generic_same_to_same for\n"
+                               + " transform_type_id:%s, transform_template_id:%s" % (transform_type_id, transform_template_id))
 
     except WebError as e:
         return Response( response=json.dumps({'success': False,
@@ -2252,7 +2216,7 @@ TRANSFORM_MAP = loads("""
                         "plateCount": 16
                         ,"wellCount": 384
                         ,"plateTypeId": "SPTT_0006"
-                        ,"variablePlateCount": false
+                        ,"variablePlateCount": true
                         ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;","Quadrant&nbsp;5:&nbsp;","Quadrant&nbsp;6:&nbsp;","Quadrant&nbsp;7:&nbsp;","Quadrant&nbsp;8:&nbsp;","Quadrant&nbsp;9:&nbsp;","Quadrant&nbsp;10:&nbsp;","Quadrant&nbsp;11:&nbsp;","Quadrant&nbsp;12:&nbsp;","Quadrant&nbsp;13:&nbsp;","Quadrant&nbsp;14:&nbsp;","Quadrant&nbsp;15:&nbsp;","Quadrant&nbsp;16:&nbsp;"]
                     }
                 }

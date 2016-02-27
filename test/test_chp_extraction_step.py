@@ -19,6 +19,11 @@ import json
 from test_flask_app import AutomatedTestingUser, RootPlate, rnd_bc
 # from sqlalchemy.exc import IntegrityError
 
+# only process 1 in every EXTRACTION_REDUCTION_FACTOR extractions
+EXTRACTION_REDUCTION_FACTOR = 4
+
+# only process 1 in every WELL_REDUCTION_FACTOR wells
+WELL_REDUCTION_FACTOR = 10
 
 def titin_extraction_spec(src_plate_name, src_sample_prefix,
                           dest_plate_rootname):
@@ -64,7 +69,7 @@ def titin_extraction_spec(src_plate_name, src_sample_prefix,
     }
 
     for extraction_num in range(16):
-        if extraction_num % 4 != 0:  # only do 25% of the extractions
+        if extraction_num % EXTRACTION_REDUCTION_FACTOR != 0:
             continue
         plate_name = dest_plate_rootname + "_%02d" % (extraction_num + 1)
         detail = {
@@ -81,7 +86,7 @@ def titin_extraction_spec(src_plate_name, src_sample_prefix,
         spec["plan"]["destinations"].append(detail)
 
         for well_384_id in range(384):
-            if well_384_id % 100 != 0:  # only do 1% of the wells
+            if well_384_id % WELL_REDUCTION_FACTOR != 0:
                 continue
             well_6144_id = 384 * extraction_num + well_384_id + 1
             well_6144_code = 661440000 + well_6144_id
@@ -102,7 +107,7 @@ def titin_extraction_spec(src_plate_name, src_sample_prefix,
 
 
 def chp_deprotection_spec(src_plate_name, src_sample_prefix):
-    dest_plate_rootname = rnd_bc()
+    dest_plate_rootname = rnd_bc("EXT")
     spec = {
         "plan": {
                 "destinations": [],
@@ -144,7 +149,7 @@ def chp_deprotection_spec(src_plate_name, src_sample_prefix):
     }
 
     for extraction_num in range(16):
-        if extraction_num % 4 != 0:  # only do 25% of the extractions
+        if extraction_num % EXTRACTION_REDUCTION_FACTOR != 0:
             continue
         plate_name = dest_plate_rootname + "_%02d" % (extraction_num + 1)
         detail = {
@@ -161,7 +166,7 @@ def chp_deprotection_spec(src_plate_name, src_sample_prefix):
         spec["plan"]["destinations"].append(detail)
 
         for well_384_id in range(384):
-            if well_384_id % 100 != 0:  # only do 1% of the wells
+            if well_384_id % WELL_REDUCTION_FACTOR != 0:
                 continue
             well_6144_id = 384 * extraction_num + well_384_id + 1
             well_6144_code = 661440000 + well_6144_id
@@ -206,7 +211,7 @@ class TestCase(unittest.TestCase):
 
     def test_post_immediate_execution_golden(self):
         """ targeting the execution method """
-        dest_plate_rootname = rnd_bc()
+        dest_plate_rootname = rnd_bc("EXT")
         new_spec = titin_extraction_spec("SRN-WARP1-TEST1",
                                          "GA_WARP1_TEST1",
                                          dest_plate_rootname)
@@ -243,7 +248,7 @@ class TestCase(unittest.TestCase):
 
     def test_post_immediate_execution_golden_warp2(self):
         """ targeting the execution method """
-        dest_plate_rootname = rnd_bc()
+        dest_plate_rootname = rnd_bc("EXT")
         new_spec = titin_extraction_spec("PLT_WARP2.1",
                                          "S_WARP2",
                                          dest_plate_rootname)
@@ -292,7 +297,7 @@ class TestCase(unittest.TestCase):
 
         # then extract
 
-        dest_plate_rootname = rnd_bc()
+        dest_plate_rootname = rnd_bc("EXT")
         extract_spec = titin_extraction_spec("PLT_WARP2.1",
                                              "S_WARP2",
                                              dest_plate_rootname)

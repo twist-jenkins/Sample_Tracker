@@ -64,7 +64,7 @@ source venv/bin/activate  # Changes your $PATH to use the virtual environment
 
 pip install -U setuptools pip  # Update the python setup tools
 
-pip install -r requirements.txt  # Install python dependencies
+pip install -r requirements.txt  #Install python dependencies
 
 ```
 

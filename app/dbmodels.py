@@ -22,7 +22,7 @@ from sqlalchemy.dialects import postgresql
 
 db_metadata = Base.metadata
 
-NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST1"
+NGS_BARCODE_PLATE = "NGS_BARCODE_PLATE_TEST2"
 NGS_BARCODE_PLATE_TYPE = 'SPTT_0006'
 NGS_BARCODE_SAMPLE_PREFIX = 'BCS_'
 

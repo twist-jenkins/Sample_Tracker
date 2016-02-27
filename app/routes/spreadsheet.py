@@ -79,9 +79,8 @@ def create_adhoc_sample_movement(db_session,
     logging.info("Caching source plates: %s" % list(srcs))
     for src_barcode in srcs:
         try:
-            source_plate = db_session.query(Plate).\
-                filter(Plate.external_barcode == src_barcode).one()
-            plate_cache[src_barcode] = source_plate
+            source_plate = db_session.query(Plate) \
+                                     .filter(Plate.external_barcode == src_barcode).one()
         except:
             logging.warn(" %s encountered error creating sample transform. "
                          "There is no source plate with the barcode: [%s]",
@@ -90,6 +89,9 @@ def create_adhoc_sample_movement(db_session,
                 "success": False,
                 "errorMessage": "There is no source plate with the barcode: [%s]" % (src_barcode)
             }
+        else:
+            plate_cache[src_barcode] = source_plate
+
 
     # Cache all destination plates, creating any that are not found
 
@@ -226,46 +228,40 @@ def sample_handler(transform, well_cache,
     etc) as well as non-mixing steps
     """
 
-    logging.debug("sample_handler: src=[%s] dest=[%s]",
-                  source_samples, destination_sample)
+    logging.debug("sample_handler: src=[%s] dest=[%s]", source_samples, destination_sample)
 
     new_id = create_unique_id(Sample.id_prefix)
 
+
+    parent_samples = ( source_samples + [destination_sample]
+                       if destination_sample
+                       else source_samples )
+
     # Copy all extant metadata except transform, parents, children, is_clonal
-    if len(source_samples) > 1:
-        logging.debug("Merging %d samples into %s",
-                      len(source_samples), destination_sample)
-        new_s = merged_sample(source_samples)
-    elif len(source_samples) == 1:
-        new_s = copied_sample(source_samples[0])
-    elif len(source_samples) == 0:
+    if len(parent_samples) > 1:
+        logging.debug("Merging %d samples into %s",  len(parent_samples), destination_sample)
+        new_s = merged_sample(parent_samples)
+    elif len(parent_samples) == 1:
+        new_s = copied_sample(parent_samples[0])
+    else:
         raise NotImplementedError("TODO?: Create samples from scratch")
 
     # Set attributes unique to this sample
     new_s.id = new_id()
     new_s.plate_id = destination_plate.id
     new_s.transform_id = transform.id
-    well = well_cache[(destination_plate.external_barcode,
-                       destination_well_id)]
+    well = well_cache[(destination_plate.external_barcode, destination_well_id)]
     new_s.plate_well_code = well.well_code
 
     # Type-specific logic
     handle_transform_specific_logic(transform, new_s)
-    true_parent_samples = parse_source_reagents(transform,
-                                                source_samples, new_s)
+    true_parent_samples = parse_source_reagents(transform, parent_samples, new_s)
 
     # Link up the source sample(s) and any "destination" sample as parent(s)
     for source_well_sample in true_parent_samples:
         source_to_dest_well_transform = TransformDetail(
             transform=transform,
             parent_sample_id=source_well_sample.id,
-            child_sample_id=new_s.id
-        )
-
-    if destination_sample:
-        dest_well_parent_transform = TransformDetail(
-            transform=transform,
-            parent_sample_id=destination_sample.id,
             child_sample_id=new_s.id
         )
 
@@ -383,10 +379,19 @@ def copied_sample(orig_obj):
     return copy
 
 
+def filter_real_samples( samples ):
+    from twistdb.work_order import Vector
+    # FIXME: this is a hacky sort of way to filter out VECtors, but we can't actually use
+    #    the Sample.order_item relationship until the sample itself has been commited to the db
+    return [s for s in samples if s.order_item_id and not s.order_item_id.startswith('VEC')]
+
+
 def merged_sample(parent_samples):
     """Merge a set of samples."""
 
-    copy = Sample()
+    filtered_parents = filter_real_samples( parent_samples )
+
+    result = Sample()
     attrs_to_ignore = ("is_clonal", )
     for attrname in ("order_item_id", "type_id", "operator_id",
                      "external_barcode", "name", "description",
@@ -396,7 +401,10 @@ def merged_sample(parent_samples):
                      "is_assembly", "is_external", "external_id",
                      "host_cell_pk", "growth_medium", "i5_sequence_id",
                      "i7_sequence_id"):
-        source_vals = set([getattr(par, attrname) for par in parent_samples])
+        source_vals = set([getattr(par, attrname) for par in filtered_parents])
         if len(source_vals) == 1:
-            setattr(copy, attrname, source_vals.pop())
-    return copy
+            setattr(result, attrname, source_vals.pop())
+    if len(parent_samples) > 1:
+        result.is_pooled = True
+
+    return result

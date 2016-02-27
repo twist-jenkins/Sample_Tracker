@@ -8,15 +8,16 @@ from twistdb.backend import *
 import os
 import os.path
 
+operator_id = 'khervold'
+
 
 def test_primer_hitpicking_src():
     desc = 'testing: primer hitpicking'
-    operator_id = 'khervold'
     sf_id = 'testing::primer-hitpicking-fake-salesforce-id'
     barcode = 'SPLT_KIERANPRIMERHITPICKING'
     os.environ['WEBSITE_ENV'] = 'Warp1local'
 
-    from app import app, db
+    from app import app
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     db = get_handle( config_file = os.path.join(script_dir, 'config.ini'))
@@ -130,5 +131,30 @@ def test_primer_hitpicking_src():
     #hitpick_create_src( [{'details': {'id': barcode}}, ], [] )
 
 
+def test_vector_hitpicking():
+    from app import app
+    from app.constants import TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    db = get_handle( config_file = os.path.join(script_dir, 'config.ini'))
+
+    data = {'sources': [{'details':{'id':'vector-bulk'}}], 'details': {'transform_type_id': VECTOR_HITPICK}, 'misc': {'dest_barcodes': ['PLT_kierantest4','PLT_kierantest1','PLT_kierantest2','PLT_kierantest3']}, 'operations': []}
+    ts = TransformSpec(type_id=VECTOR_HITPICK, data_json=data, operator_id='khervold' )
+    db.add(ts)
+    db.commit()
+
+
+    vector = db.query(Vector).filter(Vector.name == 'kieran-test-custom-vector').one()
+    plate = db.query(Plate).get('SPLT_56ccf4b250e0333427700875')
+
+    try:
+        sample = db.query(Sample).filter(Sample.order_item == vector).one()
+    except NoResultFound:
+        sample = Sample(order_item=vector, name='link between vector "kieran-test-custom-vector" and virtual plate',
+                        operator_id=operator_id, plate=plate, well=plate.get_well_by_number(1) )
+        db.add(sample)
+        db.commit()
+
 if __name__ == "__main__":
     test_primer_hitpicking_src()
+    test_vector_hitpicking()
