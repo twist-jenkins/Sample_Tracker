@@ -34,19 +34,21 @@ angular.module('twist.app').controller('hamiltonWizardFinishRunController', ['$s
             $scope.clearScannedItemErrorMessage();
             var savedSpecToFinish = data.data;
 
-            /* create the data for the Hamilton Worklist dragout functionality */
-            var now = (new Date()).toLocaleDateString().split('/').join('-');
-            var filename = 'worklist-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.csv';
-            var afterProtocol = document.location.href.substring(document.location.href.indexOf('://') + 3);
-            var server = afterProtocol.substring(0, afterProtocol.indexOf('/'));
+            if (savedSpecToFinish.data_json.details.transform_template_id == 42 || savedSpecToFinish.data_json.details.transform_template_id == 46) {
+                $scope.displayWorklist = false;
+                $scope.worklistFetched = true;
+            } else {
+                $scope.displayWorklist = true;
+                /* create the data for the Hamilton Worklist dragout functionality */
+                var now = (new Date()).toLocaleDateString().split('/').join('-');
+                var filename = 'worklist-' + now + '-' + savedSpecToFinish.data_json.sources[0].details.id + '.csv';
+                var afterProtocol = document.location.href.substring(document.location.href.indexOf('://') + 3);
+                var server = afterProtocol.substring(0, afterProtocol.indexOf('/'));
 
-            var worklistUrl = document.location.href.substring(0, document.location.href.indexOf(':')) + '://' + server + '/api/v1/rest/worklist/' + $scope.savedSpecIdToFinish;
+                var worklistUrl = document.location.href.substring(0, document.location.href.indexOf(':')) + '://' + server + '/api/v1/rest/worklist/' + $scope.savedSpecIdToFinish;
 
-            $scope.dragOutData = 'text/plain|' + filename + '|' + worklistUrl; //'text/plain|worklist.png|http://localhost/static/images/twist.png';
-
-            console.log($scope.dragOutData);
-
-            // TO DO: Generate barcode svg - directive!!!!
+                $scope.dragOutData = 'text/plain|' + filename + '|' + worklistUrl; //'text/plain|worklist.png|http://localhost/static/images/twist.png';
+            }
 
             $scope.savedSpecToFinish = savedSpecToFinish;
 

@@ -3062,6 +3062,17 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
                 float: right;
 
                 &.twst-hamilton-step-worklist-fetched {
+
+                    &.twst-hide-worklist-button {
+                        .twst-hamilton-wizard-finish-run-button {
+                            top: -0.25em;
+                        }
+
+                        .twst-hamilton-step-worklist-button {
+                            display: none;
+                        }
+                    }
+
                     .twst-hamilton-step-worklist-button {
                         font-size: 1em;
                         top: 2.8em;
