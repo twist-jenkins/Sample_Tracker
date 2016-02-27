@@ -521,8 +521,6 @@ def transform_params( transform_type_id, transform_template_id  ):
 
     return f(transform_type_id, transform_template_id)
 
-
-
 # hamilton operation routes
 
 @app.route('/api/v1/rest-ham/hamiltons/<hamilton_barcode>', methods=['GET'])

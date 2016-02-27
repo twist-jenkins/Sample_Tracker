@@ -2216,7 +2216,7 @@ TRANSFORM_MAP = loads("""
                         "plateCount": 16
                         ,"wellCount": 384
                         ,"plateTypeId": "SPTT_0006"
-                        ,"variablePlateCount": false
+                        ,"variablePlateCount": true
                         ,"plateTitles": ["Quadrant&nbsp;1:&nbsp;","Quadrant&nbsp;2:&nbsp;","Quadrant&nbsp;3:&nbsp;","Quadrant&nbsp;4:&nbsp;","Quadrant&nbsp;5:&nbsp;","Quadrant&nbsp;6:&nbsp;","Quadrant&nbsp;7:&nbsp;","Quadrant&nbsp;8:&nbsp;","Quadrant&nbsp;9:&nbsp;","Quadrant&nbsp;10:&nbsp;","Quadrant&nbsp;11:&nbsp;","Quadrant&nbsp;12:&nbsp;","Quadrant&nbsp;13:&nbsp;","Quadrant&nbsp;14:&nbsp;","Quadrant&nbsp;15:&nbsp;","Quadrant&nbsp;16:&nbsp;"]
                     }
                 }

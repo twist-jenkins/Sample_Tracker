@@ -1006,6 +1006,15 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
                     margin-top: 0;
                 }
 
+                &.twst-skipped-plate {
+                    color: #ddd;
+
+                    input {
+                        background-color: #ededed;
+                        color: #bbb;
+                    }
+                }
+
                 .twst-record-step-plate-title, .twst-record-step-plate-input {
                     display: table-cell;
                     vertical-align: middle;
@@ -1042,6 +1051,36 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
 
                             svg {
                                 g {
+                                    fill: $twst-dark-red;
+                                }
+                            }
+                        }
+                    }
+
+                    .twst-skip-plate-button {
+                        position: absolute;
+                        right: 0.5em;
+                        font-size: 1em;
+                        top: 0.75em;
+                        opacity: 0.8;
+                        cursor: pointer;
+
+                        svg {
+                            height: 1em;
+                            path, ellipse {
+                                stroke: #ccc;
+                            }
+                            ellipse {
+                                fill: #ccc;
+                            }
+                        }
+
+                        &:hover {
+                            svg {
+                                path, ellipse {
+                                    stroke: $twst-dark-red;
+                                }
+                                ellipse {
                                     fill: $twst-dark-red;
                                 }
                             }

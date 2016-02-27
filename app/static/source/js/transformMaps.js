@@ -1637,7 +1637,7 @@ app = angular.module('twist.app')
                     ,destination: {
                         plateCount: 16
                         ,plateTypeId: 'SPTT_0006'
-                        ,variablePlateCount: true
+                        ,variablePlateCount: false
                         ,plateTitles: [
                             'Plate&nbsp;01&nbsp;'
                             ,'Plate&nbsp;02&nbsp;'
@@ -1657,6 +1657,7 @@ app = angular.module('twist.app')
                             ,'Plate&nbsp;16&nbsp;'
                         ]
                         ,create: true
+                        ,skippable: true
                     }
                 }
                 ,35: {  // keyed to transform_template_id in the database

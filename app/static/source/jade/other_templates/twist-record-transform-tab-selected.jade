@@ -18,10 +18,12 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
                 span Add Source
         div(class="twst-record-step-plate-barcodes-right")
             p(class="twst-block-header" ng-class="{'twst-invisible': !transformSpec.destinations.length}") {{transformSpec.getDestinationsHeader()}}:
-            div(class="twst-record-step-plate-row" ng-repeat="plate in transformSpec.destinations" ng-class="{'twst-2em-top-margin': $index && plate.first_in_group}")
+            div(class="twst-record-step-plate-row" ng-repeat="plate in transformSpec.destinations" ng-class="{'twst-2em-top-margin': $index && plate.first_in_group, 'twst-skipped-plate': plate.skipped}")
                 div(class="twst-record-step-plate-title" ng-if="plate.details.title" ng-bind-html="plate.details.title")
                 div(class="twst-record-step-plate-input")
-                    input(type="text" class="form-control" ng-model="plate.details.id" ng-blur="updateTransformPlan(plate.details.id, 'destination', $index)")
+                    input(type="text" class="form-control" ng-model="plate.details.id" ng-blur="updateTransformPlan(plate.details.id, 'destination', $index)" ng-disabled="plate.skipped")
+                    div(class="twst-skip-plate-button" ng-click="transformSpec.skipPlateInput('destination', $index)" ng-if="transformSpec.map.destination.skippable")
+                        ng-include(src="'static/images/skip.svg'")
                     div(class="twst-remove-plate-button" ng-click="transformSpec.removePlateInput('destination', $index)" ng-if="transformSpec.map.destination.variablePlateCount && ($index || transformSpec.destinations.length > 1)")
                         ng-include(src="'static/images/trash-can.svg'")
                     div(class="twst-spinner twst-plate-data-loading-spinner" ng-if="plate.updating")
