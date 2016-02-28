@@ -20,7 +20,8 @@ from app.models import create_destination_plate
 from app.dbmodels import NGS_BARCODE_PLATE  # , NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
-from twistdb.sampletrack import (Sample, Plate, Transform, TransformDetail)
+from twistdb.sampletrack import (Sample, Plate, Transform, PlateType,
+                                 TransformDetail)
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
 
@@ -148,6 +149,18 @@ def create_adhoc_sample_movement(db_session,
 
         if "source_well_sample" in oper:
             assert oper["source_well_sample"] == sample_cache[(s_bc, s_num)].id
+
+        if "destination_well_number" not in oper:
+            # lookup well number based on well name
+            # (quick fix for qpix log upload)
+            # not sure how many other code paths reach this
+            # TODO: if destination_well_number is in oper, crosscheck well_name
+            # TODO: speed up / cache dest_type query as needed
+            d_type = oper["destination_plate_type"]
+            dest_type = db.session.query(PlateType).get(d_type)
+            d_label = str(oper["destination_well_name"])
+            d_num = dest_type.layout.get_well_by_label(d_label).well_number
+            oper["destination_well_number"] = d_num
 
     # Also cache a map of well number to well instance for all dest wells
     well_cache = {}
