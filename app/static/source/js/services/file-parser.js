@@ -131,6 +131,7 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                                 ,destination_plate_barcode: destinationBarcode
                                 ,destination_well_name: destinationWellName
                                 ,destination_plate_well_count: destinationPlateTypeInfo.wellCount
+                                ,destination_plate_type: 'SPTT_0006'  // FIXME: sometimes 0005
                             }
                             transformJSON.push(thisRow);
                         }
