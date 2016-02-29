@@ -313,24 +313,41 @@ def plates_to_rows( sources ):
 @to_resp
 def rebatch_transform( type_id, templ_id ):
     from app.steps import rebatching_normalization
+    from app.miseq import echo_csv
     rows, cmds = [], []
     #rows = plates_to_rows( request.json['sources'] )
     destinations_ready = bool( request.json.get('destinations') )
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
 
     for dest_index, destination in enumerate(request.json['destinations']):
             if not destination['details'].get('id'):
                 destinations_ready = False
                 break
             if destinations_ready:
-                rows = rebatching_normalization.create_transform(db,
+                rows= rebatching_normalization.create_transform(db,
                               request.json['sources'],
                               request.json['destinations'] )
 
-    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
-                db.session, request.json['sources'][0]['details']['id'],
-                [x['details']['id'] for x in request.json['destinations']])'''
+            #print addl_cmds
 
-    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+            cmds.append({
+                    "type": "PRESENT_DATA",
+
+                    "item": {
+                        "type": 'file-data',
+                        "title": "Echo Worklist",
+                        "data": echo_csv(rows,100),
+                        "mimeType": "text/csv",
+                        "fileName": request.json['destinations'][0]['details']['id'] + "_echo_worklist.csv"
+                    }
+
+            })
+
+
+
+
+
+
 
     cmds.append({
         "type": "SET_DESTINATIONS",
@@ -339,14 +356,15 @@ def rebatch_transform( type_id, templ_id ):
     cmds.append({
         "type": "REQUEST_DATA",
         "item": {
-            "type": "array.1",
-            "dataType": "barcode.PLATE",
-            "title": "Associated PCA Plate Barcode",
-            "forProperty": "associatedPcaPlates"
+            "type": "barcode.PLATE",
+            "title": "Vector Source Plate Barcode",
+            "forProperty": "vectorSourcePlate"
         }
     })
 
-    #print destination_plates
+
+
+    #print cmds
     return rows, cmds
 
 
@@ -547,6 +565,7 @@ def pcr_primer_hitpick( type_id, templ_id ):
                 "title": "Echo worklist",
                 "data": echo_worklist,
                 "mimeType": "text/csv",
+                "fileType":"worklist",
                 "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
             }
 

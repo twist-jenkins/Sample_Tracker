@@ -1,11 +1,12 @@
 from collections import defaultdict
 import datetime
 import math
+import operator
 from twistdb.sampletrack import Plate, Sample, PlateWell, PlateType
 from flask import request, Response
 from json_tricks.nonp import loads
 from flask_login import current_user
-
+from app.miseq import echo_csv
 
 def calculate_volume_foreach_sample(db):
 
@@ -52,11 +53,10 @@ def calculate_volume_foreach_sample(db):
             for marker1, d in sorted(markers.items()):
 
                 thisPlate = {"type": "SPTT_0006",
-                             "first_in_group": i+1,
-                             "details": {
-                                 "title": "<strong> %s </strong> resistance - Plate <strong> %s </strong> of %s" %
-                                          (str(marker1), (i + 1), d)}}
 
+                             "details": {
+                                 "title": "resistance - Plate <strong> %s </strong> " %
+                                          ( (i +1))}}
 
 
 
@@ -69,45 +69,81 @@ def calculate_volume_foreach_sample(db):
 def create_transform(db,sources, dests ):
     rows =[]
     dest_plates =[]
+    dest_volume=[]
+    by_marker = defaultdict(list)
+
+    qpix_samples=defaultdict(list)
     dest_barcodes = [ d['details']['id'] for d in dests ]
     source_barcodes = [ d['details']['id'] for d in sources ]
+
     for src_barcode in source_barcodes:
         #plate_barcode = src['details']['id']
         samples = db.session.query(Plate).filter(Plate.external_barcode  == src_barcode).one().current_well_contents(db.session)
-    #dest_plates = destination_plates
+    for sample in samples:
+        concentration =sample.conc_ng_ul
+
+        sequence = sample.order_item.sequence
+    #print sequence
+        if len(sequence) < 200 and (concentration is not  None) :
+            fmol = 13*5
+            volume = (fmol/concentration)
+        elif len(sequence) >= 200 and (concentration is not  None) :
+            fmol = 13*2
+            volume = (fmol/concentration)
+        #qpix_samples[sample].append(volume)
+
+
+        cloning_process= sample.cloning_process
+        if cloning_process is None :
+         marker = "NOMARKER"
+        else:
+         marker = cloning_process.resistance_marker.code
+         by_marker[ marker ].append(sample)
+         qpix_samples[sample].append(volume)
+        #by_marker[ sample ].append(volume)
+
+
+
     dest_type = db.session.query(PlateType).get('SPTT_0006')
     source_type =db.session.query(PlateType).get('SPTT_0004')
 
-    layout = db.session.query(PlateType).get('SPTT_0006').layout
-    mapping_lookup = generate_worklist() #48to384transform lookup
 
-    '''for bc in dest_barcodes:
-        p = Plate( type_id='SPTT_0006', operator_id= current_user.operator_id,
-                      external_barcode=bc )
-        db.session.add( p )
-        db.session.commit()
-        plate = db.session.query(Plate) \
-                          .filter(Plate.external_barcode == bc) \
-                          .one()
+    sorted_x = generate_worklist()
+    #print sorted_x
+
+    def dest_lookup(x_384_well_id):#, well_id):
+        dest =sorted_x[x_384_well_id-1]
+
+        dest_well = str(dest[1])
+        return  dest_well
 
 
-    dest_plates.append(plate)'''
-    for dest_barcode in dest_barcodes :
-            for (qpix_plate_1,x_48_well),x_384_well_id  in mapping_lookup.items():
 
-                rows.append({'source_plate_barcode':            src_barcode,#qpix_plate_1,
-                             'source_well_name':               str(source_type.get_well_by_number(int(x_48_well)).well_label),
-                             'source_well_number':             x_48_well,
-                             'source_well_code':                source_type.get_well_by_number(int(x_48_well)).well_code,
-                             'source_sample_id':                str(samples[x_48_well-1].id),
-                             'destination_plate_barcode':      str(dest_barcode),#dest_barcodes[dest_plate_idx],
-                             'destination_well_name':          str(dest_type.get_well_by_number(int(x_384_well_id)).well_label),
-                             'destination_well_number':        str(x_384_well_id),
-                             'destination_plate_type':         str(dest_type.type_id),
-                             'destination_plate_well_count':   dest_type.layout.feature_count
-                             })
-    #print rows
+
+    for dest_barcode in dest_barcodes:
+         for src_idx, sample in enumerate(samples):
+
+             dest_well = dest_lookup(src_idx+1)
+             rows.append({'source_plate_barcode': src_barcode,
+                         'source_well_name': sample.well.well_label,
+                         'source_well_number': int(sample.well.well_number),
+                         'source_well_code': sample.well.well_code,
+                         'source_sample_id': sample.id,
+                         'destination_plate_barcode': dest_barcode,
+                         'destination_well_name':  str(dest_type.get_well_by_number(int(dest_well)).well_label),#dest_type.get_well_by_number(dest_well).well_label,
+                         'destination_well_number': int(dest_well),
+                         'destination_plate_type': str(dest_type.type_id),
+
+                         'destination_plate_well_count': dest_type.layout.feature_count
+                         })
+    print rows
     return rows
+
+
+
+
+
+
 
 def generate_worklist():
         lookup13 ={}
@@ -143,7 +179,8 @@ def generate_worklist():
                 print well_id , well'''
             #print (qpix_plate + 1, x_48_well), ':', x_384_well_id
 
-        return lookup48to384
+        sorted_x = sorted(lookup48to384.items(), key=operator.itemgetter(0))
+        return sorted_x
 
 
 
