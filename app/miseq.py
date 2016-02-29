@@ -3,6 +3,8 @@ import StringIO
 import logging
 from datetime import datetime
 
+import Bio.Seq
+
 from app import db
 
 from flask import make_response
@@ -73,7 +75,8 @@ def miseq_csv_template(rows, run_id):
 
     #run_date_created = run.date_created.strftime("%d/%m/%Y")
     run_date_created = datetime.now().strftime("%d/%m/%Y")
-    run_description = "Run description TBD"  # run.description
++   run_description = "Run description TBD -- NOTE i7 barcode sequence is RC as of 1-29-2016 1438"
+
     genome_str = ""  # blank out genome for generate fastq workfow
 
     cw.writerow(["[Header]"])
@@ -113,7 +116,7 @@ def miseq_csv_template(rows, run_id):
             "",  # Sample_Plate
             row.notes,  # Sample_Well
             row.i7_seq_name,  # I7_Index_ID
-            row.i7_seq,  # index
+            Bio.Seq.Seq(row.i7_seq).reverse_complement(),  # RC
             row.i5_seq_name,  # I5_Index_ID
             row.i5_seq,  # index2
             genome_str,  # GenomeFolder
