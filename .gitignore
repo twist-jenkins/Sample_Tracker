@@ -26,4 +26,5 @@ app/static/source/js/templates.js
 
 ### IDE-specific ignores
 /.idea/
+/_twistdb
 /sample_movement_tracker.iml
