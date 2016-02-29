@@ -1,0 +1,14 @@
+<svg viewBox="0 0 175 125" xmlns="http://www.w3.org/2000/svg">
+ <g id="svg_12">
+   <ellipse fill="#000000" stroke="#000000" stroke-width="16" stroke-linejoin="null" stroke-linecap="null" cx="80.5" cy="103" id="svg_8" rx="10.5" ry="10.5" class="twst-svg-element"/>
+   <ellipse fill="#000000" stroke="#000000" stroke-width="16" stroke-linejoin="null" stroke-linecap="null" cx="141" cy="103" rx="5" ry="5" id="svg_9" class="twst-svg-element"/>
+   <ellipse fill="#000000" stroke="#000000" stroke-width="16" stroke-linejoin="null" stroke-linecap="null" cx="19" cy="103" rx="5" ry="5" id="svg_10" class="twst-svg-element"/>
+   <g id="svg_11">
+    <path fill="none" stroke="#000000" stroke-width="16" d="m138.98599,63c0,-30.38701 -28.6376,-55 -63.99298,-55c-35.35541,0 -63.99301,24.61299 -63.99301,55" id="svg_1" transform="rotate(-5.946783065795898 106.98950195312503,35.50000000000001) " class="twst-svg-element"/>
+    <g id="svg_6">
+     <path fill="none" stroke="#000000" stroke-width="16" stroke-linejoin="round" stroke-linecap="null" d="m134,76l33.16248,-34.16246" id="svg_4" class="twst-svg-element"/>
+     <path fill="none" stroke="#000000" stroke-width="16" stroke-linejoin="round" stroke-linecap="null" d="m113,76l23.16248,-32.16246" id="svg_5" transform="rotate(90 124.58123779296875,59.918769836425795) " class="twst-svg-element"/>
+    </g>
+   </g>
+  </g>
+</svg>
