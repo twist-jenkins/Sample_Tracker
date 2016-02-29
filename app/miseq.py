@@ -75,7 +75,7 @@ def miseq_csv_template(rows, run_id):
 
     #run_date_created = run.date_created.strftime("%d/%m/%Y")
     run_date_created = datetime.now().strftime("%d/%m/%Y")
-+   run_description = "Run description TBD -- NOTE i7 barcode sequence is RC as of 1-29-2016 1438"
+    run_description = "Run description TBD -- NOTE i7 barcode sequence is RC as of 1-29-2016 1438"
 
     genome_str = ""  # blank out genome for generate fastq workfow
 
