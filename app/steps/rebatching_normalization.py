@@ -136,7 +136,7 @@ def create_transform(db,sources, dests ):
 
                          'destination_plate_well_count': dest_type.layout.feature_count
                          })
-    print rows
+    
     return rows
 
 
