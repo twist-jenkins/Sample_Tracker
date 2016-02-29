@@ -800,17 +800,21 @@ def ecr_pcr_source_plate_creation( type_id, templ_id ):
 
 @to_resp
 def ecr_pcr_primer_hitpicking( type_id, templ_id ):
+    from app.steps import ecr_pcr_hitpicking
 
     rows, cmds = [{}], []
-    destinations_ready = ("destinations" in request.json
-                          and request.json['destinations'])
+    destinations_ready = bool( request.json.get('destinations') )
 
-    for dest_index, destination in enumerate(request.json['destinations']):
-        if "id" not in destination["details"] or \
-                destination["details"]["id"] == "":
+    for destination in request.json.get('destinations', []):
+        if not destination['details'].get('id'):
             destinations_ready = False
+            break
 
     if destinations_ready:
+
+        rows, cmds = ecr_pcr_hitpicking.hitpicking( db.session,
+                                                    [x['details']['id'] for x in request.json['destinations']] )
+        '''
         # TODO: add echo worklist generation here as return as response_command
         cmds.append({
             "type": "PRESENT_DATA",
@@ -823,6 +827,7 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
             }
 
         })
+        '''
     return rows, cmds
 
 def pls_dilution(type_id, templ_id):
