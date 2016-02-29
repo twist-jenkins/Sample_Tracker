@@ -67,38 +67,40 @@ angular.module('twist.app').controller('viewManageTransformSpecsController', ['$
 
         $scope.executeSpec = function (spec) {
 
-            var deleteConfirmModal = $modal.open({
-                templateUrl: 'twist-confirm-spec-execute-modal.html'
-                ,size: 'md'
-                ,controller: ['$scope', '$modalInstance', 'spec',
-                    function($scope, $modalInstance, spec) {
+            if (!spec.updating) {
+                var execConfirmModal = $modal.open({
+                    templateUrl: 'twist-confirm-spec-execute-modal.html'
+                    ,size: 'md'
+                    ,controller: ['$scope', '$modalInstance', 'spec',
+                        function($scope, $modalInstance, spec) {
 
-                        $scope.spec = spec;
+                            $scope.spec = spec;
 
-                        $scope.clickCancel = function() {
-                            $modalInstance.dismiss();
+                            $scope.clickCancel = function() {
+                                $modalInstance.dismiss();
+                            }
+                            $scope.clickExecute = function() {
+
+                                spec.updating = true;
+                                Api.executeTransformSpec(spec.spec_id).success(function (data) {
+                                    loadSpecs();
+                                    $modalInstance.close();
+                                    announceSuccess(spec, 'execute');
+                                }).error(function () {
+                                    spec.updating = false;
+                                    $modalInstance.close();
+                                    announceError(spec, 'execute');
+                                });
+                            }
                         }
-                        $scope.clickExecute = function() {
-
-                            spec.updating = true;
-                            Api.executeTransformSpec(spec.spec_id).success(function (data) {
-                                loadSpecs();
-                                $modalInstance.close();
-                                announceSuccess(spec, 'execute');
-                            }).error(function () {
-                                spec.updating = false;
-                                $modalInstance.close();
-                                announceError(spec, 'execute');
-                            });
+                    ]
+                    ,resolve: {
+                        spec: function() {
+                            return spec;
                         }
                     }
-                ]
-                ,resolve: {
-                    spec: function() {
-                        return spec;
-                    }
-                }
-            });
+                });
+            }
 
         };
 
