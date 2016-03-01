@@ -314,6 +314,8 @@ def plates_to_rows( sources ):
 
 @to_resp
 def rebatch_transform( type_id, templ_id ):
+    from app.steps import rebatching_normalization
+
     rows, cmds = [], []
     #rows = plates_to_rows( request.json['sources'] )
     destinations_ready = bool( request.json.get('destinations') )
@@ -787,19 +789,13 @@ def ecr_pcr_planning( type_id, templ_id ):
 
     return rows, cmds
 
+
 @to_resp
 def ecr_pcr_source_plate_creation( type_id, templ_id ):
-    rows = plates_to_rows( request.json['sources'] )
+    from app.steps import ecr_pcr_hitpicking
+    return ecr_pcr_hitpicking.create_source( db.session,
+                                             request.json['sources'][0]['details']['id'] )
 
-    cmds = [{
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": "csv",
-            "title": "Source Plate Map",
-            "data": "Source Plate Data here",
-        }
-    }]
-    return rows, cmds
 
 @to_resp
 def ecr_pcr_primer_hitpicking( type_id, templ_id ):
