@@ -20,7 +20,8 @@ from app.models import create_destination_plate
 from app.dbmodels import NGS_BARCODE_PLATE  # , NGS_BARCODE_PLATE_TYPE
 
 from twistdb import create_unique_id
-from twistdb.sampletrack import (Sample, Plate, Transform, TransformDetail)
+from twistdb.sampletrack import (Sample, Plate, Transform, PlateType,
+                                 TransformDetail)
 
 IGNORE_MISSING_SOURCE_PLATE_WELLS = True  # FIXME: this allows silent failures
 
@@ -132,8 +133,7 @@ def create_adhoc_sample_movement(db_session,
     sample_cache = {}
     logging.info("Caching plate samples.")
     for barcode, plate in plate_cache.iteritems():
-        s = plate.current_well_contents(db_session)
-        for sample in s:
+        for sample in plate.current_well_contents(db_session):
             sample_cache[(barcode, sample.well.well_number)] = sample
 
     # Inject well_number by well_name into transform_map, if necessary.
@@ -148,6 +148,18 @@ def create_adhoc_sample_movement(db_session,
 
         if "source_well_sample" in oper:
             assert oper["source_well_sample"] == sample_cache[(s_bc, s_num)].id
+
+        if "destination_well_number" not in oper:
+            # lookup well number based on well name
+            # (quick fix for qpix log upload)
+            # not sure how many other code paths reach this
+            # TODO: if destination_well_number is in oper, crosscheck well_name
+            # TODO: speed up / cache dest_type query as needed
+            d_type = oper["destination_plate_type"]
+            dest_type = db.session.query(PlateType).get(d_type)
+            d_label = str(oper["destination_well_name"])
+            d_num = dest_type.layout.get_well_by_label(d_label).well_number
+            oper["destination_well_number"] = d_num
 
     # Also cache a map of well number to well instance for all dest wells
     well_cache = {}
@@ -250,6 +262,7 @@ def sample_handler(transform, well_cache,
     new_s.id = new_id()
     new_s.plate_id = destination_plate.id
     new_s.transform_id = transform.id
+    new_s.operator_id = g.user.operator_id
     well = well_cache[(destination_plate.external_barcode, destination_well_id)]
     new_s.plate_well_code = well.well_code
 
@@ -367,14 +380,16 @@ def copied_sample(orig_obj):
     """Copy a sample, this approach is hard to maintain though"""
 
     copy = Sample()
-    for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description",
-                     "work_order_id", "synthesis_run_pk", "cluster_num",
-                     "primer_pk", "cloning_process_id",
-                     "mol_type", "is_circular", "is_clonal",
-                     "is_assembly", "is_external", "external_id",
-                     "host_cell_pk", "growth_medium", "i5_sequence_id",
-                     "i7_sequence_id"):
+    attrs_to_ignore = ("details", "operator_id")
+    attrs_to_propagate = ("order_item_id", "type_id",
+                          "external_barcode", "name", "description",
+                          "work_order_id", "synthesis_run_pk", "cluster_num",
+                          "cloning_process_id",
+                          "mol_type", "is_circular", "is_clonal",
+                          "is_assembly", "is_external", "external_id",
+                          "host_cell_pk", "growth_medium", "i5_sequence_id",
+                          "i7_sequence_id")
+    for attrname in attrs_to_propagate:
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
 
@@ -392,15 +407,16 @@ def merged_sample(parent_samples):
     filtered_parents = filter_real_samples( parent_samples )
 
     result = Sample()
-    attrs_to_ignore = ("is_clonal", )
-    for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description",
-                     "work_order_id", "synthesis_run_pk", "cluster_num",
-                     "primer_pk", "cloning_process_id",
-                     "mol_type", "is_circular",
-                     "is_assembly", "is_external", "external_id",
-                     "host_cell_pk", "growth_medium", "i5_sequence_id",
-                     "i7_sequence_id"):
+    attrs_to_ignore = ("is_clonal", "details", "operator_id")
+    attrs_to_merge = ("order_item_id", "type_id",
+                      "external_barcode", "name", "description",
+                      "work_order_id", "synthesis_run_pk", "cluster_num",
+                      "cloning_process_id",
+                      "mol_type", "is_circular",
+                      "is_assembly", "is_external", "external_id",
+                      "host_cell_pk", "growth_medium", "i5_sequence_id",
+                      "i7_sequence_id")
+    for attrname in attrs_to_merge:
         source_vals = set([getattr(par, attrname) for par in filtered_parents])
         if len(source_vals) == 1:
             setattr(result, attrname, source_vals.pop())

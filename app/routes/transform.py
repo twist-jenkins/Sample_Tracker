@@ -314,24 +314,43 @@ def plates_to_rows( sources ):
 
 @to_resp
 def rebatch_transform( type_id, templ_id ):
+    from app.steps import rebatching_normalization
+    from app.miseq import echo_csv
+
     rows, cmds = [], []
     #rows = plates_to_rows( request.json['sources'] )
     destinations_ready = bool( request.json.get('destinations') )
+    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
 
     for dest_index, destination in enumerate(request.json['destinations']):
             if not destination['details'].get('id'):
                 destinations_ready = False
                 break
             if destinations_ready:
-                rows = rebatching_normalization.create_transform(db,
+                rows= rebatching_normalization.create_transform(db,
                               request.json['sources'],
                               request.json['destinations'] )
 
-    '''echo_worklist = rebatching_normalization.calculate_volume_foreach_sample(
-                db.session, request.json['sources'][0]['details']['id'],
-                [x['details']['id'] for x in request.json['destinations']])'''
+            #print addl_cmds
 
-    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+            cmds.append({
+                    "type": "PRESENT_DATA",
+
+                    "item": {
+                        "type": 'file-data',
+                        "title": "Echo Worklist",
+                        "data": echo_csv(rows,100),
+                        "mimeType": "text/csv",
+                        "fileName": request.json['destinations'][0]['details']['id'] + "_echo_worklist.csv"
+                    }
+
+            })
+
+
+
+
+
+
 
     cmds.append({
         "type": "SET_DESTINATIONS",
@@ -340,14 +359,15 @@ def rebatch_transform( type_id, templ_id ):
     cmds.append({
         "type": "REQUEST_DATA",
         "item": {
-            "type": "array.1",
-            "dataType": "barcode.PLATE",
-            "title": "Associated PCA Plate Barcode",
-            "forProperty": "associatedPcaPlates"
+            "type": "barcode.PLATE",
+            "title": "Vector Source Plate Barcode",
+            "forProperty": "vectorSourcePlate"
         }
     })
 
-    #print destination_plates
+
+
+    #print cmds
     return rows, cmds
 
 
@@ -548,6 +568,7 @@ def pcr_primer_hitpick( type_id, templ_id ):
                 "title": "Echo worklist",
                 "data": echo_worklist,
                 "mimeType": "text/csv",
+                "fileType":"worklist",
                 "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
             }
 
@@ -740,20 +761,18 @@ def generic_same_to_same( type_id, templ_id ):
 
 @to_resp
 def ecr_pcr_planning( type_id, templ_id ):
+    from app.steps import ecr_pcr_hitpicking
+
     rows, cmds = [{}], []
 
-    details = request.json["details"]
+    details = request.json['details']
 
     # we need to add master mix needs info or tell the user we need all the PCA plates first
     masterMixNeeds = ""
     ecrPlates = None
 
-    if "requestedData" in details:
-        ecrPlates = details["requestedData"]
-
-    if ecrPlates and "associatedEcrPlates" in ecrPlates:
-        ecrPlates = ecrPlates["associatedEcrPlates"]
-    else:
+    ecrPlates = details.get('requestedData', {}).get('associatedEcrPlates')
+    if ecrPlates is None:
         # if they're not already in spec, we need to add the requested PCA plates
         cmds.append({
             "type": "REQUEST_DATA",
@@ -765,7 +784,7 @@ def ecr_pcr_planning( type_id, templ_id ):
             }
         })
 
-    if not ecrPlates or ecrPlates[0] is None or ecrPlates[1] is None or ecrPlates[2] is None or ecrPlates[3] is None:
+    if not ecrPlates or (None in ecrPlates):
         masterMixNeeds = "Please scan <strong>all 4</strong> ECR plates to retrieve master mix needs."
         dataType = "text"
     else:
@@ -775,62 +794,49 @@ def ecr_pcr_planning( type_id, templ_id ):
 
         # TODO: do master mix needs for ECR/PCR and ROWS
 
-        rows = [{}]
+        print '@@ request.json:', request.json
+
+
+        if len(request.json['sources']) != 1:
+            raise WebError('expected 1 source, got %d' % len(request.json['sources']))
+        dna_plate_barcodes = request.json['details']['requestedData']['associatedEcrPlates']
+        rows, cmds = ecr_pcr_hitpicking.preplanning( db.session,
+                                                     request.json['sources'][0]['details']['id'],
+                                                     dna_plate_barcodes )
         masterMixNeeds = "Master mix needs here"
         dataType = 'csv'
 
-    cmds.append({
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": dataType,
-            "title": "Master Mix Needs",
-            "data": masterMixNeeds
-        }
-    })
-
     return rows, cmds
+
 
 @to_resp
 def ecr_pcr_source_plate_creation( type_id, templ_id ):
-    rows = plates_to_rows( request.json['sources'] )
+    from app.steps import ecr_pcr_hitpicking
+    return ecr_pcr_hitpicking.create_source( db.session,
+                                             request.json['sources'][0]['details']['id'] )
 
-    cmds = [{
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": "csv",
-            "title": "Source Plate Map",
-            "data": "Source Plate Data here",
-        }
-    }]
-    return rows, cmds
 
 @to_resp
 def ecr_pcr_primer_hitpicking( type_id, templ_id ):
+    from app.steps import ecr_pcr_hitpicking
 
     rows, cmds = [{}], []
-    destinations_ready = ("destinations" in request.json
-                          and request.json['destinations'])
+    destinations_ready = bool( request.json.get('destinations') )
 
-    for dest_index, destination in enumerate(request.json['destinations']):
-        if "id" not in destination["details"] or \
-                destination["details"]["id"] == "":
+    for destination in request.json.get('destinations', []):
+        if not destination['details'].get('id'):
             destinations_ready = False
+            break
 
     if destinations_ready:
-        # TODO: add echo worklist generation here as return as response_command
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "file-data",
-                "title": "Echo worklist",
-                "data": "WORKLIST DATA HERE",
-                "mimeType": "text/csv",
-                "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
-            }
 
-        })
+        rows, cmds = ecr_pcr_hitpicking.hitpicking( db.session,
+                                                    request.json['sources'][0]['details']['id'],
+                                                    [x['details']['id'] for x in request.json['destinations']] )
     return rows, cmds
 
+
+@to_resp
 def pls_dilution(type_id, templ_id):
     # Ready for you, Kieran
 
@@ -839,6 +845,7 @@ def pls_dilution(type_id, templ_id):
     rows = plates_to_rows(request.json['sources'])
 
     return rows, cmds
+
 
 @to_resp
 def min_planning( type_id, templ_id ):

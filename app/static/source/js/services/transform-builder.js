@@ -86,7 +86,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                             ready();
                         }
                     }
-                    
+
                 }
             };
 
@@ -442,6 +442,12 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         shouldBeNew = false;
                     }
 
+                    // quick fix for qpix uploading.  TODO: put this logic somewhere more sensible
+                    if (base.details.transform_template_id == 21
+                        || base.details.transform_template_id == 22) {
+                        shouldBeNew = true;
+                    }
+
                     Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
 
                         var destinationOk = function (destItem) {
@@ -459,7 +465,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 }
                             }
                             base.destinationsReady = true;
-                            base.updateOperationsList();  
+                            base.updateOperationsList();
                         }
 
                         var isNew = data.success;

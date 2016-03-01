@@ -72,4 +72,12 @@ def fixture_ginkgo():
     seed.seed_data(db.engine, fixture_root)
 
 
+@manager.command
+def fixture_warp3():
+    """ Add database fixtures with test data values from WARP3."""
+    from twistdb.util import seed
+    fixture_root = "test/fixture_warp3"
+    seed.seed_data(db.engine, fixture_root)
+
+
 manager.run()
