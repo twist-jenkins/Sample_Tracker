@@ -7,7 +7,7 @@ angular.module('twist.app').controller('hamiltonWizardDestinationPlacementConfir
         $scope.findNextDestinationForConfirmation = function () {
             for (var i=0; i<$scope.hamiltonDataObj.allDestinationPlates.length;i++) {
                 var thisPlate = $scope.hamiltonDataObj.allDestinationPlates[i];
-                if (!thisPlate.barcode) {
+                if (!thisPlate.unused && !thisPlate.barcode) {
                     $scope.setHighlightedPlate(thisPlate);
                     $scope.setCurrentStepInstruction('Scan position ' + thisPlate.localIndex + ' on carrier ' + thisPlate.carrier.index);
                     $timeout(function () {

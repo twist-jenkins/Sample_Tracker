@@ -490,6 +490,12 @@ def transform_params( transform_type_id, transform_template_id  ):
             transform.ngs_hitpicking,
         (MIN_PLANNING_T, MIN_PLANNING):
             transform.min_planning,
+        (12, 13):
+            transform.generic_same_to_same,  # CLO Transformation
+        (13, 14):
+            transform.generic_same_to_same,  # CLO Plating on Hamilton
+        (19, 18):
+            transform.generic_same_to_same,  # RCA Aliquoting
         (25, SAME_PLATE):
             transform.ngs_tagmentation,  # ?? no type constant?
         (NGS_MASTERMIX_T, ):
