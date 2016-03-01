@@ -812,23 +812,12 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
     if destinations_ready:
 
         rows, cmds = ecr_pcr_hitpicking.hitpicking( db.session,
+                                                    request.json['sources'][0]['details']['id'],
                                                     [x['details']['id'] for x in request.json['destinations']] )
-        '''
-        # TODO: add echo worklist generation here as return as response_command
-        cmds.append({
-            "type": "PRESENT_DATA",
-            "item": {
-                "type": "file-data",
-                "title": "Echo worklist",
-                "data": "WORKLIST DATA HERE",
-                "mimeType": "text/csv",
-                "fileName": request.json['sources'][0]['details']['id'] + "_echo_worklist.csv"
-            }
-
-        })
-        '''
     return rows, cmds
 
+
+@to_resp
 def pls_dilution(type_id, templ_id):
     # Ready for you, Kieran
 
@@ -837,6 +826,7 @@ def pls_dilution(type_id, templ_id):
     rows = plates_to_rows(request.json['sources'])
 
     return rows, cmds
+
 
 @to_resp
 def min_planning( type_id, templ_id ):

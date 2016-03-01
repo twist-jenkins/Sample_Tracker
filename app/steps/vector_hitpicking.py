@@ -153,7 +153,7 @@ def hitpicking( db, vector_barcode ):
                         'source_well_name':             t[0].well_label,
                         'source_well_number':           t[0].well_number,
                         'source_sample_id':             vector_name,
-                        'source_plate_well_count':      386,
+                        'source_plate_well_count':      384,
                         'destination_plate_barcode':    dest_plate.external_barcode,
                         'destination_well_name':        d_sample.well.well_label,
                         'destination_well_number':      d_sample.well.well_number,
