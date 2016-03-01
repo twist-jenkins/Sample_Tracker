@@ -1,5 +1,5 @@
-angular.module('twist.app').controller('plateDetailsController', ['$scope', '$state', 'Api', 'TypeAhead',
-    function ($scope, $state, Api, TypeAhead) {
+angular.module('twist.app').controller('plateDetailsController', ['$scope', '$state', 'Api', 'TypeAhead', '$timeout', 
+    function ($scope, $state, Api, TypeAhead, $timeout) {
         $scope.getTypeAheadBarcodes = TypeAhead.getTypeAheadBarcodes;
         $scope.plateBarcode = '';
         $scope.lastUsedBarcode = null;
@@ -18,6 +18,7 @@ angular.module('twist.app').controller('plateDetailsController', ['$scope', '$st
 
         $scope.getPlateDetails = function (barcode) {
             $scope.plateDetails = null;
+
             $scope.plateBarcode = barcode;
             $scope.lastUsedBarcode = barcode;
 
@@ -25,15 +26,26 @@ angular.module('twist.app').controller('plateDetailsController', ['$scope', '$st
 
             $scope.retrievedPlateBarcode = '';
 
+            $scope.clearPlateErrorVisible = function () {
+                $scope.plateError = null;
+            }
+
             Api.getBasicPlateDetails(barcode).success(function (data) {
                 $scope.fetchingDetails = false;
                 $scope.plateDetails = data;
                 $scope.retrievedPlateBarcode = $scope.plateBarcode + '';
+            }).error(function (data) {
+                $scope.fetchingDetails = false;
+                $scope.plateError = data.message;
+                $scope.plateErrorVisible = -1;
+
             });
         }
 
-        $scope.getExcelHref = function () {
-            return $scope.plateBarcode.length < 6 ? null : '/api/v1/plate-barcodes/' + $scope.plateBarcode + '/csv';
+        $scope.getExcel = function () {
+            if ($scope.plateDetails) {
+                document.location.href = '/api/v1/plate-barcodes/' + $scope.plateBarcode + '/csv';
+            }
         }
     }]
 );
