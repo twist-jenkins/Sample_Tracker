@@ -1,3 +1,3 @@
-id,ngs_run_id,sequencing_analysis_type,status,analysis_datetime
-NSA_1,TEST_RUN,NGS_PAIRED_END_OVERLAP_QC,waiting for analysis,2016-02-24
-NSA_2,ANALYZED_RUN,NGS_PAIRED_END_OVERLAP_QC,waiting for analysis,2016-02-24
+pk,ngs_run_pk,sequencing_analysis_type,status,analysis_datetime
+1,1,NGS_PAIRED_END_OVERLAP_QC,waiting for analysis,2016-02-24
+2,2,NGS_PAIRED_END_OVERLAP_QC,waiting for analysis,2016-02-24
