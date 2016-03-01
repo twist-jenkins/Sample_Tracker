@@ -586,6 +586,8 @@ def ngs_load( type_id, templ_id ):
 
     # TO DO   based on source barcode, present the target sequencer
 
+    details = request.json['details']
+
     #DEV Only remove when code exists to set sequencer
     sequencer = "MiSeq";
 
