@@ -262,6 +262,7 @@ def sample_handler(transform, well_cache,
     new_s.id = new_id()
     new_s.plate_id = destination_plate.id
     new_s.transform_id = transform.id
+    new_s.operator_id = g.user.operator_id
     well = well_cache[(destination_plate.external_barcode, destination_well_id)]
     new_s.plate_well_code = well.well_code
 
@@ -379,14 +380,16 @@ def copied_sample(orig_obj):
     """Copy a sample, this approach is hard to maintain though"""
 
     copy = Sample()
-    for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description",
-                     "work_order_id", "synthesis_run_pk", "cluster_num",
-                     "primer_pk", "cloning_process_id",
-                     "mol_type", "is_circular", "is_clonal",
-                     "is_assembly", "is_external", "external_id",
-                     "host_cell_pk", "growth_medium", "i5_sequence_id",
-                     "i7_sequence_id"):
+    attrs_to_ignore = ("details", "operator_id")
+    attrs_to_propagate = ("order_item_id", "type_id",
+                          "external_barcode", "name", "description",
+                          "work_order_id", "synthesis_run_pk", "cluster_num",
+                          "cloning_process_id",
+                          "mol_type", "is_circular", "is_clonal",
+                          "is_assembly", "is_external", "external_id",
+                          "host_cell_pk", "growth_medium", "i5_sequence_id",
+                          "i7_sequence_id")
+    for attrname in attrs_to_propagate:
         setattr(copy, attrname, getattr(orig_obj, attrname))
     return copy
 
@@ -404,15 +407,16 @@ def merged_sample(parent_samples):
     filtered_parents = filter_real_samples( parent_samples )
 
     result = Sample()
-    attrs_to_ignore = ("is_clonal", )
-    for attrname in ("order_item_id", "type_id", "operator_id",
-                     "external_barcode", "name", "description",
-                     "work_order_id", "synthesis_run_pk", "cluster_num",
-                     "primer_pk", "cloning_process_id",
-                     "mol_type", "is_circular",
-                     "is_assembly", "is_external", "external_id",
-                     "host_cell_pk", "growth_medium", "i5_sequence_id",
-                     "i7_sequence_id"):
+    attrs_to_ignore = ("is_clonal", "details", "operator_id")
+    attrs_to_merge = ("order_item_id", "type_id",
+                      "external_barcode", "name", "description",
+                      "work_order_id", "synthesis_run_pk", "cluster_num",
+                      "cloning_process_id",
+                      "mol_type", "is_circular",
+                      "is_assembly", "is_external", "external_id",
+                      "host_cell_pk", "growth_medium", "i5_sequence_id",
+                      "i7_sequence_id")
+    for attrname in attrs_to_merge:
         source_vals = set([getattr(par, attrname) for par in filtered_parents])
         if len(source_vals) == 1:
             setattr(result, attrname, source_vals.pop())
