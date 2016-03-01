@@ -14,8 +14,6 @@ div(class="twst-view-transform-spec-main")
                 //    button Hamilton
                 a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.miseq.csv" ng-if="selectedSpec.plan.details.transform_type_id == 50")
                     button MiSeq
-                a(href="/api/v1/rest/transform-specs/{{selectedSpec.spec_id}}.sample_map.xlsx" ng-if="selectedSpec.plan.details.transform_type_id == 50")
-                    button Sample Map
         div(class="twst-view-transform-spec-details")
             p Spec Id:&nbsp;
                 strong {{selectedSpec.spec_id}}
@@ -32,7 +30,7 @@ div(class="twst-view-transform-spec-main")
                         li(ng-repeat="destination in selectedSpec.plan.destinations") {{destination.details.id}}
 
             // button(class="twst-button twst-blue-button" ng-if="::!selectedSpec.date_executed" ng-click="editTransformSpec(selectedSpec)") Edit this Spec
-            div(ng-if="selectedSpec.data_json.details.requestedData") 
+            div(ng-if="selectedSpec.data_json.details.requestedData")
                 h3 Requested Data:
                     ul(class="twst-spec-requested-items")
                         li(class="twst-record-step-requested-item" ng-repeat="item in selectedSpec.data_json.details.dataRequests")
