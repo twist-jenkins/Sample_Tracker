@@ -447,6 +447,7 @@ def transform_params( transform_type_id, transform_template_id  ):
         TRANS_TYPE_MIN_PLANNING as MIN_PLANNING_T,
         TRANS_TPL_MIN_PLANNING as MIN_PLANNING,
         TRANS_TYPE_PCA_PCR_ALIQUOTING as PCA_PCR_ALIQUOTING_T,
+        TRANS_TYPE_ECR_PCR_DENATURATION as ECR_PCR_DENATURATION_T
     )
 
     f = {
@@ -455,6 +456,8 @@ def transform_params( transform_type_id, transform_template_id  ):
         (CHP_DEPROTECTION_T, SAME_PLATE):
             transform.generic_same_to_same,
         (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):
+            transform.generic_same_to_same,
+        (ECR_PCR_DENATURATION_T, SAME_PLATE):
             transform.generic_same_to_same,
         (NGS_POOLING_T, NGS_POOLING):
             transform.ngs_pooling,
