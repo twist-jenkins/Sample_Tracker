@@ -2,6 +2,7 @@ import csv
 import StringIO
 import logging
 from datetime import datetime
+import collections
 
 import Bio.Seq
 
@@ -212,6 +213,7 @@ def nps_id_details(db_session, sample_ids):
         logging.error(err)
         abort(400, message=err)
 
+    # verify barcodes
     n_missing_i7 = sum([1 for el in samples
                         if el.i5_barcode and not el.i7_barcode])
     n_missing_i5 = sum([1 for el in samples
@@ -231,6 +233,16 @@ def nps_id_details(db_session, sample_ids):
             err += "%d samples have neither i5 nor i7... " % n_missing_both
         logging.error(err)
         abort(400, message=err + ").  Miseq requires all samples to be barcoded.")
+
+    # verify no duplicate pairs
+    pairs = collections.defaultdict(int)
+    for s in samples:
+        pairs[(s.i5_barcode, s.i7_barcode)] += 1
+    errors = ["Barcode pair (%s, %s) used %dx" % (p[0], p[1], pairs[p])
+              for p in pairs if pairs[p] > 1]
+    if errors:
+        logging.error(errors)
+        abort(400, message=", ".join(errors))
 
     return samples
 
