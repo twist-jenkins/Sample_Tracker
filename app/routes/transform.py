@@ -512,6 +512,8 @@ def ngs_hitpicking( type_id, templ_id ):
     rows, cmds = [{}], []
     # TO DO   Generate worklist...
 
+    sources = request.json['sources']  # http://stackoverflow.com/questions/13063454/nginx-uwsgi-connection-reset-by-peer
+
     cmds.append({
         "type": "PRESENT_DATA",
         "item": {
@@ -528,6 +530,8 @@ def ngs_hitpicking( type_id, templ_id ):
 def ngs_mastermix( type_id, templ_id ):
     rows, cmds = [{}], []
     # TO DO   Generate master mix instructions...
+
+    sources = request.json['sources']  # http://stackoverflow.com/questions/13063454/nginx-uwsgi-connection-reset-by-peer
 
     cmds.append({
         "type": "PRESENT_DATA",
@@ -582,6 +586,8 @@ def ngs_load( type_id, templ_id ):
     rows, cmds = [{}], []
 
     # TO DO   based on source barcode, present the target sequencer
+
+    details = request.json['details']
 
     #DEV Only remove when code exists to set sequencer
     sequencer = "MiSeq";
