@@ -68,7 +68,7 @@ def strip_forbidden_chars(in_str, replace_with_char=" ", max_len=1000):
     return ''.join(clean_chars)
 
 
-def miseq_csv_template(rows, run_id):
+def miseq_csv_template(samples, run_id, i7_rc=True):
 
     si = StringIO.StringIO()
     cw = csv.writer(si)
@@ -108,20 +108,23 @@ def miseq_csv_template(rows, run_id):
                  'I7_Index_ID', 'index', 'I5_Index_ID', 'index2',
                  'GenomeFolder', 'Sample_Project', 'Description'])
 
-    for ix, row in enumerate(rows):
+    for ix, sample in enumerate(samples):
         # make data row
+        i7_seq = sample.i7_barcode.sequence
+        if i7_rc:
+            i7_seq = Bio.Seq.Seq(i7_seq).reverse_complement()
         data = [
-            "%s.%d" % (row.sample_id, ix + 1),  # Sample_ID.rownum
-            row.parent_sample_id,  # Sample_Name
-            "",  # Sample_Plate
-            row.notes,  # Sample_Well
-            row.i7_seq_name,  # I7_Index_ID
-            Bio.Seq.Seq(row.i7_seq).reverse_complement(),  # RC
-            row.i5_seq_name,  # I5_Index_ID
-            row.i5_seq,  # index2
+            "%s.%d" % (sample.id, ix + 1),  # Sample_ID.rownum
+            sample.order_item_id,  # Sample_Name
+            sample.plate.external_barcode,  # Sample_Plate
+            sample.plate_well_code,  # Sample_Well
+            sample.i7_sequence_id,  # I7_Index_ID
+            i7_seq,  # index1
+            sample.i5_sequence_id,  # I5_Index_ID
+            sample.i5_barcode.sequence,  # index2
             genome_str,  # GenomeFolder
-            "",  # Sample_Project
-            strip_forbidden_chars(row.parent_description)  # Description
+            sample.work_order_id,  # Sample_Project
+            strip_forbidden_chars("Parent Sample " + ", ".join([p.id for p in sample.parents]))  # Description
         ]
         cw.writerow(data)
 
@@ -188,35 +191,48 @@ def miseq_csv_template(rows, run_id):
 #     return sio
 
 
-def nps_id_details(db_session, nps_ids):
-    """Raises error if some sample is not NPS_"""
+def nps_id_details(db_session, sample_ids):
+    """Raises error if some sample is not barcoded.  """
 
-    n_total = len(nps_ids)
+    n_total = len(sample_ids)
     if n_total == 0:
         err = "No samples -- cannot create miseq file."
         logging.error(err)
         abort(400, message=err)
 
-    n_non_nps = sum([1 for el in nps_ids if el[0:4] != 'NPS_'])
-    if n_non_nps != 0:
-        err = "%d of %d samples are not NPS_ samples"
-        err %= (n_non_nps, n_total)
-        logging.error(err)
-        abort(400, message=err + ".  Miseq requires all samples to be NPS_.")
-
     qry = (
-        db_session.query(MiSeqSampleView)
-        .filter(MiSeqSampleView.sample_id.in_(nps_ids))
-        .order_by(MiSeqSampleView.sample_id)
+        db_session.query(Sample)
+        .filter(Sample.id.in_(sample_ids))
+        .order_by(Sample.id)
     )
-    rows = qry.all()
+    samples = qry.all()
 
-    if not rows:
-        err = "MiSeqSampleView query failed -- cannot create miseq file."
+    if not samples:
+        err = "NPS Sample query failed -- cannot create miseq file."
         logging.error(err)
         abort(400, message=err)
 
-    return rows
+    n_missing_i7 = sum([1 for el in samples
+                        if el.i5_barcode and not el.i7_barcode])
+    n_missing_i5 = sum([1 for el in samples
+                        if el.i7_barcode and not el.i5_barcode])
+    n_missing_both = sum([1 for el in samples
+                          if not el.i5_barcode and not el.i7_barcode])
+    n_missing_either = sum([1 for el in samples
+                            if not el.i5_barcode or not el.i7_barcode])
+    if n_missing_either != 0:
+        err = "%d of %d samples are not properly barcoded ("
+        err %= (n_missing_either, n_total)
+        if n_missing_i5:
+            err += "%d samples have i7 but no i5... " % n_missing_i5
+        if n_missing_i7:
+            err += "%d samples have i5 but no i7... " % n_missing_i7
+        if n_missing_both:
+            err += "%d samples have neither i5 nor i7... " % n_missing_both
+        logging.error(err)
+        abort(400, message=err + ").  Miseq requires all samples to be barcoded.")
+
+    return samples
 
 
 def miseq_csv_response(nps_detail_rows, fname=None):
