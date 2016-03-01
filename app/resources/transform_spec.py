@@ -143,6 +143,7 @@ class TransformSpecResource(flask_restful.Resource):
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
 
+            # TODO: there seems to be a lot of duplicate code between POST and PUT
             if method == 'POST':
                 assert spec_id is None
                 spec = TransformSpec()         # create new, unknown id
@@ -160,6 +161,13 @@ class TransformSpecResource(flask_restful.Resource):
                     # FIXME: the client should not set execution: immediate
                     # for this case
                     immediate = False
+
+                # perform additional operations for certain transform_template_id values
+                if 'transform_template_id' in spec.data_json['details']:
+                    if spec.data_json['details']['transform_template_id'] == 32:
+                        from ..worklist.hamilton import miniprep_hitpicking
+                        csv = miniprep_hitpicking(sess, spec)
+                        spec.data_json['details']['worklist'] = {"content": csv}
 
                 if immediate:
                     cls.execute(sess, spec)
@@ -186,6 +194,13 @@ class TransformSpecResource(flask_restful.Resource):
                 # workaround for poor input marshaling
                 if type(spec.data_json) in (str, unicode):
                     spec.data_json = json.loads(spec.data_json)
+
+                # perform additional operations for certain transform_template_id values
+                if 'transform_template_id' in spec.data_json['details']:
+                    if spec.data_json['details']['transform_template_id'] == 32:
+                        from ..worklist.hamilton import miniprep_hitpicking
+                        csv = miniprep_hitpicking(sess, spec)
+                        spec.data_json['details']['worklist'] = {"content": csv}
 
                 spec.operator_id = current_user.operator_id
                 # TODO: allow execution operator_id != creation operator_id
