@@ -8,13 +8,20 @@ from collections import defaultdict
 from app.miseq import echo_csv
 from app.routes.transform import WebError
 from app.constants import (
-    TRANS_TYPE_ECR_PCR_PLANNING as ECR_PCR_PLANNING_T )
+    TRANS_TYPE_ECR_PCR_PLANNING as ECR_PCR_PLANNING_T,
+    TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
+    TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
+    TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
+)
 
 
 SEARCH_LAST_N_DAYS = 2
 XFER_VOL = 100 # [nl]
 ALIQ_PER_WELL = 390
 
+ROOT_STEP_LOOKUP = { PRIMER_CREATE_SRC_T:  PRIMER_PREPLANNING_T,
+                     PRIMER_MASTER_T:      PRIMER_PREPLANNING_T,
+}
 
 def retrieve_transform_spec( db, type_id, vector_barcode ):
 
@@ -74,10 +81,14 @@ def preplanning( db, bulk_barcode, dna_barcodes ):
 
 
 def create_source( db, type_id, bulk_barcode ):
-    src_spec = retrieve_transform_spec( db, type_id, bulk_barcode )
+
+    previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
+    
+    src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
 
     dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in src_spec['misc']['dest_barcodes'] ]
+                   for bc in
+                   src_spec['operations'][0]['details']['requestedData']['misc']['dest_barcodes'] ]
 
     primer_tallies = defaultdict(int)
     for p in dna_plates:
@@ -154,6 +165,35 @@ def create_source( db, type_id, bulk_barcode ):
                            "title": "Source Plate Map",
                            "data": '[no custom primers needed]',
                        }    }]
+
+
+def pca_plates_to_master_mixes( pca_plates ):
+    """
+    returns a list of master-mixes for the given pca plates
+    assumes that each plate has one and only one condition, which can be determined by looking @ the sample in well A1
+    """
+    buff = StringIO()
+    c = csv.writer(buff)
+    c.writerow(('Plate','Master mix'))
+    for plate in pca_plates:
+        try:
+            # FIXME: there's a million ways this can go wrong...
+            mix = plate.samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix
+        except Exception as e:
+            mix = 'ERROR: '+str(e)
+        c.writerow( (plate.external_barcode, mix) )
+    buff.seek(0)
+    return buff.read()
+
+
+def bulk_barcode_to_mastermixes( db, type_id, bulk_barcode ):
+
+    previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
+    src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
+    dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
+                   for bc in
+                   src_spec['operations'][0]['details']['requestedData']['misc']['dest_barcodes'] ]
+    return pca_plates_to_master_mixes( dna_plates )
 
 
 def hitpicking( db, bulk_barcode, tmp_barcodes ):
