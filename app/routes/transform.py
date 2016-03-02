@@ -583,60 +583,8 @@ def pcr_primer_hitpick( type_id, templ_id ):
 
 @to_resp
 def ngs_load( type_id, templ_id ):
-    rows, cmds = [{}], []
-
-    # TO DO   based on source barcode, present the target sequencer
-
-    details = request.json['details']
-
-    #DEV Only remove when code exists to set sequencer
-    sequencer = "MiSeq";
-
-    cmds.append({
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": "text",
-            "title": "Target Sequencer",
-            "data": "<strong>" + sequencer + "</strong>"
-        }
-    })
-
-    reqData = {
-        "sequencerBarcode": None,
-        "inputCartridgeBarcode": None,
-        "flowCellBarcode": None
-    }
-
-    if "requestedData" in details:
-        data = details["requestedData"]
-        if "sequencerBarcode" in data:
-            reqData["sequencerBarcode"] = data["sequencerBarcode"]
-        if "inputCartridgeBarcode" in data:
-            reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
-        if "flowCellBarcode" in data:
-            reqData["flowCellBarcode"] = data["flowCellBarcode"]
-
-    cmds.extend( [
-        {"type": "REQUEST_DATA",
-         "item": {'type': "barcode.INSTRUMENT",
-                 "title": "Sequencer Barcode",
-                 "forProperty": "sequencerBarcode",
-                 #"value": reqData["sequencerBarcode"]
-        }},
-        {"type": "REQUEST_DATA",
-         "item": {
-             "type": "barcode.CARTRIDGE",
-             "title": "Input Cartridge Barcode",
-             "forProperty": "inputCartridgeBarcode",
-             #"value": reqData["inputCartridgeBarcode"]
-         }},
-        {"type": "REQUEST_DATA",
-         "item": {
-             "type": "barcode.FLOWCELL",
-             "title": "Flowcell Barcode",
-             "forProperty": "flowCellBarcode",
-             #"value": reqData["flowCellBarcode"]
-         }}, ])
+    from app.steps import ngs_run
+    rows, cmds = ngs_run.preview_ngs_load(db.session, request)
     return rows, cmds
 
 
@@ -648,17 +596,12 @@ def ngs_tagmentation(type_id, templ_id):
     return rows, cmds
 
 
-
 @to_resp
 def ngs_pooling(type_id, templ_id):
-
-    rows, cmds = [{}], []
-
     from app.steps import ngs_pooling as ngsp
     s_samples = ngsp.get_source_samples(db.session, request.json['sources'])
     cmds = ngsp.pooling_cmds(db.session, request, s_samples)
     rows = ngsp.pooling_transform(db.session, s_samples)
-
     return rows, cmds
 
 
