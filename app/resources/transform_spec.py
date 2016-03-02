@@ -228,9 +228,11 @@ class TransformSpecResource(flask_restful.Resource):
         operations = spec.data_json["operations"]
         wells = operations  # (??)
 
+        print '@@ 1'
         if 'requestedData' in spec.data_json['details'] \
            and transform_type_id in (constants.TRANS_TYPE_UPLOAD_QUANT,
-                                     constants.TRANS_TYPE_ECR_PCR_PLANNING):
+                                     constants.TRANS_TYPE_ECR_PCR_PLANNING,
+                                     constants.TRANS_TYPE_PCA_PREPLANNING, ):
             if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
                 quant_data = spec.data_json['details']['requestedData']['instrument_data']
@@ -238,11 +240,12 @@ class TransformSpecResource(flask_restful.Resource):
                 if not result["success"]:
                     abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
 
-            elif transform_type_id == constants.TRANS_TYPE_ECR_PCR_PLANNING:
+            else:
                 """
                 this 'spec' really just binds the bulk plate barcode to the destination plates
                 """
-                ts = TransformSpec( type_id=constants.TRANS_TYPE_ECR_PCR_PLANNING,
+                print '@@ creating TS'
+                ts = TransformSpec( type_id=transform_type_id,
                                     operator_id=current_user.operator_id,
                                     data_json=spec.data_json )
                 db.session.add(ts)
