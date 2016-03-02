@@ -244,6 +244,41 @@ def sample_data_determined_transform(transform_template_id, sources, dests):
     return groups
 
 
+def pca_pre_planning( bulk_barcode, pca_barcodes ):
+    """
+    return list of master mix conditions for extracted PCA plates.
+
+    more importantly, this function has a side-effect: it pre-generates the Echo worklist
+    for the later "Primer Hitpicking" step.
+
+    worse, this is stored in a misleading way, as a transform that moves primers from the
+    bulk primer plate to the PCA plates, but the REAL destinations are temporary PCR plates.
+    the plate id's are later replaced with the real destination barcodes.
+    """
+    from app.steps import primer_hitpicking, vector_hitpicking
+
+    pca_plates = []
+    for bc in pca_barcodes:
+        try:
+            pca_plates.append( db.session.query(Plate).filter(Plate.external_barcode == bc).one() )
+        except NoResultFound:
+            logger.error("Bad barcode for PCA plate: %s" % bc)
+
+    try:
+        bulk = db.session.query(Plate).filter(
+            Plate.external_barcode == bulk_barcode).one()
+    except NoResultFound:
+        # we don't really need a plate for this step, but will later
+        bulk = Plate( type_id='SPTT_0006', operator_id=current_user.operator_id,
+                      external_barcode=bulk_barcode )
+        db.session.add( bulk )
+        db.session.commit()
+
+    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode, pca_plates )
+    master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
+    return master_mixes, rows
+
+
 def plates_to_rows( sources ):
     rows = []
     # Pull the first source plate to fix the plate type
@@ -279,48 +314,63 @@ def plates_to_rows( sources ):
 
 @to_resp
 def rebatch_transform( type_id, templ_id ):
+    #print '@@ xx'
     from app.steps import rebatching_normalization
-    from app.miseq import echo_csv
-
+    from app.miseq import echo_csv_rebatch
     rows, cmds = [], []
-    #rows = plates_to_rows( request.json['sources'] )
-    destinations_ready = bool( request.json.get('destinations') )
-    destination_plates = rebatching_normalization.calculate_volume_foreach_sample(db)
+    #destinations_ready = bool( request.json.get('destinations') )
+    destination_plates = []
+    src_barcodes= []
+    dest_barcodes=[]
+    worklists =[]
+    for src_index, sources in enumerate(request.json['sources']):
+        barcode = sources['details'].get('id')
+
+        src_barcodes.append(barcode)
+        #print '@srcccccc',src_barcodes
+    destination_plate = rebatching_normalization.calculate_number_of_plates(db,src_barcodes)
+        #destination_plates.append(destination_plate)
+    print '@@@ destination',destination_plate
+
+
+    cmds.append({
+        "type": "SET_DESTINATIONS",
+        "plates": destination_plate
+    })
+    #print '@@ xx', destination_plates
+    #print '@@@ yyy' ,len(src_barcodes)
+    destinations_ready= (len(request.json['destinations']) > 0)
 
     for dest_index, destination in enumerate(request.json['destinations']):
             if not destination['details'].get('id'):
                 destinations_ready = False
                 break
-            if destinations_ready:
-                rows= rebatching_normalization.create_transform(db,
-                              request.json['sources'],
-                              request.json['destinations'] )
+            else:
 
-            #print addl_cmds
+                #print 'dest-ready'
+                dest_barcode = destination['details'].get('id')
 
-            cmds.append({
-                    "type": "PRESENT_DATA",
+                #print '@@@ ddddddd' ,dest_barcode
+                dest_barcodes.append(str(dest_barcode))
+                #print '#YESYESYES',dest_barcodes
+    if destinations_ready:
+        rows= rebatching_normalization.create_transform(db,
+                  src_barcodes,
+                 dest_barcodes)#destination['details'].get('id'))
 
-                    "item": {
-                        "type": 'file-data',
-                        "title": "Echo Worklist",
-                        "data": echo_csv(rows,100),
-                        "mimeType": "text/csv",
-                        "fileName": request.json['destinations'][0]['details']['id'] + "_echo_worklist.csv"
-                    }
+        cmds.append({
+                        "type": "PRESENT_DATA",
+
+            "item": {
+                "type": 'file-data',
+                "title": "Echo Worklist",
+                "data": echo_csv_rebatch(rows),
+                "mimeType": "text/csv",
+                "fileName": "_echo_worklist.csv"
+            }
 
             })
 
-
-
-
-
-
-
-    cmds.append({
-        "type": "SET_DESTINATIONS",
-        "plates": destination_plates
-    })
     cmds.append({
         "type": "REQUEST_DATA",
         "item": {

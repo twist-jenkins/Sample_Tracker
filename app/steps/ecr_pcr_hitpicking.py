@@ -1,5 +1,6 @@
 import datetime
 from twistdb.sampletrack import *
+from twistdb import NoResultFound
 import csv
 import math
 from cStringIO import StringIO
@@ -30,6 +31,7 @@ ROOT_STEP_LOOKUP = { PRIMER_CREATE_SRC_T:      PRIMER_PREPLANNING_T,
                      ECR_HITPICKING_T:         ECR_PLANNING_T,
 }
 
+
 def retrieve_transform_spec( db, type_id, vector_barcode ):
 
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
@@ -39,9 +41,7 @@ def retrieve_transform_spec( db, type_id, vector_barcode ):
     for spec in db.query(TransformSpec) \
                   .filter( TransformSpec.date_created >= N_days_ago ) \
                   .filter( TransformSpec.type_id == type_id ):
-        print '@@ spec:', spec
         srcs = spec.data_json['sources']
-
         if ( len(srcs) == 1
              and srcs[0]['details']['id'] == vector_barcode ):
 
@@ -58,8 +58,12 @@ def retrieve_transform_spec( db, type_id, vector_barcode ):
 
 def preplanning( db, bulk_barcode, dna_barcodes ):
 
-    dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in dna_barcodes ]
+    dna_plates = []
+    for bc in dna_barcodes:
+        try:
+            dna_plates.append( db.query(Plate).filter(Plate.external_barcode == bc).one() )
+        except NoResultFound:
+            raise WebError("Couldn't find barcode '%s'" % bc)
 
     buff = StringIO()
     cout = csv.writer(buff)
