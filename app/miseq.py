@@ -272,9 +272,36 @@ def echo_csv( operations, transfer_volume ):
     return si.getvalue().strip('\r\n')
 
 
+def echo_csv_rebatch( operations):
+    """
+    generates string containing CSV in Echo format
+    see echo_csv_for_nps()
+    """
+    # FIXME shouldn't this be somewhere else if it's general echo worklist generation??
+    si = StringIO.StringIO()
+    cw = csv.writer(si)
+
+    cw.writerow(['Source Plate Barcode', 'Source Well',
+                 'Destination Plate Barcode', 'Destination Well',
+                 'Transfer Volume'])
+
+    for oper in operations:
+        # make data row
+        data = [
+            oper["source_plate_barcode"],
+            oper["source_well_name"],
+            oper["destination_plate_barcode"],
+            oper["destination_well_name"],
+            oper["transfer_volume"]
+
+        ]
+        cw.writerow(data)
+
+    return si.getvalue().strip('\r\n')
+
 def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
     """ assumes each oper looks like {
-            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST1",
+            "source_plate_barcode": "NGS_BARCODE_PLATE_TEST2",
             "source_well_name": "A1",
             "source_sample_id":"BCS_00234",
             "source_plate_well_count": 384,
