@@ -468,9 +468,9 @@ def transform_params( transform_type_id, transform_template_id  ):
         (VECTOR_NORM_T, SAME_PLATE):
             transform.generic_same_to_same,
         (PRIMER_PREPLANNING_T, PRIMER_PREPLANNING):
-            transform.primer_preplanning,
-        (PRIMER_CREATE_SRC_T, SAME_PLATE):
-            transform.primer_create_src,
+            transform.ecr_pcr_planning, # transform.primer_preplanning,
+        (PRIMER_CREATE_SRC_T, VECTOR_CREATE_SRC):
+            transform.ecr_pcr_source_plate_creation, # transform.primer_create_src,
         (PRIMER_MASTER_T, SAME_PLATE):
             transform.primer_master_mix,
         (PRIMER_THERMO_T, SAME_PLATE):

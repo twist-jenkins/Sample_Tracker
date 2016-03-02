@@ -819,6 +819,7 @@ def ecr_pcr_planning( type_id, templ_id ):
 def ecr_pcr_source_plate_creation( type_id, templ_id ):
     from app.steps import ecr_pcr_hitpicking
     return ecr_pcr_hitpicking.create_source( db.session,
+                                             type_id,
                                              request.json['sources'][0]['details']['id'] )
 
 
