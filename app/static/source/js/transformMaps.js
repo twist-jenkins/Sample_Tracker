@@ -6,7 +6,7 @@ app = angular.module('twist.app')
             transformTemplates: {
                 1: {  // keyed to transform_template_id in the database
                     description: 'Source and destination have SAME LAYOUT'
-                    ,type: 'same-same'
+                    ,type: 'same-layout'
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: false
@@ -30,7 +30,7 @@ app = angular.module('twist.app')
                     }
                 }
                 ,4: {  // keyed to transform_template_id in the database
-                    description: 'Multiplexed same to same'
+                    description: 'Multiplexed self-to-self'
                     ,type: 'same-same'
                     ,source: {
                         plateCount: 1
@@ -1794,6 +1794,21 @@ app = angular.module('twist.app')
                         plateCount: 4
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: true
+                        ,create: true
+                    }
+                }
+                ,41: {  // keyed to transform_template_id in the database
+                    description: 'CLO Qpix Planning'
+                    ,type: 'standard_template'
+                    ,source: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
+                    }
+                    ,destination: {
+                        plateCount: 1
+                        ,plateTypeId: 'SPTT_0006'
+                        ,variablePlateCount: false
                         ,create: true
                     }
                 }

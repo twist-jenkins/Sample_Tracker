@@ -411,7 +411,7 @@ def transform_params( transform_type_id, transform_template_id  ):
         TRANS_TPL_PCR_PRIMER_HITPICK as PRIMER_HITPICK,
         TRANS_TYPE_PCR_PRIMER_HITPICK as PRIMER_HITPICK_T,
         TRANS_TPL_SAME_PLATE as SAME_PLATE,
-        TRANS_TPL_SAME_TO_SAME as SAME_TO_SAME,
+        TRANS_TPL_SAME_LAYOUT as SAME_LAYOUT,
         TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
         TRANS_TYPE_PCA_THERMOCYCLE as PRIMER_THERMO_T,
         TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
@@ -447,7 +447,8 @@ def transform_params( transform_type_id, transform_template_id  ):
         TRANS_TYPE_MIN_PLANNING as MIN_PLANNING_T,
         TRANS_TPL_MIN_PLANNING as MIN_PLANNING,
         TRANS_TYPE_PCA_PCR_ALIQUOTING as PCA_PCR_ALIQUOTING_T,
-        TRANS_TYPE_ECR_PCR_DENATURATION as ECR_PCR_DENATURATION_T
+        TRANS_TYPE_ECR_PCR_DENATURATION as ECR_PCR_DENATURATION_T,
+        TRANS_TYPE_ECR_STAMP_DRY_DOWN as ECR_STAMP_DRY_DOWN_T
     )
 
     f = {
@@ -455,7 +456,7 @@ def transform_params( transform_type_id, transform_template_id  ):
             transform.generic_same_to_same,
         (CHP_DEPROTECTION_T, SAME_PLATE):
             transform.generic_same_to_same,
-        (PCA_PCR_ALIQUOTING_T, SAME_TO_SAME):
+        (PCA_PCR_ALIQUOTING_T, SAME_LAYOUT):
             transform.generic_same_to_same,
         (ECR_PCR_DENATURATION_T, SAME_PLATE):
             transform.generic_same_to_same,
@@ -519,6 +520,8 @@ def transform_params( transform_type_id, transform_template_id  ):
             transform.ecr_pcr_planning,
         (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):
             transform.ecr_pcr_source_plate_creation,
+        (ECR_STAMP_DRY_DOWN_T, SAME_LAYOUT):
+            transform.generic_same_layout,
         (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):
             transform.ecr_pcr_primer_hitpicking,
     }.get((transform_type_id, transform_template_id), transform.preview)
