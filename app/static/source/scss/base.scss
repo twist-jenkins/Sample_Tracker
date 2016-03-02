@@ -1474,6 +1474,7 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
             font-size: 2em;
             color: #fff;
             width: 100%;
+            line-height: 64px;
         }
 
         .twst-header-user-info {
@@ -1907,6 +1908,10 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
 
         .dropdown-menu {
             font-size: 1.2em;
+        }
+
+        .twst-message {
+            margin-top: 1em;
         }
 
         .twst-plate-details-display {

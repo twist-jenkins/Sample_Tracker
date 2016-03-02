@@ -1,3 +1,3 @@
-id,sample_id,cartridge_id,flowcell_id,instrument_run_number,instrument_pk,read_1_cycles,read_2_cycles,miseq_adapter,date_created
-TEST_RUN,S_POOLED_NGS_LIB,blah,blah,1,1,150,150,blah,2/23/16
-ANALYZED_RUN,S_POOLED_FINISHED_NGS_LIB,blah2,blah2,1,1,150,150,blah,2/23/16
+pk,sample_id,cartridge_id,flowcell_id,instrument_run_number,instrument_pk,read_1_cycles,read_2_cycles,miseq_adapter,date_created
+1,S_POOLED_NGS_LIB,blah,blah,1,1,150,150,blah,2/23/16
+2,S_POOLED_FINISHED_NGS_LIB,blah2,blah2,1,1,150,150,blah,2/23/16

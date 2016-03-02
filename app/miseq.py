@@ -2,6 +2,7 @@ import csv
 import StringIO
 import logging
 from datetime import datetime
+import collections
 
 import Bio.Seq
 
@@ -13,7 +14,7 @@ from flask_login import current_user
 
 from dbmodels import MiSeqSampleView
 from twistdb.sampletrack import Sample, TransformDetail
-from twistdb.ngs import NGSBarcodePair
+from twistdb.ngs import NGSBarcodePair, NGSRun, NGSSequencingAnalysis
 from twistdb import create_unique_id
 
 """ some of the templates and logic is from twistbio.util.miseq.py.
@@ -212,6 +213,7 @@ def nps_id_details(db_session, sample_ids):
         logging.error(err)
         abort(400, message=err)
 
+    # verify barcodes
     n_missing_i7 = sum([1 for el in samples
                         if el.i5_barcode and not el.i7_barcode])
     n_missing_i5 = sum([1 for el in samples
@@ -231,6 +233,16 @@ def nps_id_details(db_session, sample_ids):
             err += "%d samples have neither i5 nor i7... " % n_missing_both
         logging.error(err)
         abort(400, message=err + ").  Miseq requires all samples to be barcoded.")
+
+    # verify no duplicate pairs
+    pairs = collections.defaultdict(int)
+    for s in samples:
+        pairs[(s.i5_barcode, s.i7_barcode)] += 1
+    errors = ["Barcode pair (%s, %s) used %dx" % (p[0], p[1], pairs[p])
+              for p in pairs if pairs[p] > 1]
+    if errors:
+        logging.error(errors)
+        abort(400, message=", ".join(errors))
 
     return samples
 
@@ -318,51 +330,45 @@ def echo_csv_for_nps(operations, fname=None, transfer_volume=200):
     return response
 
 
-'''
-def create_msr(cur_session, form_params):
-    """Lifted from twist_lims/lims_app/util/temp_google.py handle_create_ngs_run """
+def create_msr(cur_session, msr_sample, cartridge_id='car_tbd',
+               flowcell_id='fc_tbd',
+               instrument_run_number='irn_tbd', instrument_pk=1):
+    """Adapted from twist_lims/lims_app/util/temp_google.py handle_create_ngs_run """
     ##############
     # make ngs run
     ##############
+
     # replace with sequence or object id
     print "Replace ngs run max with db sequence or object id"
-    max_run = cur_session.query(func.max(tdd.NGSRun.run_id)).one()
+    max_run = cur_session.query(func.max(NGSRun.id)).one()
     next_run_id = "MSR_%05d" % (int(max_run[0].split("_")[1]) + 1)
+
     # get max run id (replace)
-    instrument_run_number = int(form_params['instrument_run_number'])
+    # instrument_run_number = int(form_params['instrument_run_number'])
     # get max analysis id
+    '''
     max_analysis = cur_session.query(
         func.max(tdd.NGSSequencingAnalysis.analysis_id)).one()
     next_analysis_id = "NSA_%05d" % (int(max_analysis[0].split("_")[1]) + 1)
+    '''
+
     # split adpator sequence from assay
-    miseq_adaptor_seq, miseq_assay = form_params['miseq_adapter'].split("_", 1)
+    # miseq_adaptor_seq, miseq_assay = form_params['miseq_adapter'].split("_", 1)
+
     # create ngs run
-    ngs_run = tdd.NGSRun(
-        next_run_id,
-        form_params['run_date'],
-        cur_operator.operator_id,
-        cur_instrument.instrument_id,
-        form_params['cartridge_id'],
-        form_params['flowcell_id'],
-        # max_run_num + 1,
-        instrument_run_number,
-        form_params['run_status'],
-        # strip nbsp; from copy and paste confluence
-        form_params['run_description'].replace(u'\xa0', ' '),
-        form_params['run_notes'],
-        form_params['miseq_workflow'],
-        form_params['miseq_chemistry'],
-        form_params['read1_cycles'],
-        form_params['read2_cycles'],
-        miseq_adaptor_seq,
-        miseq_assay,
-        form_params['miseq_quality_score_trim'],
-        )
-    ngs_run.instrument = cur_instrument
-    # need to store miseq kit lots (associate RTS)
+    ngs_run = NGSRun()
+    ngs_run.id = next_run_id
+    ngs_run.sample_id = msr_sample.id
+    ngs_run.cartridge_id = cartridge_id
+    ngs_run.instrument_run_number = instrument_run_number
+    ngs_run.instrument_pk = instrument_pk
+    ngs_run.read_1_cycles = -123
+    ngs_run.read_2_cycles = -456
+    ngs_run.miseq_adaptor = 'miseq_adaptor_tbd'
+
     cur_session.add(ngs_run)
 
-
+'''
 def create_nrsj(cur_session, ngs_run, ngs_prepped_samples):
     """Adapted from twist_lims/temp_google.py handle_create_ngs_run line 2977"""
     for ix, ngs_prepped_sample in enumerate(ngs_prepped_samples):

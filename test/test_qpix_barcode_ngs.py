@@ -445,5 +445,17 @@ class TestCase(unittest.TestCase):
         # 10. Make sure there are the expected number of unique pairs
         assert len(bc_pairs) == len(transform_map)
 
+    def DISABLED_test_pooling(self):
+        # 11. We should be able to get a miseq sample sheet
+        # 'https://sampletransfer-stg.twistbioscience.com/api/v1/rest/transform-specs/194.miseq.csv'
+        new_spec_url = 'FIXME'
+        miseq_csv_url = new_spec_url + ".miseq.csv"
+        rv = self.client.get(miseq_csv_url,
+                             content_type="application/json")
+        assert rv.status_code == 200
+        result = json.loads(rv.data)
+        assert 'Amplicon' in result
+
+
 if __name__ == '__main__':
     unittest.main()

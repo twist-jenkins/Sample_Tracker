@@ -139,39 +139,54 @@ class TransformSpecResource(flask_restful.Resource):
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
         logger.debug('@@ create_or_replace')
+
+        def load_data_json(spec):
+            # workaround for poor input marshaling
+            if type(spec.data_json) in (str, unicode):
+                spec.data_json = json.loads(spec.data_json)
+
+        def perform_common_operations(sess, spec, immediate_flag):
+            spec.operator_id = current_user.operator_id
+            # TODO: allow execution operator_id != creation operator_id
+            if immediate_flag:
+                cls.execute(sess, spec)
+            sess.add(spec)
+
+        def perform_additional_operations(sess, spec):
+            # perform addnl operations for certain transform_template_id values
+            if 'details' in spec.data_json \
+               and 'transform_template_id' in spec.data_json['details']:
+                if spec.data_json['details']['transform_template_id'] == 32:
+                    from ..worklist.hamilton import miniprep_hitpicking
+                    csv = miniprep_hitpicking(sess, spec)
+                    spec.data_json['details']['worklist'] = {"content": csv}
+
         with scoped_session(db.engine) as sess:
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
 
             if method == 'POST':
+                # create new, unknown id
                 assert spec_id is None
-                spec = TransformSpec()         # create new, unknown id
+                spec = TransformSpec()
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
                 logger.debug('@@ spec.data_json:', spec.data_json)
-                spec.operator_id = current_user.operator_id
 
-                # workaround for poor input marshaling
-                if type(spec.data_json) in (str, unicode):
-                    spec.data_json = json.loads(spec.data_json)
-
+                load_data_json(spec)
                 if modify_before_insert(sess, spec):
                     # HACK FOR NGS BARCODING
                     # FIXME: the client should not set execution: immediate
                     # for this case
                     immediate = False
 
-                if immediate:
-                    cls.execute(sess, spec)
-                sess.add(spec)
-                sess.flush()  # required to get the id from the database sequence
-                result = spec_schema.dump(spec).data
-                return json_api_success(result, 201,
-                                        cls.response_headers(spec))
-            elif method == 'PUT':
-                assert spec_id is not None
+                perform_additional_operations(sess, spec)
+                perform_common_operations(sess, spec, immediate)
+                sess.flush()  # required (?) to get the id from the database sequence
 
+            elif method == 'PUT':
                 # create or replace known spec_id
+                assert spec_id is not None
                 row = sess.query(TransformSpec).filter(
                     TransformSpec.spec_id == spec_id).first()
                 if row:
@@ -183,21 +198,17 @@ class TransformSpecResource(flask_restful.Resource):
                 if request.json and request.json["plan"]:
                     spec.data_json = request.json["plan"]
 
-                # workaround for poor input marshaling
-                if type(spec.data_json) in (str, unicode):
-                    spec.data_json = json.loads(spec.data_json)
+                load_data_json(spec)
+                perform_additional_operations(sess, spec)
+                perform_common_operations(sess, spec, immediate)
 
-                spec.operator_id = current_user.operator_id
-                # TODO: allow execution operator_id != creation operator_id
-                if immediate:
-                    cls.execute(sess, spec)
-
-                sess.add(spec)
-                result = spec_schema.dump(spec).data
-                return json_api_success(result, 201,
-                                        cls.response_headers(spec))
             else:
                 raise ValueError(method, spec_id)
+
+            result = spec_schema.dump(spec).data
+            return json_api_success(result, 201,
+                                    cls.response_headers(spec))
+
         # TODO:
         # sess.expunge(row)
         # result = spec_schema.dump(row).data
@@ -217,13 +228,25 @@ class TransformSpecResource(flask_restful.Resource):
         operations = spec.data_json["operations"]
         wells = operations  # (??)
 
-        if 'requestedData' in spec.data_json['details'].keys() \
-           and transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
+        if 'requestedData' in spec.data_json['details'] \
+           and transform_type_id in (constants.TRANS_TYPE_UPLOAD_QUANT,
+                                     constants.TRANS_TYPE_ECR_PCR_PLANNING):
+            if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
                 aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
                 quant_data = spec.data_json['details']['requestedData']['instrument_data']
                 result = store_quant_data(sess, aliquot_plate, quant_data)
                 if not result["success"]:
                     abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
+
+            elif transform_type_id == constants.TRANS_TYPE_ECR_PCR_PLANNING:
+                """
+                this 'spec' really just binds the bulk plate barcode to the destination plates
+                """
+                ts = TransformSpec( type_id=constants.TRANS_TYPE_ECR_PCR_PLANNING,
+                                    operator_id=current_user.operator_id,
+                                    data_json=spec.data_json )
+                db.session.add(ts)
+                db.session.commit()
 
         else:
             result = create_adhoc_sample_movement(sess,

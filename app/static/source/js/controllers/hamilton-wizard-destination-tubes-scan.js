@@ -72,7 +72,7 @@ angular.module('twist.app').controller('hamiltonWizardDestinationTubesScanContro
                 }).error(function (data) {
                     $scope.savingSourcesAndDestinations = false;
                     console.log(data);
-                });;
+                });
             }
 
         };
