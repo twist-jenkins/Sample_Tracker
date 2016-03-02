@@ -168,10 +168,13 @@ class TransformSpecResource(flask_restful.Resource):
             if method == 'POST':
                 # create new, unknown id
                 assert spec_id is None
-                spec = TransformSpec()
+                import json
+                type_id = ( json.loads(request.json['plan'])
+                            .get('details',{})
+                            .get('transform_type_id') )
+                spec = TransformSpec( type_id = type_id )
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
-                logger.debug('@@ spec.data_json:', spec.data_json)
 
                 load_data_json(spec)
                 if modify_before_insert(sess, spec):
@@ -197,6 +200,9 @@ class TransformSpecResource(flask_restful.Resource):
 
                 if request.json and request.json["plan"]:
                     spec.data_json = request.json["plan"]
+                    spec.type_id = ( json.loads(request.json['plan'])
+                                     .get('details',{})
+                                     .get('transform_type_id') )
 
                 load_data_json(spec)
                 perform_additional_operations(sess, spec)
@@ -219,7 +225,6 @@ class TransformSpecResource(flask_restful.Resource):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
-        logger.debug('@@ executing - details:' % details)
         try:
             transform_type_id = details["transform_type_id"]
         except:
@@ -228,7 +233,6 @@ class TransformSpecResource(flask_restful.Resource):
         operations = spec.data_json["operations"]
         wells = operations  # (??)
 
-        print '@@ 1'
         if 'requestedData' in spec.data_json['details'] \
            and transform_type_id in (constants.TRANS_TYPE_UPLOAD_QUANT,
                                      constants.TRANS_TYPE_ECR_PCR_PLANNING,
@@ -244,7 +248,6 @@ class TransformSpecResource(flask_restful.Resource):
                 """
                 this 'spec' really just binds the bulk plate barcode to the destination plates
                 """
-                print '@@ creating TS'
                 ts = TransformSpec( type_id=transform_type_id,
                                     operator_id=current_user.operator_id,
                                     data_json=spec.data_json )
