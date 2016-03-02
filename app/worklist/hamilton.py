@@ -109,7 +109,11 @@ def miniprep_hitpicking(db, transform_spec):
     # get best clones from each plate and compile an easily sortable sample dict
     for src in json['sources']:
         plate_id = src['details']['id']
-        wells = db.query(Plate).get(plate_id).current_well_contents(db)
+        plate = db.query(Plate).get(plate_id)
+        if plate is None:
+            print "ERROR: Source plate_id (%s) doesn't exist." % plate_id
+            continue
+        wells = plate.current_well_contents(db)
         for sample in wells:
             if sample.passed_ngs and sample.is_best_clone:
                 pos = src['details']['position']

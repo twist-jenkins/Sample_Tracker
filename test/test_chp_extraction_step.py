@@ -249,7 +249,7 @@ class TestCase(unittest.TestCase):
     def test_post_immediate_execution_golden_warp2(self):
         """ targeting the execution method """
         dest_plate_rootname = rnd_bc("EXT")
-        new_spec = titin_extraction_spec("PLT_WARP2.1",
+        new_spec = titin_extraction_spec("SRN-WARP1-TEST1",
                                          "S_WARP2",
                                          dest_plate_rootname)
 
@@ -284,7 +284,7 @@ class TestCase(unittest.TestCase):
 
         # first deprotect
 
-        deprotection_spec = chp_deprotection_spec("PLT_WARP2.1", "S_WARP2")
+        deprotection_spec = chp_deprotection_spec("SRN-WARP1-TEST1", "S_WARP2")
         headers = [("Transform-Execution", "Immediate")]
         rv = self.client.post('/api/v1/rest/transform-specs',
                               data=json.dumps(deprotection_spec),
@@ -298,7 +298,7 @@ class TestCase(unittest.TestCase):
         # then extract
 
         dest_plate_rootname = rnd_bc("EXT")
-        extract_spec = titin_extraction_spec("PLT_WARP2.1",
+        extract_spec = titin_extraction_spec("SRN-WARP1-TEST1",
                                              "S_WARP2",
                                              dest_plate_rootname)
         headers = [("Transform-Execution", "Immediate")]

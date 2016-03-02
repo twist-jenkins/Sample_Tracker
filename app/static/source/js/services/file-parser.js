@@ -1,8 +1,8 @@
 var api_base_url = '/api/v1/';
 var server_url = twist_api_url;
 
-angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
-    function (Maps, $q, Api) {
+angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api', 'Constants', 
+    function (Maps, $q, Api, Constants) {
 
         var getNormalRowColumnFromQPix = function (rowColumn, plateType) {
 
@@ -255,6 +255,11 @@ angular.module('twist.app').factory('FileParser',['Maps', '$q', 'Api',
                             });
                         } else {
                             /* this is a same-plate step so the dest plate will already exist - no need to check for it */
+                            /* but we do need to make sure the source and destination barcode are the same */
+                            if (source_barcodes.join() != destination_barcodes.join()) {
+                                decorateResponse(sourceData, 'Barcode mismatch: Expected ' + source_barcodes[0] + ' for destination but got ' + destination_barcodes[0] + '.');
+                            }
+
                             decorateResponse(sourceData);
                         }
 
