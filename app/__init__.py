@@ -502,10 +502,8 @@ def transform_params( transform_type_id, transform_template_id  ):
             transform.ngs_mastermix,
         (PCR_PRIMER_HITPICK, ):
             transform.pcr_primer_hitpick,
-        (NGS_LOAD_T, ):
+        (NGS_LOAD_T, SAME_PLATE):
             transform.ngs_load,
-        (NGS_POOLING_T, ):
-            transform.ngs_pooling,
         (ECR_PCR_PLANNING_T, ECR_PCR_PLANNING):
             transform.ecr_pcr_planning,
         (ECR_PCR_SOURCE_PLATE_CREATION_T, ECR_PCR_SOURCE_PLATE_CREATION):
