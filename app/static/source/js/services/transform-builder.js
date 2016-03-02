@@ -87,6 +87,8 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         }
                     }
 
+                } else {
+                    ready();
                 }
             };
 
@@ -300,7 +302,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 } else if (which == Constants.PLATE_DESTINATION) {
                 base.destinationsReady = base.checkDestinationsReady();
                 }
-                base.updateOperationsList();
+                base.updateOperationsList(true);
             }
 
             base.checkSourcesReady = function (clearErrors) {
@@ -376,9 +378,8 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 } else {
                                     return;
                                 }
-                                base.updateOperationsList();
+                                base.updateOperationsList(true);
                             }
-                            ready();
                         }
                         sourceItem.updating = false;
                     } else {
@@ -393,8 +394,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         if (base.checkSourcesReady()) {
                             base.sourcesReady = true;
                         }
-                        base.updateOperationsList();
-                        ready();
+                        base.updateOperationsList(true);
                     } else {
                         onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
                     }
@@ -465,7 +465,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 }
                             }
                             base.destinationsReady = true;
-                            base.updateOperationsList();
+                            base.updateOperationsList(true);
                         }
 
                         var isNew = data.success;

@@ -721,7 +721,7 @@ def generic_same_to_same( type_id, templ_id ):
                         else request.json['destinations'] ) ]
 
     if templ_id in (
-            constants.TRANS_TPL_SAME_TO_SAME,
+            constants.TRANS_TPL_SAME_LAYOUT,
             constants.TRANS_TPL_SAME_PLATE):
 
         src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
