@@ -161,7 +161,7 @@ class TestCase(unittest.TestCase):
 
         # Retrieve the current HEAD sample ID for targeted plate/wells
         stamp_data = []
-        src_plate = 'PLT_WARP2.1'
+        src_plate = 'SRN-WARP1-TEST1'
         src_wells = [1,3,5,6,7]
         for well_num in src_wells:
             rv = self.client.get('/api/v1/rest/plate/%s/well/%d' %
@@ -174,12 +174,12 @@ class TestCase(unittest.TestCase):
         #
         #
         # stamp_data = [
-        #     ('S_WARP2_0001', 'PLT_WARP2.1', 1),
-        #     ('S_WARP2_0002', 'PLT_WARP2.1', 2),
-        #     ('S_WARP2_0003', 'PLT_WARP2.1', 3),
-        #     ('S_WARP2_0005', 'PLT_WARP2.1', 5),
-        #     ('S_WARP2_0006', 'PLT_WARP2.1', 6),
-        #     ('S_WARP2_0007', 'PLT_WARP2.1', 7),
+        #     ('S_WARP2_0001', 'SRN-WARP1-TEST1', 1),
+        #     ('S_WARP2_0002', 'SRN-WARP1-TEST1', 2),
+        #     ('S_WARP2_0003', 'SRN-WARP1-TEST1', 3),
+        #     ('S_WARP2_0005', 'SRN-WARP1-TEST1', 5),
+        #     ('S_WARP2_0006', 'SRN-WARP1-TEST1', 6),
+        #     ('S_WARP2_0007', 'SRN-WARP1-TEST1', 7),
         # ]
 
         transform_map = [{
