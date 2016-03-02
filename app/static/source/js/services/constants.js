@@ -45,6 +45,7 @@ angular.module('twist.app').factory('Constants',[
             ,INSTRUMENT_TYPE_SEQUENCER: 'SEQUENCER'
             ,INSTRUMENT_TYPE_ECHO: 'ECHO'
             ,INSTRUMENT_TYPE_THERMOCYCLER: 'THERMOCYCLER'
+            ,SELF_TO_SELF_TRANSFORM_ID: 2
 
         };
     }]
