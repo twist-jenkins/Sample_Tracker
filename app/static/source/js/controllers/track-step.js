@@ -121,7 +121,7 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
                 executeNow = false;
             }
 
-            if (!$scope.submitting && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
+            if (!$scope.submittingStep && $scope.sampleTrackFormReady() && !$scope.transformSpec.updating) {
 
                 $scope.submittingStep = true;
 
