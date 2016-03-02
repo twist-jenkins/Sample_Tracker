@@ -797,6 +797,7 @@ def ecr_pcr_primer_hitpicking( type_id, templ_id ):
     if destinations_ready:
 
         rows, cmds = ecr_pcr_hitpicking.hitpicking( db.session,
+                                                    type_id,
                                                     request.json['sources'][0]['details']['id'],
                                                     [x['details']['id'] for x in request.json['destinations']] )
     return rows, cmds

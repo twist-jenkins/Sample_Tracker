@@ -12,6 +12,10 @@ from app.constants import (
     TRANS_TYPE_PRIMER_HITPICK_CREATE_SRC as PRIMER_CREATE_SRC_T,
     TRANS_TYPE_PCA_PREPLANNING as PRIMER_PREPLANNING_T,
     TRANS_TYPE_ADD_PCA_MASTER_MIX as PRIMER_MASTER_T,
+    TRANS_TYPE_ECR_PCR_SOURCE_PLATE_CREATION as ECR_SOURCE_CREATION_T,
+    TRANS_TYPE_ECR_PCR_PLANNING as ECR_PLANNING_T,
+    TRANS_TYPE_ECR_PCR_PRIMER_HITPICKING as ECR_HITPICKING_T,
+
 )
 
 
@@ -19,8 +23,11 @@ SEARCH_LAST_N_DAYS = 2
 XFER_VOL = 100 # [nl]
 ALIQ_PER_WELL = 390
 
-ROOT_STEP_LOOKUP = { PRIMER_CREATE_SRC_T:  PRIMER_PREPLANNING_T,
-                     PRIMER_MASTER_T:      PRIMER_PREPLANNING_T,
+# specs are associated with the pre-planning spec-id
+ROOT_STEP_LOOKUP = { PRIMER_CREATE_SRC_T:      PRIMER_PREPLANNING_T,
+                     PRIMER_MASTER_T:          PRIMER_PREPLANNING_T,
+                     ECR_SOURCE_CREATION_T:    ECR_PLANNING_T,
+                     ECR_HITPICKING_T:         ECR_PLANNING_T,
 }
 
 def retrieve_transform_spec( db, type_id, vector_barcode ):
@@ -196,12 +203,13 @@ def bulk_barcode_to_mastermixes( db, type_id, bulk_barcode ):
     return pca_plates_to_master_mixes( dna_plates )
 
 
-def hitpicking( db, bulk_barcode, tmp_barcodes ):
-
-    src_spec = retrieve_transform_spec( db, bulk_barcode )
+def hitpicking( db, type_id, bulk_barcode, tmp_barcodes ):
+    previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
+    src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
 
     dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in src_spec['misc']['dest_barcodes'] ]
+                   for bc in
+                   src_spec['operations'][0]['details']['requestedData']['misc']['dest_barcodes'] ]
 
     bulk_plate = db.query(Plate).filter(Plate.external_barcode == bulk_barcode).one()
     
@@ -209,14 +217,14 @@ def hitpicking( db, bulk_barcode, tmp_barcodes ):
         raise WebError("# of dna plates (%s) didn't match # of temp plates (%s)"
                        % (src_spec['misc']['dest_barcodes'], tmp_barcodes))
 
-    primer_re = re.compile(r'primer\s(\w+)\s')
+    primer_re = re.compile(r'primer\s(\w+)')
     by_primer = defaultdict(list)
     for primer_s in bulk_plate.current_well_contents(db):
         try:
             primer_name = primer_re.search( primer_s.name ).group(1)
         except Exception as e:
             print '@@', type(e), '::', e
-            raise WebError("couldn't find primer name in '%s'" % s.name)
+            raise WebError("couldn't find primer name in '%s'" % primer_s.name)
 
         by_primer[ primer_name ].append( [primer_s.well, 0] )
 
