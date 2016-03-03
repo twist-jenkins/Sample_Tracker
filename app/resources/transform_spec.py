@@ -138,7 +138,6 @@ class TransformSpecResource(flask_restful.Resource):
 
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
-        logger.debug('@@ create_or_replace')
 
         def load_data_json(spec):
             # workaround for poor input marshaling
@@ -200,6 +199,7 @@ class TransformSpecResource(flask_restful.Resource):
 
                 if request.json and request.json["plan"]:
                     spec.data_json = request.json["plan"]
+
                     spec.type_id = ( json.loads(request.json['plan'])
                                      .get('details',{})
                                      .get('transform_type_id') )
@@ -247,12 +247,15 @@ class TransformSpecResource(flask_restful.Resource):
             else:
                 """
                 this 'spec' really just binds the bulk plate barcode to the destination plates
+
+                FIXME: this used to be necessary, but now the spec is saved by create_or_replace
                 """
-                ts = TransformSpec( type_id=transform_type_id,
-                                    operator_id=current_user.operator_id,
-                                    data_json=spec.data_json )
-                db.session.add(ts)
-                db.session.commit()
+                
+                #ts = TransformSpec( type_id=transform_type_id,
+                #                    operator_id=current_user.operator_id,
+                #                    data_json=spec.data_json )
+                #db.session.add(ts)
+                #db.session.commit()
 
         else:
             result = create_adhoc_sample_movement(sess,
