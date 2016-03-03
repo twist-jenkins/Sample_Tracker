@@ -139,7 +139,10 @@ class TransformSpecResource(flask_restful.Resource):
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
 
-        def load_data_json(spec, plan_required):
+        def perform_common_operations(sess, spec, plan_required):
+            """operations common to PUT and POST"""
+
+            # load the json data
             j = request.json
             if plan_required:
                 spec.data_json = j["plan"]
@@ -149,11 +152,11 @@ class TransformSpecResource(flask_restful.Resource):
             # workaround for poor input marshaling
             if type(spec.data_json) in (str, unicode):
                 spec.data_json = json.loads(spec.data_json)
+
+            # set some basic spec metadata
             spec.type_id = (spec.data_json.get('details', {})
                             .get('transform_type_id'))
-
-        def perform_common_operations(sess, spec):
-            """operations common to PUT and POST"""
+            spec.operator_id = current_user.operator_id
 
             # perform addnl operations for certain transform_template_id values
             if modify_before_insert(sess, spec):
@@ -168,7 +171,6 @@ class TransformSpecResource(flask_restful.Resource):
                     csv = miniprep_hitpicking(sess, spec)
                     spec.data_json['details']['worklist'] = {"content": csv}
 
-            spec.operator_id = current_user.operator_id
             # now execute the spec
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
@@ -183,8 +185,7 @@ class TransformSpecResource(flask_restful.Resource):
                 # create new, unknown id
                 assert spec_id is None
                 spec = TransformSpec()
-                load_data_json(spec, plan_required=True)
-                perform_common_operations(sess, spec)
+                perform_common_operations(sess, spec, plan_required=True)
                 sess.flush()  # required (?) to get the id from the database sequence
 
             elif method == 'PUT':
@@ -197,9 +198,7 @@ class TransformSpecResource(flask_restful.Resource):
                 else:
                     spec = TransformSpec()        # create new, known id
                     spec.spec_id = spec_id
-
-                load_data_json(spec, plan_required=False)
-                perform_common_operations(sess, spec)
+                perform_common_operations(sess, spec, plan_required=False)
 
             else:
                 raise ValueError(method, spec_id)
