@@ -339,7 +339,7 @@ def rebatch_transform( type_id, templ_id ):
     })
     #print '@@ xx', destination_plates
     #print '@@@ yyy' ,len(src_barcodes)
-    destinations_ready= (len(request.json['destinations']) > 0)
+    destinations_ready = bool( request.json['destinations'] )
 
     for dest_index, destination in enumerate(request.json['destinations']):
             if not destination['details'].get('id'):
@@ -353,23 +353,19 @@ def rebatch_transform( type_id, templ_id ):
                 #print '@@@ ddddddd' ,dest_barcode
                 dest_barcodes.append(str(dest_barcode))
                 #print '#YESYESYES',dest_barcodes
+
     if destinations_ready:
-        rows= rebatching_normalization.create_transform(db,
-                  src_barcodes,
-                 dest_barcodes)#destination['details'].get('id'))
+        rows = rebatching_normalization.create_transform( db, src_barcodes, dest_barcodes)
+        #destination['details'].get('id'))
 
-        cmds.append({
-                        "type": "PRESENT_DATA",
-
-            "item": {
-                "type": 'file-data',
-                "title": "Echo Worklist",
-                "data": echo_csv_rebatch(rows),
-                "mimeType": "text/csv",
-                "fileName": "_echo_worklist.csv"
-            }
-
-            })
+        cmds.append( {"type": "PRESENT_DATA",
+                      "item": {
+                          "type": 'file-data',
+                          "title": "Echo Worklist",
+                        "data": echo_csv_rebatch(rows),
+                          "mimeType": "text/csv",
+                          "fileName": "_echo_worklist.csv"
+                      } })
 
     cmds.append({
         "type": "REQUEST_DATA",
