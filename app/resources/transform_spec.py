@@ -217,39 +217,17 @@ class TransformSpecResource(flask_restful.Resource):
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
-        try:
-            transform_type_id = details["transform_type_id"]
-        except:
-            transform_type_id = details["id"]  # FIXME: REMOVE SHIM
-        transform_template_id = details["transform_template_id"]
-        operations = spec.data_json["operations"]
+        transform_type_id = details.get('transform_type_id',
+                                        details['id'] )  # FIXME: REMOVE SHIM
+
+        transform_type = sess.query(TransformType).get(transform_type_id)
+
+        transform_template_id = details['transform_template_id']
+        
+        operations = spec.data_json['operations']
         wells = operations  # (??)
 
-        if 'requestedData' in spec.data_json['details'] \
-           and transform_type_id in (constants.TRANS_TYPE_UPLOAD_QUANT,
-                                     constants.TRANS_TYPE_ECR_PCR_PLANNING,
-                                     constants.TRANS_TYPE_PCA_PREPLANNING, ):
-            if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
-                aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
-                quant_data = spec.data_json['details']['requestedData']['instrument_data']
-                result = store_quant_data(sess, aliquot_plate, quant_data)
-                if not result["success"]:
-                    abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
-
-            else:
-                """
-                this 'spec' really just binds the bulk plate barcode to the destination plates
-
-                FIXME: this used to be necessary, but now the spec is saved by create_or_replace
-                """
-
-                #ts = TransformSpec( type_id=transform_type_id,
-                #                    operator_id=current_user.operator_id,
-                #                    data_json=spec.data_json )
-                #db.session.add(ts)
-                #db.session.commit()
-
-        else:
+        if transform_type.can_be_executed:
             result = create_adhoc_sample_movement(sess,
                                                   transform_type_id,
                                                   transform_template_id,
@@ -257,6 +235,17 @@ class TransformSpecResource(flask_restful.Resource):
                                                   transform_spec_id=spec.spec_id)
             if not result:
                 abort(400, message="Failed to execute step (sample_movement) -- create_adhoc_sample_movement returned nothing")
+
+        elif 'requestedData' in spec.data_json['details'] \
+             and transform_type_id  == constants.TRANS_TYPE_UPLOAD_QUANT:
+
+            # FIXME: this should really happen when the TransformSpec is initially created
+
+            aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
+            quant_data = spec.data_json['details']['requestedData']['instrument_data']
+            result = store_quant_data(sess, aliquot_plate, quant_data)
+            if not result["success"]:
+                abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
 
         spec.date_executed = datetime.utcnow()
         spec.operator_id = current_user.operator_id
