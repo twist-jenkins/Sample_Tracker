@@ -17,7 +17,7 @@ from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
 
-from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate, PlateType
+from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate, PlateType, TransformType
 
 logger = logging.getLogger()
 
