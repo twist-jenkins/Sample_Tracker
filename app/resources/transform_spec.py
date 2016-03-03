@@ -143,6 +143,8 @@ class TransformSpecResource(flask_restful.Resource):
             # workaround for poor input marshaling
             if type(spec.data_json) in (str, unicode):
                 spec.data_json = json.loads(spec.data_json)
+            spec.type_id = (spec.data_json.get('details', {})
+                            .get('transform_type_id'))
 
         def perform_common_operations(sess, spec, immediate_flag):
             spec.operator_id = current_user.operator_id
@@ -167,11 +169,7 @@ class TransformSpecResource(flask_restful.Resource):
             if method == 'POST':
                 # create new, unknown id
                 assert spec_id is None
-                import json
-                type_id = ( json.loads(request.json['plan'])
-                            .get('details',{})
-                            .get('transform_type_id') )
-                spec = TransformSpec( type_id = type_id )
+                spec = TransformSpec()
                 assert "plan" in request.json
                 spec.data_json = request.json["plan"]
 
@@ -196,13 +194,6 @@ class TransformSpecResource(flask_restful.Resource):
                 else:
                     spec = TransformSpec()        # create new, known id
                     spec.spec_id = spec_id
-
-                if request.json and request.json["plan"]:
-                    spec.data_json = request.json["plan"]
-
-                    spec.type_id = ( json.loads(request.json['plan'])
-                                     .get('details',{})
-                                     .get('transform_type_id') )
 
                 load_data_json(spec)
                 perform_additional_operations(sess, spec)
@@ -250,7 +241,7 @@ class TransformSpecResource(flask_restful.Resource):
 
                 FIXME: this used to be necessary, but now the spec is saved by create_or_replace
                 """
-                
+
                 #ts = TransformSpec( type_id=transform_type_id,
                 #                    operator_id=current_user.operator_id,
                 #                    data_json=spec.data_json )
