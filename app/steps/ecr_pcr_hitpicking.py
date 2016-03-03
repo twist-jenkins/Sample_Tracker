@@ -55,6 +55,18 @@ def retrieve_transform_spec( db, type_id, vector_barcode ):
     return src_spec
 
 
+def plate_to_master_mix( plate ):
+    """
+    returns the master-mix for the given pca plate
+    assumes that each plate has one and only one condition, which can be determined by looking @ the sample in well A1
+    """
+    try:
+        # FIXME: there's a million ways this can go wrong...
+        mix = plate.samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix
+    except Exception as e:
+        mix = 'ERROR: '+str(e)
+    return mix
+
 
 def preplanning( db, bulk_barcode, dna_barcodes ):
 
@@ -72,8 +84,7 @@ def preplanning( db, bulk_barcode, dna_barcodes ):
         samples = p.current_well_contents(db)
         try:
             # FIXME: there's a million ways this can go wrong...
-            cout.writerow( (p.external_barcode,
-                            samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix) )
+            cout.writerow( (p.external_barcode, plate_to_master_mix(p)) )
         except Exception as e:
              cout.writerow( (p.external_barcode, e) )
 
@@ -178,33 +189,23 @@ def create_source( db, type_id, bulk_barcode ):
                        }    }]
 
 
-def pca_plates_to_master_mixes( pca_plates ):
+
+
+def barcode_to_master_mix_csv( db, barcode ):
     """
-    returns a list of master-mixes for the given pca plates
-    assumes that each plate has one and only one condition, which can be determined by looking @ the sample in well A1
+    given plate barcode, return the master mix in a CSV table
     """
+    try:
+        plate = db.query(Plate).filter(Plate.external_barcode == barcode).one()
+    except Exception as e:
+        raise WebError("problem retrieving plate '%s': %s" % (barcode, e))
+
     buff = StringIO()
     c = csv.writer(buff)
     c.writerow(('Plate','Master mix'))
-    for plate in pca_plates:
-        try:
-            # FIXME: there's a million ways this can go wrong...
-            mix = plate.samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix
-        except Exception as e:
-            mix = 'ERROR: '+str(e)
-        c.writerow( (plate.external_barcode, mix) )
+    c.writerow( (plate.external_barcode, plate_to_master_mix(plate)) )
     buff.seek(0)
     return buff.read()
-
-
-def bulk_barcode_to_mastermixes( db, type_id, bulk_barcode ):
-
-    previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
-    src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
-    dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in
-                   src_spec['operations'][0]['details']['requestedData']['misc']['dest_barcodes'] ]
-    return pca_plates_to_master_mixes( dna_plates )
 
 
 def hitpicking( db, type_id, bulk_barcode, tmp_barcodes ):

@@ -454,9 +454,8 @@ def primer_create_src( type_id, templ_id ):
 def primer_master_mix( type_id, templ_id ):
     from app.steps import ecr_pcr_hitpicking
 
-    rows = plates_to_rows( request.json['sources'] )
-    bulk_barcode = request.json['sources'][0]['details']['id']
-    mixes = ecr_pcr_hitpicking.bulk_barcode_to_mastermixes(  db.session, type_id, bulk_barcode )
+    barcode = request.json['sources'][0]['details']['id']
+    mixes = ecr_pcr_hitpicking.barcode_to_master_mix_csv(  db.session, barcode )
 
     cmds = [{
         "type": "PRESENT_DATA",
@@ -466,7 +465,7 @@ def primer_master_mix( type_id, templ_id ):
             "data":  mixes,
         }
     }]
-    return rows, cmds
+    return [{}], cmds
 
 
 @to_resp
