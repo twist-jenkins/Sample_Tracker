@@ -448,7 +448,18 @@ def transform_params( transform_type_id, transform_template_id  ):
         TRANS_TPL_MIN_PLANNING as MIN_PLANNING,
         TRANS_TYPE_PCA_PCR_ALIQUOTING as PCA_PCR_ALIQUOTING_T,
         TRANS_TYPE_ECR_PCR_DENATURATION as ECR_PCR_DENATURATION_T,
-        TRANS_TYPE_ECR_STAMP_DRY_DOWN as ECR_STAMP_DRY_DOWN_T
+        TRANS_TYPE_ECR_STAMP_DRY_DOWN as ECR_STAMP_DRY_DOWN_T,
+        TRANS_TYPE_ECR_BIODOT as ECR_BIODOT_T,
+        TRANS_TYPE_ECR_CYBIO_DISPENSE as ECR_CYBIO_DISPENSE_T,
+        TRANS_TYPE_ECR_THERMOCYCLING as ECR_THERMOCYCLING_T,
+        TRANS_TYPE_ECR_PCR_ALIQUOTING_FOR_QUANT as ECR_PCR_ALIQUOTING_FOR_QUANT_T,
+        TRANS_TYPE_ECR_PCR_STAMP_TO_ECHO as ECR_PCR_STAMP_TO_ECHO_T,
+        TRANS_TYPE_FRG_ALIQUOTING_FOR_FRAG as FRG_ALIQUOTING_FOR_FRAG_T,
+        TRANS_TPL_FRG_ALIQUOTING_FOR_FRAG as FRG_ALIQUOTING_FOR_FRAG,
+        TRANS_TYPE_RCA_CELL_DILUTION_ON_CYBIO as RCA_CELL_DILUTION_ON_CYBIO_T,
+        TRANS_TYPE_RCA_BOILING as RCA_BOILING_T,
+        TRANS_TYPE_RCA_REAGENT_ADDITION as RCA_REAGENT_ADDITION_T,
+        TRANS_TYPE_RCA_FIRST_DILUTION as RCA_FIRST_DILUTION_T
     )
 
     f = {
@@ -502,7 +513,7 @@ def transform_params( transform_type_id, transform_template_id  ):
             transform.generic_same_to_same,  # RCA Aliquoting
         (25, SAME_PLATE):
             transform.ngs_tagmentation,  # ?? no type constant?
-        (NGS_MASTERMIX_T, ):
+        (NGS_MASTERMIX_T, SAME_PLATE):
             transform.ngs_mastermix,
         (PCR_PRIMER_HITPICK, ):
             transform.pcr_primer_hitpick,
@@ -524,6 +535,26 @@ def transform_params( transform_type_id, transform_template_id  ):
             transform.generic_same_layout,
         (ECR_PCR_PRIMER_HITPICKING_T, ECR_PCR_PRIMER_HITPICKING):
             transform.ecr_pcr_primer_hitpicking,
+        (ECR_BIODOT_T, SAME_PLATE):
+            transform.generic_same_to_same,
+        (ECR_CYBIO_DISPENSE_T, SAME_LAYOUT):
+            transform.generic_same_layout,
+        (ECR_THERMOCYCLING_T, SAME_PLATE):
+            transform.thermocycle,
+        (ECR_PCR_ALIQUOTING_FOR_QUANT_T, SAME_LAYOUT):
+            transform.generic_same_layout,
+        (ECR_PCR_STAMP_TO_ECHO_T, SAME_LAYOUT):
+            transform.generic_same_layout,
+        (FRG_ALIQUOTING_FOR_FRAG_T, FRG_ALIQUOTING_FOR_FRAG):
+            transform.frag_aliquoting,
+        (RCA_CELL_DILUTION_ON_CYBIO_T, SAME_LAYOUT):
+            transform.generic_same_layout,
+        (RCA_BOILING_T, SAME_PLATE):
+            transform.generic_same_to_same,
+        (RCA_REAGENT_ADDITION_T, SAME_PLATE):
+            transform.generic_same_to_same,
+        (RCA_FIRST_DILUTION_T, SAME_PLATE):
+            transform.generic_same_to_same,
     }.get((transform_type_id, transform_template_id), transform.preview)
 
     print '@@ transform_type_id:%s, transform_template_id:%s -> %s' \

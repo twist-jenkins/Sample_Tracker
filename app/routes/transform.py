@@ -789,6 +789,19 @@ def generic_same_layout( type_id, templ_id ):
     return rows, cmds
 
 @to_resp
+def frag_aliquoting( type_id, templ_id ):
+    rows, cmds = [], []
+
+    # todo handle these many transforms!
+    rows.append({'source_plate_barcode': 'code to',
+                 'source_well_name': 'generate real',
+                 'source_sample_id': 'Change this',
+                 'destination_plate_barcode': 'data',
+                 });
+
+    return rows, cmds
+
+@to_resp
 def ecr_pcr_planning( type_id, templ_id ):
     from app.steps import ecr_pcr_hitpicking
 
