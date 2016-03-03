@@ -195,6 +195,9 @@ class TransformSpecResource(flask_restful.Resource):
                     spec = TransformSpec()        # create new, known id
                     spec.spec_id = spec_id
 
+                if request.json and request.json["plan"]:
+                    spec.data_json = request.json["plan"]
+
                 load_data_json(spec)
                 perform_additional_operations(sess, spec)
                 perform_common_operations(sess, spec, immediate)
