@@ -16,6 +16,7 @@ from app import db, constants, miseq
 from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
+from app.steps import ngs_run
 
 from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate, PlateType
 
@@ -164,12 +165,15 @@ class TransformSpecResource(flask_restful.Resource):
                 # FIXME: the client should not set execution: immediate
                 # for this case
                 immediate = False
-            if 'details' in spec.data_json \
-               and 'transform_template_id' in spec.data_json['details']:
-                if spec.data_json['details']['transform_template_id'] == 32:
-                    from ..worklist.hamilton import miniprep_hitpicking
-                    csv = miniprep_hitpicking(sess, spec)
-                    spec.data_json['details']['worklist'] = {"content": csv}
+            if 'details' in spec.data_json:
+                if 'transform_template_id' in spec.data_json['details']:
+                    if spec.data_json['details']['transform_template_id'] == \
+                       constants.TRANS_TPL_MIN_HITPICKING_FOR_MINIPREP:
+                        from ..worklist.hamilton import miniprep_hitpicking
+                        csv = miniprep_hitpicking(sess, spec)
+                        spec.data_json['details']['worklist'] = {"content": csv}
+            if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+                ngs_run.store_ngs_run(sess, request)
 
             # now execute the spec
             execution = request.headers.get('Transform-Execution')
