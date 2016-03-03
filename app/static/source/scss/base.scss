@@ -1266,6 +1266,12 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
         }
     }
 
+    .twst-spec-updating-spinner {
+        font-size: 0.8em;
+        position: relative;
+        top: 2em;
+    }
+
     .twst-record-step-present-request-data-pane {
         position: relative;
         margin: 1em 0;
@@ -1279,13 +1285,6 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
         &.twst-record-step-present-request-data-pane-visible {
             height: auto;
             opacity: 1;
-        }
-
-        .twst-spinner {
-            position: absolute;
-            top: 0.8em;
-            left: 45%;
-            font-size: 0.8em;
         }
 
         h1 {
@@ -1740,6 +1739,7 @@ ul.twst-spec-requested-items, ul.twst-spec-presented-items {
     .twst-transform-spec-barcodes-mode .twst-record-step-plate-barcodes,
     .twst-transform-spec-file-mode .twst-record-step-main-excel-upload {
         display: table;
+        position: relative;
     }
 
 }
