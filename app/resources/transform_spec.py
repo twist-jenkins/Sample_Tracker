@@ -139,22 +139,28 @@ class TransformSpecResource(flask_restful.Resource):
     @classmethod
     def create_or_replace(cls, method, spec_id=None):
 
-        def load_data_json(spec):
+        def load_data_json(spec, plan_required):
+            j = request.json
+            if plan_required:
+                spec.data_json = j["plan"]
+            else:
+                if j and j["plan"]:
+                    spec.data_json = j["plan"]
             # workaround for poor input marshaling
             if type(spec.data_json) in (str, unicode):
                 spec.data_json = json.loads(spec.data_json)
             spec.type_id = (spec.data_json.get('details', {})
                             .get('transform_type_id'))
 
-        def perform_common_operations(sess, spec, immediate_flag):
-            spec.operator_id = current_user.operator_id
-            # TODO: allow execution operator_id != creation operator_id
-            if immediate_flag:
-                cls.execute(sess, spec)
-            sess.add(spec)
+        def perform_common_operations(sess, spec):
+            """operations common to PUT and POST"""
 
-        def perform_additional_operations(sess, spec):
             # perform addnl operations for certain transform_template_id values
+            if modify_before_insert(sess, spec):
+                # HACK FOR NGS BARCODING
+                # FIXME: the client should not set execution: immediate
+                # for this case
+                immediate = False
             if 'details' in spec.data_json \
                and 'transform_template_id' in spec.data_json['details']:
                 if spec.data_json['details']['transform_template_id'] == 32:
@@ -162,26 +168,23 @@ class TransformSpecResource(flask_restful.Resource):
                     csv = miniprep_hitpicking(sess, spec)
                     spec.data_json['details']['worklist'] = {"content": csv}
 
-        with scoped_session(db.engine) as sess:
+            spec.operator_id = current_user.operator_id
+            # now execute the spec
             execution = request.headers.get('Transform-Execution')
             immediate = (execution == "Immediate")
+            # TODO: allow execution operator_id != creation operator_id
+            if immediate:
+                cls.execute(sess, spec)
+            sess.add(spec)
+
+        with scoped_session(db.engine) as sess:
 
             if method == 'POST':
                 # create new, unknown id
                 assert spec_id is None
                 spec = TransformSpec()
-                assert "plan" in request.json
-                spec.data_json = request.json["plan"]
-
-                load_data_json(spec)
-                if modify_before_insert(sess, spec):
-                    # HACK FOR NGS BARCODING
-                    # FIXME: the client should not set execution: immediate
-                    # for this case
-                    immediate = False
-
-                perform_additional_operations(sess, spec)
-                perform_common_operations(sess, spec, immediate)
+                load_data_json(spec, plan_required=True)
+                perform_common_operations(sess, spec)
                 sess.flush()  # required (?) to get the id from the database sequence
 
             elif method == 'PUT':
@@ -195,12 +198,8 @@ class TransformSpecResource(flask_restful.Resource):
                     spec = TransformSpec()        # create new, known id
                     spec.spec_id = spec_id
 
-                if request.json and request.json["plan"]:
-                    spec.data_json = request.json["plan"]
-
-                load_data_json(spec)
-                perform_additional_operations(sess, spec)
-                perform_common_operations(sess, spec, immediate)
+                load_data_json(spec, plan_required=False)
+                perform_common_operations(sess, spec)
 
             else:
                 raise ValueError(method, spec_id)
