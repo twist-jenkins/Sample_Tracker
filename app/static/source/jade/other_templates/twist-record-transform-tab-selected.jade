@@ -58,9 +58,9 @@ div(class="twst-record-step-form" class="twst-transform-template-{{transformSpec
                 p The Hamilton Wizard will guide you through recording the plate data to create a worklist for this Hamilton run.
                 button(class="twst-button twst-blue-button twst-record-step-start-hamilton-button" ng-click="startHamiltonSteps()") Start Hamilton Wizard
 
+    div(class="twst-spinner twst-spec-updating-spinner" ng-if="transformSpec.updating")
     div(class="twst-record-step-present-request-data-pane" ng-class="{'twst-record-step-present-request-data-pane-visible': showPresentedRequestedData}")
         h1 Additional Items for this Transform
-        div(class="twst-spinner" ng-if="transformSpec.updating")
         div(class="twst-record-step-present-request-data-pane-content")
             div(class="twst-present-request-data-pane-content-left" ng-if="transformSpec.requestedDataItems.length")
                 h3
