@@ -8,6 +8,8 @@ angular.module('twist.app').factory('BarcodeManager', ['Constants',
             'p': Constants.BARCODE_TYPE_PLATE
             ,'i': Constants.BARCODE_TYPE_INSTRUMENT
             ,'c': Constants.BARCODE_TYPE_CARRIER
+            ,'f': Constants.BARCODE_TYPE_FLOWCELL
+            ,'r': Constants.BARCODE_TYPE_CARTRIDGE
         };
 
         var instruments = {

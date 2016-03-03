@@ -6,7 +6,9 @@ from cStringIO import StringIO
 from app.routes.transform import WebError
 
 from twistdb.sampletrack import Plate, TransformSpec
-from app.constants import TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK
+from app.constants import (
+    TRANS_TYPE_VECTOR_HITPICK as VECTOR_HITPICK,
+    TRANS_TYPE_REBATCH_FOR_TRANSFORM as REBATCH_XFORM_T, )
 
 SEARCH_LAST_N_DAYS = 2
 
@@ -24,13 +26,10 @@ def retrieve_transform_spec( db, vector_barcode ):
     N_days_ago = datetime.datetime.now() - datetime.timedelta( days=SEARCH_LAST_N_DAYS )
     specjs = []
     for spec in db.query(TransformSpec) \
-                  .filter( TransformSpec.date_created >= N_days_ago ):
-        srcs = spec.data_json['sources']
-
-        if ( len(srcs) == 1
-             and srcs[0]['details']['id'] == vector_barcode
-             and spec.data_json['details']['transform_type_id'] == VECTOR_HITPICK ):
-
+                  .filter( TransformSpec.date_created >= N_days_ago ) \
+                  .filter( TransformSpec.type_id == REBATCH_XFORM_T ):
+        
+        if spec.data_json['details']['requestedData']['vectorSourcePlate'] == vector_barcode:
             specjs.append( spec.data_json )
 
     try:
@@ -45,9 +44,8 @@ def create_src( db, vector_barcode ):
     """
     """
     src_spec = retrieve_transform_spec( db, vector_barcode )
-    print "@@ src_spec['misc']['dest_barcodes']:", src_spec['misc']['dest_barcodes']
-    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == dest_plate_barcode).one()
-                    for dest_plate_barcode in src_spec['misc']['dest_barcodes'] ]
+    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == x['details']['id']).one()
+                    for x in src_spec['destinations'] ]
 
     vector_tallies = defaultdict(int)
     for plate in dest_plates:

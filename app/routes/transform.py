@@ -339,7 +339,7 @@ def rebatch_transform( type_id, templ_id ):
     })
     #print '@@ xx', destination_plates
     #print '@@@ yyy' ,len(src_barcodes)
-    destinations_ready= (len(request.json['destinations']) > 0)
+    destinations_ready = bool( request.json['destinations'] )
 
     for dest_index, destination in enumerate(request.json['destinations']):
             if not destination['details'].get('id'):
@@ -353,23 +353,19 @@ def rebatch_transform( type_id, templ_id ):
                 #print '@@@ ddddddd' ,dest_barcode
                 dest_barcodes.append(str(dest_barcode))
                 #print '#YESYESYES',dest_barcodes
+
     if destinations_ready:
-        rows= rebatching_normalization.create_transform(db,
-                  src_barcodes,
-                 dest_barcodes)#destination['details'].get('id'))
+        rows = rebatching_normalization.create_transform( db, src_barcodes, dest_barcodes)
+        #destination['details'].get('id'))
 
-        cmds.append({
-                        "type": "PRESENT_DATA",
-
-            "item": {
-                "type": 'file-data',
-                "title": "Echo Worklist",
-                "data": echo_csv_rebatch(rows),
-                "mimeType": "text/csv",
-                "fileName": "_echo_worklist.csv"
-            }
-
-            })
+        cmds.append( {"type": "PRESENT_DATA",
+                      "item": {
+                          "type": 'file-data',
+                          "title": "Echo Worklist",
+                        "data": echo_csv_rebatch(rows),
+                          "mimeType": "text/csv",
+                          "fileName": "_echo_worklist.csv"
+                      } })
 
     cmds.append({
         "type": "REQUEST_DATA",
@@ -598,60 +594,8 @@ def pcr_primer_hitpick( type_id, templ_id ):
 
 @to_resp
 def ngs_load( type_id, templ_id ):
-    rows, cmds = [{}], []
-
-    # TO DO   based on source barcode, present the target sequencer
-
-    details = request.json['details']
-
-    #DEV Only remove when code exists to set sequencer
-    sequencer = "MiSeq";
-
-    cmds.append({
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": "text",
-            "title": "Target Sequencer",
-            "data": "<strong>" + sequencer + "</strong>"
-        }
-    })
-
-    reqData = {
-        "sequencerBarcode": None,
-        "inputCartridgeBarcode": None,
-        "flowCellBarcode": None
-    }
-
-    if "requestedData" in details:
-        data = details["requestedData"]
-        if "sequencerBarcode" in data:
-            reqData["sequencerBarcode"] = data["sequencerBarcode"]
-        if "inputCartridgeBarcode" in data:
-            reqData["inputCartridgeBarcode"] = data["inputCartridgeBarcode"]
-        if "flowCellBarcode" in data:
-            reqData["flowCellBarcode"] = data["flowCellBarcode"]
-
-    cmds.extend( [
-        {"type": "REQUEST_DATA",
-         "item": {'type': "barcode.INSTRUMENT",
-                 "title": "Sequencer Barcode",
-                 "forProperty": "sequencerBarcode",
-                 #"value": reqData["sequencerBarcode"]
-        }},
-        {"type": "REQUEST_DATA",
-         "item": {
-             "type": "barcode.CARTRIDGE",
-             "title": "Input Cartridge Barcode",
-             "forProperty": "inputCartridgeBarcode",
-             #"value": reqData["inputCartridgeBarcode"]
-         }},
-        {"type": "REQUEST_DATA",
-         "item": {
-             "type": "barcode.FLOWCELL",
-             "title": "Flowcell Barcode",
-             "forProperty": "flowCellBarcode",
-             #"value": reqData["flowCellBarcode"]
-         }}, ])
+    from app.steps import ngs_run
+    rows, cmds = ngs_run.preview_ngs_load(db.session, request)
     return rows, cmds
 
 
@@ -663,17 +607,12 @@ def ngs_tagmentation(type_id, templ_id):
     return rows, cmds
 
 
-
 @to_resp
 def ngs_pooling(type_id, templ_id):
-
-    rows, cmds = [{}], []
-
     from app.steps import ngs_pooling as ngsp
     s_samples = ngsp.get_source_samples(db.session, request.json['sources'])
     cmds = ngsp.pooling_cmds(db.session, request, s_samples)
     rows = ngsp.pooling_transform(db.session, s_samples)
-
     return rows, cmds
 
 
@@ -721,7 +660,7 @@ def generic_same_to_same( type_id, templ_id ):
                         else request.json['destinations'] ) ]
 
     if templ_id in (
-            constants.TRANS_TPL_SAME_TO_SAME,
+            constants.TRANS_TPL_SAME_LAYOUT,
             constants.TRANS_TPL_SAME_PLATE):
 
         src_plate_type = request.json['sources'][0]['details']['plateDetails']['type']
@@ -779,6 +718,31 @@ def generic_same_to_same( type_id, templ_id ):
 
     return rows, cmds
 
+@to_resp
+def generic_same_layout( type_id, templ_id ):
+    rows, cmds = [], []
+
+    # todo handle these many transforms!
+    rows.append({'source_plate_barcode': 'code to',
+                 'source_well_name': 'generate real',
+                 'source_sample_id': 'Change this',
+                 'destination_plate_barcode': 'data',
+                 });
+
+    return rows, cmds
+
+@to_resp
+def frag_aliquoting( type_id, templ_id ):
+    rows, cmds = [], []
+
+    # todo handle these many transforms!
+    rows.append({'source_plate_barcode': 'code to',
+                 'source_well_name': 'generate real',
+                 'source_sample_id': 'Change this',
+                 'destination_plate_barcode': 'data',
+                 });
+
+    return rows, cmds
 
 @to_resp
 def ecr_pcr_planning( type_id, templ_id ):
