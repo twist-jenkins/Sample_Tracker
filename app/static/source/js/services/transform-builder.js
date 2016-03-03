@@ -658,6 +658,10 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         }
                     }
                 }
+
+                if (base.details && base.details.requestedData) {
+                    delete base.details.requestedData;
+                }
             }
 
             base.setCreateEditDefaults = function () {
