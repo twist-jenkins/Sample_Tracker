@@ -16,6 +16,7 @@ from app import db, constants, miseq
 from app.utils import scoped_session
 from app.dbmodels import NGS_BARCODE_PLATE, barcode_sequence_to_barcode_sample
 from app.routes.spreadsheet import create_adhoc_sample_movement
+from app.steps import ngs_run
 
 from twistdb.sampletrack import Sample, TransformSpec, Transform, Plate, PlateType, TransformType
 
@@ -32,16 +33,19 @@ def json_api_success(data, status_code, headers=None):
     else:
         return json_api_response, status_code, headers
 
-# TODO:
-# def json_api_error(err_list, status_code, headers=None):
-#     json_api_response = {"data": {},
-#                          "errors": err_list,
-#                          "meta": {}
-#                          }
-#     if headers is None:
-#         return json_api_response, status_code
-#     else:
-#         return json_api_response, status_code, headers
+
+def json_api_error(err_list=None, status_code=400, headers=None):
+    if err_list is None:
+        err_list = ["Generic Error"]
+    err_string = ', '.join(err_list)  # FIXME -- UI doesn't want list
+    json_api_response = { # "data": data, # FIXME -- UI doesn't want data here
+                         "errors": err_string,
+                         "meta": {}
+                         }
+    if headers is None:
+        return json_api_response, status_code
+    else:
+        return json_api_response, status_code, headers
 
 
 def formatted(db_session, data, fmt, spec):
@@ -51,9 +55,9 @@ def formatted(db_session, data, fmt, spec):
         rows = miseq.nps_id_details(db_session, nps_ids)
 
         if fmt == 'miseq.csv':
-            return miseq.miseq_csv_response(rows)
+            return ngs_run.miseq_csv_response(rows)
         elif fmt == 'sample_map.xlsx':
-            return miseq.sample_map_response(rows)
+            return ngs_run.sample_map_response(rows)
         else:
             raise ValueError(fmt)
     elif fmt == 'echo.csv':
@@ -164,19 +168,34 @@ class TransformSpecResource(flask_restful.Resource):
                 # FIXME: the client should not set execution: immediate
                 # for this case
                 immediate = False
-            if 'details' in spec.data_json \
-               and 'transform_template_id' in spec.data_json['details']:
-                if spec.data_json['details']['transform_template_id'] == 32:
-                    from ..worklist.hamilton import miniprep_hitpicking
-                    csv = miniprep_hitpicking(sess, spec)
-                    spec.data_json['details']['worklist'] = {"content": csv}
+            if 'details' in spec.data_json:
+                if 'transform_template_id' in spec.data_json['details']:
+                    if spec.data_json['details']['transform_template_id'] == \
+                       constants.TRANS_TPL_MIN_HITPICKING_FOR_MINIPREP:
+                        from ..worklist.hamilton import miniprep_hitpicking
+                        csv = miniprep_hitpicking(sess, spec)
+                        spec.data_json['details']['worklist'] = {"content": csv}
 
-            # now execute the spec
+            # Are we executing the spec, or just saving it for later execution?
+            # FIXME: it's awkward that we term that later execution as
+            # "immediate" in the api.  The whole HTTP header thing should be
+            # replaced with a separate REST "transform-execution" resource.
             execution = request.headers.get('Transform-Execution')
-            immediate = (execution == "Immediate")
-            # TODO: allow execution operator_id != creation operator_id
-            if immediate:
+            execute_now = (execution == "Immediate")
+            # TODO: store execution operator_id != creation operator_id
+            if execute_now:
                 cls.execute(sess, spec)
+            else:
+                # Great... yet another place we're hanging logic onto this
+                # poor overloaded "transform-specs" resource.  Here, we deal
+                # with the new (as of 1/16) class of steps which have one set
+                # of things (besides the spec itself) committed to the
+                # database upon spec "Save", and a different set of things
+                # committed to the database upon spec "Execute".
+                if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+                    errors = ngs_run.store_ngs_run(sess, spec)
+                    if errors:
+                        return json_api_error(errors)
             sess.add(spec)
 
         with scoped_session(db.engine) as sess:
@@ -214,6 +233,7 @@ class TransformSpecResource(flask_restful.Resource):
 
     @classmethod
     def execute(cls, sess, spec):
+        """NOTE: does not add the spec to the session (fixme?)"""
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
@@ -223,7 +243,7 @@ class TransformSpecResource(flask_restful.Resource):
         transform_type = sess.query(TransformType).get(transform_type_id)
 
         transform_template_id = details['transform_template_id']
-        
+
         operations = spec.data_json['operations']
         wells = operations  # (??)
 
@@ -236,16 +256,16 @@ class TransformSpecResource(flask_restful.Resource):
             if not result:
                 abort(400, message="Failed to execute step (sample_movement) -- create_adhoc_sample_movement returned nothing")
 
-        elif 'requestedData' in spec.data_json['details'] \
-             and transform_type_id  == constants.TRANS_TYPE_UPLOAD_QUANT:
+        elif 'requestedData' in spec.data_json['details']:
+            if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
 
-            # FIXME: this should really happen when the TransformSpec is initially created
+                # FIXME: this should really happen when the TransformSpec is initially created
 
-            aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
-            quant_data = spec.data_json['details']['requestedData']['instrument_data']
-            result = store_quant_data(sess, aliquot_plate, quant_data)
-            if not result["success"]:
-                abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
+                aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
+                quant_data = spec.data_json['details']['requestedData']['instrument_data']
+                result = store_quant_data(sess, aliquot_plate, quant_data)
+                if not result["success"]:
+                    abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
 
         spec.date_executed = datetime.utcnow()
         spec.operator_id = current_user.operator_id
