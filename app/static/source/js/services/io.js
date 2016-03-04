@@ -56,8 +56,6 @@ angular.module('twist.app').factory('Io', ['Api', '$q',
                         thenCounts[what]--;
                         thenDo();
                     });
-                } else {
-                    console.log('');
                 }
             }
             ,getSourcePlate: function (barcode, fullDetails) {
