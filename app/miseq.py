@@ -323,7 +323,8 @@ def echo_csv_rebatch( operations):
             oper["source_well_name"],
             oper["destination_plate_barcode"],
             oper["destination_well_name"],
-            oper["transfer_volume"]
+            oper["transfer_volume"],
+            oper["marker"]
 
         ]
         cw.writerow(data)

@@ -156,6 +156,7 @@ def create_transform(db,sources, destinations ):
                  'destination_well_number': int(dest_well),
                  'destination_plate_type': str(dest_type.type_id),
                  'transfer_volume': volume,
+                 'marker':marker,
                  'destination_plate_well_count': dest_type.layout.feature_count
                  })
 
