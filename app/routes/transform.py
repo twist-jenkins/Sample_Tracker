@@ -244,41 +244,6 @@ def sample_data_determined_transform(transform_template_id, sources, dests):
     return groups
 
 
-def pca_pre_planning( bulk_barcode, pca_barcodes ):
-    """
-    return list of master mix conditions for extracted PCA plates.
-
-    more importantly, this function has a side-effect: it pre-generates the Echo worklist
-    for the later "Primer Hitpicking" step.
-
-    worse, this is stored in a misleading way, as a transform that moves primers from the
-    bulk primer plate to the PCA plates, but the REAL destinations are temporary PCR plates.
-    the plate id's are later replaced with the real destination barcodes.
-    """
-    from app.steps import primer_hitpicking, vector_hitpicking
-
-    pca_plates = []
-    for bc in pca_barcodes:
-        try:
-            pca_plates.append( db.session.query(Plate).filter(Plate.external_barcode == bc).one() )
-        except NoResultFound:
-            logger.error("Bad barcode for PCA plate: %s" % bc)
-
-    try:
-        bulk = db.session.query(Plate).filter(
-            Plate.external_barcode == bulk_barcode).one()
-    except NoResultFound:
-        # we don't really need a plate for this step, but will later
-        bulk = Plate( type_id='SPTT_0006', operator_id=current_user.operator_id,
-                      external_barcode=bulk_barcode )
-        db.session.add( bulk )
-        db.session.commit()
-
-    rows = primer_hitpicking.bulk_to_temp_transform(db.session, bulk_barcode, pca_plates )
-    master_mixes = primer_hitpicking.pca_plates_to_master_mixes( pca_plates )
-    return master_mixes, rows
-
-
 def plates_to_rows( sources ):
     rows = []
     # Pull the first source plate to fix the plate type
@@ -383,55 +348,6 @@ def rebatch_transform( type_id, templ_id ):
 
 
 @to_resp
-def primer_preplanning( type_id, templ_id ):
-    rows, cmds = [{}], []
-
-    details = request.json["details"]
-
-    # we need to add master mix needs info or tell the user we need all the PCA plates first
-    masterMixNeeds = ""
-    pcaPlates = None
-
-    if "requestedData" in details:
-        pcaPlates = details["requestedData"]
-
-    if pcaPlates and "associatedPcaPlates" in pcaPlates:
-        pcaPlates = pcaPlates["associatedPcaPlates"]
-    else:
-        # if they're not already in spec, we need to add the requested PCA plates
-        cmds.append({
-            "type": "REQUEST_DATA",
-            "item": {
-                "type": "array.4",
-                "dataType": "barcode.PLATE",
-                "title": "Associated PCA Plate Barcodes",
-                "forProperty": "associatedPcaPlates"
-            }
-        })
-
-    if not pcaPlates or pcaPlates[0] is None or pcaPlates[1] is None or pcaPlates[2] is None or pcaPlates[3] is None:
-        masterMixNeeds = "Please scan <strong>all 4</strong> PCA plates to retrieve master mix needs."
-        dataType = "text"
-    else:
-        # then all the plates had barcodes
-        # now we need to decide which master mixes are needed
-        # content like "Master Mix A x2\n\rMaster Mix B x3"
-        bulk_barcode = request.json['sources'][0]['details']['id']
-        masterMixNeeds, rows = pca_pre_planning( bulk_barcode, pcaPlates )
-        dataType = 'csv'
-
-    cmds.append({
-        "type": "PRESENT_DATA",
-        "item": {
-            "type": dataType,
-            "title": "Master Mix Needs",
-            "data": masterMixNeeds
-        }
-    })
-    return rows, cmds
-
-
-@to_resp
 def primer_create_src( type_id, templ_id ):
     from app.steps import primer_hitpicking, vector_hitpicking
 
@@ -454,9 +370,8 @@ def primer_create_src( type_id, templ_id ):
 def primer_master_mix( type_id, templ_id ):
     from app.steps import ecr_pcr_hitpicking
 
-    rows = plates_to_rows( request.json['sources'] )
-    bulk_barcode = request.json['sources'][0]['details']['id']
-    mixes = ecr_pcr_hitpicking.bulk_barcode_to_mastermixes(  db.session, type_id, bulk_barcode )
+    barcode = request.json['sources'][0]['details']['id']
+    mixes = ecr_pcr_hitpicking.barcode_to_master_mix_csv(  db.session, barcode )
 
     cmds = [{
         "type": "PRESENT_DATA",
@@ -466,7 +381,7 @@ def primer_master_mix( type_id, templ_id ):
             "data":  mixes,
         }
     }]
-    return rows, cmds
+    return [{}], cmds
 
 
 @to_resp
@@ -780,6 +695,9 @@ def ecr_pcr_planning( type_id, templ_id ):
             raise WebError('expected 1 source, got %d' % len(request.json['sources']))
 
         dna_plate_barcodes = request.json['details']['requestedData']['associatedEcrPlates']
+        print '@@ here'
+        print '@@ 2:', db.session, request.json['sources'][0]['details']['id'], dna_plate_barcodes
+
         rows, cmds = ecr_pcr_hitpicking.preplanning( db.session,
                                                      request.json['sources'][0]['details']['id'],
                                                      dna_plate_barcodes )

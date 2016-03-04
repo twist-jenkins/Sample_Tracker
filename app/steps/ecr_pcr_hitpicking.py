@@ -55,9 +55,20 @@ def retrieve_transform_spec( db, type_id, vector_barcode ):
     return src_spec
 
 
+def samples_to_master_mix( samples ):
+    """
+    returns the master-mix for the given pca plate
+    assumes that each plate has one and only one condition, which can be determined by looking @ the sample in well A1
+    """
+    try:
+        # FIXME: there's a million ways this can go wrong...
+        mix = samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix
+    except Exception as e:
+        mix = 'ERROR: '+str(e)
+    return mix
+
 
 def preplanning( db, bulk_barcode, dna_barcodes ):
-
     dna_plates = []
     for bc in dna_barcodes:
         try:
@@ -69,11 +80,9 @@ def preplanning( db, bulk_barcode, dna_barcodes ):
     cout = csv.writer(buff)
     cout.writerow( ('Plate','Master_Mix') )
     for p in dna_plates:
-        samples = p.current_well_contents(db)
         try:
             # FIXME: there's a million ways this can go wrong...
-            cout.writerow( (p.external_barcode,
-                            samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix) )
+            cout.writerow( (p.external_barcode, samples_to_master_mix( p.current_well_contents(db) )) )
         except Exception as e:
              cout.writerow( (p.external_barcode, e) )
 
@@ -92,9 +101,7 @@ def preplanning( db, bulk_barcode, dna_barcodes ):
 
 
 def create_source( db, type_id, bulk_barcode ):
-
     previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
-    
     src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
 
     dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
@@ -107,7 +114,6 @@ def create_source( db, type_id, bulk_barcode ):
             if sample.order_item.primer_pair.primer_pair_type == 'custom':
                 primer_tallies[ sample.order_item.primer_pair.fwd_primer.name ] += 1
                 primer_tallies[ sample.order_item.primer_pair.rev_primer.name ] += 1
-
 
     bulk_source = db.query(Plate).filter(Plate.external_barcode == 'Bulk Primer Template 1').one()
 
@@ -129,6 +135,7 @@ def create_source( db, type_id, bulk_barcode ):
             'destination_plate_type':       'SPTT_0006',
         })
         row_names.add( sample.well.well_label[0] )
+
 
     row_st = ord(max(row_names)) + 1
 
@@ -178,33 +185,23 @@ def create_source( db, type_id, bulk_barcode ):
                        }    }]
 
 
-def pca_plates_to_master_mixes( pca_plates ):
+
+
+def barcode_to_master_mix_csv( db, barcode ):
     """
-    returns a list of master-mixes for the given pca plates
-    assumes that each plate has one and only one condition, which can be determined by looking @ the sample in well A1
+    given plate barcode, return the master mix in a CSV table
     """
+    try:
+        plate = db.query(Plate).filter(Plate.external_barcode == barcode).one()
+    except Exception as e:
+        raise WebError("problem retrieving plate '%s': %s" % (barcode, e))
+
     buff = StringIO()
     c = csv.writer(buff)
     c.writerow(('Plate','Master mix'))
-    for plate in pca_plates:
-        try:
-            # FIXME: there's a million ways this can go wrong...
-            mix = plate.samples[0].order_item.designs[0].cluster_designs[0].batching_group.master_mix
-        except Exception as e:
-            mix = 'ERROR: '+str(e)
-        c.writerow( (plate.external_barcode, mix) )
+    c.writerow( (plate.external_barcode, samples_to_master_mix( plate.current_well_contents(db) )) )
     buff.seek(0)
     return buff.read()
-
-
-def bulk_barcode_to_mastermixes( db, type_id, bulk_barcode ):
-
-    previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
-    src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
-    dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in
-                   src_spec['operations'][0]['details']['requestedData']['misc']['dest_barcodes'] ]
-    return pca_plates_to_master_mixes( dna_plates )
 
 
 def hitpicking( db, type_id, bulk_barcode, tmp_barcodes ):
@@ -268,8 +265,7 @@ def hitpicking( db, type_id, bulk_barcode, tmp_barcodes ):
                 else:
                     raise WebError("didn't find a source well for primer "+primer.name)
 
-
-    return [], [ {"type": "PRESENT_DATA",
+    return [{}], [ {"type": "PRESENT_DATA",
                     "item": {
                         "type":     "file-data",
                         "title":    "Echo worklist",

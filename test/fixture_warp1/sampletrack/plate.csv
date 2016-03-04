@@ -1,0 +1,4 @@
+id,type_id,operator_id,date_created,storage_location,description,name,external_barcode,status
+PLT_SRN_000767,SPTT_1009,jdiggans,2016-03-03 11:44:45.425756,,"Titin ""plate"" for SRN_000767",,PLT_SRN_000767,new
+PLT_SRN_000790,SPTT_1009,jdiggans,2016-03-03 11:44:52.095821,,"Titin ""plate"" for SRN_000790",,PLT_SRN_000790,new
+PLT_SRN_000819,SPTT_1009,jdiggans,2016-03-03 11:45:01.271054,,"Titin ""plate"" for SRN_000819",,PLT_SRN_000819,new
