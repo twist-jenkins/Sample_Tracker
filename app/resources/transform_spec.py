@@ -33,16 +33,18 @@ def json_api_success(data, status_code, headers=None):
     else:
         return json_api_response, status_code, headers
 
-# TODO:
-# def json_api_error(err_list, status_code, headers=None):
-#     json_api_response = {"data": {},
-#                          "errors": err_list,
-#                          "meta": {}
-#                          }
-#     if headers is None:
-#         return json_api_response, status_code
-#     else:
-#         return json_api_response, status_code, headers
+
+def json_api_error(err_list=None, status_code=401, headers=None):
+    if err_list is None:
+        err_list = ["Generic Error"]
+    json_api_response = {"data": {},
+                         "errors": err_list,
+                         "meta": {}
+                         }
+    if headers is None:
+        return json_api_response, status_code
+    else:
+        return json_api_response, status_code, headers
 
 
 def formatted(db_session, data, fmt, spec):
@@ -173,12 +175,25 @@ class TransformSpecResource(flask_restful.Resource):
                         csv = miniprep_hitpicking(sess, spec)
                         spec.data_json['details']['worklist'] = {"content": csv}
 
-            # now execute the spec
+            # Are we executing the spec, or just saving it for later execution?
+            # FIXME: it's awkward that we term that later execution as
+            # "immediate" in the api.  The whole HTTP header thing should be
+            # replaced with a separate REST "transform-execution" resource.
             execution = request.headers.get('Transform-Execution')
-            immediate = (execution == "Immediate")
-            # TODO: allow execution operator_id != creation operator_id
-            if immediate:
+            execute_now = (execution == "Immediate")
+            # TODO: store execution operator_id != creation operator_id
+            if execute_now:
                 cls.execute(sess, spec)
+            else:
+                # Great... yet another place we're hanging logic onto this
+                # poor overloaded "transform-specs" resource.  Here, we deal
+                # with the new (as of 1/16) class of steps which have one set
+                # of things (besides the spec itself) committed to the
+                # database upon spec "Save", and a different set of things
+                # committed to the database upon spec "Execute".
+                if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+                    ngs_run.store_ngs_run(sess, spec)
+                    return json_api_error()
             sess.add(spec)
 
         with scoped_session(db.engine) as sess:
@@ -239,20 +254,16 @@ class TransformSpecResource(flask_restful.Resource):
             if not result:
                 abort(400, message="Failed to execute step (sample_movement) -- create_adhoc_sample_movement returned nothing")
 
-        elif 'requestedData' in spec.data_json['details'] \
-             and transform_type_id  == constants.TRANS_TYPE_UPLOAD_QUANT:
+        elif 'requestedData' in spec.data_json['details']:
+            if transform_type_id == constants.TRANS_TYPE_UPLOAD_QUANT:
 
-            # FIXME: this should really happen when the TransformSpec is initially created
+                # FIXME: this should really happen when the TransformSpec is initially created
 
-            aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
-            quant_data = spec.data_json['details']['requestedData']['instrument_data']
-            result = store_quant_data(sess, aliquot_plate, quant_data)
-            if not result["success"]:
-                abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
-
-        if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
-            # TODO: refactor this incorporating can_be_executed
-            ngs_run.store_ngs_run(sess, request)
+                aliquot_plate = spec.data_json['operations'][0]['source_plate_barcode']
+                quant_data = spec.data_json['details']['requestedData']['instrument_data']
+                result = store_quant_data(sess, aliquot_plate, quant_data)
+                if not result["success"]:
+                    abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
 
         spec.date_executed = datetime.utcnow()
         spec.operator_id = current_user.operator_id
