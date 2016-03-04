@@ -69,13 +69,15 @@ def preview_ngs_load(session, request):
     return rows, cmds
 
 
-def store_ngs_run(sess, request):
+def store_ngs_run(sess, spec):
 
     print "@" * 500
-
+    import pprint
+    pprint.pprint(spec.data_json)
     # parse metadata
-    assert "requestedData" in request.details
-    data = request.details["requestedData"]
+    details = spec.data_json['details']
+    assert "requestedData" in details
+    data = details["requestedData"]
     sequencer_bc = data["sequencerBarcode"]
     input_cartridge_bc = data["inputCartridgeBarcode"]
     flowcell_bc = data["flowCellBarcode"]
@@ -83,7 +85,7 @@ def store_ngs_run(sess, request):
         assert barcode is not None
 
     # parse sample
-    sources = request.details["sources"]
+    sources = spec.data_json["sources"]
     assert len(sources) == 1
     assert "details" in sources[0]
     source_plate_bc = sources[0]["details"]["id"]
@@ -92,13 +94,15 @@ def store_ngs_run(sess, request):
                      .filter_by(external_barcode=source_plate_bc)
                      ).one()
     msr_samples = msr_platetube.current_well_contents(sess)
-    assert len(msr_samples) == 1
+    if len(msr_samples) != 1:
+        return False
     msr_sample = msr_samples[0]
 
     # create msr
     create_msr(sess, msr_sample, input_cartridge_bc, flowcell_bc,
                sequencer_bc)
 
+    return False
 
 def create_msr(cur_session, msr_sample, cartridge_id,
                flowcell_id, instrument_stub):
