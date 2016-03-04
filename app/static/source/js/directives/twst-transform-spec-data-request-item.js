@@ -1,5 +1,5 @@
-angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout', 'BarcodeManager',   
-    function($compile, Constants, $timeout, BarcodeManager) {
+angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$compile', 'Constants', '$timeout', 'BarcodeManager', 'Io',    
+    function($compile, Constants, $timeout, BarcodeManager, Io) {
         return {
             scope: {
                 transformSpec: '='
@@ -98,7 +98,11 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                     } else {
                                         $scope.item.validData = 0;
                                     }
-                                    $scope.transformSpec.updateOperationsList(true);
+
+                                    Io.whenReady('plate', function () {
+                                        $scope.transformSpec.updateOperationsList(true);
+                                    }, true);
+                                    
                                 }
                             }
 
@@ -157,7 +161,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                     $scope.item.validData = true;
                                 }
 
-                                $scope.transformSpec.updateOperationsList(true);
+                                Io.whenReady('plate', function () {
+                                    $scope.transformSpec.updateOperationsList(true);
+                                }, true);
                             }
                         }
 
@@ -232,7 +238,9 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                     $scope.validate = function (errorOnEmpty) {
                         $scope.item.validData = true;
                         $timeout(function () {
-                            $scope.transformSpec.updateOperationsList(true)
+                            Io.whenReady('plate', function () {
+                                $scope.transformSpec.updateOperationsList(true);
+                            }, true);
                         }, 0);
                     }
 

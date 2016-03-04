@@ -10,6 +10,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 1
@@ -23,6 +24,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -35,6 +37,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -49,6 +52,7 @@ app = angular.module('twist.app')
                         ,wellCount: 384
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination:{
                         plateCount: 4
@@ -455,6 +459,7 @@ app = angular.module('twist.app')
                         ,wellCount: 96
                         ,plateTypeId: 'SPTT_0005'
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination:{
                         plateCount: 2
@@ -572,6 +577,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0004'
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -588,6 +594,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0005'
                         ,variablePlateCount: true
                         ,plateTitles: ['Quadrant&nbsp;1:&nbsp;','Quadrant&nbsp;2:&nbsp;','Quadrant&nbsp;3:&nbsp;','Quadrant&nbsp;4:&nbsp;']
+                        ,requireAll: true
                     }
                     ,destination:{
                         plateCount: 1
@@ -998,6 +1005,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0005'
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1011,11 +1019,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0004'
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,plateTypeId: 'SPTT_0005'
                         ,variablePlateCount: true
+                        ,create: true
                     }
                 }
                 ,22: {  // keyed to transform_template_id in the database
@@ -1025,11 +1035,13 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0004'
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: true
+                        ,create: true
                     }
                 }
                 ,23: {  // keyed to transform_template_id in the database
@@ -1038,6 +1050,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 1
@@ -1051,6 +1064,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 1
@@ -1065,6 +1079,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,variablePlateCount: true
                         ,plateTypeId: 'SPTT_0006'
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1079,6 +1094,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1091,6 +1107,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1103,6 +1120,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 5
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 10
@@ -1203,6 +1221,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1215,6 +1234,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 4
@@ -1227,6 +1247,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: false
                     }
                     ,destination: {
                         plateCount: 0
@@ -1252,6 +1273,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 32
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 4
@@ -1374,6 +1396,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 5
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 96
@@ -1633,6 +1656,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_1009'
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 16
@@ -1662,12 +1686,13 @@ app = angular.module('twist.app')
                 }
                 ,35: {  // keyed to transform_template_id in the database
                     description: 'PCA Pre-Planning'
-                    ,type: 'PLATE_PLANNING'
+                    ,type: 'standard_template'
                     ,source: {
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
                         ,create: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1681,6 +1706,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 4
@@ -1695,6 +1721,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 4
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 4
@@ -1741,6 +1768,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1776,6 +1804,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
                         ,create: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1789,6 +1818,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 4
@@ -1804,6 +1834,7 @@ app = angular.module('twist.app')
                         plateCount: 1
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 1
@@ -1818,6 +1849,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 2
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 2
@@ -1895,6 +1927,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
                         ,create: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1909,6 +1942,7 @@ app = angular.module('twist.app')
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
                         ,create: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0
@@ -1921,6 +1955,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 4
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 4
@@ -1997,6 +2032,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 2
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 2
@@ -2072,6 +2108,7 @@ app = angular.module('twist.app')
                     ,source: {
                         plateCount: 1
                         ,variablePlateCount: true
+                        ,requireAll: true
                     }
                     ,destination: {
                         plateCount: 0

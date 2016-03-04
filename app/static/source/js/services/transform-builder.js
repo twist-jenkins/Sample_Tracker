@@ -1,8 +1,8 @@
 var api_base_url = '/api/v1/';
 var server_url = twist_api_url;
 
-angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constants',
-    function (Api, Maps, Constants) {
+angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constants', 'Io', 
+    function (Api, Maps, Constants, Io) {
 
         var TransformSpec = function () {
             var base = this;
@@ -39,15 +39,26 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             };
 
             base.updateOperationsList = function (toggleUpdating) {
+
                 if (base.autoUpdateSpec) {
 
-                    if (toggleUpdating) {
-                        updating();
-                    }
-
                     if (base.sourcesReady && base.destinationsReady) {
-                        // kieran
-                        Api.previewTransformation( base.sources, base.destinations, base.details )
+                        if (toggleUpdating) {
+                            updating();
+                        }
+
+                        var sources = base.sources;
+
+                        if (!base.map.source.requireAll) {
+                            sources = []
+                            for (var i=0; i< base.sources.length; i++) {
+                                if (base.sources[i].details.id) {
+                                    sources.push(base.sources[i]);
+                                }
+                            }
+                        }
+
+                        Api.previewTransformation(sources, base.destinations, base.details )
                             .success( function(result) {
                                 if( result.success ) {
                                     base.error_message = '';
@@ -265,7 +276,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 }
                 base.map[which].plateCount += howMany;
                 base.updateInputs();
-                base.updateOperationsList();
+                Io.whenReady('plate', function () {
+                    base.updateOperationsList();
+                }, true);
             }
 
             base.removePlateInput = function (which, plateIndex) {
@@ -280,7 +293,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 }
                 base[which + 's'] = newSources;
                 base.updateInputs();
-                base.updateOperationsList();
+                Io.whenReady('plate', function () {
+                    base.updateOperationsList();
+                }, true);
             }
 
             base.skipPlateInput = function (which, plateIndex) {
@@ -302,10 +317,15 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 } else if (which == Constants.PLATE_DESTINATION) {
                 base.destinationsReady = base.checkDestinationsReady();
                 }
-                base.updateOperationsList(true);
+                Io.whenReady('plate', function () {
+                    base.updateOperationsList(true);
+                }, true);
             }
 
             base.checkSourcesReady = function (clearErrors) {
+
+                var requireAll = base.map.source.requireAll;
+                var unreadySources = 0;
 
                 for (var i=0; i<base.sources.length; i++) {
 
@@ -313,17 +333,29 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         if (!base.sources[i].updating) { /* don't call base.notReady if the plate is still fetching its data */
                             delete base.sources[i].loaded
                             delete base.sources[i].error;
-                            base.notReady('source');
-                            return false;
+                            if (requireAll) {
+                                base.notReady('source');
+                                return false;
+                            } else {
+                                unreadySources++;
+                            }
                         }
                     } else {
                         //we might have loaded data but then removed the barcode for this input
                         if (base.sources[i].details.id == "") {
                             delete base.sources[i].loaded;
                             delete base.sources[i].error;
-                            base.notReady('source');
-                            return false;
+                            if (requireAll) {
+                                base.notReady('source');
+                                return false;
+                            } else {
+                                unreadySources++;
+                            }
                         }
+                    }
+
+                    if (requireAll && unreadySources == base.sources.length) {
+                        return false;
                     }
 
                 }
@@ -350,13 +382,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                 updating();
                 sourceItem.updating = true;
 
-                var plateDetailsFetcher = Api.getBasicPlateDetails;
-
-                if (base.type == Constants.TRANSFORM_SPEC_TYPE_PLATE_PLANNING) {
-                    plateDetailsFetcher = Api.getPlateDetails;
-                }
-
-                plateDetailsFetcher(barcode).success(function (data) {
+                Io.getSourcePlate(barcode).success(function (data) {
                     if (data.success) {
                         if (base.map.source.create) {
                             //then the source plate will be created in this step and should not exist - this success is actually an error
@@ -378,7 +404,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 } else {
                                     return;
                                 }
-                                base.updateOperationsList(true);
+                                Io.whenReady('plate', function () {
+                                    base.updateOperationsList(true);
+                                }, true);
                             }
                         }
                         sourceItem.updating = false;
@@ -394,7 +422,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         if (base.checkSourcesReady()) {
                             base.sourcesReady = true;
                         }
-                        base.updateOperationsList(true);
+                        Io.whenReady('plate', function () {
+                            base.updateOperationsList(true);
+                        }, true);
                     } else {
                         onError(sourceItem, 'Error: Plate data for ' + barcode + ' could not be retrieved.');
                     }
@@ -442,13 +472,7 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                         shouldBeNew = false;
                     }
 
-                    // quick fix for qpix uploading.  TODO: put this logic somewhere more sensible
-                    if (base.details.transform_template_id == 21
-                        || base.details.transform_template_id == 22) {
-                        shouldBeNew = true;
-                    }
-
-                    Api.checkDestinationPlatesAreNew(barcodeArray).success(function (data) {
+                    Io.checkDestinations(barcodeArray).success(function (data) {
 
                         var destinationOk = function (destItem) {
                             /* destination plate is new - we're good to go */
@@ -465,7 +489,9 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                 }
                             }
                             base.destinationsReady = true;
-                            base.updateOperationsList(true);
+                            Io.whenReady('plate', function () {
+                                base.updateOperationsList(true);
+                            }, true);
                         }
 
                         var isNew = data.success;
@@ -720,8 +746,10 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                                         //do nothing - this destination was already entered
                                     } else {
                                         source.details.id = base.sources[j].details ? base.sources[j].details.id : null;
-                                        base.sources[j] = dest;
-                                        base.addSource(j);
+                                        base.sources[j] = source;
+                                        if (source.details.id) {
+                                            base.addSource(j);
+                                        }
                                     }
                                 } else {
                                     base.sources[j] = source;
