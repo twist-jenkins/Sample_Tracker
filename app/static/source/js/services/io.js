@@ -76,7 +76,7 @@ angular.module('twist.app').factory('Io', ['Api', '$q',
             }
             ,checkDestinations: function (barcodeArray) {
                 start('plate');
-                var fetch = checkDestinationPlatesAreNew(barcodeArray);
+                var fetch = Api.checkDestinationPlatesAreNew(barcodeArray);
 
                 fetch.success(function (data) {
                     finish('plate');
