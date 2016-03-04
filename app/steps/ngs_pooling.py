@@ -5,6 +5,8 @@ import csv
 import random
 import string
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from app.routes.transform import WebError
 
 from twistdb.sampletrack import Plate
@@ -15,9 +17,9 @@ def pooling_cmds(db, request, source_samples):
 
     sequencer = None
 
-    basePairMax = 0;
-    currentBasePairTotal = 0;
-    previousBasePairTotal = 0;
+    basePairMax = 0
+    currentBasePairTotal = 0
+    previousBasePairTotal = 0
     cmds = []
 
     details = request.json["details"]
@@ -39,9 +41,9 @@ def pooling_cmds(db, request, source_samples):
             }
         })
 
-    sources = request.json['sources'];
+    sources = request.json['sources']
 
-    sourcesSet = [];
+    sourcesSet = []
 
     for sourceIndex, source in enumerate(sources):
         sourcesSet.append({
@@ -55,7 +57,7 @@ def pooling_cmds(db, request, source_samples):
         # TO DO  Derive the max BP count for this sequencer
         #        AND
         #        Return total count of basepairs on source plate(s)
-        basePairMax = 14000000;
+        basePairMax = 14000000
 
         '''
         currentBasePairTotal = total of BPs in all source plates
@@ -63,7 +65,7 @@ def pooling_cmds(db, request, source_samples):
         '''
 
         # DEV ONLY - remove when real basepair counting is done
-        previousBasePairTotal = 500;
+        previousBasePairTotal = 500
         #currentBasePairTotal = basePairMax - 3 + len(sources);
 
         currentBasePairTotal = sum([len(sample.order_item.sequence)
@@ -76,7 +78,7 @@ def pooling_cmds(db, request, source_samples):
             #and add another source input to indicate there's more room
             sourcesSet.append({
                 "type": "SPTT_0006"
-            });
+            })
 
         elif basePairMax and currentBasePairTotal == basePairMax:
             cmds.append({
@@ -124,8 +126,6 @@ def pooling_cmds(db, request, source_samples):
 
 def get_source_samples(db, sources):
 
-    from sqlalchemy.orm.exc import NoResultFound
-
     s_samples = []
     for source in sources:
         if source is None:
@@ -139,7 +139,7 @@ def get_source_samples(db, sources):
     return s_samples
 
 
-def pooling_transform(db, source_samples):
+def pooling_transform(sess, source_samples):
 
     def random_tube_barcode():
         return 'miseq_tube_' + ''.join([random.choice(string.letters)
@@ -150,18 +150,18 @@ def pooling_transform(db, source_samples):
 
     for s_sample in source_samples:
         plate_size = s_sample.plate.plate_type.layout.feature_count
+        # note: sample_id gets accessioned later, by the sample merging logic
         rows.append({
-            'source_plate_barcode':         s_sample.plate.external_barcode,
-            'source_well_name':             s_sample.well.well_label,
-            'source_well_number':           s_sample.well.well_number,
-            'source_sample_id':             s_sample.id,
-            'source_plate_well_count':      plate_size,
-            'destination_plate_barcode':    dest_tube_barcode,
-            'destination_well_name':        'A1',
-            'destination_well_number':      1,
+            'source_plate_barcode': s_sample.plate.external_barcode,
+            'source_well_name': s_sample.well.well_label,
+            'source_well_number': s_sample.well.well_number,
+            'source_sample_id': s_sample.id,
+            'source_plate_well_count': plate_size,
+            'destination_plate_barcode': dest_tube_barcode,
+            'destination_well_name': 'A1',
+            'destination_well_number': 1,
             'destination_plate_well_count': 1,
-            #'destination_sample_id':        d_sample.id,
-            'destination_plate_type':       'SPTT_2048',
+            'destination_plate_type': 'SPTT_2048',
         })
 
     return rows
