@@ -172,8 +172,6 @@ class TransformSpecResource(flask_restful.Resource):
                         from ..worklist.hamilton import miniprep_hitpicking
                         csv = miniprep_hitpicking(sess, spec)
                         spec.data_json['details']['worklist'] = {"content": csv}
-            if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
-                ngs_run.store_ngs_run(sess, request)
 
             # now execute the spec
             execution = request.headers.get('Transform-Execution')
@@ -218,6 +216,7 @@ class TransformSpecResource(flask_restful.Resource):
 
     @classmethod
     def execute(cls, sess, spec):
+        """NOTE: does not add the spec to the session (fixme?)"""
         if not spec.data_json:
             raise KeyError("spec.data_json is null or empty")
         details = spec.data_json["details"]
@@ -227,7 +226,7 @@ class TransformSpecResource(flask_restful.Resource):
         transform_type = sess.query(TransformType).get(transform_type_id)
 
         transform_template_id = details['transform_template_id']
-        
+
         operations = spec.data_json['operations']
         wells = operations  # (??)
 
@@ -250,6 +249,10 @@ class TransformSpecResource(flask_restful.Resource):
             result = store_quant_data(sess, aliquot_plate, quant_data)
             if not result["success"]:
                 abort(400, message="Failed to execute step (sample_movement) -- store_quant_data failed")
+
+        if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
+            # TODO: refactor this incorporating can_be_executed
+            ngs_run.store_ngs_run(sess, request)
 
         spec.date_executed = datetime.utcnow()
         spec.operator_id = current_user.operator_id
