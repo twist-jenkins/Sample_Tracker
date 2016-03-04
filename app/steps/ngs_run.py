@@ -1,9 +1,14 @@
+import Bio.Seq
+
 from twistdb.sampletrack import Plate, Sample
+from twistdb.ngs import NGSRun
+
 from app.routes.transform import WebError
 
 MISEQ_READ_1_CYCLES = 151
 MISEQ_READ_2_CYCLES = 151
 MISEQ_ADAPTOR_SEQUENCE = "CTGTCTCTTATACACATCT"
+
 
 def preview_ngs_load(session, request):
     rows, cmds = [{}], []
@@ -12,7 +17,7 @@ def preview_ngs_load(session, request):
     details = request.json['details']
 
     # DEV Only remove when code exists to set sequencer
-    sequencer = "MiSeq";
+    sequencer = "MiSeq"
 
     cmds.append({
         "type": "PRESENT_DATA",
@@ -44,21 +49,23 @@ def preview_ngs_load(session, request):
                   "title": "Sequencer Barcode",
                   "forProperty": "sequencerBarcode",
                   # "value": reqData["sequencerBarcode"]
-         }},
+                  }
+         },
         {"type": "REQUEST_DATA",
-         "item": {
-             "type": "barcode.CARTRIDGE",
-             "title": "Input Cartridge Barcode",
-             "forProperty": "inputCartridgeBarcode",
-             # "value": reqData["inputCartridgeBarcode"]
-         }},
+         "item": {"type": "barcode.CARTRIDGE",
+                  "title": "Input Cartridge Barcode",
+                  "forProperty": "inputCartridgeBarcode",
+                  # "value": reqData["inputCartridgeBarcode"]
+                  }
+         },
         {"type": "REQUEST_DATA",
-         "item": {
-             "type": "barcode.FLOWCELL",
-             "title": "Flowcell Barcode",
-             "forProperty": "flowCellBarcode",
-             # "value": reqData["flowCellBarcode"]
-         }}, ])
+         "item": {"type": "barcode.FLOWCELL",
+                  "title": "Flowcell Barcode",
+                  "forProperty": "flowCellBarcode",
+                  # "value": reqData["flowCellBarcode"]
+                  }
+         },
+    ])
     return rows, cmds
 
 
@@ -93,9 +100,8 @@ def store_ngs_run(sess, request):
                sequencer_bc)
 
 
-def create_msr(cur_session, msr_sample, cartridge_id='car_tbd',
-               flowcell_id='fc_tbd', instrument_stub='inr_tbd'
-               instrument_run_number='irn_tbd', instrument_pk=1):
+def create_msr(cur_session, msr_sample, cartridge_id,
+               flowcell_id, instrument_stub):
     """Adapted from twist_lims/lims_app/util/temp_google.py handle_create_ngs_run """
     ##############
     # make ngs run

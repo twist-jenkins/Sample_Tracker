@@ -4,8 +4,6 @@ import logging
 from datetime import datetime
 import collections
 
-import Bio.Seq
-
 from app import db
 
 from flask import make_response
