@@ -1,13 +1,158 @@
+import StringIO
+import csv
+from datetime import datetime
+import logging
+
+from flask import make_response
+from flask_login import current_user
 import Bio.Seq
 
 from twistdb.sampletrack import Plate, Sample
 from twistdb.ngs import NGSRun
-
 from app.routes.transform import WebError
 
 MISEQ_READ_1_CYCLES = 151
 MISEQ_READ_2_CYCLES = 151
 MISEQ_ADAPTOR_SEQUENCE = "CTGTCTCTTATACACATCT"
+
+""" some of the templates and logic is from twistbio.util.miseq.py.
+That code will continue to be used by R&D.
+Pasting the relevant bits here instead of importing twist_core."""
+
+FORBIDDEN_CHARS_MISEQ = list("""?()[]/\=+<>:;"',*^|&""")
+FORBIDDEN_CHARS_NEXTSEQ = list("""?()[]/\=+<>:;"',*^|&.@""")
+FORBIDDEN_CHARS = FORBIDDEN_CHARS_NEXTSEQ
+
+# note that this is for resequencing workflow only now
+SAMPLE_SHEET_TEMPLATE = """[Header]
+IEMFileVersion,4
+Investigator Name,%s %s
+Experiment Name,%s
+Date,%s
+Workflow,%s
+Application,%s
+Assay,%s
+Description,%s
+Chemistry,%s
+
+[Reads]
+%d
+%d
+
+[Settings]
+FilterPCRDuplicates,1
+ReverseComplement,0
+VariantFilterQualityCutoff,30
+QualityScoreTrim,%d
+Adapter,%s
+
+[Data]
+Sample_ID,Sample_Name,Sample_Plate,Sample_Well,I7_Index_ID,index,I5_Index_ID,index2,GenomeFolder,Sample_Project,Description
+%s
+"""
+
+
+# def sample_map_template(rows):
+#
+#     sio = StringIO.StringIO()
+#     book = twist_excel.workbook.TwistExcelWorkbook(sio)
+#
+#     book.format.gray.set_align('center')
+#     book.format.gray.set_align('vcenter')
+#     book.format.gray.set_text_wrap()
+#     book.format.gray.set_bold()
+#
+#     book.fields = (
+#         book.Field("sample_num_on_run", 20, book.format.gray,
+#                    "Sample Number On Run (For FASTQ Naming)"),
+#         book.Field("sample_id", 10, book.format.gray,
+#                    "Sample ID"),
+#         book.Field("i5_sequence_id", 15, book.format.gray,
+#                    "I5 Barcode Sequence ID (From Barcode Sequence table)"),
+#         book.Field("i7_sequence_id", 15, book.format.gray,
+#                    "I7 Barcode Sequence ID (From Barcode Sequence table)"),
+#         book.Field("description", 60, book.format.gray,
+#                    "Expected result description, notes about why on run, "
+#                    "prep-related notes, which samples are controls, etc"),
+#         book.Field("var_prep_type", 15, book.format.lime,
+#                    "Variable: Prep"),
+#         book.Field("var_parent_type ", 10, book.format.lime,
+#                    "Variable: Parent type"),
+#         book.Field("var_flag", 5, book.format.lime,
+#                    "Variable: Flag"),
+#     )
+#
+#     sheet = book.workbook.add_worksheet("NGS Run Map")
+#     sheet.write('A1', ':table')
+#     sheet.write('B1', "sample_map")
+#     sheet.write('A3', 'Maps each sample on run to barcodes and one or more '
+#                 'variables under study. You can add as many categories '
+#                 '(columns) as you like, just match the var_xxx format '
+#                 'in row 6 (row 5 is ignored). Variables that do not start '
+#                 'with "var_" are ignored in row 6 -- do not use spaces.')
+#     sheet.set_row(4, 72)
+#     book.write_to(sheet, book.fields)
+#
+#     row_format = book.format.regular
+#     for row_ix, row in enumerate(rows):
+#         position = book.cell_position(row_ix)
+#         col_vals = [
+#             row_ix + 1,
+#             row.parent_sample_id,  # CS_00233
+#             row.i5_sequence_id,
+#             row.i7_sequence_id,
+#             strip_forbidden_chars(row.parent_description),
+#             "Automated",
+#             "Colony"
+#         ]
+#         sheet.write_row(position, col_vals, row_format)
+#
+#     return sio
+
+
+def strip_forbidden_chars(in_str, replace_with_char=" ", max_len=1000):
+    """Return clean string"""
+    if not in_str:
+        return ""
+    clean_chars = []
+    for c in in_str:
+        if c in FORBIDDEN_CHARS:
+            clean_chars.append(replace_with_char)
+        else:
+            clean_chars.append(c)
+    if len(clean_chars) > max_len:
+        return ''.join(clean_chars)[0:max_len] + "..."
+    return ''.join(clean_chars)
+
+
+def miseq_csv_response(nps_detail_rows, fname=None):
+    """MiSeq CSV"""
+    run_id = "MSR_tbd"  # run.run_id
+    csvout = miseq_csv_template(nps_detail_rows, run_id)
+    logging.info(" %s downloaded the MISEQ REPORT",
+                 current_user.first_and_last_name)
+    response = make_response(csvout)
+    if fname is None:
+        datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+        fname = "ngs_miseq_%s.csv" % datestr
+    response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
+    return response
+
+
+# def sample_map_response(nps_detail_rows, fname=None):
+#     """Sample Map XLSX"""
+#     xlsx_out = sample_map_template(nps_detail_rows)
+#     logging.info(" %s downloaded the SAMPLE MAP REPORT",
+#                  current_user.first_and_last_name)
+#     xlsx_out.seek(0)
+#     mimt = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+#     response = make_response(xlsx_out.read())
+#     response.mimetype = mimt
+#     if fname is None:
+#         datestr = datetime.now().strftime("%Y-%m-%d_%H%M")
+#         fname = "ngs_sample_map_%s.xlsx" % datestr
+#     response.headers["Content-Disposition"] = "attachment; filename=%s" % fname
+#     return response
 
 
 def preview_ngs_load(session, request):
@@ -103,6 +248,7 @@ def store_ngs_run(sess, spec):
                sequencer_bc)
 
     return False
+
 
 def create_msr(cur_session, msr_sample, cartridge_id,
                flowcell_id, instrument_stub):

@@ -21,7 +21,19 @@ login_manager.anonymous_user = AutomatedTestingUser
 client = app.test_client()
 
 
-def test_small_qpix_to_96_golden():
+def DISABLED_test_pooling():
+    # 11. We should be able to get a miseq sample sheet
+    # 'https://sampletransfer-stg.twistbioscience.com/api/v1/rest/transform-specs/194.miseq.csv'
+    new_spec_url = 'FIXME'
+    miseq_csv_url = new_spec_url + ".miseq.csv"
+    rv = client.get(miseq_csv_url,
+                         content_type="application/json")
+    assert rv.status_code == 200
+    result = json.loads(rv.data)
+    assert 'Amplicon' in result
+
+
+def test_miseq_run_loading():
     rnd = rnd_bc()
     dest_plate_1_barcode = rnd + '_1'
     dest_plate_2_barcode = rnd + '_2'
@@ -103,16 +115,5 @@ def test_small_ngs_prep_golden():
     print result
     assert result["success"] is True
 
-
-def DISABLED_test_pooling():
-    # 11. We should be able to get a miseq sample sheet
-    # 'https://sampletransfer-stg.twistbioscience.com/api/v1/rest/transform-specs/194.miseq.csv'
-    new_spec_url = 'FIXME'
-    miseq_csv_url = new_spec_url + ".miseq.csv"
-    rv = client.get(miseq_csv_url,
-                         content_type="application/json")
-    assert rv.status_code == 200
-    result = json.loads(rv.data)
-    assert 'Amplicon' in result
 
 

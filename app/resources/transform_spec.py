@@ -54,9 +54,9 @@ def formatted(db_session, data, fmt, spec):
         rows = miseq.nps_id_details(db_session, nps_ids)
 
         if fmt == 'miseq.csv':
-            return miseq.miseq_csv_response(rows)
+            return ngs_run.miseq_csv_response(rows)
         elif fmt == 'sample_map.xlsx':
-            return miseq.sample_map_response(rows)
+            return ngs_run.sample_map_response(rows)
         else:
             raise ValueError(fmt)
     elif fmt == 'echo.csv':
