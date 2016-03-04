@@ -34,11 +34,12 @@ def json_api_success(data, status_code, headers=None):
         return json_api_response, status_code, headers
 
 
-def json_api_error(err_list=None, status_code=401, headers=None):
+def json_api_error(err_list=None, status_code=400, headers=None):
     if err_list is None:
         err_list = ["Generic Error"]
-    json_api_response = {"data": {},
-                         "errors": err_list,
+    err_string = ', '.join(err_list)  # FIXME -- UI doesn't want list
+    json_api_response = { # "data": data, # FIXME -- UI doesn't want data here
+                         "errors": err_string,
                          "meta": {}
                          }
     if headers is None:
@@ -192,8 +193,9 @@ class TransformSpecResource(flask_restful.Resource):
                 # database upon spec "Save", and a different set of things
                 # committed to the database upon spec "Execute".
                 if spec.type_id == constants.TRANS_TYPE_NGS_LOAD_ON_SEQUENCER:
-                    ngs_run.store_ngs_run(sess, spec)
-                    return json_api_error()
+                    errors = ngs_run.store_ngs_run(sess, spec)
+                    if errors:
+                        return json_api_error(errors)
             sess.add(spec)
 
         with scoped_session(db.engine) as sess:

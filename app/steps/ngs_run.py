@@ -6,6 +6,7 @@ import logging
 from flask import make_response
 from flask_login import current_user
 import Bio.Seq
+from sqlalchemy.sql import func
 
 from twistdb.sampletrack import Plate, Sample
 from twistdb.ngs import NGSRun
@@ -239,8 +240,9 @@ def store_ngs_run(sess, spec):
                      .filter_by(external_barcode=source_plate_bc)
                      ).one()
     msr_samples = msr_platetube.current_well_contents(sess)
-    if len(msr_samples) != 1:
-        return False
+    lms = len(msr_samples)
+    if lms != 1:
+        return "Incorrect number of source samples: [%s], expected 1" % lms
     msr_sample = msr_samples[0]
 
     # create msr
@@ -259,8 +261,8 @@ def create_msr(cur_session, msr_sample, cartridge_id,
 
     # replace with sequence or object id
     print "Replace ngs run max with db sequence or object id"
-    max_run = cur_session.query(func.max(NGSRun.id)).one()
-    next_run_id = "MSR_%05d" % (int(max_run[0].split("_")[1]) + 1)
+    max_run = cur_session.query(func.max(NGSRun.pk)).one()
+    next_run_id = max_run[0] + 1
 
     # get max run id (replace)
     # instrument_run_number = int(form_params['instrument_run_number'])
@@ -276,14 +278,15 @@ def create_msr(cur_session, msr_sample, cartridge_id,
 
     # create ngs run
     ngs_run = NGSRun()
-    ngs_run.id = next_run_id
+    ngs_run.pk = next_run_id
     ngs_run.sample_id = msr_sample.id
     ngs_run.cartridge_id = cartridge_id
-    ngs_run.instrument_run_number = instrument_run_number
-    ngs_run.instrument_pk = instrument_pk
+    ngs_run.flowcell_id = flowcell_id
+    ngs_run.instrument_run_number = '1234' # instrument_run_number
+    ngs_run.instrument_pk = '1' # instrument_pk
     ngs_run.read_1_cycles = MISEQ_READ_1_CYCLES
     ngs_run.read_2_cycles = MISEQ_READ_2_CYCLES
-    ngs_run.miseq_adaptor = MISEQ_ADAPTOR_SEQUENCE
+    ngs_run.miseq_adapter = MISEQ_ADAPTOR_SEQUENCE
 
     cur_session.add(ngs_run)
 
