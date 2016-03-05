@@ -464,7 +464,7 @@ def transform_params( transform_type_id, transform_template_id  ):
 
     f = {
         (EXTRACTION_TITIN_T, EXTRACTION_TITIN):
-            transform.generic_same_to_same,
+            transform.titin_extraction,
         (CHP_DEPROTECTION_T, SAME_PLATE):
             transform.generic_same_to_same,
         (PCA_PCR_ALIQUOTING_T, SAME_LAYOUT):

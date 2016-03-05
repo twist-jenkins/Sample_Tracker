@@ -3,6 +3,7 @@
 import json
 import math
 import logging
+import datetime, time
 
 from app import db
 from app import constants
@@ -10,7 +11,7 @@ from app.plate_to_plate_maps import maps_json
 
 from collections import defaultdict
 
-from flask import request, Response
+from flask import g, request, Response
 from flask_login import current_user
 from json_tricks.nonp import loads  # json w/ support for comments
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -27,7 +28,6 @@ class WebError(Exception):
     not the purest approach, but I'm using this for flow-control, to
     short-circuit bad requests
     """
-
 
 def to_resp(f):
     """
@@ -558,6 +558,76 @@ def vector_create_src( type_id, templ_id ):
         raise WebError('expected one source; got %d' % len(request.json['sources']))
 
     return vector_hitpicking.create_src( db.session, request.json['sources'][0]['details']['id'] )
+
+@to_resp
+def titin_extraction( type_id, templ_id ):
+    
+    rows, cmds, howMany = [], [], 16
+
+    destinations_ready = bool( request.json.get('destinations') )
+
+    for dest_index, destination in enumerate(request.json['destinations']):
+        if not destination['details'].get('id'):
+            destinations_ready = False
+            break
+
+    if not destinations_ready:
+
+        barcodes = create_barcodes(howMany, "CHPx", "B");
+
+        plates = [];
+
+        for x in range(0, howMany):
+            plate_ind = x + 1;
+            if x < 9:
+                plate_ind = "0" + str(plate_ind);
+            plates.append({
+                "type": "SPTT_0006"
+                ,"details": {
+                    "title": "Plate&nbsp;" + str(plate_ind) + ":&nbsp;"
+                    ,"id": barcodes[x]
+                }
+            });
+
+        cmds.append({
+            "type": "SET_DESTINATIONS",
+            "plates": plates
+        })
+
+        cmds.append({
+            "type": "PRESENT_DATA",
+            "item": {
+                "type": "barcode-labels",
+                "title": "Destination Plate Labels",
+                "data": barcodes
+            }
+        })
+
+    else:
+        rows = [{}]
+
+    return rows, cmds
+
+
+def create_barcodes(howMany, step_prefix, flex_char):
+
+    labels = []
+
+    day_month = '%02d' % datetime.date.today().day + '%02d' % datetime.date.today().month
+
+    now = datetime.datetime.now()
+    seconds_since_midnight = int((now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds() * 10)
+
+    for x in range(0, howMany):
+
+        deciSeconds = str(seconds_since_midnight + x)[-6:];
+
+        while len(deciSeconds) < 6:
+            deciSeconds = "0" + deciSeconds
+
+        labels.append("p" + step_prefix + day_month + flex_char + deciSeconds + g.user.initials);
+
+    return labels
 
 
 @to_resp

@@ -48,6 +48,10 @@ angular.module('twist.app').directive('twstTransformSpecDataPresentationItem', [
                         ml += '</table>';
 
                         break;
+                    case Constants.DATA_TYPE_BARCODE_LABELS:
+                        // assemble the presented data
+                        ml += '<button class="twst-button twst-blue-button" ng-click="printLabels()">Print Labels</button>';
+                        break;
                     
                     default :
                         console.log('Error: Unrecognized response command type = [' + $scope.itemData.type + ']');

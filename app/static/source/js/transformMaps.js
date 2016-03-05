@@ -1659,27 +1659,9 @@ app = angular.module('twist.app')
                         ,requireAll: true
                     }
                     ,destination: {
-                        plateCount: 16
+                        plateCount: 0
                         ,plateTypeId: 'SPTT_0006'
                         ,variablePlateCount: false
-                        ,plateTitles: [
-                            'Plate&nbsp;01&nbsp;'
-                            ,'Plate&nbsp;02&nbsp;'
-                            ,'Plate&nbsp;03&nbsp;'
-                            ,'Plate&nbsp;04&nbsp;'
-                            ,'Plate&nbsp;05&nbsp;'
-                            ,'Plate&nbsp;06&nbsp;'
-                            ,'Plate&nbsp;07&nbsp;'
-                            ,'Plate&nbsp;08&nbsp;'
-                            ,'Plate&nbsp;09&nbsp;'
-                            ,'Plate&nbsp;10&nbsp;'
-                            ,'Plate&nbsp;11&nbsp;'
-                            ,'Plate&nbsp;12&nbsp;'
-                            ,'Plate&nbsp;13&nbsp;'
-                            ,'Plate&nbsp;14&nbsp;'
-                            ,'Plate&nbsp;15&nbsp;'
-                            ,'Plate&nbsp;16&nbsp;'
-                        ]
                         ,create: true
                         ,skippable: true
                     }
