@@ -1,0 +1,7 @@
+"pk","fwd_primer_id","rev_primer_id","name","primer_pair_type","primer_pair_role","is_active","date_added","operator_id"
+8,15,16,"gingko_vector_1_prm_1","custom","linearization",FALSE,"2016-03-05 05:13:31.073475","orders_api"
+9,17,18,"gingko_vector_1_prm_2","custom","linearization",FALSE,"2016-03-05 05:13:31.073475","orders_api"
+10,19,20,"gingko_vector_1_prm_3","custom","linearization",FALSE,"2016-03-05 05:13:31.073475","orders_api"
+11,21,22,"prm_1","custom","amplification",FALSE,"2016-03-05 05:13:31.073475","orders_api"
+12,23,24,"prm_2","custom","amplification",FALSE,"2016-03-05 05:13:31.073475","orders_api"
+13,25,26,"prm_3","custom","amplification",FALSE,"2016-03-05 05:13:31.073475","orders_api"
