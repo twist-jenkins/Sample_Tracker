@@ -4,6 +4,7 @@ import math
 import csv
 from cStringIO import StringIO
 from app.routes.transform import WebError
+from twistdb import NoResultFound
 
 from twistdb.sampletrack import Plate, TransformSpec
 from app.constants import (
@@ -44,8 +45,16 @@ def create_src( db, vector_barcode ):
     """
     """
     src_spec = retrieve_transform_spec( db, vector_barcode )
-    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == x['details']['id']).one()
-                    for x in src_spec['destinations'] ]
+    
+    dest_plates = []
+    for x in src_spec['destinations']:
+        try:
+            p = db.query(Plate).filter(Plate.external_barcode == x['details']['id']).one()
+        except NoResultFound:
+            raise WebError('missing destination plate %s - maybe you forgot to execute the spec?'
+                           % x['details']['id'])
+        else:
+            dest_plates.append(p)
 
     vector_tallies = defaultdict(int)
     for plate in dest_plates:
