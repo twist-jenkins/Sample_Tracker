@@ -58,10 +58,11 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
                             }
                         }
 
+                        base.error_message = '';
+
                         Api.previewTransformation(sources, base.destinations, base.details )
                             .success( function(result) {
                                 if( result.success ) {
-                                    base.error_message = '';
                                     base.operations = result.data;
 
                                     if (result.responseCommands) {
@@ -654,6 +655,8 @@ angular.module('twist.app').factory('TransformBuilder', ['Api', 'Maps', 'Constan
             base.reset = function () {
                 base.presentedDataItems = [];
                 base.requestedDataItems = [];
+
+                base.error_message = '';
 
 
                 for (var i=0; i< base.sources.length; i++) {

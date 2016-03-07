@@ -67,12 +67,8 @@ angular.module('twist.app').controller('trackStepController', ['$scope', '$state
 
         $scope.sampleTrackFormReady = function () {
 
-            if (!$scope.transformSpec.details) {
+            if (!$scope.transformSpec.details || $scope.transformSpec.updating || !$scope.transformSpec.operations || !$scope.transformSpec.operations.length) {
                 return false;
-            }
-
-            if (!$scope.transformSpec.operations || !$scope.transformSpec.operations.length) {
-                return false
             }
 
             if ($scope.transformSpec.validateRequestedData) {

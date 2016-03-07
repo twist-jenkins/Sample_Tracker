@@ -677,7 +677,7 @@ def ecr_pcr_planning( type_id, templ_id ):
         cmds.append({
             "type": "REQUEST_DATA",
             "item": {
-                "type": "array.4",
+                "type": "array.x",
                 "dataType": "barcode.PLATE",
                 "title": "Associated PCA Plate Barcodes",
                 "forProperty": "associatedPcaPlates"
