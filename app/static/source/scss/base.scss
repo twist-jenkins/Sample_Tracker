@@ -523,6 +523,10 @@ strong {
     font-size: 0.6em;
 }
 
+/******************************/
+/*** END SPINNER ***/
+/******************************/
+
 .twst-data-readout-table {
 
     tr:first-child {
@@ -557,11 +561,6 @@ strong {
         background-color: #eee;
     }
 }
-
-
-/******************************/
-/*** END SPINNER ***/
-/******************************/
 
 .twst-message {
     border-radius: 0.3em;
@@ -649,6 +648,63 @@ strong {
 
 .twst-2em-top-margin {
     margin-top: 2em !important;
+}
+
+.twst-barcode-inputs-array-item {
+
+    .twst-barcode-inputs-array-item-inner {
+        display: inline-block;
+        position: relative;
+
+        .twst-barcode-inputs-array-remove-plate-button {
+            position: absolute;
+            right: 3em;
+            font-size: 1em;
+            top: 0.75em;
+            opacity: 0.8;
+            cursor: pointer;
+
+            svg {
+                height: 1em;
+
+                g {
+                    fill: #ccc;
+                }
+            }
+
+            &:hover {
+                opacity: 1;
+
+                svg {
+                    g {
+                        fill: $twst-dark-red;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.twst-barcode-inputs-array-add-plate-button {
+    cursor: pointer;
+    opacity: 0.8;
+    margin-top: 0.3em;
+    display: inline-block;
+
+    &:hover {
+        opacity: 1;
+    }
+    .twst-blue-button {
+        padding: 0 0.2em;
+        font-size: 1em;
+        line-height: 1em;
+        margin-right: 0.3em;
+    }
+
+    span {
+        position: relative;
+        top: 0.1em
+    }
 }
 
 /**********************************************************************************************************/

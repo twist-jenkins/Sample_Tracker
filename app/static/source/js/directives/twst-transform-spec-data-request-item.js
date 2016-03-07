@@ -32,24 +32,71 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
 
                 if ($scope.itemData.type.indexOf(Constants.DATA_TYPE_ARRAY) == 0) {
 
-                    var arrayCount = $scope.itemData.type.split('.')[1] - 0;
+                    var arrayCount = $scope.itemData.type.split('.')[1];
 
-                    $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = new Array(4);
+                    $scope.variableArray = false;
+
+                    if (arrayCount == 'x') {
+                        $scope.variableArray = true;
+                        arrayCount = 1;
+                    } else {
+                        arrayCount =  arrayCount - 0;
+                    }
+
+                    $scope.thisArray = [];
+
+                    for (var i=0; i< arrayCount; i++) {
+                        $scope.thisArray.push({id: i});
+                    }
+
+                    $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = new Array(arrayCount);
+
+                    $scope.validations = new Array(arrayCount);
+                    $scope.errors = new Array(arrayCount);
 
 
-                    $scope.validations = new Array(4);
-                    $scope.errors = new Array(4);
+                    $scope.addAssociatedPlate = function () {
+                        $scope.thisArray.push({id: $scope.thisArray.length});
+                        $scope.validations.push(null);
+                        $scope.errors.push(null);
+                        $scope.validate($scope.thisArray.length - 1, true);
+                    }
 
-                    for (var i=0; i < arrayCount; i++) {
-                        if (!$scope.readOnly) {
-                            ml +=   '<p>' +
-                                        '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[\'' + $scope.itemData.forProperty + '\'][' + i + ']" ng-blur="validate(' + i + ', true);"/>' +
-                                        '<twst-thumb-validation-icon validation="validations[' + i + ']" error="errors[' + i + ']"></twst-thumb-validation-icon>' +
-                                    '</p>';
-                        } else {
-                            ml += '<p><strong>' + $scope.transformSpec.details.requestedData[$scope.itemData.forProperty][i] + '</strong></p>';
-                        }
-                        
+                    $scope.removeAssociatedPlate = function (index) {
+                        /* remove is complicated: 
+                        *  since we track inputs using one array but model data using another
+                        *  we'll need to merge the two when we remove
+                        *
+                        *
+                        */
+                        var newDetailsData = angular.copy($scope.transformSpec.details.requestedData[$scope.itemData.forProperty]);
+                        newDetailsData.splice(index, 1);
+                        $scope.thisArray.splice(index, 1);
+                        $scope.transformSpec.details.requestedData[$scope.itemData.forProperty] = newDetailsData;
+                        /* and re-validate item 0 to trigger array-wide validation */
+                        $scope.validations.splice(index, 1);
+                        $scope.errors.splice(index, 1)
+                        $scope.validate(0, true);
+                    }
+
+                    if (!$scope.readOnly) {
+                         ml +=  '<div class="twst-barcode-inputs-array-item" ng-repeat="item in thisArray">' +
+                                    '<div class="twst-barcode-inputs-array-item-inner">' +
+                                        '<input type="text" class="form-control" ng-model="transformSpec.details.requestedData[itemData.forProperty][$index]" ng-blur="validate($index, true);"/>' +
+                                        '<twst-thumb-validation-icon validation="validations[$index]" error="errors[$index]"></twst-thumb-validation-icon>' +
+                                        '<span class="twst-barcode-inputs-array-remove-plate-button" ng-click="removeAssociatedPlate($index)" ng-if="variableArray && thisArray.length > 1">' +
+                                            '<ng-include src="\'static/images/trash-can.svg\'"></ng-include>' +
+                                        '</span>' + 
+                                    '</div>' +
+                                '</div>';
+                    } else {
+                        ml += '<p ng-repeat="item in thisArray"><strong>{{transformSpec.details.requestedData[itemData.forProperty][$index]}}</strong></p>'; 
+                    }
+
+                    if ($scope.variableArray) {
+                        ml +=   '<div class="twst-barcode-inputs-array-add-plate-button" ng-click="addAssociatedPlate()">' +
+                                    '<button class="twst-button twst-blue-button">+</button> add plate' +
+                                '</div>';
                     }
 
                     $scope.validate = function (arrayIndex, errorOnEmpty) {
@@ -93,7 +140,8 @@ angular.module('twist.app').directive('twstTransformSpecDataRequestItem', ['$com
                                     }
 
                                     /* ugly way to test if all validations for this array passed*/
-                                    if ($scope.validations.join('').length == arrayCount) {
+
+                                    if ($scope.validations.join('').length == $scope.transformSpec.details.requestedData[$scope.itemData.forProperty].length) {
                                         $scope.item.validData = true;
                                     } else {
                                         $scope.item.validData = 0;
