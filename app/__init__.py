@@ -220,7 +220,7 @@ def plate_report_page(plate_barcode):
 
 api = flask_restful.Api(app)
 
-from app.resources import transform_spec, worklist, sample, plate_well
+from app.resources import barcode, transform_spec, worklist, sample, plate_well
 
 api.add_resource(transform_spec.TransformSpecListResource,
                  '/api/v1/rest/transform-specs')
@@ -234,6 +234,12 @@ api.add_resource(transform_spec.TransformSpecResource,
 
 api.add_resource(worklist.WorklistResource,
                  '/api/v1/rest/worklist/<spec_id>')
+
+api.add_resource(barcode.BarcodeResource,
+    '/api/v1/rest/barcode/<label_data>',
+    '/api/v1/rest/barcode/<label_data>/<label_type>',
+    '/api/v1/rest/barcode/<label_data>/<label_type>/<printer>'
+)
 
 api.add_resource(sample.SampleResource,
                  '/api/v1/rest/sample/<sample_id>')
