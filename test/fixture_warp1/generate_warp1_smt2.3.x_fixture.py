@@ -19,7 +19,7 @@ DNA_HEADER = ["id","difficulty_pk","difficulty_label","difficulty_score","sequen
 CDESIGN_HEADER = ["id","design_id","batching_group_pk","design_rank","category_num","category_pk","details","longest_oligo_length","overlap_perc_gc","cloning_process_id","primer_pair_pk","requested_feature_loc","requested_dest_well","requested_extraction"]
 DESIGN_HEADER = ["id","order_item_id","design_rank","design","longest_oligo_length","overlap_perc_gc"]
 SRN_HEADER = ["pk","name","chip_id","added_datetime","control_set_id","status_pk","operator_id"]
-SRI_HEADER = ["id","synthesis_run_id","cluster_design_id",
+SRI_HEADER = ["id","synthesis_run_pk","cluster_design_id",
               "assigned_feature_loc","extraction_sample_id"]
 PLATE_HEADER = ["id","type_id","operator_id","date_created","storage_location","description","name","external_barcode","status"]
 SAMPLE_HEADER = ["id","plate_id","plate_well_code","order_item_id",

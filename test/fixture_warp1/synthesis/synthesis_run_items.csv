@@ -1,4 +1,4 @@
-id,synthesis_run_id,cluster_design_id,assigned_feature_loc,extraction_sample_id
+id,synthesis_run_pk,cluster_design_id,assigned_feature_loc,extraction_sample_id
 SRI_56d8942d00bc153cac71a1ce,767,"0    CLD_56d8942c00bc153cac719d50
 Name: id, dtype: object",1,1
 SRI_56d8942d00bc153cac71a1d0,767,"0    CLD_56d8942c00bc153cac719d50

@@ -11,7 +11,7 @@ import pandas as pd
 
 from twistdb import create_unique_id
 
-SRI_HEADER = ["id","synthesis_run_id","cluster_design_id",
+SRI_HEADER = ["id","synthesis_run_pk","cluster_design_id",
               "assigned_feature_loc","extraction_sample_id"]
 SAMPLE_HEADER = ["id","plate_id","plate_well_code","order_item_id",
                  "cloning_process_id","name","mol_type"]

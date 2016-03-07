@@ -1,4 +1,4 @@
-id,synthesis_run_id,cluster_design_id,assigned_feature_loc,extraction_sample_id
+id,synthesis_run_pk,cluster_design_id,assigned_feature_loc,extraction_sample_id
 SRI_56bcfc3300bc152d34e8afd3,1,CLD_56bc188500bc15c4efa36f05,5761,S_WARP2_5761
 SRI_56bcfc3300bc152d34e8afd4,1,CLD_56bc188600bc15c4eea36f09,5377,S_WARP2_5377
 SRI_56bcfc3300bc152d34e8afd5,1,CLD_56bc1a6400bc15ca83a36f01,4993,S_WARP2_4993
