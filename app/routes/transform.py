@@ -669,22 +669,22 @@ def ecr_pcr_planning( type_id, templ_id ):
 
     # we need to add master mix needs info or tell the user we need all the PCA plates first
     masterMixNeeds = ""
-    ecrPlates = None
+    pcaPlates = None
 
-    ecrPlates = details.get('requestedData', {}).get('associatedEcrPlates')
-    if ecrPlates is None:
+    pcaPlates = details.get('requestedData', {}).get('associatedPcaPlates')
+    if pcaPlates is None:
         # if they're not already in spec, we need to add the requested PCA plates
         cmds.append({
             "type": "REQUEST_DATA",
             "item": {
                 "type": "array.4",
                 "dataType": "barcode.PLATE",
-                "title": "Associated ECR Plate Barcodes",
-                "forProperty": "associatedEcrPlates"
+                "title": "Associated PCA Plate Barcodes",
+                "forProperty": "associatedPcaPlates"
             }
         })
 
-    if ecrPlates and (None not in ecrPlates):
+    if pcaPlates and (None not in pcaPlates):
         # then all the plates had barcodes
         # now we need to decide which master mixes are needed
         # content like "Master Mix A x2\n\rMaster Mix B x3"
@@ -694,7 +694,7 @@ def ecr_pcr_planning( type_id, templ_id ):
         if len(request.json['sources']) != 1:
             raise WebError('expected 1 source, got %d' % len(request.json['sources']))
 
-        dna_plate_barcodes = request.json['details']['requestedData']['associatedEcrPlates']
+        dna_plate_barcodes = request.json['details']['requestedData']['associatedPcaPlates']
         print '@@ here'
         print '@@ 2:', db.session, request.json['sources'][0]['details']['id'], dna_plate_barcodes
 
