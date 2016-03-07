@@ -191,7 +191,7 @@ class BarcodeResource(flask_restful.Resource):
             result['zpl'] = self.zebra.send(label_data, label_type, printer)
         except BarcodeError, err:
             result['status'] = 'invalid_label_format'
-            pprint.pprint("BarcodeError: %s" % repr(err.args))
+            print "BarcodeError: %s" % repr(err.args)
             return json_api_success(result, 200)
 
         return json_api_success(result, 200)
