@@ -8,6 +8,8 @@ from json_tricks.nonp import loads
 from flask_login import current_user
 from app.miseq import echo_csv
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
+
 def calculate_number_of_plates(db,barcodes):
 
     by_marker = defaultdict(list)
@@ -82,7 +84,10 @@ def calculate_number_of_plates(db,barcodes):
 
 
 
-def create_transform(db,sources, destinations ):
+def create_transform( db, sources, destinations ):
+    import time
+    tst = time.time()
+
     rows =[]
     dest_plates =[]
     dest_volume=[]
@@ -98,9 +103,11 @@ def create_transform(db,sources, destinations ):
 
     #source_barcodes = [ d['details']['id'] for d in sources ]
     dest_type = db.session.query(PlateType).get('SPTT_0006')
-    source_type =db.session.query(PlateType).get('SPTT_0004')
+    dest_layout = dest_type.layout  # this should prevent some extra trips to the db
+    source_type = db.session.query(PlateType).get('SPTT_0004')
     lookup_48_to_384, _ = generate_worklist()
 
+    
     for src_barcode in sources:
         #src_barcode = get_sample_barcode(i)
         #print src_barcode, 'SRC'
@@ -118,6 +125,9 @@ def create_transform(db,sources, destinations ):
                 #print marker ,":",plate_barcode
             by_marker[ marker ].append(sample)
 
+    print '@@ reb t1:', time.time() - tst
+    tst = time.time()
+
     for marker in sorted (by_marker):
         tmp = defaultdict(list)
         for i, sample in enumerate(by_marker[marker]):
@@ -125,49 +135,43 @@ def create_transform(db,sources, destinations ):
         for plate_no in sorted (tmp):
             qpix_plates.append( (marker,tmp[plate_no]) )
 
-    #print len(qpix_plates),'qpix_plates'
-
-        #sorted_x = generate_worklist()
+    print '@@ reb t2:', time.time() - tst
+    tst = time.time()
 
     for plate_no, (marker, samples) in enumerate( qpix_plates ):
-            #print '@ppppppp' ,plate_no ,sources ,str(plate_no // 8 )
-
 
         for x_384_well_id, sample in enumerate( samples ):
 
             dest_plate_no = plate_no % 8
             src_barcode1 = sources[(plate_no // 8)-1]
-            try:
-                dest_barcode1 = destinations[plate_no // 8 ]
-            except IndexError:
-
-                print ''
-
+            dest_barcode1 = destinations[plate_no // 8 ]
+            s_well = sample.well
 
             dest_well = lookup_48_to_384[ (dest_plate_no+1,x_384_well_id+1) ]
-            volume =calculate_volume(sample)
+            volume = calculate_volume(sample)
             rows.append({'source_plate_barcode': str(src_barcode1),
-                 'source_well_name': str(sample.well.well_label),
-                 'source_well_number': int(sample.well.well_number),
-                 'source_well_code': sample.well.well_code,
+                 'source_well_name': str(s_well.well_label),
+                 'source_well_number': int(s_well.well_number),
+                 'source_well_code': s_well.well_code,
                  'source_sample_id': str(sample.id),
                  'destination_plate_barcode': str(dest_barcode1), #+ "-%d,%d" % (dest_plate_no+1,x_384_well_id+1),
-                 'destination_well_name':  str(dest_type.get_well_by_number(int(dest_well)).well_label),#dest_type.get_well_by_number(dest_well).well_label,
+                 'destination_well_name':  str(dest_layout.get_well_by_number(int(dest_well)).well_label),#dest_type.get_well_by_number(dest_well).well_label,
                  'destination_well_number': int(dest_well),
                  'destination_plate_type': str(dest_type.type_id),
                  'transfer_volume': volume,
-                 'marker':marker,
-                 'destination_plate_well_count': dest_type.layout.feature_count
+                 'marker': marker,
+                 'destination_plate_well_count': dest_layout.feature_count
                  })
 
-    #print rows
+    print '@@ reb t3:', time.time() - tst
+
     return rows
 
 
 
 def calculate_volume(sample):
 
-        concentration =sample.conc_ng_ul
+        concentration = sample.conc_ng_ul
         pfmol =0.013
         weight = 660
 
