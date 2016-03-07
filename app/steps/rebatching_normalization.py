@@ -25,7 +25,7 @@ def calculate_number_of_plates(db,barcodes):
         samples = db.session.query(Plate).filter(Plate.external_barcode  == barcode).one().current_well_contents(db.session)
 
         for sample in samples:
-            #concentration = sample.conc_ng_ul
+            #concentration = sample.conc_ng_ul sample
             cloning_process= sample.cloning_process
 
             if cloning_process is None :
