@@ -308,7 +308,7 @@ def echo_csv_rebatch( operations):
     generates string containing CSV in Echo format
     see echo_csv_for_nps()
     """
-    # FIXME shouldn't this be somewhere else if it's general echo worklist generation??
+    # FIXME shouldn't this be somewhere else if it's general echo worklist generation??yes 
     si = StringIO.StringIO()
     cw = csv.writer(si)
 
