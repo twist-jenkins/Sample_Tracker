@@ -109,20 +109,17 @@ def hitpicking( db, vector_barcode ):
     from app.miseq import echo_csv
 
     src_spec = retrieve_transform_spec( db, vector_barcode )
-    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == dest_plate_barcode).one()
-                    for dest_plate_barcode in src_spec['misc']['dest_barcodes'] ]
+    dest_plates = [ db.query(Plate).filter(Plate.external_barcode == x['details']['id']).one()
+                    for x in src_spec['destinations'] ]
 
     vector_plate = db.query(Plate).filter(Plate.external_barcode == vector_barcode).one()
 
     by_vector = defaultdict(list)
     for vector_s in vector_plate.current_well_contents(db):
-        print '@@ vector_s:', vector_s.id, vector_s.name, vector_s.order_item
         if vector_s.order_item:
             by_vector[ vector_s.order_item.name ].append( [vector_s.well, 0] )
         else:
             print '@@ missing vector?? sample:%s' % vector_s.id
-
-    print '@@ vectors:', sorted((v, len(by_vector[v])) for v in by_vector)
 
     # order is important, as the last well will likely have less material in it
     for well_list in by_vector.values():
