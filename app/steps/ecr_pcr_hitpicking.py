@@ -106,7 +106,7 @@ def create_source( db, type_id, bulk_barcode ):
 
     dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
                    for bc in
-                   src_spec['operations'][0]['details']['requestedData']['misc']['dest_barcodes'] ]
+                   src_spec['details']['requestedData']['misc']['dest_barcodes'] ]
 
     primer_tallies = defaultdict(int)
     for p in dna_plates:
