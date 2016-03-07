@@ -34,7 +34,7 @@ def createdb():
     db_url = app.config['SQLALCHEMY_DATABASE_URI']
     print '@@ config:', db_url
     initdb(engine_url=db_url, create_tables=True)
-    # Base.metadata.create_all(bind=db.engine)
+    # Base.metadata.create_all(bind=db.engine) test
 
 
 @manager.command
