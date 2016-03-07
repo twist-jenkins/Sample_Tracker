@@ -104,9 +104,14 @@ def create_source( db, type_id, bulk_barcode ):
     previous_step_id = ROOT_STEP_LOOKUP[ type_id ]
     src_spec = retrieve_transform_spec( db, previous_step_id, bulk_barcode )
 
-    dna_plates = [ db.query(Plate).filter(Plate.external_barcode == bc).one()
-                   for bc in
-                   src_spec['details']['requestedData']['associatedEcrPlates'] ]
+    dna_plates = []
+    for bc in src_spec['details']['requestedData']['associatedEcrPlates']:
+        try:
+            p = db.query(Plate).filter(Plate.external_barcode == bc).one()
+        except NoResultFound:
+            raise WebError('ECR plate not found: '+bc)
+        else:
+            dna_plates.append(p)
 
     primer_tallies = defaultdict(int)
     for p in dna_plates:
