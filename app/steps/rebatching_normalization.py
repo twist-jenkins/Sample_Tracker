@@ -94,7 +94,7 @@ def create_transform(db,sources, destinations ):
     qpix_samples=defaultdict(list)
     #print '@length' , destinations
 
-    #dests=['kgjkgjkjkgjk','PPPOPIOPOO']#[ d['details']['id'] for d in dests ]
+    #dests=['kgjkgjkjkgjk','PPPOPIOPOO']#[ d['details']['id'] for d in dests ]hhhhhhhhhh
 
     #source_barcodes = [ d['details']['id'] for d in sources ]
     dest_type = db.session.query(PlateType).get('SPTT_0006')
