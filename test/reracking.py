@@ -79,7 +79,7 @@ class TestCase(unittest.TestCase):
                     marker = "NOMARKER"
                 else:
                     marker = cloning_process.resistance_marker.code
-                #by_marker[ marker ].append(sample)
+                #by_marker[ marker ].append(samples)
 
 
 
