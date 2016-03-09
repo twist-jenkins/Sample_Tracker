@@ -18,7 +18,7 @@ from twistdb.ngs import NGSBarcodePair, NGSRun, NGSSequencingAnalysis
 from twistdb import create_unique_id
 
 """ some of the templates and logic is from twistbio.util.miseq.py.
-That code will continue to be used by R&D.
+That code will continue to be used by R&D. Sucheta
 Pasting the relevant bits here instead of importing twist_core."""
 
 FORBIDDEN_CHARS_MISEQ = list("""?()[]/\=+<>:;"',*^|&""")
