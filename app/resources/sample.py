@@ -56,7 +56,7 @@ class SampleResource(flask_restful.Resource):
     """get / delete / put a single sample"""
 
     def get(self, sample_id):
-        """fetches a single sample"""
+        """fetches a single sample instance"""
         with scoped_session(db.engine) as sess:
             sample = sess.query(Sample).filter(
                 Sample.id == sample_id).first()
