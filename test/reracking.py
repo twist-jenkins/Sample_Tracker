@@ -217,7 +217,7 @@ def test_transform(dest_plates):
 
 
         sorted_x = sorted(lookup48to384.items(), key=operator.itemgetter(0))
-        #print sorted_x
+        print sorted_x
 
         def dest_lookup(x_384_well_id):#, well_id):
             dest =sorted_x[x_384_well_id-1]
