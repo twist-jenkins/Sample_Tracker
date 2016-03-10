@@ -140,7 +140,7 @@ class TestCase(unittest.TestCase):
 
         layout = test_transform(destination_plates)
 
-        #print layout
+        #print layout data
 
 
 
