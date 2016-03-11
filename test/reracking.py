@@ -61,7 +61,7 @@ class TestCase(unittest.TestCase):
 
 
 
-            #    print (qpix_plate + 1, x_48_well), ':', x_384_well_id
+            #    print (qpix_plate + 1, x_48_well), ':', x_384_well_id print
 
 
             #dest_type = db.session.query(PlateType).get('SPTT_0006')
